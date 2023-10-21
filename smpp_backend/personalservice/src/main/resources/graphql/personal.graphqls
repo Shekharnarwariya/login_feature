@@ -1,0 +1,17 @@
+type Query {
+    personalDetails(id:String): String
+    personalTemp(id:String): Book
+}
+
+type Book {
+    id: ID
+    name: String
+    pageCount: Int
+    author: Author
+}
+
+type Author {
+    id: ID
+    firstName: String
+    lastName: String
+}

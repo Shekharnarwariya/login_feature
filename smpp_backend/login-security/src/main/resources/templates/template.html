@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Welcome to SMPP!</title>
+	<!-- Include Bootstrap CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+	<style>
+		/* Custom CSS for the banner */
+		body {
+			font-family: Arial, sans-serif;
+			background-color: #f4f4f4;
+			padding: 20px;
+		}
+
+		.banner {
+			background-color: rgb(192, 192, 192);
+			color: #fff;
+			padding: 20px;
+			border-radius: 5px;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+		}
+
+		.banner img {
+			max-width: 100px;
+		}
+
+		.banner h2 {
+			font-size: 24px;
+		}
+
+		.banner p {
+			margin: 10px 0;
+		}
+
+		.contact-email {
+			color: #3498db;
+			font-weight: bold;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="container">
+		<div class="banner">
+			<img src="cid:htiLogo" alt="hti company Logo">
+			<h2>Welcome to SMPP!</h2>
+			<p><b th:text="${message}"></b></p>
+			<p><b th:text="${otp}"></b></p>
+			<p><b th:text="${username}"></b></p>
+			<p><b th:text="${password}"></b></p>
+			<p>If you have any questions or need assistance, feel free to contact us at .</p>
+			<p><span class="contact-email">contact:- smpp99999@gmail.com</span></p>
+		</div>
+	</div>
+	<!-- Include Bootstrap JS and jQuery (optional) -->
+	<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+
+</html>

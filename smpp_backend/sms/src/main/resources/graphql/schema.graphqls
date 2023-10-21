@@ -1,0 +1,33 @@
+
+input SmsRequest {
+  senderId: String!
+  messageType: String!
+  message: String!
+  from: String!
+  destinationNumber: String!
+}
+
+type BulkListInfo {
+  total: Int
+  validCount: Int
+  invalidCount: Int
+  duplicate: Int
+}
+
+type SmsResponse {
+  respMsgId: String!
+  msgCount: String!
+  BulkListInfo: BulkListInfo 
+  credits: String!
+  deductcredits: String!
+  status:String!
+}
+
+type Query {
+  dummyQuery: String
+}
+
+
+type Mutation {
+  sendSms(smsRequest: SmsRequest): SmsResponse
+}

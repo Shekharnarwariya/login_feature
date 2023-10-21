@@ -1,0 +1,12 @@
+version: '2'
+services:
+    personalservice:
+        container_name: personalservice
+        image: personalservice:0.0.1-snapshot
+        ports:
+            - 9091:9091
+        networks:
+            - smpp
+networks:
+    smpp:
+        driver: bridge
