@@ -24,8 +24,8 @@
 		<module>Template</module>
 		<module>personalservice</module>
 		<module>twoway</module>
+		<module>login-security</module>
 		<module>user</module>
-		<module>spring-boot-security-jwt</module>
 		
 	</modules>
 </project>
