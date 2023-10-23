@@ -13,7 +13,7 @@ public interface TemplatesService {
 
 	public List<TemplatesResponse> getAllTemplates();
 
-	public boolean updateTemplate(int id, TemplatesRequest request);
+	public TemplatesResponse updateTemplate(int id, TemplatesRequest request);
 
 	public boolean deleteTemplate(int id);
 }

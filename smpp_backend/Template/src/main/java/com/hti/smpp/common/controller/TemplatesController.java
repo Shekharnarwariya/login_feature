@@ -1,6 +1,9 @@
 package com.hti.smpp.common.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -25,14 +28,14 @@ public class TemplatesController {
 		this.templatesService = templatesService;
 	}
 
-	@PostMapping
-	public ResponseEntity<String> createTemplate(@Valid @RequestBody TemplatesRequest request) {
+	@MutationMapping("createTemplate")
+	public TemplatesResponse createTemplate(@Argument TemplatesRequest request) {
 		TemplatesResponse response = templatesService.createTemplate(request);
-		return ResponseEntity.ok("Template created successfully");
+		return response;
 	}
 
-	@GetMapping("/{id}")
-	public ResponseEntity<TemplatesResponse> getTemplateById(@PathVariable int id) {
+	@QueryMapping("getTemplateById")
+	public ResponseEntity<TemplatesResponse> getTemplateById(@Argument int id) {
 		TemplatesResponse response = templatesService.getTemplateById(id);
 		if (response != null) {
 			return ResponseEntity.ok(response);
@@ -41,20 +44,16 @@ public class TemplatesController {
 		}
 	}
 
-	@GetMapping
-	public ResponseEntity<List<TemplatesResponse>> getAllTemplates() {
+	@QueryMapping("allTemplate")
+	public ResponseEntity<List<TemplatesResponse>> getAllTemplates(@Argument int id) {
 		List<TemplatesResponse> templates = templatesService.getAllTemplates();
 		return ResponseEntity.ok(templates);
 	}
 
-	@PutMapping("/{id}")
-	public ResponseEntity<String> updateTemplate(@PathVariable int id, @Valid @RequestBody TemplatesRequest request) {
-		boolean success = templatesService.updateTemplate(id, request);
-		if (success) {
-			return ResponseEntity.ok("Template updated successfully");
-		} else {
-			return ResponseEntity.notFound().build();
-		}
+	@MutationMapping("updateTemplateById")
+	public TemplatesResponse updateTemplate(@Argument("id") int id,@Argument("request") TemplatesRequest request) {
+
+		return  templatesService.updateTemplate(id, request);
 	}
 
 	@DeleteMapping("/{id}")

@@ -62,16 +62,23 @@ public class TemplatesServiceImpl implements TemplatesService {
 	}
 
 	@Override
-	public boolean updateTemplate(int id, TemplatesRequest request) {
+	public TemplatesResponse updateTemplate(int id, TemplatesRequest request) {
 		TemplatesDTO template = templatesRepository.findById(id).orElse(null);
+		TemplatesDTO updatedTemplate = null;
 		if (template != null) {
 			template.setMessage(Converter.UTF16(request.getMessage()));
 			// template.setMasterId(request.getMasterId());
 			template.setTitle(Converter.UTF16(request.getTitle()));
-			templatesRepository.save(template);
-			return true; // Return true if the update was successful.
+			updatedTemplate = templatesRepository.save(template);
+			if (updatedTemplate.getMessage() != null && !updatedTemplate.getMessage().isEmpty()) {
+				updatedTemplate.setMessage(Converter.hexCodePointsToCharMsg(updatedTemplate.getMessage()));
+			}
+			if (updatedTemplate.getTitle() != null && !updatedTemplate.getTitle().isEmpty()) {
+				updatedTemplate.setTitle(Converter.hexCodePointsToCharMsg(updatedTemplate.getTitle()));
+			}
+
 		}
-		return false; // Return false if the template was not found or couldn't be updated.
+		return mapToResponse(updatedTemplate);
 	}
 
 	@Override

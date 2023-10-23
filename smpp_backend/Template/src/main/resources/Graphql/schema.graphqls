@@ -1,0 +1,30 @@
+
+type Query {
+  allTemplate:[TemplatesResponse]
+  getTemplateById:TemplatesResponse
+}
+type TemplatesResponse {
+  id: Int
+  message: String
+  masterId: String
+  title: String
+}
+
+type Mutation {
+  createTemplate(request: TemplatesRequest): TemplatesResponse
+   updateTemplateById(id:Int!, request: TemplatesRequest!): TemplatesResponse
+ 
+  
+}
+
+
+input TemplatesRequest {
+  message: String
+  title: String
+}
+type TemplatesDTO {
+  id: Int
+  message: String
+  masterId: String
+  title: String
+}
