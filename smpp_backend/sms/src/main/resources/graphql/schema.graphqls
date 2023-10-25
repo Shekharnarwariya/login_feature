@@ -28,6 +28,7 @@ type Query {
 }
 
 
+
 type Mutation {
   sendSms(smsRequest: SmsRequest): SmsResponse
 }

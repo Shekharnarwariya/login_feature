@@ -31,6 +31,12 @@ public class TemplatesServiceImpl implements TemplatesService {
 		template.setMasterId("usertest1");
 		template.setTitle(Converter.UTF16(request.getTitle()));
 		TemplatesDTO savedTemplate = templatesRepository.save(template);
+		if (savedTemplate.getMessage() != null && savedTemplate.getMessage().length() > 0) {
+			savedTemplate.setMessage(Converter.hexCodePointsToCharMsg(savedTemplate.getMessage()));
+		}
+		if (savedTemplate.getTitle() != null && savedTemplate.getTitle().length() > 0) {
+			savedTemplate.setTitle(Converter.hexCodePointsToCharMsg(savedTemplate.getTitle()));
+		}
 		return mapToResponse(savedTemplate);
 	}
 

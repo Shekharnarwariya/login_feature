@@ -17,7 +17,7 @@ import java.util.List;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/templates")
+@RequestMapping("/template")
 @Validated // Add this annotation to enable method-level validation
 public class TemplatesController {
 
@@ -45,15 +45,15 @@ public class TemplatesController {
 	}
 
 	@QueryMapping("allTemplate")
-	public ResponseEntity<List<TemplatesResponse>> getAllTemplates(@Argument int id) {
+	public List<TemplatesResponse> getAllTemplates() {
 		List<TemplatesResponse> templates = templatesService.getAllTemplates();
-		return ResponseEntity.ok(templates);
+		return (templates);
 	}
 
 	@MutationMapping("updateTemplateById")
-	public TemplatesResponse updateTemplate(@Argument("id") int id,@Argument("request") TemplatesRequest request) {
+	public TemplatesResponse updateTemplate(@Argument("id") int id, @Argument("request") TemplatesRequest request) {
 
-		return  templatesService.updateTemplate(id, request);
+		return templatesService.updateTemplate(id, request);
 	}
 
 	@DeleteMapping("/{id}")
