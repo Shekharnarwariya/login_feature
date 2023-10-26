@@ -1,18 +1,39 @@
-spring:  
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: personal-service
+          uri: lb://personal-service:8081/
+          predicates:
+            - Path=/personal/**
+          filters:
+            - AuthenticationFilter
+        - id: TEMPLATE-SERVICE
+          uri: lb://TEMPLATE-SERVICE:8081/
+          predicates:
+            - Path=/template/**
+          filters:
+            - AuthenticationFilter
+        - id: LOGIN-SERVICE
+          uri: lb://LOGIN-SERVICE:8082/
+          predicates:
+            - Path=/auth/**
+          filters:
+            - AuthenticationFilter
+        - id: front-end
+          uri: http://localhost:8100/
+          predicates:
+            - Path=/**
+          filters:
+            - AuthenticationFilter
   application:
     name: API-GATEWAY-SERVICE
-  
-server:
-  port: 9999    
-
-eureka:
-  instance:
-    prefer-ip-address: true
-  client:
-    fetch-registry: true
-    register-with-eureka: true
-    serviceUrl:
-      defaultZone: http://localhost:8761/eureka
-
-
-            
+  eureka:
+    instance:
+      hostname: localhost
+      prefer-ip-address: true
+    client:
+      fetch-registry: true
+      register-with-eureka: true
+      serviceUrl:
+        defaultZone: http://localhost:8761/eureka/

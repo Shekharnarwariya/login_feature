@@ -15,6 +15,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -49,7 +50,7 @@ import jakarta.validation.Valid;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping("api/auth")
+@RequestMapping("/auth")
 public class AuthController {
 	@Autowired
 	private AuthenticationManager authenticationManager;
@@ -83,6 +84,21 @@ public class AuthController {
 				.collect(Collectors.toList());
 
 		return new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), userDetails.getEmail(), roles);
+	}
+
+	@GetMapping("/validate")
+	public String validateJwtToken(@RequestParam("token") String token) {
+		String jwt = null;
+		if (StringUtils.hasText(token) && token.startsWith("Bearer ")) {
+			jwt = token.substring(7);
+		}
+		if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+			String username = jwtUtils.getUserNameFromJwtToken(jwt);
+			return "token is valid";
+		}
+
+		return "token is invalid";
+
 	}
 
 	@PostMapping("/signup")

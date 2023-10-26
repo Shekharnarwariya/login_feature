@@ -1,24 +1,23 @@
 package com.hti.smpp.common.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.hti.smpp.common.request.TemplatesRequest;
 import com.hti.smpp.common.responce.TemplatesResponse;
 import com.hti.smpp.common.service.TemplatesService;
 
-import java.util.List;
-
-import jakarta.validation.Valid;
-
 @RestController
 @RequestMapping("/template")
-@Validated // Add this annotation to enable method-level validation
 public class TemplatesController {
 
 	private final TemplatesService templatesService;
