@@ -30,7 +30,7 @@ spring:
     name: API-GATEWAY-SERVICE
   eureka:
     instance:
-      hostname: localhost
+      hostname: API-GATEWAY-SERVICE
       prefer-ip-address: true
     client:
       fetch-registry: true

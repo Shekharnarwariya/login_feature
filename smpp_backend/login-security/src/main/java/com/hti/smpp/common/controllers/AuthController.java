@@ -70,8 +70,8 @@ public class AuthController {
 	@Autowired
 	private EmailSender emailSender;
 
-	@MutationMapping("authenticateUser")
-	public JwtResponse authenticateUser(@Argument LoginRequest loginRequest) {
+	@PostMapping("/login")
+	public JwtResponse authenticateUser(@RequestBody LoginRequest loginRequest) {
 
 		Authentication authentication = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
