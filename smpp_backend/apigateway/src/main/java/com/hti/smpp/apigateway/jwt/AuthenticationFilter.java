@@ -4,9 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
-
-import com.hti.smpp.apigateway.excepation.UNAuthorizationExcepation;
 
 @Component
 public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
@@ -21,13 +20,18 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 		super(Config.class);
 	}
 
+	ServerHttpRequest request;
+
 	@Override
 	public GatewayFilter apply(Config config) {
+
 		return ((exchange, chain) -> {
 			if (validator.isSecured.test(exchange.getRequest())) {
 				// header contains token or not
 				if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-					throw new UNAuthorizationExcepation("missing authorization header");
+					System.out.println("missing authorization header...!");
+					throw new RuntimeException("missing authorization header");
+
 				}
 
 				String authHeader = exchange.getRequest().getHeaders().get(HttpHeaders.AUTHORIZATION).get(0);
@@ -37,12 +41,15 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 				try {
 					jwtUtil.validateToken(authHeader);
 
+					request = exchange.getRequest().mutate()
+							.header("username", jwtUtil.getUserNameFromJwtToken(authHeader)).build();
+
 				} catch (Exception e) {
-					System.out.println("invalid access...!");
-					throw new UNAuthorizationExcepation("un authorized access to application");
+					System.out.println("unauthorized access to application...!");
+					throw new RuntimeException("un authorized access to application");
 				}
 			}
-			return chain.filter(exchange);
+			return chain.filter(exchange.mutate().request(request).build());
 		});
 	}
 

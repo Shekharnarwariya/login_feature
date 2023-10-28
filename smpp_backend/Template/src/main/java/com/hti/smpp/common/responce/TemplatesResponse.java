@@ -3,7 +3,7 @@ package com.hti.smpp.common.responce;
 public class TemplatesResponse {
 	private int id;
 	private String message;
-	private String masterId;
+	private Long masterId;
 	private String title;
 
 	public int getId() {
@@ -22,11 +22,11 @@ public class TemplatesResponse {
 		this.message = message;
 	}
 
-	public String getMasterId() {
+	public Long getMasterId() {
 		return masterId;
 	}
 
-	public void setMasterId(String masterId) {
+	public void setMasterId(Long masterId) {
 		this.masterId = masterId;
 	}
 
@@ -36,25 +36,6 @@ public class TemplatesResponse {
 
 	public void setTitle(String title) {
 		this.title = title;
-	}
-
-	@Override
-	public String toString() {
-		return "TemplatesResponse [id=" + id + ", message=" + message + ", masterId=" + masterId + ", title=" + title
-				+ "]";
-	}
-
-	public TemplatesResponse(int id, String message, String masterId, String title) {
-		super();
-		this.id = id;
-		this.message = message;
-		this.masterId = masterId;
-		this.title = title;
-	}
-
-	public TemplatesResponse() {
-		super();
-
 	}
 
 }

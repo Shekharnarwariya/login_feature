@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.TimeZone;
@@ -19,6 +20,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.hti.smpp.common.login.dto.User;
+import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.messages.dto.BulkEntry;
 import com.hti.smpp.common.messages.dto.BulkSmsDTO;
 import com.hti.smpp.common.messages.dto.QueueBackupExt;
@@ -30,22 +33,23 @@ import com.hti.smpp.common.sms.service.RouteDAService;
 import com.hti.smpp.common.sms.service.SendSmsService;
 import com.hti.smpp.common.sms.service.SmsService;
 import com.hti.smpp.common.sms.session.SessionHandler;
-import com.hti.smpp.common.sms.session.SessionHelper;
 import com.hti.smpp.common.sms.session.UserSession;
 import com.hti.smpp.common.sms.util.Body;
 import com.hti.smpp.common.sms.util.Converter;
 import com.hti.smpp.common.sms.util.GlobalVars;
 import com.hti.smpp.common.sms.util.IConstants;
-import com.hti.smpp.common.user.dto.UserSessionObject;
+import com.hti.smpp.common.user.dto.BalanceEntry;
+import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
+import com.hti.smpp.common.user.repository.BalanceEntryRepository;
+import com.hti.smpp.common.user.repository.UserEntryRepository;
+import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.logica.smpp.Data;
 import com.logica.smpp.Session;
 import com.logica.smpp.pdu.SubmitSM;
 import com.logica.smpp.pdu.SubmitSMResp;
 import com.logica.smpp.pdu.WrongDateFormatException;
 import com.logica.smpp.util.ByteBuffer;
-
-import jakarta.servlet.http.HttpSession;
 
 @Service
 public class SmsServiceImpl implements SmsService {
@@ -58,7 +62,19 @@ public class SmsServiceImpl implements SmsService {
 	private ScheduleEntryRepository scheduleEntryRepository;
 
 	@Autowired
+	private UserRepository userRepository;
+
+	@Autowired
 	private RouteDAService routeService;
+
+	@Autowired
+	private WebMasterEntryRepository webMasterEntryRepository;
+
+	@Autowired
+	private BalanceEntryRepository balanceEntryRepository;
+
+	@Autowired
+	private UserEntryRepository userEntryRepository;
 
 	private static Map<String, String> hashTabOne = new HashMap<String, String>();
 	private Random rand = new Random();
@@ -158,37 +174,18 @@ public class SmsServiceImpl implements SmsService {
 		hashTabOne.put("?", "3F");
 	}
 
-	public SmsResponse sendSsms(SmsRequest smsRequest, HttpSession session) {
-		BulkSmsDTO bulkSmsDTO = new BulkSmsDTO();
-		bulkSmsDTO.setClientId("testUser1");
-		bulkSmsDTO.setSystemId("testUser1");
-		bulkSmsDTO.setPassword("1");
-		bulkSmsDTO.setReqType("Single");
-		bulkSmsDTO.setSenderId(smsRequest.getSenderId());
-		bulkSmsDTO.setFrom("mobile");
-		List<String> list = new ArrayList<String>();
-		String[] split = smsRequest.getDestinationNumber().split(",");
-		// VALIDATE AND PUT TO ARRAYLIST
-		for (String number : split) {
-			if (isValidNumber(number)) {
-				list.add(number);
-			}
+	public SmsResponse sendSms(SmsRequest smsRequest, String username) {
+		Optional<User> userOptional = userRepository.findByUsername(username);
+
+		User user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
 		}
-		bulkSmsDTO.setDestinationList(list);
-		bulkSmsDTO.setMessageType(smsRequest.getMessageType());
-		bulkSmsDTO.setMessage(smsRequest.getMessage());
-		bulkSmsDTO.setDestinationNumber(smsRequest.getDestinationNumber());
-
-		sendSingleMsg(bulkSmsDTO);
-		SmsResponse smsResponse = new SmsResponse();
-		smsResponse.setCredits("this is test");
-		smsResponse.setRespMsgId("4");
-		return smsResponse;
-
-	}
-
-	@Override
-	public SmsResponse sendSms(SmsRequest smsRequest, HttpSession session) {
+		Optional<UserEntry> userEntryOptional = userEntryRepository.findBySystemId(String.valueOf(user.getSystem_id()));
+		UserEntry userEntry = null;
+		if (userEntryOptional.isPresent()) {
+			userEntry = userEntryOptional.get();
+		}
 		SmsResponse smsResponse = new SmsResponse();
 		String target = IConstants.FAILURE_KEY;
 		BulkSmsDTO bulkSmsDTO = new BulkSmsDTO();
@@ -218,10 +215,6 @@ public class SmsServiceImpl implements SmsService {
 		double totalcost = 0, adminCost = 0;// total_defcost = 0;
 		String unicodeMsg = "";
 		bulkSmsDTO.setReqType("Single");
-//		UserSessionObject userSessionObject = (UserSessionObject) SessionHelper
-//				.getSessionObject(IConstants.USER_SESSION_KEY);
-		UserSessionObject userSessionObject = (UserSessionObject) SessionHelper
-				.getSessionObject(IConstants.USER_SESSION_KEY);
 		BulkListInfo listInfo = new BulkListInfo();
 
 		if (bulkSmsDTO.isSchedule()) {
@@ -236,9 +229,19 @@ public class SmsServiceImpl implements SmsService {
 			// String adminId = userSessionObject.getMasterId();
 
 			// check wallet balance
-			String wallet_flag = userSessionObject.getBalance().getWalletFlag();
-			double wallet = userSessionObject.getBalance().getWalletAmount();
-			double adminWallet = userSessionObject.getMasterBalance().getWalletAmount();
+			Optional<BalanceEntry> balanceOptional = balanceEntryRepository
+					.findBySystemId(String.valueOf(user.getSystem_id()));
+			String wallet_flag = null;
+			double wallet = 0;
+			double adminWallet = 0;
+			BalanceEntry balanceEntry = null;
+			if (balanceOptional.isPresent()) {
+				balanceEntry = balanceOptional.get();
+				wallet_flag = balanceEntry.getWalletFlag();
+				wallet = balanceEntry.getWalletAmount();
+				adminWallet = balanceEntry.getWalletAmount();
+
+			}
 			int no_of_msg = bulkSmsDTO.getSmsParts();
 			if (smsRequest.getMessageType().equalsIgnoreCase("Unicode")) {
 				bulkSmsDTO.setDistinct("yes");
@@ -281,7 +284,7 @@ public class SmsServiceImpl implements SmsService {
 			ArrayList<String> destinationList = new ArrayList<String>();
 			String destination = bulkSmsDTO.getDestinationNumber();
 
-			WebMasterEntry webEntry = userSessionObject.getWebMasterEntry();
+			WebMasterEntry webEntry = webMasterEntryRepository.findByUserId(user.getSystem_id().intValue());
 
 			if (destination != null) {
 				String[] tokens;
@@ -329,35 +332,39 @@ public class SmsServiceImpl implements SmsService {
 			if (wallet_flag.equalsIgnoreCase("yes")) {
 				bulkSmsDTO.setUserMode("wallet");
 
-				totalcost = routeService.calculateRoutingCost(userSessionObject.getId(), destinationList, no_of_msg);
+				totalcost = routeService.calculateRoutingCost(user.getSystem_id().intValue(), destinationList,
+						no_of_msg);
 
 				if (destinationList.size() > 0) {
 					boolean amount = false;
-					if (userSessionObject.isAdminDepend()) {
+					if (userEntry.isAdminDepend()) {
 
-						adminCost = routeService.calculateRoutingCost(userSessionObject.getMasterUserId(),
+						adminCost = routeService.calculateRoutingCost(Integer.parseInt(userEntry.getMasterId()),
 								destinationList, no_of_msg);
 
 						if ((adminWallet >= adminCost)) {
 							if (wallet >= totalcost) {
 								adminWallet = adminWallet - adminCost;
-								userSessionObject.getMasterBalance().setWalletAmount(adminWallet);
+								balanceEntry.setWalletAmount(adminWallet);
+
 								wallet = wallet - totalcost;
-								userSessionObject.getBalance().setWalletAmount(wallet);
+								balanceEntry.setWalletAmount(wallet);
 								amount = true;
+								balanceEntryRepository.save(balanceEntry);
 							} else {
 								logger.info(bulkSessionId + " <-- Insufficient Balance -->");
 							}
 						} else {
 							// Insufficient Admin balance
-							logger.info(bulkSessionId + " <-- Insufficient Admin(" + userSessionObject.getMasterId()
+							logger.info(bulkSessionId + " <-- Insufficient Admin(" + userEntry.getMasterId()
 									+ ") Balance -->");
 						}
 					} else {
 						if (wallet >= totalcost) {
 							wallet = wallet - totalcost;
-							userSessionObject.getBalance().setWalletAmount(wallet);
+							balanceEntry.setWalletAmount(wallet);
 							amount = true;
+							balanceEntryRepository.save(balanceEntry);
 						} else {
 							// Insufficient balance
 							logger.info(bulkSessionId + " <-- Insufficient Balance -->");
@@ -425,7 +432,6 @@ public class SmsServiceImpl implements SmsService {
 							smsResponse.setBulkListInfo(listInfo);
 							smsResponse.setCredits(new DecimalFormat("0.00000").format(wallet));
 							smsResponse.setDeductcredits(new DecimalFormat("0.00000").format(totalcost));
-							session.setAttribute("credits", new DecimalFormat("0.00000").format(wallet));
 							logger.info(bulkSessionId + " Processed :-> Balance: " + wallet + " Cost: " + totalcost);
 						} else {
 							logger.info(bulkSessionId + "<-- Process Failed --> ");
@@ -441,29 +447,31 @@ public class SmsServiceImpl implements SmsService {
 			} else if (wallet_flag.equalsIgnoreCase("no")) {
 				bulkSmsDTO.setUserMode("credit");
 				if (destinationList.size() > 0) {
-					long credits = userSessionObject.getBalance().getCredits();
-					long adminCredit = userSessionObject.getMasterBalance().getCredits();
+					long credits = balanceEntry.getCredits();
+					long adminCredit = balanceEntry.getCredits();
 					boolean amount = false;
-					if (userSessionObject.isAdminDepend()) {
+					if (userEntry.isAdminDepend()) {
 						if (adminCredit >= total_msg) {
 							if (credits >= total_msg) {
 								adminCredit = adminCredit - total_msg;
-								userSessionObject.getMasterBalance().setCredits(adminCredit);
+								balanceEntry.setCredits(adminCredit);
 								credits = credits - total_msg;
-								userSessionObject.getBalance().setCredits(credits);
+								balanceEntry.setCredits(credits);
 								amount = true;
+								balanceEntryRepository.save(balanceEntry);
 							} else {
 								logger.info(bulkSessionId + " <-- Insufficient Credits -->");
 							}
 						} else {
-							logger.info(bulkSessionId + " <-- Insufficient Admin(" + userSessionObject.getMasterId()
+							logger.info(bulkSessionId + " <-- Insufficient Admin(" + userEntry.getMasterId()
 									+ ") Credits -->");
 						}
 					} else {
 						if (credits >= total_msg) {
 							credits = credits - total_msg;
-							userSessionObject.getBalance().setCredits(credits);
+							balanceEntry.setCredits(credits);
 							amount = true;
+							balanceEntryRepository.save(balanceEntry);
 						} else {
 							logger.info(bulkSessionId + " <-- Insufficient Credits -->");
 						}

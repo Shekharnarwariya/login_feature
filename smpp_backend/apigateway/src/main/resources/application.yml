@@ -11,7 +11,7 @@ spring:
         - id: TEMPLATE-SERVICE
           uri: lb://TEMPLATE-SERVICE:8081/
           predicates:
-            - Path=/template/**
+            - Path=/templates/**
           filters:
             - AuthenticationFilter
         - id: LOGIN-SERVICE
@@ -20,12 +20,20 @@ spring:
             - Path=/auth/**
           filters:
             - AuthenticationFilter
+        - id: SMS-SERVICE
+          uri: lb://SMS-SERVICE:8083/
+          predicates:
+            - Path=/sms/**
+          filters:
+            - AuthenticationFilter
+       
         - id: front-end
           uri: http://localhost:8100/
           predicates:
             - Path=/**
           filters:
             - AuthenticationFilter
+        
   application:
     name: API-GATEWAY-SERVICE
   eureka:
