@@ -1,16 +1,8 @@
 package com.hti.smpp.common.response;
 
-import org.springframework.stereotype.Component;
-
 import com.hti.smpp.common.sms.service.impl.BulkListInfo;
 
-@Component
-public class SmsResponse {
-
-	private String respMsgId;
-
-	private String msgCount;
-
+public class BulkResponse {
 	private BulkListInfo BulkListInfo;
 
 	private String credits;
@@ -19,21 +11,7 @@ public class SmsResponse {
 
 	private String status;
 
-	public String getRespMsgId() {
-		return respMsgId;
-	}
-
-	public void setRespMsgId(String respMsgId) {
-		this.respMsgId = respMsgId;
-	}
-
-	public String getMsgCount() {
-		return msgCount;
-	}
-
-	public void setMsgCount(String msgCount) {
-		this.msgCount = msgCount;
-	}
+	private String bulkSessionId;
 
 	public BulkListInfo getBulkListInfo() {
 		return BulkListInfo;
@@ -65,6 +43,14 @@ public class SmsResponse {
 
 	public void setStatus(String status) {
 		this.status = status;
+	}
+
+	public String getBulkSessionId() {
+		return bulkSessionId;
+	}
+
+	public void setBulkSessionId(String bulkSessionId) {
+		this.bulkSessionId = bulkSessionId;
 	}
 
 }

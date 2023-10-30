@@ -27,17 +27,19 @@ public class BulkMgmtEntry {
 	private String updateBy;
 	private String updateOn;
 
-	public BulkMgmtEntry() {
+	public BulkMgmtEntry(BulkEntry entry) {
+		this.bulkEntry = entry;
 	}
 
-	public BulkMgmtEntry(BulkEntry bulkEntry) {
-		this.bulkEntry = bulkEntry;
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
 	}
 
 	public BulkEntry getBulkEntry() {
-		if (bulkEntry == null) {
-			bulkEntry = new BulkEntry();
-		}
 		return bulkEntry;
 	}
 
@@ -116,4 +118,5 @@ public class BulkMgmtEntry {
 	public void setUpdateOn(String updateOn) {
 		this.updateOn = updateOn;
 	}
+
 }

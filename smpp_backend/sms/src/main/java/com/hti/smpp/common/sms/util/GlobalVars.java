@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Component;
 
+import com.hti.smpp.common.dto.BatchObject;
 import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.route.dto.HlrRouteEntry;
 import com.hti.smpp.common.route.dto.OptionalRouteEntry;
@@ -44,4 +45,6 @@ public class GlobalVars {
 	public static Map<Integer, OptionalRouteEntry> OptionalRouteEntries;
 
 	public static Map<String, Integer> PrefixMapping = Collections.synchronizedMap(new HashMap<String, Integer>());
+
+	public static Map<Integer, BatchObject> BatchQueue;
 }

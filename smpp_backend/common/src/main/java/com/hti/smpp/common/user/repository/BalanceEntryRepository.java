@@ -13,4 +13,6 @@ public interface BalanceEntryRepository extends JpaRepository<BalanceEntry, Inte
 
 	public Optional<BalanceEntry> findBySystemId(String system_id);
 
+	public Optional<BalanceEntry> findByUserId(int valueOf);
+
 }
