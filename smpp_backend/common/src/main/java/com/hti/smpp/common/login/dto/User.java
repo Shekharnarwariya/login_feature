@@ -17,9 +17,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-
-
-
 @Entity
 @Table(name = "users", uniqueConstraints = { @UniqueConstraint(columnNames = "username"),
 		@UniqueConstraint(columnNames = "email") })
@@ -45,14 +42,7 @@ public class User {
 	@JoinTable(name = "user_master", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
 	private Set<Role> roles = new HashSet<>();
 
-	public User() {
-	}
-
-	public User(String username, String email, String password) {
-		this.username = username;
-		this.email = email;
-		this.password = password;
-	}
+	private String Base64Password;
 
 	public Long getSystem_id() {
 		return system_id;
@@ -92,6 +82,20 @@ public class User {
 
 	public void setRoles(Set<Role> roles) {
 		this.roles = roles;
+	}
+
+	public String getBase64Password() {
+		return Base64Password;
+	}
+
+	public void setBase64Password(String base64Password) {
+		Base64Password = base64Password;
+	}
+
+	@Override
+	public String toString() {
+		return "User [system_id=" + system_id + ", username=" + username + ", email=" + email + ", password=" + password
+				+ ", roles=" + roles + ", Base64Password=" + Base64Password + "]";
 	}
 
 }

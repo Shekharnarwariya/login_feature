@@ -1,5 +1,7 @@
 package com.hti.smpp.common.controllers;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -39,12 +41,19 @@ import com.hti.smpp.common.payload.response.JwtResponse;
 import com.hti.smpp.common.payload.response.MessageResponse;
 import com.hti.smpp.common.security.jwt.JwtUtils;
 import com.hti.smpp.common.security.services.UserDetailsImpl;
+import com.hti.smpp.common.user.dto.UserEntry;
+import com.hti.smpp.common.user.repository.BalanceEntryRepository;
+import com.hti.smpp.common.user.repository.DlrSettingEntryRepository;
+import com.hti.smpp.common.user.repository.ProfessionEntryRepository;
+import com.hti.smpp.common.user.repository.UserEntryRepository;
+import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Constant;
 import com.hti.smpp.common.util.EmailValidator;
 import com.hti.smpp.common.util.OTPGenerator;
+import com.hti.smpp.common.util.PasswordConverter;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -64,10 +73,24 @@ public class AuthController {
 	private PasswordEncoder encoder;
 
 	@Autowired
+	private PasswordConverter PasswordConverter;
+
+	@Autowired
 	private JwtUtils jwtUtils;
 
 	@Autowired
 	private EmailSender emailSender;
+
+	@Autowired
+	private UserEntryRepository userEntryRepository;
+	@Autowired
+	private WebMasterEntryRepository webMasterEntryRepository;
+	@Autowired
+	private DlrSettingEntryRepository dlrSettingEntryRepository;
+	@Autowired
+	private ProfessionEntryRepository professionEntryRepository;
+	@Autowired
+	private BalanceEntryRepository balanceEntryRepository;
 
 	@PostMapping("/login")
 	public JwtResponse authenticateUser(@RequestBody LoginRequest loginRequest) {
@@ -101,6 +124,7 @@ public class AuthController {
 	}
 
 	@PostMapping("/signup")
+	@Transactional
 	public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
 		if (userRepository.existsByUsername(signUpRequest.getUsername())) {
 			return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
@@ -113,8 +137,11 @@ public class AuthController {
 			return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is not valid."));
 		}
 		// Create new user's account
-		User user = new User(signUpRequest.getUsername(), signUpRequest.getEmail(),
-				encoder.encode(signUpRequest.getPassword()));
+		User user = new User();
+		user.setEmail(signUpRequest.getEmail());
+		user.setPassword(encoder.encode(signUpRequest.getPassword()));
+		user.setUsername(signUpRequest.getUsername());
+		user.setBase64Password(signUpRequest.getPassword());
 
 		Set<String> strRoles = signUpRequest.getRole();
 		Set<Role> roles = new HashSet<>();
@@ -153,8 +180,60 @@ public class AuthController {
 		}
 
 		user.setRoles(roles);
-		userRepository.save(user);
+		User save = userRepository.save(user);
+		UserEntry entry = new UserEntry();
+		entry.setAccessCountry(String.join(",", signUpRequest.getAccessCountries()));
+		entry.setAccessIp(signUpRequest.getAccessIp());
+		entry.setAdminDepend(signUpRequest.isAdminDepend());
+		entry.setAlertEmail(signUpRequest.getAlertEmail());
+		entry.setAlertNumber(signUpRequest.getAlertNumber());
+		entry.setAlertUrl(signUpRequest.getAlertUrl());
+		entry.setAlertWaitDuration(signUpRequest.getAlertWaitDuration());
+		entry.setBindAlert(signUpRequest.isBindAlert());
+		entry.setCreatedBy(signUpRequest.getAccessIp());
+		entry.setCreatedOn(signUpRequest.getCreatedOn());
+		entry.setCurrency(signUpRequest.getCurrency());
+		entry.setDltDefaultSender(signUpRequest.getDltDefaultSender());
+		entry.setEditBy(signUpRequest.getSystemType());
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String formattedDate = dateFormat.format(new Date());
+		entry.setEditOn(formattedDate);
+		entry.setExpiry("" + signUpRequest.getExpiry());
+		entry.setFixLongSms(signUpRequest.isFixLongSms());
+		entry.setFlagStatus(signUpRequest.getFlagValue());
+		entry.setForceDelay(signUpRequest.getForceDelay());
+		entry.setForcePasswordChange(signUpRequest.isForcePasswordChange());
+		entry.setHlr(signUpRequest.isHlr());
+		entry.setLogDays(signUpRequest.getLogDays());
+		entry.setLogging(signUpRequest.isLogging());
+		entry.setLoopSmscId(signUpRequest.getLoopSmscId());
+		entry.setMasterId(signUpRequest.getMasterId());
+		entry.setPassword(signUpRequest.getPassword());
+		entry.setPasswordExpiresOn(signUpRequest.getPasswordExpiresOn());
+		entry.setPriority(signUpRequest.getPriority());
+		entry.setRecordMnp(signUpRequest.isRecordMnp());
+		entry.setRemark(signUpRequest.getRemark());
+		entry.setSenderLength(signUpRequest.getSenderLength());
+		entry.setSenderTrim(signUpRequest.isSenderTrim());
+		entry.setSleep(signUpRequest.getSleep());
+		entry.setSystemId(signUpRequest.getUsername());
+		entry.setSystemType(signUpRequest.getSystemType());
+		entry.setTimeout(signUpRequest.getTimeout());
 
+		userEntryRepository.save(entry);
+
+		signUpRequest.getWebMasterEntry().setUserId(save.getSystem_id().intValue());
+		signUpRequest.getDlrSettingEntry().setUserId(save.getSystem_id().intValue());
+		signUpRequest.getProfessionEntry().setUserId(save.getSystem_id().intValue());
+		signUpRequest.getBalance().setUserId(save.getSystem_id().intValue());
+		signUpRequest.getBalance().setSystemId(save.getUsername());
+
+		webMasterEntryRepository.save(signUpRequest.getWebMasterEntry());
+		dlrSettingEntryRepository.save(signUpRequest.getDlrSettingEntry());
+		professionEntryRepository.save(signUpRequest.getProfessionEntry());
+		balanceEntryRepository.save(signUpRequest.getBalance());
+
+		// return entry.getId();
 		return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
 	}
 
@@ -175,6 +254,7 @@ public class AuthController {
 
 		// Update User Password
 		User user = userOptional.get();
+		user.setBase64Password(PasswordConverter.convertToDatabaseColumn(passwordForgotRequest.getNewPassword()));
 		user.setPassword(encoder.encode(passwordForgotRequest.getNewPassword()));
 		userRepository.save(user);
 		if (EmailValidator.isEmailValid(user.getEmail()))
@@ -217,6 +297,8 @@ public class AuthController {
 			if (encoder.matches(passwordUpdateRequest.getOldPassword(), currentPassword)) {
 				// Valid old password, update the password
 				user.setPassword(encoder.encode(passwordUpdateRequest.getNewPassword()));
+				user.setBase64Password(
+						PasswordConverter.convertToDatabaseColumn(passwordUpdateRequest.getNewPassword()));
 				userRepository.save(user);
 				if (EmailValidator.isEmailValid(user.getEmail()))
 					emailSender.sendEmail(user.getEmail(), Constant.PASSWORD_UPDATE_SUBJECT, Constant.TEMPLATE_PATH,
