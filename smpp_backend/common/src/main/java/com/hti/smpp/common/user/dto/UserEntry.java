@@ -10,9 +10,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
-/**
- * Entity bean with JPA annotations
- */
 @Entity
 @Table(name = "usermaster")
 public class UserEntry implements Serializable, Comparable<UserEntry> {
@@ -20,13 +17,13 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
-	@Column(name = "system_id", unique = true, nullable = false, updatable = false)
+	@Column(name = "system_id")
 	private String systemId;
-	@Column(name = "master_id", nullable = false, updatable = false)
+	@Column(name = "master_id")
 	private String masterId;
-	@Column(name = "password", nullable = false, updatable = false)
+	@Column(name = "password")
 	private String password;
-	@Column(name = "admindepend", updatable = false)
+	@Column(name = "admindepend")
 	private boolean adminDepend;
 	@Column(name = "expiryday")
 	private String expiry;
@@ -48,7 +45,7 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 	private double forceDelay;
 	@Column(name = "timeout")
 	private int timeout = 60;
-	@Column(name = "createdon", insertable = false, updatable = false, nullable = false)
+	@Column(name = "createdon")
 	private String createdOn;
 	@Column(name = "access_ip")
 	private String accessIp;
@@ -56,11 +53,11 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 	private boolean logging;
 	@Column(name = "log_days")
 	private int logDays;
-	@Column(name = "createdby", updatable = false)
+	@Column(name = "createdby")
 	private String createdBy;
 	@Column(name = "editby")
 	private String editBy;
-	@Column(name = "editOn", insertable = false, updatable = false, nullable = false)
+	@Column(name = "editOn")
 	private String editOn;
 	@Column(name = "sender_length")
 	private int senderLength;
@@ -86,7 +83,7 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 	private boolean skipContent;
 	@Column(name = "loop_smsc_id")
 	private int loopSmscId;
-	@Column(name = "pwd_expires_on", insertable = false, updatable = false, nullable = false)
+	@Column(name = "pwd_expires_on")
 	private String passwordExpiresOn;
 	@Column(name = "force_pwd_change")
 	private boolean forcePasswordChange;

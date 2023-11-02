@@ -1,6 +1,5 @@
 package com.hti.smpp.common.payload.request;
 
-import java.sql.Date;
 import java.util.Set;
 
 import com.hti.smpp.common.user.dto.BalanceEntry;
@@ -18,7 +17,7 @@ public class SignupRequest {
 	private String masterId;
 	private String password;
 	private boolean adminDepend;
-	private Date expiry;
+	private String expiry;
 	private boolean hlr;
 	private String currency;
 	private String systemType;
@@ -107,11 +106,13 @@ public class SignupRequest {
 		this.adminDepend = adminDepend;
 	}
 
-	public Date getExpiry() {
+	
+
+	public String getExpiry() {
 		return expiry;
 	}
 
-	public void setExpiry(Date expiry) {
+	public void setExpiry(String expiry) {
 		this.expiry = expiry;
 	}
 

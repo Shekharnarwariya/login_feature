@@ -1,7 +1,5 @@
 package com.hti.smpp.common.controllers;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -50,7 +48,6 @@ import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Constant;
 import com.hti.smpp.common.util.EmailValidator;
 import com.hti.smpp.common.util.OTPGenerator;
-import com.hti.smpp.common.util.PasswordConverter;
 
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
@@ -71,9 +68,6 @@ public class AuthController {
 
 	@Autowired
 	private PasswordEncoder encoder;
-
-	@Autowired
-	private PasswordConverter PasswordConverter;
 
 	@Autowired
 	private JwtUtils jwtUtils;
@@ -195,9 +189,7 @@ public class AuthController {
 		entry.setCurrency(signUpRequest.getCurrency());
 		entry.setDltDefaultSender(signUpRequest.getDltDefaultSender());
 		entry.setEditBy(signUpRequest.getSystemType());
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDate = dateFormat.format(new Date());
-		entry.setEditOn(formattedDate);
+		entry.setEditOn(signUpRequest.getCreatedOn());
 		entry.setExpiry("" + signUpRequest.getExpiry());
 		entry.setFixLongSms(signUpRequest.isFixLongSms());
 		entry.setFlagStatus(signUpRequest.getFlagValue());
@@ -219,7 +211,6 @@ public class AuthController {
 		entry.setSystemId(signUpRequest.getUsername());
 		entry.setSystemType(signUpRequest.getSystemType());
 		entry.setTimeout(signUpRequest.getTimeout());
-
 		userEntryRepository.save(entry);
 
 		signUpRequest.getWebMasterEntry().setUserId(save.getSystem_id().intValue());
@@ -254,7 +245,6 @@ public class AuthController {
 
 		// Update User Password
 		User user = userOptional.get();
-		user.setBase64Password(PasswordConverter.convertToDatabaseColumn(passwordForgotRequest.getNewPassword()));
 		user.setPassword(encoder.encode(passwordForgotRequest.getNewPassword()));
 		userRepository.save(user);
 		if (EmailValidator.isEmailValid(user.getEmail()))
@@ -297,8 +287,6 @@ public class AuthController {
 			if (encoder.matches(passwordUpdateRequest.getOldPassword(), currentPassword)) {
 				// Valid old password, update the password
 				user.setPassword(encoder.encode(passwordUpdateRequest.getNewPassword()));
-				user.setBase64Password(
-						PasswordConverter.convertToDatabaseColumn(passwordUpdateRequest.getNewPassword()));
 				userRepository.save(user);
 				if (EmailValidator.isEmailValid(user.getEmail()))
 					emailSender.sendEmail(user.getEmail(), Constant.PASSWORD_UPDATE_SUBJECT, Constant.TEMPLATE_PATH,

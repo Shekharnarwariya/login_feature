@@ -1,6 +1,7 @@
 package com.hti.smpp.common.user.dto;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,30 +15,45 @@ import jakarta.persistence.Transient;
 @Entity
 @Table(name = "balance_master")
 public class BalanceEntry implements Serializable {
-	
+
+	private static final long serialVersionUID = 1L;
+
 	@Id
-	@Column(name = "user_id", unique = true, nullable = false)
-	private int userId;
-	@Column(name = "system_id", nullable = false, updatable = false)
+	@Column(name = "user_id")
+	private Integer userId;
+
+	@Column(name = "system_id")
 	private String systemId;
+
 	@Column(name = "wallet_flag")
 	private String walletFlag;
-	@Column(name = "wallet", nullable = false)
+
+	@Column(name = "wallet")
 	private Double walletAmount;
-	@Column(name = "credits", nullable = false)
-	private long credits;
+
+	@Column(name = "credits")
+	private Long credits;
+
+	@Column(name = "last_updated")
+	private Date lastUpdated;
+
 	@Transient
 	private boolean active;
 
-	public BalanceEntry() {
-	}
-
-	public int getUserId() {
+	public Integer getUserId() {
 		return userId;
 	}
 
-	public void setUserId(int userId) {
+	public void setUserId(Integer userId) {
 		this.userId = userId;
+	}
+
+	public String getSystemId() {
+		return systemId;
+	}
+
+	public void setSystemId(String systemId) {
+		this.systemId = systemId;
 	}
 
 	public String getWalletFlag() {
@@ -56,20 +72,20 @@ public class BalanceEntry implements Serializable {
 		this.walletAmount = walletAmount;
 	}
 
-	public long getCredits() {
+	public Long getCredits() {
 		return credits;
 	}
 
-	public void setCredits(long credits) {
+	public void setCredits(Long credits) {
 		this.credits = credits;
 	}
 
-	public String getSystemId() {
-		return systemId;
+	public Date getLastUpdated() {
+		return lastUpdated;
 	}
 
-	public void setSystemId(String systemId) {
-		this.systemId = systemId;
+	public void setLastUpdated(Date lastUpdated) {
+		this.lastUpdated = lastUpdated;
 	}
 
 	public boolean isActive() {
@@ -80,8 +96,10 @@ public class BalanceEntry implements Serializable {
 		this.active = active;
 	}
 
+	@Override
 	public String toString() {
-		return "Balance: userid=" + userId + ",WalletFlag=" + walletFlag + ",WalletAmount=" + walletAmount + ",Credits="
-				+ credits;
+		return "BalanceEntry{" + "userId=" + userId + ", systemId='" + systemId + '\'' + ", walletFlag='" + walletFlag
+				+ '\'' + ", walletAmount=" + walletAmount + ", credits=" + credits + ", lastUpdated=" + lastUpdated
+				+ ", active=" + active + '}';
 	}
 }

@@ -7,8 +7,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import com.hti.smpp.common.messages.dto.BulkEntry;
-
 @Entity
 @Table(name = "bulk_mgmt_entry")
 public class BulkMgmtEntry {
@@ -16,7 +14,6 @@ public class BulkMgmtEntry {
 	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
-	private BulkEntry bulkEntry;
 	private String userMode;
 	private long msgCount;
 	private double totalCost;
@@ -27,24 +24,12 @@ public class BulkMgmtEntry {
 	private String updateBy;
 	private String updateOn;
 
-	public BulkMgmtEntry(BulkEntry entry) {
-		this.bulkEntry = entry;
-	}
-
 	public int getId() {
 		return id;
 	}
 
 	public void setId(int id) {
 		this.id = id;
-	}
-
-	public BulkEntry getBulkEntry() {
-		return bulkEntry;
-	}
-
-	public void setBulkEntry(BulkEntry bulkEntry) {
-		this.bulkEntry = bulkEntry;
 	}
 
 	public String getUserMode() {
@@ -117,6 +102,13 @@ public class BulkMgmtEntry {
 
 	public void setUpdateOn(String updateOn) {
 		this.updateOn = updateOn;
+	}
+
+	@Override
+	public String toString() {
+		return "BulkMgmtEntry [id=" + id + ", userMode=" + userMode + ", msgCount=" + msgCount + ", totalCost="
+				+ totalCost + ", origMessage=" + origMessage + ", campaignType=" + campaignType + ", status=" + status
+				+ ", remarks=" + remarks + ", updateBy=" + updateBy + ", updateOn=" + updateOn + "]";
 	}
 
 }

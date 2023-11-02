@@ -226,11 +226,13 @@ public class SmsServiceImpl implements SmsService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 		}
-		Optional<UserEntry> userEntryOptional = userEntryRepository.findBySystemId(String.valueOf(user.getSystem_id()));
+		System.out.println(user);
+		Optional<UserEntry> userEntryOptional = userEntryRepository.findBySystemId(String.valueOf(user.getUsername()));
 		UserEntry userEntry = null;
 		if (userEntryOptional.isPresent()) {
 			userEntry = userEntryOptional.get();
 		}
+		System.out.println(userEntry);
 		SmsResponse smsResponse = new SmsResponse();
 		String target = IConstants.FAILURE_KEY;
 		BulkSmsDTO bulkSmsDTO = new BulkSmsDTO();
@@ -275,9 +277,10 @@ public class SmsServiceImpl implements SmsService {
 
 			// check wallet balance
 			Optional<BalanceEntry> masterBalanceOptional = balanceEntryRepository
-					.findBySystemId(String.valueOf(userEntry.getMasterId()));
+					.findByUserId(Integer.parseInt(userEntry.getMasterId()));
 			Optional<BalanceEntry> balanceOptional = balanceEntryRepository
 					.findByUserId(user.getSystem_id().intValue());
+			System.out.println(balanceOptional.get());
 			String wallet_flag = null;
 			double wallet = 0;
 			double adminWallet = 0;
@@ -1116,7 +1119,7 @@ public class SmsServiceImpl implements SmsService {
 		try {
 
 			Optional<UserEntry> userEntryOptional = userEntryRepository
-					.findBySystemId(String.valueOf(user.getSystem_id()));
+					.findBySystemId(String.valueOf(user.getUsername()));
 			UserEntry userEntry = null;
 			if (userEntryOptional.isPresent()) {
 				userEntry = userEntryOptional.get();
@@ -1401,9 +1404,10 @@ public class SmsServiceImpl implements SmsService {
 			// String userExparyDate = (userSessionObject.getExpiry()).toString();
 			// String adminId = userSessionObject.getMasterId();
 			Optional<BalanceEntry> masterBalanceOptional = balanceEntryRepository
-					.findBySystemId(String.valueOf(userEntry.getMasterId()));
+					.findByUserId(Integer.parseInt(userEntry.getMasterId()));
 			Optional<BalanceEntry> balanceOptional = balanceEntryRepository
 					.findByUserId(user.getSystem_id().intValue());
+			System.out.println(balanceOptional.get());
 			String wallet_flag = null;
 			double wallet = 0;
 			double adminWallet = 0;
@@ -1770,7 +1774,7 @@ public class SmsServiceImpl implements SmsService {
 		int snpi = 0;
 		String ret = "";
 		int user_id = System_Id.intValue();
-		WebMasterEntry webEntry = GlobalVars.WebmasterEntries.get(user_id);
+		WebMasterEntry webEntry = webMasterEntryRepository.findByUserId(user_id);
 		if (bulkSmsDTO.getFrom().compareToIgnoreCase("Mobile") == 0) {
 			ston = 1;
 			snpi = 1;
@@ -1886,7 +1890,7 @@ public class SmsServiceImpl implements SmsService {
 			}
 			logger.info(bulkSmsDTO.getSystemId() + " End Preparing batch content list");
 			if (waitForApprove) {
-				BulkMgmtEntry bulkMgmtEntry = new BulkMgmtEntry(entry);
+				BulkMgmtEntry bulkMgmtEntry = new BulkMgmtEntry();
 				bulkMgmtEntry.setTotalCost(bulkSmsDTO.getTotalCost());
 				bulkMgmtEntry.setUserMode(bulkSmsDTO.getUserMode());
 				bulkMgmtEntry.setMsgCount(bulkSmsDTO.getMsgCount());
@@ -1903,7 +1907,10 @@ public class SmsServiceImpl implements SmsService {
 					} else {
 						bulkMgmtEntry.setTotalCost(0);
 					}
+					bulkEntryRepository.save(entry);
+
 					int wait_id = bulkMgmtEntryRepository.save(bulkMgmtEntry).getId();
+
 					if (wait_id > 0) {
 						if (event != null) {
 
@@ -2041,7 +2048,7 @@ public class SmsServiceImpl implements SmsService {
 				content.setFlag(entry.getFlag());
 				bulkMgmtContentList.add(content);
 			}
-
+			db.createBulkMgmtContentTable(batch_id, bulkMgmtContentList);
 			// List<BulkMgmtContent> savedEntities =
 			// bulkMgmtContentRepository.saveAll(bulkMgmtContentList);
 			// insertCounter = savedEntities.size();

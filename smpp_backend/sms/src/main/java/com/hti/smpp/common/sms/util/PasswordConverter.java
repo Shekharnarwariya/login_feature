@@ -1,4 +1,4 @@
-package com.hti.smpp.common.util;
+package com.hti.smpp.common.sms.util;
 
 import java.security.Key;
 import java.util.Base64;
@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
-
 
 @Converter(autoApply = true)
 public class PasswordConverter implements AttributeConverter<String, String> {
