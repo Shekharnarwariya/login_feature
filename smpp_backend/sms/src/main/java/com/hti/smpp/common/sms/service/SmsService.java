@@ -12,4 +12,6 @@ public interface SmsService {
 	public SmsResponse sendSms(SmsRequest smsRequest, String username);
 
 	public BulkResponse sendBulkSms(BulkRequest bulkRequest, String username, MultipartFile destinationNumberFile);
+
+	public BulkResponse sendBulkCustome(BulkRequest bulkRequest, String username, MultipartFile destinationNumberFile);
 }
