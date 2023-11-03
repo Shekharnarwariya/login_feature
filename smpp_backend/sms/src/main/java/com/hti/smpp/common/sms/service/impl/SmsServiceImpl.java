@@ -34,12 +34,12 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.hti.smpp.common.dto.BatchObject;
 import com.hti.smpp.common.dto.BulkMgmtContent;
-import com.hti.smpp.common.dto.Data_Base;
 import com.hti.smpp.common.login.dto.User;
 import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.management.dto.BulkMgmtEntry;
@@ -81,6 +81,7 @@ import com.logica.smpp.pdu.WrongDateFormatException;
 import com.logica.smpp.util.ByteBuffer;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
 
 @Service
 public class SmsServiceImpl implements SmsService {
@@ -114,6 +115,9 @@ public class SmsServiceImpl implements SmsService {
 	private HttpSession session1;
 
 	private ProgressEvent event;
+
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
 
 	@Autowired
 	private BulkEntryRepository bulkEntryRepository;
@@ -2007,10 +2011,9 @@ public class SmsServiceImpl implements SmsService {
 
 	public int saveBulkMgmtContent(int batch_id, List<BulkContentEntry> list, ProgressEvent progressEvent)
 			throws Exception {
-
+		System.out.println("this is new batch id......"+batch_id);
 		int insertCounter = 0;
 		int upload_percent = 0;
-		Data_Base db = new Data_Base();
 		try {
 
 			List<BulkMgmtContent> bulkMgmtContentList = new ArrayList<>();
@@ -2021,7 +2024,7 @@ public class SmsServiceImpl implements SmsService {
 				content.setFlag(entry.getFlag());
 				bulkMgmtContentList.add(content);
 			}
-			db.createBulkMgmtContentTable(batch_id, bulkMgmtContentList);
+			createBulkMgmtContentTable(batch_id, bulkMgmtContentList);
 			// List<BulkMgmtContent> savedEntities =
 			// bulkMgmtContentRepository.saveAll(bulkMgmtContentList);
 			// insertCounter = savedEntities.size();
@@ -2036,7 +2039,7 @@ public class SmsServiceImpl implements SmsService {
 
 	public int saveBulkMgmtContent(int batch_id, List<BulkContentEntry> list) throws Exception {
 		int insertCounter = 0;
-		Data_Base db = new Data_Base();
+		System.out.println("this is new batch id......"+batch_id);
 		try {
 			// db.createBulkMgmtContentTable(batch_id);
 
@@ -2048,7 +2051,7 @@ public class SmsServiceImpl implements SmsService {
 				content.setFlag(entry.getFlag());
 				bulkMgmtContentList.add(content);
 			}
-			db.createBulkMgmtContentTable(batch_id, bulkMgmtContentList);
+			createBulkMgmtContentTable(batch_id, bulkMgmtContentList);
 			// List<BulkMgmtContent> savedEntities =
 			// bulkMgmtContentRepository.saveAll(bulkMgmtContentList);
 			// insertCounter = savedEntities.size();
@@ -2086,4 +2089,33 @@ public class SmsServiceImpl implements SmsService {
 
 		return savedReport.getId();
 	}
+
+	@Transactional
+	public boolean createBulkMgmtContentTable(int batchId, List<BulkMgmtContent> bulkMgmtContentList) {
+		try {
+			String tableName = "bulk_mgmt_content_" + batchId;
+			{
+				createTable(tableName);
+				persistEntities(bulkMgmtContentList, tableName);
+				return true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("Error creating table or persisting entities: {}", e.getMessage());
+			return false;
+		}
+	}
+
+	private void createTable(String tableName) {
+		jdbcTemplate.update("CALL CreateTableIfNotExists(?)", new Object[] { tableName });
+
+	}
+
+	private void persistEntities(List<BulkMgmtContent> bulkMgmtContentList, String tableName) {
+		for (BulkMgmtContent content : bulkMgmtContentList) {
+			jdbcTemplate.update("CALL InsertDataIntoTable(?, ?, ?, ?)", content.getDestination(), content.getContent(),
+					content.getFlag(), tableName);
+		}
+	}
+
 }

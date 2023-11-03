@@ -7,4 +7,7 @@
 //
 //@Repository
 //public interface BulkMgmtContentRepository extends JpaRepository<BulkMgmtContent, Long> {
+//	
+//	
+//	
 //}
