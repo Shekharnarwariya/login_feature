@@ -47,7 +47,12 @@ public class SmsController {
 		try {
 			ObjectMapper objectMapper = new ObjectMapper();
 			readValue = objectMapper.readValue(bulkRequest, BulkRequest.class);
-			bulkResponse = smsService.sendBulkSms(readValue, username, destinationNumberFile);
+			if (readValue.isCustomContent()) {
+				System.out.println("custom conten  is true.......");
+				bulkResponse = smsService.sendBulkCustome(readValue, username, destinationNumberFile);
+			} else {
+				bulkResponse = smsService.sendBulkSms(readValue, username, destinationNumberFile);
+			}
 			return ResponseEntity.ok(bulkResponse);
 		} catch (JsonProcessingException e) {
 			// Log the exception properly and handle it accordingly

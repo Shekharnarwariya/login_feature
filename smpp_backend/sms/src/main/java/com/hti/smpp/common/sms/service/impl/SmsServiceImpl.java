@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -2134,7 +2135,7 @@ public class SmsServiceImpl implements SmsService {
 		String unicodeMsg = "";
 		int no_of_msg = 0;
 		String target = IConstants.FAILURE_KEY;
-		List<String> destinationList = null;
+		ArrayList destinationList = null;
 		List<String> temp_number_list = new ArrayList<String>();
 		ProgressEvent progressEvent = new ProgressEvent(session1);
 		Optional<User> userOptional = userRepository.findByUsername(username);
@@ -2146,7 +2147,7 @@ public class SmsServiceImpl implements SmsService {
 		Map errors = new HashMap();
 		BulkResponse bulkResponse = new BulkResponse();
 		String bulkSessionId = user.getSystem_id() + "_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
-		WebMasterEntry webEntry= null;
+		WebMasterEntry webEntry = null;
 		BulkSmsDTO bulkSmsDTO = new BulkSmsDTO();
 		UserEntry userEntry = null;
 		try {
@@ -2335,74 +2336,61 @@ public class SmsServiceImpl implements SmsService {
 			// System.out.println("1====> "+new SimpleDateFormat("HH:mm:ss").format(new
 			// Date()));
 			String content = "";
-			String file_mode = null;
-			String uploaded_file = destinationNumberFile.getName();
-			// System.out.println("Filename: " + uploaded_file);
-			if (uploaded_file.lastIndexOf(".txt") > -1) {
-				file_mode = "txt";
-			} /*
-				 * else if (uploaded_file.lastIndexOf(".csv") > -1) { file_mode = "csv"; }
-				 */ else if ((uploaded_file.lastIndexOf(".xls") > -1) || (uploaded_file.lastIndexOf(".xlsx") > -1)) {
-				file_mode = "xls";
+			String fileMode = null;
+			String uploadedFile = destinationNumberFile.getOriginalFilename();
+			System.out.println("Filename: " + uploadedFile);
+
+			if (uploadedFile.endsWith(".txt")) {
+				fileMode = "txt";
+			} else if (uploadedFile.endsWith(".csv")) {
+				fileMode = "csv";
+			} else if (uploadedFile.endsWith(".xls") || uploadedFile.endsWith(".xlsx")) {
+				fileMode = "xls";
 			}
+
 			int total_numbers = 0;
 			int invalid_count = 0;
-			List param_list = new ArrayList();
+			List<String[]> param_list = new ArrayList<>();
 			InputStream inputStream = destinationNumberFile.getInputStream();
 			boolean isValidFile = true;
 			int column_count = 0;
-			if (file_mode != null) {
-				if (file_mode.equalsIgnoreCase("txt")) {
-					BufferedReader bufferedReader = null;
-					try {
-						bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
-						// System.out.println("Content=> " + content);
-						int row = 0;
-						while ((content = bufferedReader.readLine()) != null) {
-							row++;
-							if (row == 1) {
-								StringTokenizer strToken = new StringTokenizer(content, ";");
-								column_count = strToken.countTokens();
-							} else {
-								total_numbers++;
-								if (content.contains(";")) {
-									// ------------- Getting Parameters ----
+			System.out.println("this is file type....." + fileMode);
+			if (fileMode != null) {
+				try {
+					if (fileMode.equalsIgnoreCase("txt")) {
+						try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
+							int row = 0;
+							while ((content = bufferedReader.readLine()) != null) {
+								row++;
+								if (row == 1) {
 									StringTokenizer strToken = new StringTokenizer(content, ";");
-									String[] params = new String[strToken.countTokens()];
-									int i = 0;
-									while (strToken.hasMoreTokens()) {
-										String param_value = strToken.nextToken();
-										// System.out.println("Row[" + row + "] => " + param_value);
-										params[i] = param_value;
-										i++;
-									}
-									param_list.add(params);
+									column_count = strToken.countTokens();
 								} else {
-									invalid_count++;
-									int counter = 0;
-									if (errors.containsKey("Invalid Seperator")) {
-										counter = (Integer) errors.get("Invalid Seperator");
+									total_numbers++;
+									if (content.contains(";")) {
+										// ------------- Getting Parameters ----
+										StringTokenizer strToken = new StringTokenizer(content, ";");
+										String[] params = new String[strToken.countTokens()];
+										int i = 0;
+										while (strToken.hasMoreTokens()) {
+											String param_value = strToken.nextToken();
+											params[i] = param_value;
+											i++;
+										}
+										param_list.add(params);
+									} else {
+										invalid_count++;
+										int counter = (Integer) errors.get("Invalid Seperator");
+										errors.put("Invalid Separator", ++counter);
+										logger.info(
+												bulkSessionId + " Invalid Separator Found [" + row + "]:" + content);
 									}
-									errors.put("Invalid Seperator", ++counter);
-									logger.info(bulkSessionId + " Invalid Seperator Found [" + row + "]:" + content);
 								}
 							}
 						}
-					} catch (Exception ex) {
-						logger.info(bulkSessionId, ex.fillInStackTrace());
-					} finally {
-						if (bufferedReader != null) {
-							try {
-								bufferedReader.close();
-							} catch (IOException ioe) {
-								bufferedReader = null;
-							}
-						}
-					}
-				} else if (file_mode.equalsIgnoreCase("xls")) {
-					try {
-						Workbook workbook = null;
-						if (uploaded_file.endsWith(".xlsx")) {
+					} else if (fileMode.equalsIgnoreCase("xls")) {
+						Workbook workbook;
+						if (uploadedFile.endsWith(".xlsx")) {
 							workbook = new XSSFWorkbook(inputStream);
 						} else {
 							workbook = new HSSFWorkbook(inputStream);
@@ -2412,21 +2400,16 @@ public class SmsServiceImpl implements SmsService {
 							Sheet firstSheet = workbook.getSheetAt(i);
 							logger.info(bulkSessionId + " Sheet[" + i + "] Total Rows: "
 									+ firstSheet.getPhysicalNumberOfRows());
-							Iterator<org.apache.poi.ss.usermodel.Row> iterator = firstSheet.iterator();
-							column_count = 0;
-							while (iterator.hasNext()) {
-								org.apache.poi.ss.usermodel.Row nextRow = iterator.next();
+							for (Row nextRow : firstSheet) {
 								if (nextRow.getRowNum() == 0) {
 									column_count = nextRow.getPhysicalNumberOfCells();
 									logger.info(bulkSessionId + " Total Columns: " + column_count);
 								} else {
 									total_numbers++;
-									Iterator<Cell> cellIterator = nextRow.cellIterator();
 									String cell_value = null;
-									String params[] = new String[column_count];
+									String[] params = new String[column_count];
 									int cell_number = 0;
-									while (cellIterator.hasNext()) {
-										Cell cell = cellIterator.next();
+									for (Cell cell : nextRow) {
 										cell_value = new DataFormatter().formatCellValue(cell);
 										if (cell_number == 0) {
 											if (cell_value == null || cell_value.length() == 0) {
@@ -2448,16 +2431,15 @@ public class SmsServiceImpl implements SmsService {
 							}
 							break;
 						}
-					} catch (Exception ex) {
-						logger.info(bulkSessionId, ex.fillInStackTrace());
 					}
+				} catch (IOException ex) {
+					logger.info(bulkSessionId, ex);
 				}
 			} else {
 				isValidFile = false;
 				logger.info(bulkSessionId + " <--- Unsupported File Format --->");
 			}
-			// System.out.println("2====> "+new SimpleDateFormat("HH:mm:ss").format(new
-			// Date()));
+			System.out.println("file is valid or not....... " + isValidFile);
 			if (isValidFile) {
 				// --------------------------Checking Numbers & Creating Message Content
 				// ------------------
@@ -2585,9 +2567,9 @@ public class SmsServiceImpl implements SmsService {
 						}
 					}
 					System.out.println("Final Web Links: " + web_links_list);
-					Map<String, String> campaign_mapping = getCampaignId(String.valueOf(user.getSystem_id()),
-							bulkSmsDTO.getSenderId(), "GWYM2", web_links_list, String.join(",", entry_map.keySet()),
-							campaign_name);
+//					Map<String, String> campaign_mapping = getCampaignId(String.valueOf(user.getSystem_id()),
+//							bulkSmsDTO.getSenderId(), "GWYM2", web_links_list, String.join(",", entry_map.keySet()),
+//							campaign_name);
 					String web_link_hex_param = null;
 					if (bulkSmsDTO.getMessageType().equalsIgnoreCase("Unicode")) {
 						web_link_hex_param = "005B007700650062005F006C0069006E006B005F0074007200610063006B0069006E0067005F00750072006C005D"
@@ -2607,11 +2589,11 @@ public class SmsServiceImpl implements SmsService {
 						for (String msg : map_entry.getValue()) {
 							if (msgType.equalsIgnoreCase("Unicode")) {
 								for (int i = 0; i < web_links_list.size(); i++) {
-									if (campaign_mapping.containsKey(web_links_list.get(i))) {
-										String appending_url = "http://1l.ae/"
-												+ campaign_mapping.get(web_links_list.get(i)) + "/r=" + number_serial;
-										msg = msg.replaceFirst(web_link_hex_param, UTF16(appending_url).toLowerCase());
-									}
+//									if (campaign_mapping.containsKey(web_links_list.get(i))) {
+//										String appending_url = "http://1l.ae/"
+//												+ campaign_mapping.get(web_links_list.get(i)) + "/r=" + number_serial;
+//										msg = msg.replaceFirst(web_link_hex_param, UTF16(appending_url).toLowerCase());
+//									}
 								}
 								msg_length = msg.length();
 								if (msg_length > 280) {
@@ -2627,11 +2609,11 @@ public class SmsServiceImpl implements SmsService {
 								}
 							} else {
 								for (int i = 0; i < web_links_list.size(); i++) {
-									if (campaign_mapping.containsKey(web_links_list.get(i))) {
-										String appending_url = "http://1l.ae/"
-												+ campaign_mapping.get(web_links_list.get(i)) + "/r=" + number_serial;
-										msg = msg.replaceFirst(web_link_hex_param, appending_url);
-									}
+//									if (campaign_mapping.containsKey(web_links_list.get(i))) {
+//										String appending_url = "http://1l.ae/"
+//												+ campaign_mapping.get(web_links_list.get(i)) + "/r=" + number_serial;
+//										msg = msg.replaceFirst(web_link_hex_param, appending_url);
+//									}
 								}
 								// System.out.println(destNumber + " " + msg);
 								msg_length = msg.length();
@@ -2700,7 +2682,7 @@ public class SmsServiceImpl implements SmsService {
 				// logger.info(bulkSessionId + " mapping: " + mapTable);
 				logger.info(bulkSessionId + " numbers: " + msgLengthTable.keySet().size());
 				if (!msgLengthTable.isEmpty()) {
-					ArrayList destinationList1 = new ArrayList(msgLengthTable.keySet());
+					 destinationList = new ArrayList(msgLengthTable.keySet());
 					listInfo.setTotal(total_numbers);
 					listInfo.setValidCount(msgLengthTable.keySet().size());
 					listInfo.setDuplicate(duplicate_count);
@@ -2711,6 +2693,7 @@ public class SmsServiceImpl implements SmsService {
 						bulkSmsDTO.setDistinct("yes");
 					}
 					bulkSmsDTO.setDestinationList(destinationList);
+					System.out.println("map table ...." + mapTable);
 					bulkSmsDTO.setMapTable(mapTable);
 					// ArrayList destinationList = bulkSmsDTO.getDestinationList(listInfo);
 					// ********************Calculating message Length for Each Number
