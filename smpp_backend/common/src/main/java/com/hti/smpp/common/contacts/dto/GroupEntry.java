@@ -9,31 +9,30 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
 @Entity
-@Table(name = "addgroup")
+@Table(name = "smsc_group")
 public class GroupEntry {
 	@Id
 	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
-	@Column(name = "masterid", updatable = false)
-	private String masterId;
 	@Column(name = "name")
 	private String name;
-	@Column(name = "groupData")
-	private boolean groupData;
-	@Column(name = "created_by")
-	private String createdBy;
+	@Column(name = "duration")
+	private int duration;
+	@Column(name = "check_duration")
+	private int checkDuration;
+	@Column(name = "check_volume")
+	private int checkVolume;
+	@Column(name = "no_of_repeat")
+	private int noOfRepeat;
+	@Column(name = "keep_repeat_day")
+	private int keepRepeatDays;
+	@Column(name = "prime_member")
+	private int primeMember;
+	@Column(name = "remarks")
+	private String remarks;
 	@Transient
-	private long members;
-
-	public GroupEntry(String name, String masterId, boolean groupData) {
-		this.name = name;
-		this.masterId = masterId;
-		this.groupData = groupData;
-	}
-
-	public GroupEntry() {
-	}
+	private String primeMemberName;
 
 	public int getId() {
 		return id;
@@ -41,14 +40,6 @@ public class GroupEntry {
 
 	public void setId(int id) {
 		this.id = id;
-	}
-
-	public String getMasterId() {
-		return masterId;
-	}
-
-	public void setMasterId(String masterId) {
-		this.masterId = masterId;
 	}
 
 	public String getName() {
@@ -59,31 +50,71 @@ public class GroupEntry {
 		this.name = name;
 	}
 
-	public boolean isGroupData() {
-		return groupData;
+	public String getRemarks() {
+		return remarks;
 	}
 
-	public void setGroupData(boolean groupData) {
-		this.groupData = groupData;
+	public void setRemarks(String remarks) {
+		this.remarks = remarks;
 	}
 
-	public long getMembers() {
-		return members;
+	public int getDuration() {
+		return duration;
 	}
 
-	public void setMembers(long members) {
-		this.members = members;
+	public void setDuration(int duration) {
+		this.duration = duration;
 	}
 
-	public String getCreatedBy() {
-		return createdBy;
+	public int getCheckDuration() {
+		return checkDuration;
 	}
 
-	public void setCreatedBy(String createdBy) {
-		this.createdBy = createdBy;
+	public void setCheckDuration(int checkDuration) {
+		this.checkDuration = checkDuration;
+	}
+
+	public int getCheckVolume() {
+		return checkVolume;
+	}
+
+	public void setCheckVolume(int checkVolume) {
+		this.checkVolume = checkVolume;
+	}
+
+	public int getNoOfRepeat() {
+		return noOfRepeat;
+	}
+
+	public void setNoOfRepeat(int noOfRepeat) {
+		this.noOfRepeat = noOfRepeat;
+	}
+
+	public int getKeepRepeatDays() {
+		return keepRepeatDays;
+	}
+
+	public void setKeepRepeatDays(int keepRepeatDays) {
+		this.keepRepeatDays = keepRepeatDays;
+	}
+
+	public int getPrimeMember() {
+		return primeMember;
+	}
+
+	public void setPrimeMember(int primeMember) {
+		this.primeMember = primeMember;
+	}
+
+	public String getPrimeMemberName() {
+		return primeMemberName;
+	}
+
+	public void setPrimeMemberName(String primeMemberName) {
+		this.primeMemberName = primeMemberName;
 	}
 
 	public String toString() {
-		return "addGroup: id=" + id + ",master=" + masterId + ",name=" + name + ",groupData=" + groupData;
+		return "SmscGroup: id=" + id + ",name=" + name + ",remarks=" + remarks;
 	}
 }

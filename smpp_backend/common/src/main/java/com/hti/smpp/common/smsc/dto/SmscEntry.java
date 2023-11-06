@@ -24,7 +24,6 @@ public class SmscEntry implements Serializable {
 	@Column(name = "master_id")
 	private String masterId;
 	@Column(name = "password", nullable = false, updatable = false)
-	// @Convert(converter = com.hti.smpp.common.util.dto.PasswordConverter.class)
 	private String password;
 	@Column(name = "ip")
 	private String ip;

@@ -8,4 +8,5 @@ import com.hti.smpp.common.smsc.dto.TrafficScheduleEntry;
 @Repository
 public interface TrafficScheduleEntryRepository extends JpaRepository<TrafficScheduleEntry, Integer> {
 
+
 }
