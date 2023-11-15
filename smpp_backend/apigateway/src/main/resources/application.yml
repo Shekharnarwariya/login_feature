@@ -26,6 +26,21 @@ spring:
             - Path=/sms/**
           filters:
             - AuthenticationFilter
+            
+        - id: SMSC-SERVICE
+          uri: lb://SMSc-SERVICE:8085/
+          predicates:
+            - Path=/smsc/**
+          filters:
+            - AuthenticationFilter
+            
+                  
+        - id: HLR-SMSC-SERVICE
+          uri: lb://HLR-SMSC-SERVICE:8084/
+          predicates:
+            - Path=/hlr/**
+          filters:
+            - AuthenticationFilter
        
         - id: front-end
           uri: http://localhost:8100/

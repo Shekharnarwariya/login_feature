@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 import com.hti.smpp.common.network.dto.NetworkEntry;
 
 @Repository
-public interface NetworkEntryRepository extends JpaRepository<NetworkEntry, String> {
+public interface NetworkEntryRepository extends JpaRepository<NetworkEntry, Integer> {
 
 }

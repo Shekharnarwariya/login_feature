@@ -21,7 +21,7 @@ import com.hti.smpp.common.service.HlrSmscService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/smsc")
+@RequestMapping("/hlr")
 public class HlrSmscController {
 
 	private final HlrSmscService hlrSmscService;

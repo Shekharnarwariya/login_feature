@@ -1,7 +1,7 @@
 package com.hti.smpp.common.impl;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -10,16 +10,23 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.contacts.dto.GroupEntry;
 import com.hti.smpp.common.contacts.dto.GroupMemberEntry;
 import com.hti.smpp.common.contacts.repository.GroupEntryRepository;
 import com.hti.smpp.common.contacts.repository.GroupMemberEntryRepository;
+import com.hti.smpp.common.exception.SmscDataAccessException;
+import com.hti.smpp.common.exception.SmscInternalServerException;
+import com.hti.smpp.common.exception.SmscNotFoundException;
 import com.hti.smpp.common.request.CustomRequest;
 import com.hti.smpp.common.request.GroupMemberRequest;
 import com.hti.smpp.common.request.GroupRequest;
+import com.hti.smpp.common.request.LimitRequest;
 import com.hti.smpp.common.request.SmscEntryRequest;
+import com.hti.smpp.common.request.SmscLoopingRequest;
+import com.hti.smpp.common.request.TrafficScheduleRequest;
 import com.hti.smpp.common.service.SmscDAO;
 import com.hti.smpp.common.smsc.dto.CustomEntry;
 import com.hti.smpp.common.smsc.dto.LimitEntry;
@@ -78,43 +85,639 @@ public class SmscDAOImpl implements SmscDAO {
 
 	@Override
 	public String save(SmscEntryRequest smscEntryRequest, String username) {
-		System.out.println("Username: " + username);
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		SmscEntry convertedRequest = ConvertRequest(smscEntryRequest);
-
-		if (userOptional.isPresent()) {
-			UserEntry userEntry = userOptional.get();
-			convertedRequest.setSystemId(String.valueOf(userEntry.getSystemId()));
-			convertedRequest.setSystemType(userEntry.getSystemType());
-			convertedRequest.setMasterId(userEntry.getMasterId());
-		}
-
 		try {
+			// Logging the username
+			System.out.println("Username: " + username);
+
+			// Finding the user by system ID
+			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+
+			// Converting the request
+			SmscEntry convertedRequest = ConvertRequest(smscEntryRequest);
+
+			// Handling the optional user entry
+			if (userOptional.isPresent()) {
+				UserEntry userEntry = userOptional.get();
+				setConvertedRequestFields(convertedRequest, userEntry);
+			} else {
+				throw new SmscNotFoundException("User not found. Please enter a valid username.");
+			}
+			// Saving the SMS entry
 			SmscEntry savedEntry = smscEntryRepository.save(convertedRequest);
-			return "successfully  save this id :{}" + savedEntry.getId();
+			return "Successfully saved this id: " + savedEntry.getId();
+		} catch (SmscNotFoundException e) {
+			System.out.println("run not found exception...");
+			logger.error("An error occurred while saving the SmscEntry: {}", e.getMessage());
+			throw new SmscNotFoundException("Failed to save SmscEntry. Error: " + e.getMessage());
+		} catch (DataAccessException e) {
+			logger.error("A DataAccessException occurred while saving the SmscEntry: {}", e.getMessage());
+			throw new SmscDataAccessException("Failed to save SmscEntry. Data access error: " + e.getMessage());
 		} catch (Exception e) {
 			logger.error("An error occurred while saving the SmscEntry: {}", e.getMessage());
-			throw new RuntimeException("Failed to save SmscEntry", e);
+			throw new SmscInternalServerException("Failed to save SmscEntry. Error: " + e.getMessage());
 		}
 	}
 
+	private void setConvertedRequestFields(SmscEntry convertedRequest, UserEntry userEntry) {
+		convertedRequest.setSystemId(String.valueOf(userEntry.getSystemId()));
+		convertedRequest.setSystemType(userEntry.getSystemType());
+		convertedRequest.setMasterId(userEntry.getMasterId());
+	}
+
 	@Override
-	public void update(SmscEntry entry) {
+	public String update(int smscId, SmscEntryRequest smscEntryRequest) {
 		try {
-			smscEntryRepository.save(entry);
-		} catch (Exception e) {
+			if (smscEntryRepository.existsById(smscId)) {
+				SmscEntry convertRequest = ConvertRequest(smscEntryRequest);
+				convertRequest.setId(smscId);
+				smscEntryRepository.save(convertRequest);
+				return "SmscEntry with ID " + smscId + " has been successfully updated.";
+			} else {
+				throw new SmscNotFoundException("SmscEntry with ID " + smscId + " not found. Update operation failed.");
+			}
+		} catch (SmscNotFoundException e) {
 			logger.error("An error occurred during the update operation: " + e.getMessage(), e);
-			throw new RuntimeException("Failed to update SmscEntry: " + e.getMessage());
+			throw new SmscNotFoundException("Failed to update SmscEntry: " + e.getMessage());
+		} catch (DataAccessException e) {
+			logger.error("A DataAccessException occurred during the update operation: " + e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to update SmscEntry: Data access error occurred.");
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred during the update operation: " + e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to update SmscEntry: Unexpected error occurred.");
 		}
 	}
 
 	@Override
-	public void delete(SmscEntry entry) {
+	public String delete(int smscId) {
 		try {
-			smscEntryRepository.delete(entry);
+			Optional<SmscEntry> smscEntryOptional = smscEntryRepository.findById(smscId);
+			if (!smscEntryOptional.isPresent()) {
+				throw new SmscNotFoundException("SmscEntry with ID " + smscId + " was not found in the database.");
+			}
+			smscEntryRepository.deleteById(smscId);
+			System.out.println("run delete ...");
+			return "SmscEntry with ID " + smscId + " has been successfully deleted.";
+		} catch (DataAccessException ex) {
+			logger.error("An error occurred during the delete operation: " + ex.getMessage(), ex);
+			throw new SmscDataAccessException("Failed to delete SmscEntry: " + ex.getMessage());
+		} catch (SmscNotFoundException e) {
+			logger.error("An error occurred during the update operation: " + e.getMessage(), e);
+			throw e;
+		} catch (Exception ex) {
+			logger.error("An error occurred during the delete operation: " + ex.getMessage(), ex);
+			throw new SmscInternalServerException("Failed to delete SmscEntry: " + ex.getMessage());
+		}
+	}
+
+	@Override
+	public List<StatusEntry> listBound(boolean bound) {
+		try {
+			List<StatusEntry> list;
+			if (bound) {
+				list = statusEntryRepository.findByBound(bound);
+			} else {
+				list = statusEntryRepository.findAll();
+			}
+			return list;
+		} catch (DataAccessException e) {
+			// Log the exception for debugging purposes
+			logger.error("Error occurred while fetching StatusEntry records: " + e.getMessage());
+			throw new SmscDataAccessException("Failed to list Smsc Status Records");
 		} catch (Exception e) {
-			logger.error("An error occurred during the delete operation: " + e.getMessage(), e);
-			throw new RuntimeException("Failed to delete SmscEntry: " + e.getMessage());
+			// Log the exception for debugging purposes
+			logger.error("Unknown error occurred while fetching StatusEntry records: " + e.getMessage());
+			throw new SmscInternalServerException("Failed to list Smsc Status Records");
+		}
+	}
+
+	@Override
+	public List<CustomEntry> listCustom() {
+		try {
+			List<CustomEntry> list = customEntryRepository.findAll();
+			return list;
+		} catch (DataAccessException e) {
+			// Log the exception for debugging purposes
+			logger.error("Error occurred while fetching CustomEntry records: " + e.getMessage());
+			throw new SmscDataAccessException("Failed to list Smsc Custom Entry Records");
+		} catch (Exception e) {
+			// Log the exception for debugging purposes
+			logger.error("Unknown error occurred while fetching CustomEntry records: " + e.getMessage());
+			throw new SmscInternalServerException("Failed to list Smsc Custom Entry Records");
+		}
+	}
+
+	@Override
+	public CustomEntry getCustomEntry(int smscId) {
+		try {
+			Optional<CustomEntry> optionalEntry = customEntryRepository.findById(smscId);
+			if (optionalEntry.isPresent()) {
+				CustomEntry entry = optionalEntry.get();
+				return entry;
+			} else {
+				throw new SmscNotFoundException("Smsc CustomEntry with ID " + smscId + " not found");
+			}
+		} catch (SmscNotFoundException e) {
+			// Log the exception for debugging purposes
+			logger.error("CustomEntryNotFoundException: " + e.getMessage());
+			throw e;
+		} catch (DataAccessException e) {
+			// Log the exception for debugging purposes
+			logger.error("DataAccessException: " + e.getMessage());
+			throw new SmscDataAccessException("Failed to retrieve Smsc CustomEntry with ID: " + smscId);
+		} catch (Exception e) {
+			// Log the exception for debugging purposes
+			logger.error("Unknown error occurred while retrieving CustomEntry: " + e.getMessage());
+			throw new SmscInternalServerException("Failed to retrieve Smsc CustomEntry with ID: " + smscId);
+		}
+	}
+
+	@Override
+	public String saveCustom(CustomRequest customRequest) {
+		try {
+			CustomEntry convertedRequest = ConvertRequest(customRequest);
+			customEntryRepository.save(convertedRequest);
+			logger.info("CustomEntry saved successfully");
+			return "Successfully saved the CustomEntry.";
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while saving the CustomEntry: {}", e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to save CustomEntry. Data access error occurred.");
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while saving the CustomEntry: {}", e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to save CustomEntry. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public String updateCustom(int customId, CustomRequest customRequest) {
+		try {
+			if (customEntryRepository.existsById(customId)) {
+				CustomEntry convertRequest = ConvertRequest(customRequest);
+				convertRequest.setSmscId(customId); // Ensure the ID is set
+				customEntryRepository.save(convertRequest);
+				return "CustomEntry updated successfully";
+			} else {
+				throw new SmscNotFoundException("CustomEntry not found with id: " + customId);
+			}
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while updating the CustomEntry: {}", e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to update CustomEntry. Data access error occurred.");
+		} catch (SmscNotFoundException e) {
+			logger.error("CustomEntryNotFoundException: {}", e.getMessage(), e);
+			throw e;
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while updating the CustomEntry: {}", e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to update CustomEntry. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public String deleteCustom(int customId) {
+		try {
+			Optional<CustomEntry> optionalCustomEntry = customEntryRepository.findById(customId);
+			if (optionalCustomEntry.isPresent()) {
+				CustomEntry entry = optionalCustomEntry.get();
+				customEntryRepository.delete(entry);
+				return "CustomEntry deleted successfully";
+			} else {
+				throw new SmscNotFoundException("CustomEntry not found with id: " + customId);
+			}
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while deleting the CustomEntry: {}", e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to delete CustomEntry. Data access error occurred.");
+		} catch (SmscNotFoundException e) {
+			logger.error("CustomEntryNotFoundException: {}", e.getMessage(), e);
+			throw e;
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while deleting the CustomEntry: {}", e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to delete CustomEntry. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public String saveLimit(LimitRequest limitRequest) {
+		try {
+			List<LimitEntry> convertRequest = ConvertRequest(limitRequest);
+			limitEntryRepository.saveAll(convertRequest);
+			return "LimitEntry saved successfully.";
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while saving the LimitEntry: {}", e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to save LimitEntry. Data access error occurred.");
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while saving the LimitEntry: {}", e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to save LimitEntry. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public String updateLimit(int limitId, LimitRequest limitRequest) {
+		try {
+			if (limitEntryRepository.existsById(limitId)) {
+				List<LimitEntry> convertRequest = ConvertRequest(limitRequest);
+				for (LimitEntry entry : convertRequest) {
+					if (entry.getId() == limitId) {
+						limitEntryRepository.save(entry);
+						return "Limit updated successfully";
+					}
+				}
+				throw new RuntimeException("Failed to update LimitEntry: No matching ID found in the request");
+			} else {
+				throw new SmscNotFoundException("Limit with the provided ID not found");
+			}
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while updating the LimitEntry: {}", e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to update LimitEntry. Data access error occurred.");
+		} catch (SmscNotFoundException e) {
+			logger.error("LimitEntryNotFoundException: {}", e.getMessage(), e);
+			throw e;
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while updating the LimitEntry: {}", e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to update LimitEntry. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public String deleteLimit(int limitId) {
+		try {
+			if (limitEntryRepository.existsById(limitId)) {
+				limitEntryRepository.deleteById(limitId);
+				return "LimitEntry with ID " + limitId + " deleted successfully";
+			} else {
+				throw new SmscNotFoundException("LimitEntry with ID " + limitId + " not found");
+			}
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while deleting the LimitEntry: {}", e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to delete LimitEntry. Data access error occurred.");
+		} catch (SmscNotFoundException e) {
+			logger.error("LimitEntryNotFoundException: {}", e.getMessage(), e);
+			throw e;
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while deleting the LimitEntry: {}", e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to delete LimitEntry. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public List<LimitEntry> listLimit() {
+		try {
+			List<LimitEntry> list = limitEntryRepository.findAll();
+			return list;
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while fetching the list of Limit Entries: {}", e.getMessage(),
+					e);
+			throw new SmscDataAccessException("Failed to list Smsc limit Entries. Data access error occurred.");
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while fetching the list of Limit Entries: {}", e.getMessage(),
+					e);
+			throw new SmscInternalServerException("Failed to list Smsc limit Entries. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public String saveGroup(GroupRequest groupRequest) {
+		try {
+			List<GroupEntry> convertedRequest = ConvertRequest(groupRequest);
+			groupEntryRepository.saveAll(convertedRequest);
+			logger.info("GroupEntry saved successfully");
+			return "GroupEntry saved successfully";
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while saving the GroupEntry: {}", e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to save GroupEntry. Data access error occurred.");
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while saving the GroupEntry: {}", e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to save GroupEntry. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public String updateGroup(GroupRequest groupRequest) {
+		try {
+			List<GroupEntry> convertRequest = ConvertRequest(groupRequest);
+			for (GroupEntry group : convertRequest) {
+				if (groupEntryRepository.existsById(group.getId())) {
+					groupEntryRepository.save(group);
+				} else {
+					logger.info("Group not found with id: {}", group.getId());
+					throw new SmscNotFoundException("Group not found with id: " + group.getId());
+				}
+			}
+			return "Group updated successfully.";
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while updating the GroupEntry: {}", e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to update GroupEntry. Data access error occurred.");
+		} catch (SmscNotFoundException e) {
+			logger.error("GroupEntryNotFoundException: {}", e.getMessage(), e);
+			throw e;
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while updating the GroupEntry: {}", e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to update GroupEntry. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public String deleteGroup(int groupId) {
+		try {
+			Optional<GroupEntry> groupEntryOptional = groupEntryRepository.findById(groupId);
+			if (!groupEntryOptional.isPresent()) {
+				throw new SmscNotFoundException("Group with ID " + groupId + " was not found in the database.");
+			}
+			groupEntryRepository.deleteById(groupId);
+			return "Group with ID " + groupId + " has been deleted successfully.";
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while deleting the GroupEntry: {}", e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to delete GroupEntry. Data access error occurred.");
+		} catch (SmscNotFoundException e) {
+			logger.error("Group not found: {}", e.getMessage(), e);
+			throw e;
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while deleting the GroupEntry: {}", e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to delete GroupEntry. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public List<GroupEntry> listGroup() {
+		try {
+			List<GroupEntry> list = groupEntryRepository.findAll();
+			return list;
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while fetching the list of Group Entries: {}", e.getMessage(),
+					e);
+			throw new SmscDataAccessException("Failed to list Group Entries. Data access error occurred.");
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while fetching the list of Group Entries: {}", e.getMessage(),
+					e);
+			throw new SmscInternalServerException("Failed to list Group Entries. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public String saveGroupMember(GroupMemberRequest groupMemberRequest) {
+		try {
+			List<GroupMemberEntry> convertRequest = ConvertRequest(groupMemberRequest);
+			for (GroupMemberEntry entry : convertRequest) {
+				groupMemberEntryRepository.save(entry);
+
+			}
+			return "Group members saved successfully.";
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while saving the GroupMemberEntry: {}", e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to save GroupMemberEntry. Data access error occurred.");
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while saving the GroupMemberEntry: {}", e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to save GroupMemberEntry. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public String updateGroupMember(GroupMemberRequest groupMemberRequest) {
+		try {
+			List<GroupMemberEntry> convertRequest = ConvertRequest(groupMemberRequest);
+
+			for (GroupMemberEntry entry : convertRequest) {
+				if (groupMemberEntryRepository.existsById(entry.getId())) {
+					groupMemberEntryRepository.save(entry);
+				} else {
+					throw new SmscNotFoundException("Group member not found with ID: " + entry.getId());
+				}
+			}
+			return "Group members updated successfully.";
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while updating the GroupMemberEntry: {}", e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to update GroupMemberEntry. Data access error occurred.");
+		} catch (SmscNotFoundException e) {
+			logger.error("GroupMemberNotFoundException: {}", e.getMessage(), e);
+			throw e;
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while updating the GroupMemberEntry: {}", e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to update GroupMemberEntry. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public String deleteGroupMember(int groupMemberId) {
+		try {
+			if (groupMemberEntryRepository.existsById(groupMemberId)) {
+				groupMemberEntryRepository.deleteById(groupMemberId);
+				return "Group member with ID " + groupMemberId + " has been deleted successfully.";
+			} else {
+				String errorMessage = "Group member with ID " + groupMemberId + " not found.";
+				logger.error(errorMessage);
+				throw new SmscNotFoundException(errorMessage);
+			}
+		} catch (SmscNotFoundException e) {
+			// Handle the case when the group member with the provided ID does not exist
+			logger.error("Group member not found exception: {}", e.getMessage());
+			throw e; // rethrowing the caught exception
+		} catch (DataAccessException e) {
+			String errorMessage = "A data access error occurred while deleting the GroupMemberEntry: " + e.getMessage();
+			logger.error(errorMessage, e);
+			throw new SmscDataAccessException(errorMessage);
+		} catch (Exception e) {
+			String errorMessage = "An unexpected error occurred while deleting the GroupMemberEntry: " + e.getMessage();
+			logger.error(errorMessage, e);
+			throw new SmscInternalServerException(errorMessage);
+		}
+	}
+
+	@Override
+	public List<GroupMemberEntry> listGroupMember(int groupId) {
+		try {
+			List<GroupMemberEntry> list = groupMemberEntryRepository.findByGroupId(groupId);
+			return list;
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while fetching the list of Group Member Entries: {}",
+					e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to list Group Member Entries. Data access error occurred.");
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while fetching the list of Group Member Entries: {}",
+					e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to list Group Member Entries. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public String saveSchedule(TrafficScheduleRequest trafficScheduleRequest) {
+		try {
+			List<TrafficScheduleEntry> convertedEntries = ConvertRequest(trafficScheduleRequest);
+			for (TrafficScheduleEntry entry : convertedEntries) {
+				trafficScheduleEntryRepository.save(entry);
+			}
+			return "Traffic schedule saved successfully.";
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while saving the TrafficScheduleEntry: {}", e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to save TrafficScheduleEntry. Data access error occurred.");
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while saving the TrafficScheduleEntry: {}", e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to save TrafficScheduleEntry. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public String updateSchedule(TrafficScheduleRequest trafficScheduleRequest) {
+		try {
+			List<TrafficScheduleEntry> convertRequest = ConvertRequest(trafficScheduleRequest);
+			for (TrafficScheduleEntry entry : convertRequest) {
+				if (trafficScheduleEntryRepository.existsById(entry.getId())) {
+					trafficScheduleEntryRepository.save(entry);
+				} else {
+					throw new SmscNotFoundException("Traffic schedule not found with ID: " + entry.getId());
+				}
+			}
+			return "Traffic schedule updated successfully.";
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while updating the TrafficScheduleEntry: {}", e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to update TrafficScheduleEntry. Data access error occurred.");
+		} catch (SmscNotFoundException e) {
+			logger.error("TrafficScheduleNotFoundException: {}", e.getMessage(), e);
+			throw e;
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while updating the TrafficScheduleEntry: {}", e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to update TrafficScheduleEntry. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public String deleteSchedule(int scheduleId) {
+		try {
+			if (trafficScheduleEntryRepository.existsById(scheduleId)) {
+				trafficScheduleEntryRepository.deleteById(scheduleId);
+				return "Traffic schedule with ID " + scheduleId + " deleted successfully.";
+			} else {
+				logger.error("Traffic schedule with ID {} does not exist", scheduleId);
+				throw new SmscNotFoundException("Traffic schedule with ID " + scheduleId + " not found.");
+			}
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while deleting the TrafficScheduleEntry: {}", e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to delete TrafficScheduleEntry. Data access error occurred.");
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while deleting the TrafficScheduleEntry: {}", e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to delete TrafficScheduleEntry. Unexpected error occurred.");
+		}
+	}
+
+	public Map<String, TrafficScheduleEntry> listSchedule() {
+		try {
+			List<TrafficScheduleEntry> list = trafficScheduleEntryRepository.findAll();
+			Map<String, TrafficScheduleEntry> map = new HashMap<>();
+			for (TrafficScheduleEntry entry : list) {
+				setDayName(entry);
+				setSmscNameAndAddToMap(entry, map);
+			}
+			return map;
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while fetching the list of TrafficScheduleEntries: {}",
+					e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to list TrafficScheduleEntries. Data access error occurred.");
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while fetching the list of TrafficScheduleEntries: {}",
+					e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to list TrafficScheduleEntries. Unexpected error occurred.");
+		}
+	}
+
+	private void setDayName(TrafficScheduleEntry entry) {
+		Map<Integer, String> daysMap = Map.of(0, "EveryDay", 1, "Sunday", 2, "Monday", 3, "Tuesday", 4, "Wednesday", 5,
+				"Thursday", 6, "Friday", 7, "Saturday");
+		entry.setDayName(daysMap.getOrDefault(entry.getDay(), "Unknown"));
+	}
+
+	private void setSmscNameAndAddToMap(TrafficScheduleEntry entry, Map<String, TrafficScheduleEntry> map) {
+		Optional<SmscEntry> smscEntry = smscEntryRepository.findById(entry.getSmscId());
+		if (smscEntry.isPresent()) {
+			entry.setSmscName(smscEntry.get().getName());
+			map.put(entry.getSmscId() + "#" + entry.getDay(), entry);
+		}
+	}
+
+	@Override
+	public String saveLoopingRule(SmscLoopingRequest smscLoopingRequest) {
+		try {
+			SmscLooping convertRequest = ConvertRequest(smscLoopingRequest);
+			smscLoopingRepository.save(convertRequest);
+			return "SmscLooping entry saved successfully";
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while saving the SmscLooping entry: {}", e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to save SmscLooping entry. Data access error occurred.");
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while saving the SmscLooping entry: {}", e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to save SmscLooping entry. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public String updateLoopingRule(SmscLoopingRequest smscLoopingRequest) {
+		try {
+			SmscLooping convertRequest = ConvertRequest(smscLoopingRequest);
+			if (smscLoopingRepository.existsById(convertRequest.getSmscId())) {
+				smscLoopingRepository.save(convertRequest);
+				return "SmscLooping entry updated successfully";
+			} else {
+				throw new SmscNotFoundException("SmscLooping entry with the provided ID not found");
+			}
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while updating the SmscLooping entry", e);
+			throw new SmscDataAccessException("Failed to update SmscLooping entry. Data access error occurred.");
+		} catch (SmscNotFoundException e) {
+			logger.error("SmscNotFoundException: {}", e.getMessage(), e);
+			throw e;
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while updating the SmscLooping entry", e);
+			throw new SmscInternalServerException("Failed to update SmscLooping entry. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public String deleteLoopingRule(int smscId) {
+		try {
+			if (smscLoopingRepository.existsById(smscId)) {
+				smscLoopingRepository.deleteById(smscId);
+				return "SmscLooping entry deleted successfully";
+			} else {
+				throw new SmscNotFoundException("SmscLooping entry with the provided ID not found");
+			}
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while deleting the SmscLooping entry: {}", e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to delete SmscLooping entry. Data access error occurred.");
+		} catch (SmscNotFoundException e) {
+			logger.error("SmscLooping entry not found: {}", e.getMessage(), e);
+			throw e;
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while deleting the SmscLooping entry: {}", e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to delete SmscLooping entry. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public SmscLooping getLoopingRule(int smscId) {
+		try {
+			Optional<SmscLooping> loopingRule = smscLoopingRepository.findBySmscId((long) smscId);
+			if (loopingRule.isPresent()) {
+				return loopingRule.get();
+			} else {
+				throw new SmscNotFoundException("SmscLooping rule not found with ID: " + smscId);
+			}
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while retrieving the SmscLooping rule: {}", e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to retrieve SmscLooping rule. Data access error occurred.");
+		} catch (SmscNotFoundException e) {
+			logger.error("SmscNotFoundException: {}", e.getMessage(), e);
+			throw e;
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while retrieving the SmscLooping rule: {}", e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to retrieve SmscLooping rule. Unexpected error occurred.");
+		}
+	}
+
+	@Override
+	public List<SmscLooping> listLoopingRule() {
+		try {
+			return smscLoopingRepository.findAll();
+		} catch (DataAccessException e) {
+			logger.error("A data access error occurred while listing SmscLooping rules: {}", e.getMessage(), e);
+			throw new SmscDataAccessException("Failed to list SmscLooping rules. Data access error occurred.");
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred while listing SmscLooping rules: {}", e.getMessage(), e);
+			throw new SmscInternalServerException("Failed to list SmscLooping rules. Unexpected error occurred.");
 		}
 	}
 
@@ -275,378 +878,88 @@ public class SmscDAOImpl implements SmscDAO {
 		}
 	}
 
-	
-	@Override
-	public List<StatusEntry> listBound(boolean bound) {
+	public List<LimitEntry> ConvertRequest(LimitRequest limitRequest) {
+
+		LimitEntry limit = null;
 		try {
-			List<StatusEntry> list;
-			if (bound) {
-				list = statusEntryRepository.findByBound(bound);
-			} else {
-				list = statusEntryRepository.findAll();
+			limit = new LimitEntry();
+			List<LimitEntry> list = new java.util.ArrayList<LimitEntry>();
+			int networkId[] = limitRequest.getNetworkId();
+			for (int i = 0; i < networkId.length; i++) {
+				limit.setSmscId(limitRequest.getSmscId());
+				limit.setNetworkId(networkId[i]);
+				limit.setLimit(limitRequest.getLimit());
+				limit.setRerouteId(limitRequest.getRerouteId());
+				limit.setResetTime(limitRequest.getResetTime());
+				limit.setAlertEmail(limitRequest.getAlertEmail());
+				limit.setAlertNumber(limitRequest.getAlertNumber());
+				limit.setAlertSender(limitRequest.getAlertSender());
+				list.add(limit);
 			}
+
+			logger.info("Converted LimitRequest to LimitEntry successfully");
 			return list;
 		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to list Smsc Status Records", e);
+			logger.error("Error occurred while converting LimitRequest to LimitEntry: {}", e.getMessage());
+			throw new RuntimeException("Error occurred while converting LimitRequest to LimitEntry", e);
+
 		}
 	}
 
-	@Override
-	public List<CustomEntry> listCustom() {
+	public SmscLooping ConvertRequest(SmscLoopingRequest smscLoopingRequest) {
+
+		SmscLooping smscLooping = null;
 		try {
-			List<CustomEntry> list = customEntryRepository.findAll();
+			smscLooping = new SmscLooping();
+			smscLooping.setActive(smscLoopingRequest.isActive());
+			smscLooping.setCount(smscLoopingRequest.getCount());
+			smscLooping.setDuration(smscLoopingRequest.getDuration());
+			// smscLooping.setRerouteSmsc(smscLoopingRequest.);
+			smscLooping.setRerouteSmscId(smscLoopingRequest.getRerouteSmscId());
+			smscLooping.setSenderId(smscLoopingRequest.getSenderId());
+			// smscLooping.setSmsc(smscLoopingRequest.);
+			smscLooping.setSmscId(smscLoopingRequest.getSmscId());
+			logger.info("Converted SmscLoopingRequest to SmscLooping successfully");
+			return smscLooping;
+		} catch (Exception e) {
+			logger.error("Error occurred while converting SmscLoopingRequest to SmscLooping: {}", e.getMessage());
+			throw new RuntimeException("Error occurred while converting SmscLoopingRequest to SmscLooping", e);
+
+		}
+	}
+
+	public List<TrafficScheduleEntry> ConvertRequest(TrafficScheduleRequest trafficScheduleRequest) {
+
+		try {
+			int[] smscId = trafficScheduleRequest.getSmscId();
+			String[] gmt = trafficScheduleRequest.getGmt();
+			int[] day = trafficScheduleRequest.getDay();
+			String[] duration = trafficScheduleRequest.getDuration();
+			String[] downTime = trafficScheduleRequest.getDownTime();
+
+			Map<String, TrafficScheduleEntry> map = listSchedule();
+
+			List<TrafficScheduleEntry> list = new ArrayList<TrafficScheduleEntry>();
+			for (int i = 0; i < smscId.length; i++) {
+				if (map != null && !map.isEmpty()) {
+					if (map.containsKey(smscId[i] + "#" + day[i])) {
+						logger.info(smscId[i] + "#" + day[i] + " Entry Already Exist. Skipping");
+						continue;
+					}
+				}
+				list.add(new TrafficScheduleEntry(smscId[i], gmt[i], day[i], duration[i], downTime[i]));
+
+			}
+			logger.info("Converted TrafficScheduleRequest to TrafficScheduleEntry successfully");
+
 			return list;
 		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to list Smsc Custom Entry Records", e);
+			logger.error("Error occurred while converting TrafficScheduleRequest to TrafficScheduleEntry: {}",
+					e.getMessage());
+			throw new RuntimeException("Error occurred while converting TrafficScheduleRequest to TrafficScheduleEntry",
+					e);
+
 		}
 	}
 
-	@Override
-
-	public CustomEntry getCustomEntry(int smscId) {
-		try {
-			Optional<CustomEntry> optionalEntry = customEntryRepository.findById(smscId);
-			if (optionalEntry.isPresent()) {
-				CustomEntry entry = optionalEntry.get();
-				return entry;
-			} else {
-				throw new Exception("Smsc CustomEntry with ID " + smscId + " not found");
-			}
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to retrieve Smsc CustomEntry with ID: " + smscId, e);
-		}
-	}
-
-	@Override
-	public String saveCustom(CustomRequest customRequest) {
-		try {
-			CustomEntry convertedRequest = ConvertRequest(customRequest);
-			customEntryRepository.save(convertedRequest);
-			logger.info("CustomEntry saved successfully");
-			return "successfully saved....";
-		} catch (Exception e) {
-			logger.error("An error occurred while saving the CustomEntry: {}", e.getMessage(), e);
-			throw new RuntimeException("Failed to save CustomEntry", e);
-		}
-	}
-
-	@Override
-	public void updateCustom(CustomEntry entry) {
-		try {
-			customEntryRepository.save(entry);
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to update CustomEntry: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public void deleteCustom(CustomEntry entry) {
-		try {
-			customEntryRepository.delete(entry);
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to delete CustomEntry: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public void saveLimit(LimitEntry entry) {
-		try {
-			limitEntryRepository.save(entry);
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to save LimitEntry: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public void updateLimit(List<LimitEntry> list) {
-		try {
-			int i = 0;
-			for (LimitEntry entry : list) {
-				limitEntryRepository.save(entry);
-				if (++i % 10 == 0) {
-					// flush a batch of inserts and release memory:
-					limitEntryRepository.flush();
-					entityManager.clear();
-				}
-			}
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to update LimitEntry: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public void deleteLimit(List<LimitEntry> list) {
-		try {
-			int i = 0;
-			for (LimitEntry entry : list) {
-				limitEntryRepository.delete(entry);
-				if (++i % 10 == 0) {
-					// flush a batch of deletes and release memory:
-					limitEntryRepository.flush();
-					entityManager.clear();
-				}
-			}
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to delete LimitEntry: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public List<LimitEntry> listLimit() {
-		try {
-			List<LimitEntry> list = limitEntryRepository.findAll();
-			return list;
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to list Smsc limit Entries: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public String saveGroup(GroupRequest groupRequest) {
-		try {
-			int i = 0;
-			List<GroupEntry> convertedRequest = ConvertRequest(groupRequest);
-
-			groupEntryRepository.saveAll(convertedRequest);
-			if (++i % 10 == 0) {
-				groupEntryRepository.flush();
-				entityManager.clear();
-			}
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to save GroupEntry: " + e.getMessage(), e);
-		}
-		return "save successfully ...";
-	}
-
-	@Override
-	public void updateGroup(List<GroupEntry> list) {
-		try {
-			int i = 0;
-			for (GroupEntry entry : list) {
-				groupEntryRepository.save(entry);
-				if (++i % 10 == 0) {
-					// flush a batch of inserts and release memory:
-					groupEntryRepository.flush();
-					entityManager.clear();
-				}
-			}
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to update GroupEntry: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public void deleteGroup(GroupEntry entry) {
-		try {
-			groupEntryRepository.delete(entry);
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to delete GroupEntry: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public List<GroupEntry> listGroup() {
-		try {
-			List<GroupEntry> list = groupEntryRepository.findAll();
-			return list;
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to list Group Entries: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public String saveGroupMember(GroupMemberRequest groupMemberRequest) {
-		try {
-			List<GroupMemberEntry> convertRequest = ConvertRequest(groupMemberRequest);
-			int batchSize = 10;
-			int count = 0;
-
-			for (GroupMemberEntry entry : convertRequest) {
-				groupMemberEntryRepository.save(entry);
-				if (++count % batchSize == 0) {
-					groupMemberEntryRepository.flush();
-					entityManager.clear();
-				}
-			}
-			return "Group members saved successfully.";
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to save GroupMemberEntry: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public void updateGroupMember(List<GroupMemberEntry> list) {
-		try {
-			int i = 0;
-			for (GroupMemberEntry entry : list) {
-				groupMemberEntryRepository.save(entry);
-				if (++i % 10 == 0) {
-					// flush a batch of inserts and release memory:
-					groupMemberEntryRepository.flush();
-					entityManager.clear();
-				}
-			}
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to update GroupMemberEntry: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public void deleteGroupMember(Collection<GroupMemberEntry> list) {
-		try {
-			int i = 0;
-			for (GroupMemberEntry entry : list) {
-				groupMemberEntryRepository.delete(entry);
-				if (++i % 10 == 0) {
-					// flush a batch of deletes and release memory:
-					groupMemberEntryRepository.flush();
-					entityManager.clear();
-				}
-			}
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to delete GroupMemberEntry: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public List<GroupMemberEntry> listGroupMember(int groupId) {
-		try {
-			List<GroupMemberEntry> list = groupMemberEntryRepository.findByGroupId(groupId);
-			return list;
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to list Group Member Entries: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public void saveSchedule(List<TrafficScheduleEntry> list) {
-		try {
-			int i = 0;
-			for (TrafficScheduleEntry entry : list) {
-				trafficScheduleEntryRepository.save(entry);
-				if (++i % 10 == 0) {
-					// flush a batch of inserts and release memory:
-					trafficScheduleEntryRepository.flush();
-					entityManager.clear();
-				}
-			}
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to save TrafficScheduleEntry: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public void updateSchedule(List<TrafficScheduleEntry> list) {
-		try {
-			int i = 0;
-			for (TrafficScheduleEntry entry : list) {
-				trafficScheduleEntryRepository.save(entry);
-				if (++i % 10 == 0) {
-					// flush a batch of inserts and release memory:
-					trafficScheduleEntryRepository.flush();
-					entityManager.clear();
-				}
-			}
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to update TrafficScheduleEntry: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public void deleteSchedule(List<TrafficScheduleEntry> list) {
-		try {
-			int i = 0;
-			for (TrafficScheduleEntry entry : list) {
-				trafficScheduleEntryRepository.delete(entry);
-				if (++i % 10 == 0) {
-					// flush a batch of deletes and release memory:
-					trafficScheduleEntryRepository.flush();
-					entityManager.clear();
-				}
-			}
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to delete TrafficScheduleEntry: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public List<TrafficScheduleEntry> listSchedule() {
-		try {
-			List<TrafficScheduleEntry> list = trafficScheduleEntryRepository.findAll();
-			return list;
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to list TrafficScheduleEntries: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public void saveLoopingRule(SmscLooping entry) {
-		try {
-			smscLoopingRepository.save(entry);
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to save SmscLooping entry: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public void updateLoopingRule(SmscLooping entry) {
-		try {
-			smscLoopingRepository.save(entry);
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to update SmscLooping entry: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public void deleteLoopingRule(SmscLooping entry) {
-		try {
-			smscLoopingRepository.delete(entry);
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to delete SmscLooping entry: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public SmscLooping getLoopingRule(int smscId) {
-		try {
-			return smscLoopingRepository.findBySmscId((long) smscId).orElse(null);
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to retrieve SmscLooping rule: " + e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public List<SmscLooping> listLoopingRule() {
-		try {
-			return smscLoopingRepository.findAll();
-		} catch (Exception e) {
-			// Handle exceptions here
-			throw new RuntimeException("Failed to list SmscLooping rules: " + e.getMessage(), e);
-		}
-	}
 }

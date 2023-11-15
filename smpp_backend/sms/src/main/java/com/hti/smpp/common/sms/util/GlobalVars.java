@@ -20,6 +20,7 @@ import com.hti.smpp.common.route.dto.HlrRouteEntry;
 import com.hti.smpp.common.route.dto.OptionalRouteEntry;
 import com.hti.smpp.common.sms.service.SmscDAService;
 import com.hti.smpp.common.sms.session.SessionHandler;
+import com.hti.smpp.common.smsc.dto.SmscEntry;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 
@@ -47,4 +48,5 @@ public class GlobalVars {
 	public static Map<String, Integer> PrefixMapping = Collections.synchronizedMap(new HashMap<String, Integer>());
 
 	public static Map<Integer, BatchObject> BatchQueue;
+	
 }
