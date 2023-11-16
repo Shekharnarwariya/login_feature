@@ -26,6 +26,8 @@
 		<module>twoway</module>
 		<module>login-security</module>
 		<module>user</module>
-		
+		<module>hlr-smsc</module>
+		<module>smsc</module>
+
 	</modules>
 </project>
