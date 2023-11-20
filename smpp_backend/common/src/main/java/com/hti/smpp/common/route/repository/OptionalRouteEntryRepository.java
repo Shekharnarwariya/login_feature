@@ -8,4 +8,6 @@ import com.hti.smpp.common.route.dto.OptionalRouteEntry;
 @Repository
 public interface OptionalRouteEntryRepository extends JpaRepository<OptionalRouteEntry, Integer> {
 
+	public OptionalRouteEntry findByRouteId(int id);
+
 }

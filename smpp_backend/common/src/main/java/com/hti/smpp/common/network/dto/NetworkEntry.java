@@ -12,7 +12,6 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "network")
-
 public class NetworkEntry implements Serializable {
 	@Id
 	@Column(name = "id")

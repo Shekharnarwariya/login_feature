@@ -26,35 +26,7 @@ public final class IConstants {
 //	public static final String WEBAPP_DIR = TOMCAT_DIR + ContextListener.property.getProperty("tomcat.app.dir");
 //	public static final String FORMAT_DIR = TOMCAT_DIR + ContextListener.property.getProperty("tomcat.format.dir");
 	public static final String SCHEDULE_DIR = TOMCAT_DIR + "bin//schedule//";
-//	// ------------ Prefix Settings ---------------
-//	public static final int PREFIX_APPLY = Integer.parseInt(ContextListener.property.getProperty("load.prefix.apply"));
-//	public static final int PREFIX_TO_APPLY = Integer
-//			.parseInt(ContextListener.property.getProperty("load.prefix.value"));
-//	public static final int NUMBER_LENGTH = Integer
-//			.parseInt(ContextListener.property.getProperty("load.number.length"));
-//	// ----------- balance multiply limit for reseller ------
-//	public static final int BALANCE__MULTIPLY_LIMIT = Integer
-//			.parseInt(ContextListener.property.getProperty("load.balance.multiply"));
-//	// --------------------------------------------
-//	public static final String DEFAULT_GMT = ContextListener.property.getProperty("load.gmt");
-//	public static final String DEFAULT_GMT_VALUE = ContextListener.property.getProperty("load.gmt.value");
-//	public static final String AccessIP = ContextListener.property.getProperty("load.accessIP");
-//	public static final String CRM_ACCESS_IP = ContextListener.property.getProperty("load.crm_api_ip");
-//	public static final String GLOBAl_ACCESS_IP = ContextListener.property.getProperty("load.global_ip");
-//	public static final int LOGIN_OTP_VALIDITY = Integer
-//			.parseInt(ContextListener.property.getProperty("load.login.otp.validity"));
-//	public static final int PASSWORD_OTP_VALIDITY = Integer
-//			.parseInt(ContextListener.property.getProperty("load.pwd.otp.validity"));
-//	public static final int PASSWORD_LINK_VALIDITY = Integer
-//			.parseInt(ContextListener.property.getProperty("load.pwd.link.validity"));
-//	public static final int PASSWORD_EXPIRY_DAYS = Integer
-//			.parseInt(ContextListener.property.getProperty("load.pwd.expire.days"));
-//	public static final int LOGIN_ATTEMPT_LIMIT = Integer
-//			.parseInt(ContextListener.property.getProperty("load.login.attempt"));
-//	public static final String WEB_LINK_TRACKING_POST_URL = ContextListener.property
-//			.getProperty("load.tracking.post.url");
-//	public static final String WEB_LINK_TRACKING_URL = ContextListener.property.getProperty("load.tracking.url");
-//	public static final String smsc = ContextListener.property.getProperty("load.smsc");
+
 	public static final String SUCCESS_KEY = "success";
 //	public static final String SHEDULE_MORE_KEY = ContextListener.property.getProperty("load.shedule_more");
 	public static final String FAILURE_KEY = "failure";

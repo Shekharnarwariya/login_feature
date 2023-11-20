@@ -8,4 +8,6 @@ import com.hti.smpp.common.route.dto.HlrRouteEntry;
 @Repository
 public interface HlrRouteEntryRepository extends JpaRepository<HlrRouteEntry, Integer> {
 
+	public HlrRouteEntry findByRouteId(int id);
+
 }
