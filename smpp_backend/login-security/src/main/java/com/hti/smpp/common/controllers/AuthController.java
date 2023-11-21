@@ -88,7 +88,7 @@ public class AuthController {
 
 	@PostMapping("/login")
 	public JwtResponse authenticateUser(@RequestBody LoginRequest loginRequest) {
-
+		System.out.println("call api login......");
 		Authentication authentication = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 

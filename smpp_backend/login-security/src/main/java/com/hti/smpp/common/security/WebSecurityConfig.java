@@ -39,7 +39,7 @@ public class WebSecurityConfig {
 	}
 
 	private final String[] PUBLIC_URL = { "/swagger-ui/**", "/webjars/**", "/swagger-resources/**", "/v3/api-docs/**",
-			"/routes/**", "/generate-token", };
+			"/auth/login" ,"/auth/signup"};
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

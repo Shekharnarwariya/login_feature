@@ -31,6 +31,37 @@ public class RouteEntryExt {
 	public RouteEntryExt() {
 	}
 
+	public RouteEntryExt(RouteEntry basic, String systemId, String masterId, String accountType, String currency,
+			String smsc, String group, String country, String operator, String mcc, String mnc, double smscCost,
+			String oldCost, String costStr, String remarks, String numSmsc, String backupSmsc, String regSmsc,
+			String regGroup, double masterCost, boolean optional, HlrRouteEntry hlrRouteEntry,
+			OptionalRouteEntry routeOptEntry) {
+		super();
+		this.basic = basic;
+		this.systemId = systemId;
+		this.masterId = masterId;
+		this.accountType = accountType;
+		this.currency = currency;
+		this.smsc = smsc;
+		this.group = group;
+		this.country = country;
+		this.operator = operator;
+		this.mcc = mcc;
+		this.mnc = mnc;
+		this.smscCost = smscCost;
+		this.oldCost = oldCost;
+		this.costStr = costStr;
+		this.remarks = remarks;
+		this.numSmsc = numSmsc;
+		this.backupSmsc = backupSmsc;
+		this.regSmsc = regSmsc;
+		this.regGroup = regGroup;
+		this.masterCost = masterCost;
+		this.optional = optional;
+		this.hlrRouteEntry = hlrRouteEntry;
+		this.routeOptEntry = routeOptEntry;
+	}
+
 	public RouteEntryExt(RouteEntry basic) {
 		this.basic = basic;
 	}
@@ -222,4 +253,5 @@ public class RouteEntryExt {
 	public String toString() {
 		return "RouteEntryExt: " + basic.toString();
 	}
+	
 }
