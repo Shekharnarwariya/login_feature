@@ -12,6 +12,8 @@ import com.hti.smpp.common.request.OptEntryArrForm;
 import com.hti.smpp.common.request.RouteRequest;
 import com.hti.smpp.common.services.RouteServices;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 @RestController
@@ -22,15 +24,19 @@ public class RouteController {
 	private RouteServices routeService;
 
 	@PostMapping("/save")
-	public ResponseEntity<String> saveRoute(@RequestBody RouteRequest routeRequest,
-			@RequestHeader("username") String username) {
+	@Operation(summary = "Save a route")
+	public ResponseEntity<String> saveRoute(
+			@RequestBody(description = "Route request object") RouteRequest routeRequest,
+			@Parameter(description = "Username in request header", required = true) @RequestHeader("username") String username) {
 		String savedRoute = routeService.saveRoute(routeRequest, username);
 		return new ResponseEntity<>(savedRoute, HttpStatus.CREATED);
 	}
 
 	@PostMapping("/updateOptionalRoute")
-	public ResponseEntity<String> updateOptionalRoute(@RequestBody OptEntryArrForm optEntryArrForm,
-			@RequestHeader("username") String username) {
+	@Operation(summary = "Update an optional route")
+	public ResponseEntity<String> updateOptionalRoute(
+			@RequestBody(description = "Optional entry array form") OptEntryArrForm optEntryArrForm,
+			@Parameter(description = "Username in request header", required = true) @RequestHeader("username") String username) {
 		try {
 			routeService.updateOptionalRoute(optEntryArrForm, username);
 			return new ResponseEntity<>("Update successfully", HttpStatus.OK);
