@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hti.smpp.common.email.EmailSender;
-import com.hti.smpp.common.exception.InvalidOtpException;
 import com.hti.smpp.common.exception.InvalidPasswordException;
 import com.hti.smpp.common.exception.NullValueException;
 import com.hti.smpp.common.login.dto.ERole;
@@ -32,7 +32,6 @@ import com.hti.smpp.common.login.dto.User;
 import com.hti.smpp.common.login.repository.RoleRepository;
 import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.payload.request.LoginRequest;
-import com.hti.smpp.common.payload.request.PasswordForgotRequest;
 import com.hti.smpp.common.payload.request.PasswordUpdateRequest;
 import com.hti.smpp.common.payload.request.SignupRequest;
 import com.hti.smpp.common.payload.response.JwtResponse;
@@ -228,45 +227,51 @@ public class AuthController {
 		return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
 	}
 
-	@GetMapping("/password/forgot")
-	public ResponseEntity<?> forgotPassword(@Valid @RequestBody PasswordForgotRequest passwordForgotRequest,
-			HttpSession session) {
-		// Validate OTP
+	@PostMapping("/otp/validate")
+	public ResponseEntity<String> validateOTP(@RequestParam String otp, HttpSession session) {
 		String sessionOtp = (String) session.getAttribute("otp");
-		if (sessionOtp == null || !sessionOtp.equals(passwordForgotRequest.getOtp())) {
-			throw new InvalidOtpException("Error: Please Enter a Valid OTP!");
-		}
 
+		if (sessionOtp == null || !sessionOtp.equals(otp)) {
+			return new ResponseEntity<>("Error: Please Enter a Valid OTP!", HttpStatus.BAD_REQUEST);
+		} else {
+			// Remove OTP from Session
+			session.removeAttribute("otp");
+			// Successful validation
+			return new ResponseEntity<>("OTP validation successful. Please proceed.", HttpStatus.OK);
+		}
+	}
+
+	@GetMapping("/password/forgot")
+	public ResponseEntity<?> forgotPassword(@RequestParam String newPassword, HttpSession session) {
+		String email = (String) session.getAttribute("email");
 		// Find User by Email
-		Optional<User> userOptional = userRepository.findByEmail(passwordForgotRequest.getEmail());
+		Optional<User> userOptional = userRepository.findByEmail(email);
 		if (userOptional.isEmpty()) {
 			throw new NullValueException("Error: User Not Found!");
 		}
 
 		// Update User Password
 		User user = userOptional.get();
-		user.setPassword(encoder.encode(passwordForgotRequest.getNewPassword()));
+		user.setPassword(encoder.encode(newPassword));
 		userRepository.save(user);
 		if (EmailValidator.isEmailValid(user.getEmail()))
 			emailSender.sendEmail(user.getEmail(), Constant.PASSWORD_FORGOT_SUBJECT, Constant.TEMPLATE_PATH,
-					emailSender.createSourceMap(Constant.MESSAGE_FOR_FORGOT_PASSWORD, "username:- " + user.getUsername()
-							+ "  password:- " + passwordForgotRequest.getNewPassword()));
-		// Remove OTP from Session
-		session.removeAttribute("otp");
+					emailSender.createSourceMap(Constant.MESSAGE_FOR_FORGOT_PASSWORD,
+							"username:- " + user.getUsername() + "  password:- " + newPassword));
 
 		return ResponseEntity.ok(new MessageResponse("Password Reset Successfully!"));
 	}
 
 	@PostMapping("/send/otp")
-	public ResponseEntity<?> sendOTP(@RequestParam String email, HttpSession session) {
-		Optional<User> userOptional = userRepository.findByEmail(email);
+	public ResponseEntity<?> sendOTP(@RequestParam String username, HttpSession session) {
+		Optional<User> userOptional = userRepository.findByUsername(username);
 		if (userOptional.isPresent()) {
 			String generateOTP = OTPGenerator.generateOTP(6);
 			session.setAttribute("otp", generateOTP);
+			session.setAttribute("email", userOptional.get().getEmail());
 			session.setMaxInactiveInterval(120);
-			if (EmailValidator.isEmailValid(email))
-				emailSender.sendEmail(email, Constant.OTP_SUBJECT, Constant.TEMPLATE_PATH,
-						emailSender.createSourceMap(Constant.MESSAGE_FOR_OTP, generateOTP));
+			emailSender.sendEmail(userOptional.get().getEmail(), Constant.OTP_SUBJECT, Constant.TEMPLATE_PATH,
+					emailSender.createSourceMap(Constant.MESSAGE_FOR_OTP, generateOTP));
 
 			return ResponseEntity.ok(new MessageResponse("OTP Sent Successfully!"));
 		} else {
