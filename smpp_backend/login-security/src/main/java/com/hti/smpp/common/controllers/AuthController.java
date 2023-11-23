@@ -48,7 +48,6 @@ import com.hti.smpp.common.util.Constant;
 import com.hti.smpp.common.util.EmailValidator;
 import com.hti.smpp.common.util.OTPGenerator;
 
-import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
@@ -76,12 +75,16 @@ public class AuthController {
 
 	@Autowired
 	private UserEntryRepository userEntryRepository;
+
 	@Autowired
 	private WebMasterEntryRepository webMasterEntryRepository;
+
 	@Autowired
 	private DlrSettingEntryRepository dlrSettingEntryRepository;
+
 	@Autowired
 	private ProfessionEntryRepository professionEntryRepository;
+
 	@Autowired
 	private BalanceEntryRepository balanceEntryRepository;
 
@@ -228,33 +231,28 @@ public class AuthController {
 	}
 
 	@PostMapping("/otp/validate")
-	public ResponseEntity<String> validateOTP(@RequestParam String otp, HttpSession session) {
-		System.out.println("OTP ......." + otp);
-		String sessionOtp = (String) session.getAttribute("otp");
-		Long otpTimestamp = (Long) session.getAttribute("otpTimestamp");
+	public ResponseEntity<String> validateOtp(@RequestParam String username, @RequestParam String otp) {
+		System.out.println("username..........." + username);
+		System.out.println("OTP ................" + otp);
+		Optional<User> optionalUser = userRepository.findByUsername(username);
 
-		if (sessionOtp == null || otpTimestamp == null || !sessionOtp.equals(otp)) {
-			return new ResponseEntity<>("Error: Please Enter a Valid OTP!", HttpStatus.BAD_REQUEST);
-		} else {
-			// Check if OTP is still valid (within 2 minutes)
-			long currentTime = System.currentTimeMillis();
-			if (currentTime - otpTimestamp > 2 * 60 * 1000) { // 2 minutes in milliseconds
-				// OTP expired, remove from session
-				session.removeAttribute("otp");
-				session.removeAttribute("otpTimestamp");
-				return new ResponseEntity<>("Error: OTP has expired!", HttpStatus.BAD_REQUEST);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (user.getOtpSecretKey().equals(otp)) {
+				return ResponseEntity.ok("OTP validation successful. Please proceed.");
+			} else {
+				return ResponseEntity.badRequest().body("Error: Invalid OTP or OTP has expired.");
 			}
-			System.out.println("OTP validation successful .please proceed......");
-			// Successful validation
-			return new ResponseEntity<>("OTP validation successful. Please proceed.", HttpStatus.OK);
+		} else {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
 		}
 	}
 
-	@GetMapping("/password/forgot")
-	public ResponseEntity<?> forgotPassword(@RequestParam String newPassword, HttpSession session) {
-		String email = (String) session.getAttribute("email");
-		// Find User by Email
-		Optional<User> userOptional = userRepository.findByEmail(email);
+	@PostMapping("/password/forgot")
+	public ResponseEntity<?> forgotPassword(@RequestParam String newPassword, @RequestParam String username) {
+		System.out.println("username..........." + username);
+		System.out.println("newPassword ................" + newPassword);
+		Optional<User> userOptional = userRepository.findByUsername(username);
 		if (userOptional.isEmpty()) {
 			throw new NullValueException("Error: User Not Found!");
 		}
@@ -272,23 +270,32 @@ public class AuthController {
 	}
 
 	@PostMapping("/send/otp")
-	public ResponseEntity<?> sendOTP(@RequestParam String username, HttpSession session) {
-		Optional<User> userOptional = userRepository.findByUsername(username);
-		if (userOptional.isPresent()) {
-			String generateOTP = OTPGenerator.generateOTP(6);
+	public ResponseEntity<?> sendOTP(@RequestParam String username) {
+		try {
+			Optional<User> userOptional = userRepository.findByUsername(username);
 
-			// Store OTP and timestamp in the session
-			session.setAttribute("otp", generateOTP);
-			session.setAttribute("otpTimestamp", System.currentTimeMillis()); // Current timestamp
-			session.setAttribute("email", userOptional.get().getEmail());
-			session.setMaxInactiveInterval(120); // Set session timeout to 2 minutes
+			if (userOptional.isPresent()) {
+				// Generate OTP
+				String generateOTP = OTPGenerator.generateOTP(6);
 
-			emailSender.sendEmail(userOptional.get().getEmail(), Constant.OTP_SUBJECT, Constant.TEMPLATE_PATH,
-					emailSender.createSourceMap(Constant.MESSAGE_FOR_OTP, generateOTP));
+				// Set OTP Secret Key for User
+				User user = userOptional.get();
+				user.setOtpSecretKey(generateOTP);
 
-			return ResponseEntity.ok(new MessageResponse("OTP Sent Successfully!"));
-		} else {
-			throw new NullValueException("Error: User Not Found!");
+				// Send Email with OTP
+				emailSender.sendEmail(user.getEmail(), Constant.OTP_SUBJECT, Constant.TEMPLATE_PATH,
+						emailSender.createSourceMap(Constant.MESSAGE_FOR_OTP, generateOTP));
+
+				// Save User with Updated OTP
+				userRepository.save(user);
+
+				return ResponseEntity.ok(new MessageResponse("OTP Sent Successfully!"));
+			} else {
+				throw new NullValueException("Error: User Not Found!");
+			}
+		} catch (Exception e) {
+			// Handle exceptions, log or return appropriate error response
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error sending OTP: " + e.getMessage());
 		}
 	}
 

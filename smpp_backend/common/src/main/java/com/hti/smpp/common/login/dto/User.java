@@ -42,6 +42,16 @@ public class User {
 
 	private String Base64Password;
 
+	private String otpSecretKey;
+
+	public String getOtpSecretKey() {
+		return otpSecretKey;
+	}
+
+	public void setOtpSecretKey(String otpSecretKey) {
+		this.otpSecretKey = otpSecretKey;
+	}
+
 	public Long getSystem_id() {
 		return system_id;
 	}
