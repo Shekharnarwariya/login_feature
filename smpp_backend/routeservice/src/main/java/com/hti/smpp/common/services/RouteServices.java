@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.hti.smpp.common.request.OptEntryArrForm;
 import com.hti.smpp.common.request.RouteRequest;
 import com.hti.smpp.common.request.SearchCriteria;
+import com.hti.smpp.common.responce.OptionRouteResponse;
 import com.hti.smpp.common.route.dto.HlrEntryLog;
 import com.hti.smpp.common.route.dto.HlrRouteEntry;
 import com.hti.smpp.common.route.dto.OptionalEntryLog;
@@ -22,7 +23,11 @@ public interface RouteServices {
 
 	public String saveRoute(RouteRequest RouteRequest, String username);
 
-	public String updateOptionalRoute(OptEntryArrForm optEntryArrForm, String username);
+	public OptionRouteResponse updateOptionalRoute(OptEntryArrForm optEntryArrForm, String username);
+
+	public OptionRouteResponse undo(OptEntryArrForm optEntryArrForm, String username);
+
+	public OptionRouteResponse previous(OptEntryArrForm optEntryArrForm, String username);
 
 	public void saveRouteEntry(RouteEntryExt entry);
 

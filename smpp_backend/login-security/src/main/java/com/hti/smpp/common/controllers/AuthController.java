@@ -230,12 +230,19 @@ public class AuthController {
 	@PostMapping("/otp/validate")
 	public ResponseEntity<String> validateOTP(@RequestParam String otp, HttpSession session) {
 		String sessionOtp = (String) session.getAttribute("otp");
+		Long otpTimestamp = (Long) session.getAttribute("otpTimestamp");
 
-		if (sessionOtp == null || !sessionOtp.equals(otp)) {
+		if (sessionOtp == null || otpTimestamp == null || !sessionOtp.equals(otp)) {
 			return new ResponseEntity<>("Error: Please Enter a Valid OTP!", HttpStatus.BAD_REQUEST);
 		} else {
-			// Remove OTP from Session
-			session.removeAttribute("otp");
+			// Check if OTP is still valid (within 2 minutes)
+			long currentTime = System.currentTimeMillis();
+			if (currentTime - otpTimestamp > 2 * 60 * 1000) { // 2 minutes in milliseconds
+				// OTP expired, remove from session
+				session.removeAttribute("otp");
+				session.removeAttribute("otpTimestamp");
+				return new ResponseEntity<>("Error: OTP has expired!", HttpStatus.BAD_REQUEST);
+			}
 			// Successful validation
 			return new ResponseEntity<>("OTP validation successful. Please proceed.", HttpStatus.OK);
 		}
@@ -267,9 +274,13 @@ public class AuthController {
 		Optional<User> userOptional = userRepository.findByUsername(username);
 		if (userOptional.isPresent()) {
 			String generateOTP = OTPGenerator.generateOTP(6);
+
+			// Store OTP and timestamp in the session
 			session.setAttribute("otp", generateOTP);
+			session.setAttribute("otpTimestamp", System.currentTimeMillis()); // Current timestamp
 			session.setAttribute("email", userOptional.get().getEmail());
-			session.setMaxInactiveInterval(120);
+			session.setMaxInactiveInterval(120); // Set session timeout to 2 minutes
+
 			emailSender.sendEmail(userOptional.get().getEmail(), Constant.OTP_SUBJECT, Constant.TEMPLATE_PATH,
 					emailSender.createSourceMap(Constant.MESSAGE_FOR_OTP, generateOTP));
 

@@ -36,6 +36,7 @@ import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.request.OptEntryArrForm;
 import com.hti.smpp.common.request.RouteRequest;
 import com.hti.smpp.common.request.SearchCriteria;
+import com.hti.smpp.common.responce.OptionRouteResponse;
 import com.hti.smpp.common.route.dto.HlrEntryLog;
 import com.hti.smpp.common.route.dto.HlrRouteEntry;
 import com.hti.smpp.common.route.dto.OptionalEntryLog;
@@ -1075,7 +1076,8 @@ public class RouteServiceImpl implements RouteServices {
 	}
 
 	@Override
-	public String updateOptionalRoute(OptEntryArrForm optRouteEntry, String username) {
+	public OptionRouteResponse updateOptionalRoute(OptEntryArrForm optRouteEntry, String username) {
+		OptionRouteResponse responce = new OptionRouteResponse();
 		System.out.println("Username: " + username);
 		String target = IConstants.FAILURE_KEY;
 		String masterid = null;
@@ -1303,6 +1305,9 @@ public class RouteServiceImpl implements RouteServices {
 						}
 						smsclist.put(0, "DOWN [NONE]");
 
+						responce.setGroupDetail(groupDetail);
+						responce.setRoutinglist(routinglist);
+						responce.setSmsclist(smsclist);
 						target = "view";
 					} else {
 						target = IConstants.SUCCESS_KEY;
@@ -1322,8 +1327,8 @@ public class RouteServiceImpl implements RouteServices {
 			}
 			MultiUtility.changeFlag(Constants.CLIENT_FLAG_FILE, "707");
 		}
-
-		return target;
+		responce.setStatus(target);
+		return responce;
 
 	}
 
@@ -1416,5 +1421,119 @@ public class RouteServiceImpl implements RouteServices {
 
 	public void updateOptRouteSch(String scheduledOn) {
 		routeEntryRepository.updateOptRouteSchAndDelete(scheduledOn);
+	}
+
+	@Override
+	public OptionRouteResponse undo(OptEntryArrForm optRouteEntry, String username) {
+		String target = IConstants.FAILURE_KEY;
+		OptionRouteResponse responce = new OptionRouteResponse();
+		String masterid = null;
+		// Finding the user by system ID
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		if (userOptional.isPresent()) {
+			masterid = userOptional.get().getMasterId();
+		}
+		Set<Integer> refreshUsers = new HashSet<Integer>();
+		logger.info("OptionalRoute Undo Requested By " + masterid);
+		try {
+			List<OptionalRouteEntry> list = new ArrayList<OptionalRouteEntry>();
+			int[] id = optRouteEntry.getRouteId();
+			int[] userId = optRouteEntry.getUserId();
+			if (id != null && id.length > 0) {
+				Map<Integer, OptionalEntryLog> map = listOptLog(id);
+				logger.info("OptionalRoute Undo Records: " + map.size());
+				String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+				OptionalRouteEntry routingDTO = null;
+				for (int i = 0; i < id.length; i++) {
+					if (map.containsKey(id[i])) {
+						OptionalEntryLog logEntry = map.get(id[i]);
+						routingDTO = new OptionalRouteEntry(logEntry.getRouteId(), logEntry.getNumSmscId(),
+								logEntry.getBackupSmscId(), logEntry.getForceSenderNum(),
+								logEntry.getForceSenderAlpha(), logEntry.getExpiredOn(), logEntry.getSmsLength(),
+								logEntry.isRefund(), logEntry.getRegSender(), logEntry.getRegSmscId(),
+								logEntry.getCodeLength(), logEntry.isReplaceContent(), logEntry.getReplacement(),
+								logEntry.getMsgAppender(), logEntry.getSourceAppender(), masterid, editOn);
+						routingDTO.setSenderReplFrom(logEntry.getSenderReplFrom());
+						routingDTO.setSenderReplTo(logEntry.getSenderReplTo());
+						routingDTO.setRegGroupId(logEntry.getRegGroupId());
+						list.add(routingDTO);
+						refreshUsers.add(userId[i]);
+					}
+				}
+				if (!list.isEmpty()) {
+					logger.info("Optional Route Update Size: " + list.size());
+					updateOptionalRouteEntries(list);
+					List<RouteEntryExt> routinglist = getRoutingList(optRouteEntry.getCriterionEntries());
+					if (!routinglist.isEmpty()) {
+						Map<Integer, String> smsclist = listNames();
+						smsclist.put(0, "Down");
+						responce.setRoutinglist(routinglist);
+						responce.setGroupDetail(smsclist);
+						target = "view";
+					} else {
+						target = IConstants.SUCCESS_KEY;
+						logger.info("message.routingSatedSuccessfully");
+					}
+				} else {
+					logger.error("error.record.unavailable");
+				}
+			} else {
+				logger.error("error.record.unavailable");
+			}
+		} catch (Exception ex) {
+			logger.info("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+		}
+		if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY) || target.equalsIgnoreCase("view")) {
+			for (int user : refreshUsers) {
+				MultiUtility.refreshRouting(user);
+			}
+			MultiUtility.changeFlag(Constants.CLIENT_FLAG_FILE, "707");
+		}
+		responce.setStatus(target);
+		return responce;
+	}
+
+	@Override
+	public OptionRouteResponse previous(OptEntryArrForm routingForm, String username) {
+
+		OptionRouteResponse response = new OptionRouteResponse();
+		String target = IConstants.FAILURE_KEY;
+
+		String masterid = null;
+		// Finding the user by system ID
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		if (userOptional.isPresent()) {
+			masterid = userOptional.get().getMasterId();
+		}
+
+		logger.info("Optional Route Log Requested By " + masterid);
+		// List<RouteEntry> list = new ArrayList<RouteEntry>();
+		int[] id = routingForm.getRouteId();
+		// String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new
+		// Date());
+		try {
+			if (id != null && id.length > 0) {
+
+				List<Long> ids = Arrays.stream(id).asLongStream().boxed().collect(Collectors.toList());
+
+				// Making a request to the repository method
+				List<RouteEntryExt> list = routeEntryRepository.getOptRoutingLog(ids);
+				if (!list.isEmpty()) {
+					response.setRoutinglist(list);
+					target = "previous";
+				} else {
+					logger.error("error.record.unavailable");
+				}
+			} else {
+				logger.error("error.record.unavailable");
+			}
+
+		} catch (Exception ex) {
+			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+		}
+		response.setStatus(target);
+		return response;
 	}
 }
