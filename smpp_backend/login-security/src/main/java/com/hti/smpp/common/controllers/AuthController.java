@@ -229,6 +229,7 @@ public class AuthController {
 
 	@PostMapping("/otp/validate")
 	public ResponseEntity<String> validateOTP(@RequestParam String otp, HttpSession session) {
+		System.out.println("OTP ......." + otp);
 		String sessionOtp = (String) session.getAttribute("otp");
 		Long otpTimestamp = (Long) session.getAttribute("otpTimestamp");
 
@@ -243,6 +244,7 @@ public class AuthController {
 				session.removeAttribute("otpTimestamp");
 				return new ResponseEntity<>("Error: OTP has expired!", HttpStatus.BAD_REQUEST);
 			}
+			System.out.println("OTP validation successful .please proceed......");
 			// Successful validation
 			return new ResponseEntity<>("OTP validation successful. Please proceed.", HttpStatus.OK);
 		}
