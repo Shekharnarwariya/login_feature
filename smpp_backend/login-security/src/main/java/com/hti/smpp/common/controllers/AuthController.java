@@ -40,10 +40,12 @@ import com.hti.smpp.common.login.repository.RoleRepository;
 import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.payload.request.LoginRequest;
 import com.hti.smpp.common.payload.request.PasswordUpdateRequest;
+import com.hti.smpp.common.payload.request.ProfileUpdateRequest;
 import com.hti.smpp.common.payload.request.SignupRequest;
 import com.hti.smpp.common.payload.response.JwtResponse;
 import com.hti.smpp.common.payload.response.MessageResponse;
 import com.hti.smpp.common.payload.response.ProfileResponse;
+import com.hti.smpp.common.payload.response.ProfileUpdateResponse;
 import com.hti.smpp.common.security.jwt.JwtUtils;
 import com.hti.smpp.common.security.services.UserDetailsImpl;
 import com.hti.smpp.common.user.dto.BalanceEntry;
@@ -437,6 +439,36 @@ public class AuthController {
 			}
 		} else {
 			throw new NotFoundException("Error: User Not Found!");
+		}
+	}
+
+	@Operation(summary = "update user profile")
+	@ApiResponse(responseCode = "200", description = "Successfully retrieved user profile")
+	@ApiResponse(responseCode = "404", description = "Error: User not found")
+	@GetMapping("/updateprofile")
+	public ResponseEntity<ProfileUpdateResponse> updateUserProfile(@Valid @RequestBody ProfileUpdateRequest profileUpdateRequest ) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		String currentUsername = authentication.getName();
+		Optional<User> updateProfile = userRepository.findBySystemId(currentUsername);
+		
+		
+		if (updateProfile.isPresent()) {
+			User user = updateProfile.get();
+		
+
+			ProfileUpdateResponse profileUpdateResponse = new ProfileUpdateResponse();
+
+			profileUpdateResponse.setBase64Password(user.getBase64Password());
+			profileUpdateResponse.setEmail(user.getEmail());
+			profileUpdateResponse.setFirstName(user.getFirstName());
+			profileUpdateResponse.setLanguage(user.getLanguage());
+			profileUpdateResponse.setLastName(user.getLastName());
+		//	profileUpdateResponse.setContact(user.);
+		//	profileUpdateResponse.set
+					
+			return ResponseEntity.ok(profileUpdateResponse);
+		} else {
+			throw new NotFoundException("Error: profile not found!");
 		}
 	}
 
