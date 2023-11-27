@@ -447,7 +447,7 @@ public class AuthController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Successfully updated user profile"),
 			@ApiResponse(responseCode = "404", description = "User not found"),
 			@ApiResponse(responseCode = "400", description = "Bad request") })
-	@PostMapping("/update/profile")
+	@PutMapping("/update/profile")
 	public ResponseEntity<String> updateUserProfile(@RequestParam String username,
 			@Valid @RequestBody ProfileUpdateRequest profileUpdateRequest) {
 		Optional<User> optionalUser = userRepository.findBySystemId(username);
