@@ -45,7 +45,6 @@ import com.hti.smpp.common.payload.request.SignupRequest;
 import com.hti.smpp.common.payload.response.JwtResponse;
 import com.hti.smpp.common.payload.response.MessageResponse;
 import com.hti.smpp.common.payload.response.ProfileResponse;
-import com.hti.smpp.common.payload.response.ProfileUpdateResponse;
 import com.hti.smpp.common.security.jwt.JwtUtils;
 import com.hti.smpp.common.security.services.UserDetailsImpl;
 import com.hti.smpp.common.user.dto.BalanceEntry;
@@ -67,6 +66,7 @@ import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
@@ -443,33 +443,41 @@ public class AuthController {
 		}
 	}
 
-	@Operation(summary = "update user profile")
-	@ApiResponse(responseCode = "200", description = "Successfully retrieved user profile")
-	@ApiResponse(responseCode = "404", description = "Error: User not found")
-	@GetMapping("/updateprofile")
-	public ResponseEntity<ProfileUpdateResponse> updateUserProfile(@Valid @RequestBody ProfileUpdateRequest profileUpdateRequest ) {
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		String currentUsername = authentication.getName();
-		Optional<User> updateProfile = userRepository.findBySystemId(currentUsername);
-		
-		
-		if (updateProfile.isPresent()) {
-			User user = updateProfile.get();
-		
+	@Operation(summary = "Update user profile")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Successfully updated user profile"),
+			@ApiResponse(responseCode = "404", description = "User not found"),
+			@ApiResponse(responseCode = "400", description = "Bad request") })
+	@PostMapping("/update/profile")
+	public ResponseEntity<String> updateUserProfile(@RequestParam String username,
+			@Valid @RequestBody ProfileUpdateRequest profileUpdateRequest) {
+		Optional<User> optionalUser = userRepository.findBySystemId(username);
 
-			ProfileUpdateResponse profileUpdateResponse = new ProfileUpdateResponse();
-
-			profileUpdateResponse.setBase64Password(user.getBase64Password());
-			profileUpdateResponse.setEmail(user.getEmail());
-			profileUpdateResponse.setFirstName(user.getFirstName());
-			profileUpdateResponse.setLanguage(user.getLanguage());
-			profileUpdateResponse.setLastName(user.getLastName());
-		//	profileUpdateResponse.setContact(user.);
-		//	profileUpdateResponse.set
-					
-			return ResponseEntity.ok(profileUpdateResponse);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			updateUserData(user, profileUpdateRequest);
+			userRepository.save(user);
+			return ResponseEntity.ok("Profile updated successfully");
 		} else {
-			throw new NotFoundException("Error: profile not found!");
+			throw new NotFoundException("User not found!");
+		}
+	}
+
+	private void updateUserData(User user, ProfileUpdateRequest profileUpdateRequest) {
+		// Use null checks to update only non-null fields
+		if (profileUpdateRequest.getEmail() != null) {
+			user.setEmail(profileUpdateRequest.getEmail());
+		}
+		if (profileUpdateRequest.getFirstName() != null) {
+			user.setFirstName(profileUpdateRequest.getFirstName());
+		}
+		if (profileUpdateRequest.getLanguage() != null) {
+			user.setLanguage(profileUpdateRequest.getLanguage());
+		}
+		if (profileUpdateRequest.getLastName() != null) {
+			user.setLastName(profileUpdateRequest.getLastName());
+		}
+		if (profileUpdateRequest.getContact() != null) {
+			user.setContactNo(profileUpdateRequest.getContact());
 		}
 	}
 

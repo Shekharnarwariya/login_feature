@@ -1,8 +1,5 @@
 package com.hti.smpp.common.payload.request;
 
-
-
-
 public class ProfileUpdateRequest {
 
 	private String email;
@@ -15,8 +12,6 @@ public class ProfileUpdateRequest {
 		Contact = contact;
 	}
 
-	private String Base64Password;
-
 	private String firstName;
 
 	private String LastName;
@@ -24,23 +19,12 @@ public class ProfileUpdateRequest {
 	private String language;
 	private String Contact;
 
-
-
-
 	public String getEmail() {
 		return email;
 	}
 
 	public void setEmail(String email) {
 		this.email = email;
-	}
-
-	public String getBase64Password() {
-		return Base64Password;
-	}
-
-	public void setBase64Password(String base64Password) {
-		Base64Password = base64Password;
 	}
 
 	public String getFirstName() {
@@ -66,9 +50,5 @@ public class ProfileUpdateRequest {
 	public void setLanguage(String language) {
 		this.language = language;
 	}
-
-
-	
-	
 
 }
