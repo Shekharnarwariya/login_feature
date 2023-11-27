@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Update Notification</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        .main-div {
+            width: 80%;
+            margin: auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .logo {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 3rem;
+            padding: 3rem;
+            background-image: url('cid:background');
+            background-size: cover;
+            background-repeat: no-repeat;
+            height: 6rem;
+            font-size: 2.5rem;
+            font-weight: 400;
+            color: #334163;
+        }
+
+        .content {
+            margin: 1.5rem;
+            font-size: 1.5rem;
+            color: #03303D;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 1rem;
+            background-color: #334163;
+            color: #ffffff;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .main-div {
+                width: 100%;
+            }
+
+            .header {
+                padding: 1rem;
+                height: auto;
+            }
+
+            .content {
+                margin: 1rem;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-div">
+        <div class="logo">
+            <img src="cid:htiLogo" alt="hti company Logo">
+        </div>
+
+        <div class="header">
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <h3>Password Updated</h3>
+            </div>
+        </div>
+
+        <div class="content">
+            Hello <b th:text="${username}"></b>,<br/><br/>
+
+            We’ve changed your password, as you asked. To view or change your account information, <a href="#">visit your Account</a>.<br/><br/>
+
+            If you did not ask to change your password, we are here to help secure your account – just <a href="#">contact us</a>.<br/><br/>
+
+            Warm regards,<br/>
+            SMPP Team<br/><br/>
+        </div>
+
+        <hr>
+
+        <div class="footer">
+            The Broad Net | Kemp House 152-160 City Road London, England, EC1V 2NX.
+        </div>
+        <div class="footer">
+            © 2023 Broadnet. All Rights Reserved.
+        </div>
+    </div>
+</body>
+</html>

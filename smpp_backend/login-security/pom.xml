@@ -12,12 +12,14 @@
 	<groupId>com.hti.smpp.common</groupId>
 	<artifactId>login-security</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>war</packaging>
 	<name>login-security</name>
 	<description>Demo project for Spring Boot Security - JWT</description>
 
 	<properties>
 		<java.version>17</java.version>
 		<spring-cloud.version>2022.0.4</spring-cloud.version>
+		<start-class>/login-security/src/main/java/com/hti/smpp/common/SpringBootSecurityJwtApplication</start-class>
 	</properties>
 
 	<dependencies>
@@ -106,8 +108,13 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-tomcat</artifactId>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+	<!-- <dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
@@ -123,7 +130,7 @@
 				<scope>import</scope>
 			</dependency>
 		</dependencies>
-	</dependencyManagement>
+	</dependencyManagement>-->
 
 
 	<build>
@@ -131,6 +138,9 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<finalName>login</finalName>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

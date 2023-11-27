@@ -28,6 +28,7 @@ public class RouteController {
 	@Autowired
 	private RouteServices routeService;
 
+	// if (role.equalsIgnoreCase("superadmin") || role.equalsIgnoreCase("system")) {
 	@PostMapping("/save")
 	@Operation(summary = "Save a route")
 	@ApiResponse(responseCode = "201", description = "Route saved successfully")
@@ -63,6 +64,7 @@ public class RouteController {
 		return routeService.undo(optEntryArrForm, username);
 	}
 
+	// if (role.equalsIgnoreCase("superadmin") || role.equalsIgnoreCase("system")) {
 	@PostMapping("/previous")
 	@Operation(summary = "Get previous operation result")
 	@ApiResponse(responseCode = "200", description = "Previous operation result retrieved successfully")

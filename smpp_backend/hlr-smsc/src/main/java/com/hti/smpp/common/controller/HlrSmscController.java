@@ -20,13 +20,16 @@ import com.hti.smpp.common.hlr.dto.HlrSmscEntry;
 import com.hti.smpp.common.request.HlrSmscEntryRequest;
 import com.hti.smpp.common.service.HlrSmscService;
 
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @RestController
 @RequestMapping("/hlr")
+@OpenAPIDefinition(info = @Info(title = "SMPP Hlr Smsc API..", version = "1.0", description = "API for managing SMPP Hlr Smsc..."))
 public class HlrSmscController {
 
 	private final HlrSmscService hlrSmscService;

@@ -1,27 +1,17 @@
 package com.hti.smpp.common.request;
 
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Positive;
-
 public class HlrSmscEntryRequest {
 
-	@NotEmpty
 	private String name;
 
-	@NotEmpty
 	private String ip;
 
-	@Positive
 	private int port;
 
-	@Pattern(regexp = "YOUR_REGEX_PATTERN_HERE")
 	private String bindmode;
 
-	@Positive
 	private int sleep;
 
-	@NotEmpty
 	private String password;
 
 	private boolean bound;

@@ -19,8 +19,8 @@ import java.util.Map;
 @Component
 public class EmailSender {
 
-	private static final String INLINE_IMAGE_RESOURCE = "/templates/hti.jpg";
-
+	private static final String INLINE_IMAGE_RESOURCE = "/templates/logo.png";
+	private static final String INLINE_BACKGROUND_IMAGE_RESOURCE = "/templates/Background.png";
 	private final JavaMailSender javaMailSender;
 	private final TemplateEngine templateEngine;
 	private final Logger log = LoggerFactory.getLogger(EmailSender.class);
@@ -65,7 +65,9 @@ public class EmailSender {
 		helper.setSubject(subject);
 		helper.setText(emailContent, true);
 		ClassPathResource imageResource = new ClassPathResource(INLINE_IMAGE_RESOURCE);
+		ClassPathResource backgroundImageResource = new ClassPathResource(INLINE_BACKGROUND_IMAGE_RESOURCE );
 		helper.addInline("htiLogo", imageResource);
+		helper.addInline("background", backgroundImageResource);
 	}
 
 	public Map<String, String> createSourceMap(String message, String otp, String username, String password) {

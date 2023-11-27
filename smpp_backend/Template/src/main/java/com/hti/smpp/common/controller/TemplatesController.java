@@ -19,11 +19,17 @@ import com.hti.smpp.common.request.TemplatesRequest;
 import com.hti.smpp.common.responce.TemplatesResponse;
 import com.hti.smpp.common.service.TemplatesService;
 
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/templates")
 @Validated // Add this annotation to enable method-level validation
+@OpenAPIDefinition(info = @Info(title = "SMPP Templates API", version = "1.0", description = "API for managing SMPP Templates"))
 public class TemplatesController {
 
 	private final TemplatesService templatesService;
@@ -33,6 +39,9 @@ public class TemplatesController {
 		this.templatesService = templatesService;
 	}
 
+	@Operation(summary = "Create a new template")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Template created successfully"),
+			@ApiResponse(responseCode = "404", description = "Template not found") })
 	@PostMapping
 	public ResponseEntity<String> createTemplate(@Valid @RequestBody TemplatesRequest request,
 			@RequestHeader("username") String username) {
@@ -42,9 +51,11 @@ public class TemplatesController {
 		} else {
 			return ResponseEntity.notFound().build();
 		}
-
 	}
 
+	@Operation(summary = "Get a template by ID")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Template retrieved successfully"),
+			@ApiResponse(responseCode = "404", description = "Template not found") })
 	@GetMapping("/{id}")
 	public ResponseEntity<TemplatesResponse> getTemplateById(@PathVariable int id,
 			@RequestHeader("username") String username) {
@@ -56,12 +67,17 @@ public class TemplatesController {
 		}
 	}
 
+	@Operation(summary = "Get all templates")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "All templates retrieved successfully") })
 	@GetMapping
 	public ResponseEntity<List<TemplatesResponse>> getAllTemplates(@RequestHeader("username") String username) {
 		List<TemplatesResponse> templates = templatesService.getAllTemplates(username);
 		return ResponseEntity.ok(templates);
 	}
 
+	@Operation(summary = "Update a template by ID")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Template updated successfully"),
+			@ApiResponse(responseCode = "404", description = "Template not found") })
 	@PutMapping("/{id}")
 	public ResponseEntity<String> updateTemplate(@PathVariable int id, @Valid @RequestBody TemplatesRequest request,
 			@RequestHeader("username") String username) {
@@ -73,6 +89,9 @@ public class TemplatesController {
 		}
 	}
 
+	@Operation(summary = "Delete a template by ID")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Template deleted successfully"),
+			@ApiResponse(responseCode = "404", description = "Template not found") })
 	@DeleteMapping("/{id}")
 	public ResponseEntity<String> deleteTemplate(@PathVariable int id, @RequestHeader("username") String username) {
 		boolean success = templatesService.deleteTemplate(id, username);

@@ -4,8 +4,7 @@ public class Constant {
 
 	public static final String OTP_SUBJECT = "OTP confirmation alert for SMPP";
 
-	public static final String TEMPLATE_PATH = "/template";
-
+	public static final String TEMPLATE_PATH = "/index";
 	public static final String MESSAGE_FOR_OTP = "Dear User,\r\n"
 			+ "\r\n"
 			+ "Please use the following OTP (One-Time Password) to validate your email for survey participation.\r\n"

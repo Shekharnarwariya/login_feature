@@ -1,5 +1,6 @@
 package com.hti.smpp.common.login.dto;
 
+import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -43,6 +44,16 @@ public class User {
 	private String Base64Password;
 
 	private String otpSecretKey;
+
+	private LocalTime otpSendTime;
+
+	public LocalTime getOtpSendTime() {
+		return otpSendTime;
+	}
+
+	public void setOtpSendTime(LocalTime otpSendTime) {
+		this.otpSendTime = otpSendTime;
+	}
 
 	public String getOtpSecretKey() {
 		return otpSecretKey;

@@ -3,6 +3,7 @@ package com.hti.smpp.common.impl;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,12 +13,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.hti.smpp.common.exception.NotFoundException;
+import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.hlr.dto.HlrSmscEntry;
 import com.hti.smpp.common.hlr.repository.HlrSmscRepository;
+import com.hti.smpp.common.login.dto.Role;
+import com.hti.smpp.common.login.dto.User;
+import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.request.HlrSmscEntryRequest;
 import com.hti.smpp.common.service.HlrSmscService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
+import com.hti.smpp.common.util.Access;
 
 @Service
 public class HlrSmscServiceImpl implements HlrSmscService {
@@ -30,25 +37,37 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 	@Autowired
 	private UserEntryRepository userRepository;
 
+	@Autowired
+	private UserRepository loginRepository;
+
 	@Override
 	public ResponseEntity<HlrSmscEntry> save(HlrSmscEntryRequest hlrSmscEntryRequest, String username) {
+		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndUser(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 		try {
 			HlrSmscEntry entry = convertToHlrSmscEntry(hlrSmscEntryRequest);
-			System.out.println("this is user name......."+username);
+
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+
 			if (userOptional.isPresent()) {
-				entry.setSystemId(String.valueOf(userOptional.get().getSystemId()));
-				entry.setSystemType(userOptional.get().getSystemType());
+				UserEntry userEntry = userOptional.get();
+				entry.setSystemId(String.valueOf(userEntry.getSystemId()));
+				entry.setSystemType(userEntry.getSystemType());
 			}
 
 			HlrSmscEntry savedEntry = hlrSmscRepository.save(entry);
 			logger.info("HlrSmscEntry saved successfully with ID: {}", savedEntry.getId());
 			return ResponseEntity.ok(savedEntry);
-		} catch (DataAccessException e) {
-			logger.error("DataAccessException occurred while saving HlrSmscEntry: {}", e.getMessage());
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 		} catch (Exception e) {
-			logger.error("Error occurred while saving HlrSmscEntry: {}", e.getMessage());
+			String errorMessage = "Error occurred while saving HlrSmscEntry: " + e.getMessage();
+			logger.error(errorMessage, e);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 		}
 	}

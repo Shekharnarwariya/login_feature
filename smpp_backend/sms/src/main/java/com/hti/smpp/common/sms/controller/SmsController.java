@@ -19,16 +19,25 @@ import com.hti.smpp.common.response.SmsResponse;
 import com.hti.smpp.common.sms.request.BulkRequest;
 import com.hti.smpp.common.sms.request.SmsRequest;
 import com.hti.smpp.common.sms.service.SmsService;
-import com.hti.smpp.common.user.dto.BalanceEntry;
-import com.hti.smpp.common.user.repository.BalanceEntryRepository;
+
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @RestController
 @RequestMapping("/sms")
+@OpenAPIDefinition(info = @Info(title = "SMPP Sms API", version = "1.0", description = "API for managing SMPP Sms"))
 public class SmsController {
 
 	@Autowired
 	private SmsService smsService;
 
+	@Operation(summary = "Send single SMS")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "SMS sent successfully"),
+			@ApiResponse(responseCode = "400", description = "Bad Request"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
 	@PostMapping("/sendSms")
 	public ResponseEntity<SmsResponse> sendSms(@RequestBody SmsRequest smsRequest,
 			@RequestHeader("username") String username) {
@@ -36,6 +45,10 @@ public class SmsController {
 		return ResponseEntity.ok(response);
 	}
 
+	@Operation(summary = "Send bulk SMS")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Bulk SMS sent successfully"),
+			@ApiResponse(responseCode = "400", description = "Bad Request"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
 	@PostMapping(value = "/sendbulk", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<BulkResponse> sendBulk(
 			@RequestParam("destinationNumberFile") MultipartFile destinationNumberFile,
@@ -48,7 +61,7 @@ public class SmsController {
 			ObjectMapper objectMapper = new ObjectMapper();
 			readValue = objectMapper.readValue(bulkRequest, BulkRequest.class);
 			if (readValue.isCustomContent()) {
-				System.out.println("custom conten  is true.......");
+				System.out.println("custom conten is true.......");
 				bulkResponse = smsService.sendBulkCustome(readValue, username, destinationNumberFile);
 			} else {
 				bulkResponse = smsService.sendBulkSms(readValue, username, destinationNumberFile);
@@ -63,6 +76,5 @@ public class SmsController {
 			System.err.println("An unexpected error occurred: " + ex.getMessage());
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 		}
-
 	}
 }

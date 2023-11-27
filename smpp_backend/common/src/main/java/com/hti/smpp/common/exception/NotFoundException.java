@@ -1,10 +1,10 @@
 package com.hti.smpp.common.exception;
 
-public class NullValueException extends RuntimeException {
+public class NotFoundException extends RuntimeException {
 
 	private static final long serialVersionUID = 1106671598754207461L;
 
-	public NullValueException(String msg) {
+	public NotFoundException(String msg) {
 		super(msg);
 	}
 }
