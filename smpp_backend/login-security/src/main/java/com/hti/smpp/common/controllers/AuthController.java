@@ -270,7 +270,6 @@ public class AuthController {
 		entry.setLogging(signUpRequest.isLogging());
 		entry.setLoopSmscId(signUpRequest.getLoopSmscId());
 		entry.setMasterId(signUpRequest.getMasterId());
-		entry.setPassword(signUpRequest.getPassword());
 		entry.setPasswordExpiresOn(signUpRequest.getPasswordExpiresOn());
 		entry.setPriority(signUpRequest.getPriority());
 		entry.setRecordMnp(signUpRequest.isRecordMnp());
