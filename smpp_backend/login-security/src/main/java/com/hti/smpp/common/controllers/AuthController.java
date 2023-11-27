@@ -230,7 +230,7 @@ public class AuthController {
 			signUpRequest.getRechargeEntry().setSystemId(save.getSystemId());
 			signUpRequest.getWebMenuAccessEntry().setUserId(save.getUserId().intValue());
 
-			webMasterEntryRepository.save(signUpRequest.getWebMasterEntry());
+			webMenuAccessEntryRepository.save(signUpRequest.getWebMenuAccessEntry());
 			rechargeEntryRepository.save(signUpRequest.getRechargeEntry());
 			webMasterEntryRepository.save(signUpRequest.getWebMasterEntry());
 			dlrSettingEntryRepository.save(signUpRequest.getDlrSettingEntry());
