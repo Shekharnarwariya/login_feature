@@ -10,9 +10,9 @@ import com.hti.smpp.common.login.dto.User;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
-	Optional<User> findByUsername(String username);
+	Optional<User> findBySystemId(String username);
 
-	Boolean existsByUsername(String username);
+	Boolean existsBySystemId(String username);
 
 	Boolean existsByEmail(String email);
 

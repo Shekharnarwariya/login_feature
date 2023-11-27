@@ -22,11 +22,11 @@ import jakarta.validation.constraints.Size;
 public class User {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long system_id;
+	private Long userId;
 
 	@NotBlank
 	@Size(max = 20)
-	private String username;
+	private String systemId;
 
 	@NotBlank
 	@Size(max = 50)
@@ -47,36 +47,28 @@ public class User {
 
 	private LocalTime otpSendTime;
 
-	public LocalTime getOtpSendTime() {
-		return otpSendTime;
+	private String firstName;
+
+	private String LastName;
+
+	private String country;
+
+	private String language;
+
+	public Long getUserId() {
+		return userId;
 	}
 
-	public void setOtpSendTime(LocalTime otpSendTime) {
-		this.otpSendTime = otpSendTime;
+	public void setUserId(Long userId) {
+		this.userId = userId;
 	}
 
-	public String getOtpSecretKey() {
-		return otpSecretKey;
+	public String getSystemId() {
+		return systemId;
 	}
 
-	public void setOtpSecretKey(String otpSecretKey) {
-		this.otpSecretKey = otpSecretKey;
-	}
-
-	public Long getSystem_id() {
-		return system_id;
-	}
-
-	public void setSystem_id(Long system_id) {
-		this.system_id = system_id;
-	}
-
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
+	public void setSystemId(String systemId) {
+		this.systemId = systemId;
 	}
 
 	public String getEmail() {
@@ -111,19 +103,70 @@ public class User {
 		Base64Password = base64Password;
 	}
 
-	@Override
-	public String toString() {
-		return "User [system_id=" + system_id + ", username=" + username + ", email=" + email + ", password=" + password
-				+ ", roles=" + roles + ", Base64Password=" + Base64Password + "]";
+	public String getOtpSecretKey() {
+		return otpSecretKey;
 	}
 
-	public User(@NotBlank @Size(max = 20) String username, @NotBlank @Size(max = 50) @Email String email,
-			@NotBlank @Size(max = 120) String password, String base64Password) {
+	public void setOtpSecretKey(String otpSecretKey) {
+		this.otpSecretKey = otpSecretKey;
+	}
+
+	public LocalTime getOtpSendTime() {
+		return otpSendTime;
+	}
+
+	public void setOtpSendTime(LocalTime otpSendTime) {
+		this.otpSendTime = otpSendTime;
+	}
+
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public String getLastName() {
+		return LastName;
+	}
+
+	public void setLastName(String lastName) {
+		LastName = lastName;
+	}
+
+	public String getCountry() {
+		return country;
+	}
+
+	public void setCountry(String country) {
+		this.country = country;
+	}
+
+	public String getLanguage() {
+		return language;
+	}
+
+	public void setLanguage(String language) {
+		this.language = language;
+	}
+
+	public User(Long userId, @NotBlank @Size(max = 20) String systemId, @NotBlank @Size(max = 50) @Email String email,
+			@NotBlank @Size(max = 120) String password, Set<Role> roles, String base64Password, String otpSecretKey,
+			LocalTime otpSendTime, String firstName, String lastName, String country, String language) {
 		super();
-		this.username = username;
+		this.userId = userId;
+		this.systemId = systemId;
 		this.email = email;
 		this.password = password;
+		this.roles = roles;
 		Base64Password = base64Password;
+		this.otpSecretKey = otpSecretKey;
+		this.otpSendTime = otpSendTime;
+		this.firstName = firstName;
+		LastName = lastName;
+		this.country = country;
+		this.language = language;
 	}
 
 	public User() {

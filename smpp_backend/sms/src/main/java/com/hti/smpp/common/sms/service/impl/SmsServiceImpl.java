@@ -236,14 +236,14 @@ public class SmsServiceImpl implements SmsService {
 	}
 
 	public SmsResponse sendSms(SmsRequest smsRequest, String username) {
-		Optional<User> userOptional = userRepository.findByUsername(username);
+		Optional<User> userOptional = userRepository.findBySystemId(username);
 
 		User user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 		}
 		System.out.println(user);
-		Optional<UserEntry> userEntryOptional = userEntryRepository.findBySystemId(String.valueOf(user.getUsername()));
+		Optional<UserEntry> userEntryOptional = userEntryRepository.findBySystemId(String.valueOf(user.getSystemId()));
 		UserEntry userEntry = null;
 		if (userEntryOptional.isPresent()) {
 			userEntry = userEntryOptional.get();
@@ -294,8 +294,7 @@ public class SmsServiceImpl implements SmsService {
 			// check wallet balance
 			Optional<BalanceEntry> masterBalanceOptional = balanceEntryRepository
 					.findByUserId(Integer.parseInt(userEntry.getMasterId()));
-			Optional<BalanceEntry> balanceOptional = balanceEntryRepository
-					.findByUserId(user.getSystem_id().intValue());
+			Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findByUserId(user.getUserId().intValue());
 			System.out.println(balanceOptional.get());
 			String wallet_flag = null;
 			double wallet = 0;
@@ -352,7 +351,7 @@ public class SmsServiceImpl implements SmsService {
 			ArrayList<String> destinationList = new ArrayList<String>();
 			String destination = bulkSmsDTO.getDestinationNumber();
 
-			WebMasterEntry webEntry = webMasterEntryRepository.findByUserId(user.getSystem_id().intValue());
+			WebMasterEntry webEntry = webMasterEntryRepository.findByUserId(user.getUserId().intValue());
 
 			if (destination != null) {
 				String[] tokens;
@@ -400,8 +399,7 @@ public class SmsServiceImpl implements SmsService {
 			if (wallet_flag.equalsIgnoreCase("yes")) {
 				bulkSmsDTO.setUserMode("wallet");
 
-				totalcost = routeService.calculateRoutingCost(user.getSystem_id().intValue(), destinationList,
-						no_of_msg);
+				totalcost = routeService.calculateRoutingCost(user.getUserId().intValue(), destinationList, no_of_msg);
 
 				if (destinationList.size() > 0) {
 					boolean amount = false;
@@ -1123,19 +1121,18 @@ public class SmsServiceImpl implements SmsService {
 		List<String> destinationList = null;
 		List<String> temp_number_list = new ArrayList<String>();
 		ProgressEvent progressEvent = new ProgressEvent(session1);
-		Optional<User> userOptional = userRepository.findByUsername(username);
+		Optional<User> userOptional = userRepository.findBySystemId(username);
 
 		User user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 		}
 		BulkResponse bulkResponse = new BulkResponse();
-		String bulkSessionId = user.getSystem_id() + "_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
+		String bulkSessionId = user.getUserId() + "_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
 
 		try {
 
-			Optional<UserEntry> userEntryOptional = userEntryRepository
-					.findBySystemId(String.valueOf(user.getUsername()));
+			Optional<UserEntry> userEntryOptional = userEntryRepository.findBySystemId(user.getSystemId());
 			UserEntry userEntry = null;
 			if (userEntryOptional.isPresent()) {
 				userEntry = userEntryOptional.get();
@@ -1260,13 +1257,13 @@ public class SmsServiceImpl implements SmsService {
 			 */
 			if (!excludeSet.isEmpty()) {
 				try {
-					writeExcludeNumbers(String.valueOf(user.getSystem_id()), String.join("\n", excludeSet));
+					writeExcludeNumbers(String.valueOf(user.getUserId()), String.join("\n", excludeSet));
 				} catch (Exception ex) {
 					System.out.println(bulkSessionId + " " + ex);
 				}
 			} else {
 				try {
-					removeExcludeNumbers(String.valueOf(user.getSystem_id()));
+					removeExcludeNumbers(String.valueOf(user.getUserId()));
 				} catch (Exception ex) {
 					System.out.println(bulkSessionId + " " + ex);
 				}
@@ -1421,8 +1418,7 @@ public class SmsServiceImpl implements SmsService {
 			// String adminId = userSessionObject.getMasterId();
 			Optional<BalanceEntry> masterBalanceOptional = balanceEntryRepository
 					.findByUserId(Integer.parseInt(userEntry.getMasterId()));
-			Optional<BalanceEntry> balanceOptional = balanceEntryRepository
-					.findByUserId(user.getSystem_id().intValue());
+			Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findByUserId(user.getUserId().intValue());
 			System.out.println(balanceOptional.get());
 			String wallet_flag = null;
 			double wallet = 0;
@@ -1483,7 +1479,7 @@ public class SmsServiceImpl implements SmsService {
 			if (wallet_flag.equalsIgnoreCase("yes")) {
 				bulkSmsDTO.setUserMode("wallet");
 				if (destinationList.size() > 0) {
-					totalcost = routeService.calculateRoutingCost(user.getSystem_id().intValue(), destinationList,
+					totalcost = routeService.calculateRoutingCost(user.getUserId().intValue(), destinationList,
 							no_of_msg);
 					logger.info(bulkSessionId + " Balance:" + wallet + " Calculated Cost: " + totalcost);
 					boolean amount = false;
@@ -1521,7 +1517,7 @@ public class SmsServiceImpl implements SmsService {
 							logger.info(bulkSessionId + " <-- Insufficient Balance -->");
 						}
 					}
-					WebMasterEntry webEntry = webMasterEntryRepository.findByUserId(user.getSystem_id().intValue());
+					WebMasterEntry webEntry = webMasterEntryRepository.findByUserId(user.getUserId().intValue());
 					if (amount) {
 						// String applicationName = request.getContextPath();
 						bulkSmsDTO.setMsgCount(destinationList.size() * no_of_msg);
@@ -1534,7 +1530,7 @@ public class SmsServiceImpl implements SmsService {
 							if (filename != null) {
 
 								generated_id = scheduleEntryRepository
-										.save(new ScheduleEntry(String.valueOf(user.getSystem_id()),
+										.save(new ScheduleEntry(String.valueOf(user.getUserId()),
 												bulkSmsDTO.getDate() + " " + bulkSmsDTO.getTime(), bulkSmsDTO.getGmt(),
 												bulkSmsDTO.getTimestart(), IConstants.SERVER_ID, "false", filename,
 												bulkSmsDTO.getRepeat(), bulkSmsDTO.getReqType(), null))
@@ -1567,7 +1563,7 @@ public class SmsServiceImpl implements SmsService {
 						} else {
 
 							String value = sendBulkSms(bulkSmsDTO, progressEvent, webEntry.isBulkOnApprove(),
-									user.getSystem_id());
+									user.getUserId());
 							if (!value.contains("Error")) {
 								target = IConstants.SUCCESS_KEY;
 								logger.info("message.batchSuccess");
@@ -1638,7 +1634,7 @@ public class SmsServiceImpl implements SmsService {
 							if (filename != null) {
 
 								generated_id = scheduleEntryRepository
-										.save(new ScheduleEntry(String.valueOf(user.getSystem_id()),
+										.save(new ScheduleEntry(String.valueOf(user.getUserId()),
 												bulkSmsDTO.getDate() + " " + bulkSmsDTO.getTime(), bulkSmsDTO.getGmt(),
 												bulkSmsDTO.getTimestart(), IConstants.SERVER_ID, "false", filename,
 												bulkSmsDTO.getRepeat(), bulkSmsDTO.getReqType(), null))
@@ -1668,10 +1664,10 @@ public class SmsServiceImpl implements SmsService {
 							}
 						} else {
 							WebMasterEntry webEntry = webMasterEntryRepository
-									.findByUserId(user.getSystem_id().intValue());
+									.findByUserId(user.getUserId().intValue());
 
 							String value = sendBulkSms(bulkSmsDTO, progressEvent, webEntry.isBulkOnApprove(),
-									user.getSystem_id());
+									user.getUserId());
 							if (!value.contains("Error")) {
 								target = IConstants.SUCCESS_KEY;
 								logger.info("message.batchSuccess");
@@ -2138,7 +2134,7 @@ public class SmsServiceImpl implements SmsService {
 		ArrayList destinationList = null;
 		List<String> temp_number_list = new ArrayList<String>();
 		ProgressEvent progressEvent = new ProgressEvent(session1);
-		Optional<User> userOptional = userRepository.findByUsername(username);
+		Optional<User> userOptional = userRepository.findBySystemId(username);
 		User user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
@@ -2146,14 +2142,13 @@ public class SmsServiceImpl implements SmsService {
 		boolean allowDuplicate = false;
 		Map errors = new HashMap();
 		BulkResponse bulkResponse = new BulkResponse();
-		String bulkSessionId = user.getSystem_id() + "_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
+		String bulkSessionId = user.getUserId() + "_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
 		WebMasterEntry webEntry = null;
 		BulkSmsDTO bulkSmsDTO = new BulkSmsDTO();
 		UserEntry userEntry = null;
 		try {
 
-			Optional<UserEntry> userEntryOptional = userEntryRepository
-					.findBySystemId(String.valueOf(user.getUsername()));
+			Optional<UserEntry> userEntryOptional = userEntryRepository.findBySystemId(user.getSystemId());
 
 			if (userEntryOptional.isPresent()) {
 				userEntry = userEntryOptional.get();
@@ -2255,13 +2250,13 @@ public class SmsServiceImpl implements SmsService {
 		}
 		if (!excludeSet.isEmpty()) {
 			try {
-				writeExcludeNumbers(String.valueOf(user.getSystem_id()), String.join("\n", excludeSet));
+				writeExcludeNumbers(String.valueOf(user.getUserId()), String.join("\n", excludeSet));
 			} catch (Exception ex) {
 				System.out.println(bulkSessionId + " " + ex);
 			}
 		} else {
 			try {
-				removeExcludeNumbers(String.valueOf(user.getSystem_id()));
+				removeExcludeNumbers(String.valueOf(user.getUserId()));
 			} catch (Exception ex) {
 				System.out.println(bulkSessionId + " " + ex);
 			}
@@ -2279,8 +2274,7 @@ public class SmsServiceImpl implements SmsService {
 			// String adminId = userSessionObject.getMasterId();
 			Optional<BalanceEntry> masterBalanceOptional = balanceEntryRepository
 					.findByUserId(Integer.parseInt(userEntry.getMasterId()));
-			Optional<BalanceEntry> balanceOptional = balanceEntryRepository
-					.findByUserId(user.getSystem_id().intValue());
+			Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findByUserId(user.getUserId().intValue());
 			System.out.println(balanceOptional.get());
 			String wallet_flag = null;
 			double wallet = 0;
@@ -2543,7 +2537,7 @@ public class SmsServiceImpl implements SmsService {
 							list = new ArrayList<String>();
 						}
 						list.add(msg);
-						webEntry = webMasterEntryRepository.findByUserId(user.getSystem_id().intValue());
+						webEntry = webMasterEntryRepository.findByUserId(user.getUserId().intValue());
 						if (webEntry.isPrefixApply()) {
 							if (destNumber.length() < webEntry.getNumberLength()) {
 								System.out.println(destNumber + " length is less then " + webEntry.getNumberLength());
@@ -2682,7 +2676,7 @@ public class SmsServiceImpl implements SmsService {
 				// logger.info(bulkSessionId + " mapping: " + mapTable);
 				logger.info(bulkSessionId + " numbers: " + msgLengthTable.keySet().size());
 				if (!msgLengthTable.isEmpty()) {
-					 destinationList = new ArrayList(msgLengthTable.keySet());
+					destinationList = new ArrayList(msgLengthTable.keySet());
 					listInfo.setTotal(total_numbers);
 					listInfo.setValidCount(msgLengthTable.keySet().size());
 					listInfo.setDuplicate(duplicate_count);
@@ -2703,7 +2697,7 @@ public class SmsServiceImpl implements SmsService {
 					if (wallet_flag.equalsIgnoreCase("yes")) {
 						bulkSmsDTO.setUserMode("wallet");
 
-						totalcost = routeService.calculateRoutingCost(user.getSystem_id().intValue(), msgLengthTable);
+						totalcost = routeService.calculateRoutingCost(user.getUserId().intValue(), msgLengthTable);
 						logger.info(bulkSessionId + " Balance:" + wallet + " Calculated Cost: " + totalcost);
 						boolean amount = false;
 						if (userEntry.isAdminDepend()) {
@@ -2780,7 +2774,7 @@ public class SmsServiceImpl implements SmsService {
 								}
 							} else {
 								String value = sendBulkSms(bulkSmsDTO, progressEvent, webEntry.isBulkOnApprove(),
-										user.getSystem_id());
+										user.getUserId());
 								if (!value.contains("Error")) {
 									target = IConstants.SUCCESS_KEY;
 									logger.info("message.batchSuccess");
@@ -2823,10 +2817,10 @@ public class SmsServiceImpl implements SmsService {
 									balanceEntryRepository.save(balanceEntry);
 									balanceEntryRepository.save(masterbalance);
 								} else {
-									System.out.println(user.getSystem_id() + " <-- Insufficient Credits -->");
+									System.out.println(user.getUserId() + " <-- Insufficient Credits -->");
 								}
 							} else {
-								System.out.println(user.getSystem_id() + " <-- Insufficient Admin("
+								System.out.println(user.getUserId() + " <-- Insufficient Admin("
 										+ userEntry.getMasterId() + ") Credits -->");
 							}
 						} else {
@@ -2836,7 +2830,7 @@ public class SmsServiceImpl implements SmsService {
 								balanceEntryRepository.save(balanceEntry);
 								amount = true;
 							} else {
-								System.out.println(user.getSystem_id() + " <-- Insufficient Credits -->");
+								System.out.println(user.getUserId() + " <-- Insufficient Credits -->");
 							}
 						}
 						if (amount) {
@@ -2877,7 +2871,7 @@ public class SmsServiceImpl implements SmsService {
 								}
 							} else {
 								String value = sendBulkSms(bulkSmsDTO, progressEvent, webEntry.isBulkOnApprove(),
-										user.getSystem_id());
+										user.getUserId());
 								if (!value.contains("Error")) {
 									target = IConstants.SUCCESS_KEY;
 									logger.info("message.batchSuccess");

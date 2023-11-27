@@ -36,9 +36,9 @@ public class TemplatesServiceImpl implements TemplatesService {
 	public TemplatesResponse createTemplate(TemplatesRequest request, String username) {
 		TemplatesDTO template = new TemplatesDTO();
 		template.setMessage(Converter.UTF16(request.getMessage()));
-		Optional<User> userOptional = userRepository.findByUsername(username);
+		Optional<User> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
-			template.setMasterId(userOptional.get().getSystem_id());
+			template.setMasterId(userOptional.get().getUserId());
 		}
 		template.setTitle(Converter.UTF16(request.getTitle()));
 		TemplatesDTO savedTemplate = templatesRepository.save(template);
@@ -53,10 +53,10 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 	@Override
 	public TemplatesResponse getTemplateById(int id, String username) {
-		Optional<User> userOptional = userRepository.findByUsername(username);
+		Optional<User> userOptional = userRepository.findBySystemId(username);
 		Long system_id = null;
 		if (userOptional.isPresent()) {
-			system_id = userOptional.get().getSystem_id();
+			system_id = userOptional.get().getUserId();
 		}
 		TemplatesDTO template = templatesRepository.findByIdAndMasterId(id, system_id).orElse(null);
 		if (template != null) {
@@ -72,10 +72,10 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 	@Override
 	public List<TemplatesResponse> getAllTemplates(String username) {
-		Optional<User> userOptional = userRepository.findByUsername(username);
+		Optional<User> userOptional = userRepository.findBySystemId(username);
 		Long system_id = null;
 		if (userOptional.isPresent()) {
-			system_id = userOptional.get().getSystem_id();
+			system_id = userOptional.get().getUserId();
 		}
 		List<TemplatesDTO> templates = (List<TemplatesDTO>) templatesRepository.findByMasterId(system_id);
 		templates.forEach(template -> {
@@ -91,10 +91,10 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 	@Override
 	public TemplatesResponse updateTemplate(int id, TemplatesRequest request, String username) {
-		Optional<User> userOptional = userRepository.findByUsername(username);
+		Optional<User> userOptional = userRepository.findBySystemId(username);
 		Long system_id = null;
 		if (userOptional.isPresent()) {
-			system_id = userOptional.get().getSystem_id();
+			system_id = userOptional.get().getUserId();
 		}
 		TemplatesDTO template = templatesRepository.findByIdAndMasterId(id, system_id).orElse(null);
 		TemplatesDTO updatedTemplate = null;
@@ -117,10 +117,10 @@ public class TemplatesServiceImpl implements TemplatesService {
 	@Transactional
 	@Override
 	public boolean deleteTemplate(int id, String username) {
-		Optional<User> userOptional = userRepository.findByUsername(username);
+		Optional<User> userOptional = userRepository.findBySystemId(username);
 		Long system_id = null;
 		if (userOptional.isPresent()) {
-			system_id = userOptional.get().getSystem_id();
+			system_id = userOptional.get().getUserId();
 		}
 
 		try {
