@@ -55,6 +55,16 @@ public class User {
 
 	private String language;
 
+	private String contactNo;
+
+	public String getContactNo() {
+		return contactNo;
+	}
+
+	public void setContactNo(String contactNo) {
+		this.contactNo = contactNo;
+	}
+
 	public Long getUserId() {
 		return userId;
 	}
@@ -153,7 +163,8 @@ public class User {
 
 	public User(Long userId, @NotBlank @Size(max = 20) String systemId, @NotBlank @Size(max = 50) @Email String email,
 			@NotBlank @Size(max = 120) String password, Set<Role> roles, String base64Password, String otpSecretKey,
-			LocalTime otpSendTime, String firstName, String lastName, String country, String language) {
+			LocalTime otpSendTime, String firstName, String lastName, String country, String language,
+			String contactNo) {
 		super();
 		this.userId = userId;
 		this.systemId = systemId;
@@ -167,6 +178,7 @@ public class User {
 		LastName = lastName;
 		this.country = country;
 		this.language = language;
+		this.contactNo = contactNo;
 	}
 
 	public User() {

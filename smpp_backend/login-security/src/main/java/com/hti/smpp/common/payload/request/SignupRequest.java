@@ -15,6 +15,7 @@ public class SignupRequest {
 	private String LastName;
 	private String country;
 	private String language;
+	private String contactNo;
 	private String username;
 	private String email;
 	private Set<String> role;
@@ -451,6 +452,14 @@ public class SignupRequest {
 
 	public void setLanguage(String language) {
 		this.language = language;
+	}
+
+	public String getContactNo() {
+		return contactNo;
+	}
+
+	public void setContactNo(String contactNo) {
+		this.contactNo = contactNo;
 	}
 
 }

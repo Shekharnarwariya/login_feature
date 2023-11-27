@@ -25,6 +25,16 @@ public class ProfileResponse {
 
 	private String balance;
 
+	private String contactNo;
+
+	public String getContactNo() {
+		return contactNo;
+	}
+
+	public void setContactNo(String contactNo) {
+		this.contactNo = contactNo;
+	}
+
 	public String getUserName() {
 		return userName;
 	}

@@ -184,6 +184,7 @@ public class AuthController {
 			user.setLanguage(signUpRequest.getLanguage());
 			user.setLastName(signUpRequest.getLastName());
 			user.setCountry(signUpRequest.getCountry());
+			user.setContactNo(signUpRequest.getContactNo());
 			Set<String> strRoles = signUpRequest.getRole();
 			Set<Role> roles = new HashSet<>();
 
@@ -271,7 +272,6 @@ public class AuthController {
 		entry.setLogging(signUpRequest.isLogging());
 		entry.setLoopSmscId(signUpRequest.getLoopSmscId());
 		entry.setMasterId(signUpRequest.getMasterId());
-		entry.setPassword(signUpRequest.getPassword());
 		entry.setPasswordExpiresOn(signUpRequest.getPasswordExpiresOn());
 		entry.setPriority(signUpRequest.getPriority());
 		entry.setRecordMnp(signUpRequest.isRecordMnp());
@@ -341,6 +341,7 @@ public class AuthController {
 			profileResponse.setLanguage(user.getLanguage());
 			profileResponse.setLastName(user.getLastName());
 			profileResponse.setRoles(user.getRoles());
+			profileResponse.setContactNo(user.getContactNo());
 
 			return ResponseEntity.ok(profileResponse);
 		} else {
@@ -414,7 +415,7 @@ public class AuthController {
 	@ApiResponse(responseCode = "200", description = "Password updated successfully")
 	@ApiResponse(responseCode = "400", description = "Error: Invalid old password")
 	@ApiResponse(responseCode = "404", description = "Error: User not found")
-	@PutMapping("/update")
+	@PutMapping("password/update")
 	public ResponseEntity<?> updatePassword(@Valid @RequestBody PasswordUpdateRequest passwordUpdateRequest) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		String currentUsername = authentication.getName();
