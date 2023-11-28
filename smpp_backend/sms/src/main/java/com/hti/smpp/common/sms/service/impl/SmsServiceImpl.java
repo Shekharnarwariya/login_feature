@@ -52,6 +52,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.hti.smpp.common.dto.BatchObject;
 import com.hti.smpp.common.dto.BulkMgmtContent;
+import com.hti.smpp.common.exception.NotFoundException;
+import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.login.dto.User;
 import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.management.dto.BulkMgmtEntry;
@@ -85,6 +87,7 @@ import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.BalanceEntryRepository;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
+import com.hti.smpp.common.util.Access;
 import com.logica.smpp.Data;
 import com.logica.smpp.Session;
 import com.logica.smpp.pdu.SubmitSM;
@@ -237,6 +240,15 @@ public class SmsServiceImpl implements SmsService {
 
 	public SmsResponse sendSms(SmsRequest smsRequest, String username) {
 		Optional<User> userOptional = userRepository.findByUsername(username);
+		
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+			if (!Access.isAuthorizedAll(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 
 		User user = null;
 		if (userOptional.isPresent()) {
@@ -1117,14 +1129,24 @@ public class SmsServiceImpl implements SmsService {
 
 	@Override
 	public BulkResponse sendBulkSms(BulkRequest bulkRequest, String username, MultipartFile destinationNumberFile) {
+		Optional<User> userOptional = userRepository.findByUsername(username);
+		
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+			if (!Access.isAuthorizedAll(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		double totalcost = 0, adminCost = 0;// total_defcost = 0;
 		String unicodeMsg = "";
 		String target = IConstants.FAILURE_KEY;
 		List<String> destinationList = null;
 		List<String> temp_number_list = new ArrayList<String>();
 		ProgressEvent progressEvent = new ProgressEvent(session1);
-		Optional<User> userOptional = userRepository.findByUsername(username);
-
+		
 		User user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
@@ -2131,6 +2153,16 @@ public class SmsServiceImpl implements SmsService {
 
 	@Override
 	public BulkResponse sendBulkCustome(BulkRequest bulkRequest, String username, MultipartFile destinationNumberFile) {
+		Optional<User> userOptional = userRepository.findByUsername(username);
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+			if (!Access.isAuthorizedAll(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		double totalcost = 0, adminCost = 0;// total_defcost = 0;
 		String unicodeMsg = "";
 		int no_of_msg = 0;
@@ -2138,7 +2170,6 @@ public class SmsServiceImpl implements SmsService {
 		ArrayList destinationList = null;
 		List<String> temp_number_list = new ArrayList<String>();
 		ProgressEvent progressEvent = new ProgressEvent(session1);
-		Optional<User> userOptional = userRepository.findByUsername(username);
 		User user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();

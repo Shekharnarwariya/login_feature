@@ -45,7 +45,7 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 		Optional<User> optionalUser = loginRepository.findByUsername(username);
 		if (optionalUser.isPresent()) {
 			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndUser(user.getRoles())) {
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -74,6 +74,16 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 
 	@Override
 	public ResponseEntity<HlrSmscEntry> update(int id, HlrSmscEntryRequest hlrSmscEntryRequest, String username) {
+		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			String systemId = userOptional.map(user -> String.valueOf(user.getSystemId())).orElse(null);
@@ -100,6 +110,16 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 
 	@Override
 	public ResponseEntity<Void> delete(int id, String username) {
+		
+		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			String systemId = userOptional.map(user -> String.valueOf(user.getSystemId())).orElse(null);
@@ -124,6 +144,15 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 
 	@Override
 	public ResponseEntity<HlrSmscEntry> getEntry(int id, String username) {
+		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			String systemId = userOptional.map(user -> String.valueOf(user.getSystemId())).orElse(null);
@@ -146,6 +175,17 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 
 	@Override
 	public List<HlrSmscEntry> list(String username) {
+		
+		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			String systemId = userOptional.map(user -> String.valueOf(user.getSystemId())).orElse(null);

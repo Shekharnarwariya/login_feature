@@ -61,40 +61,40 @@ public class SmscController {
 	@Operation(summary = "Save Custom Entry", description = "Save the custom entry to the system.")
 	@PostMapping("/custom")
 	public ResponseEntity<String> saveCustom(
-			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Request body for Custom Entry", required = true, content = @Content(schema = @Schema(implementation = CustomRequest.class))) @RequestBody CustomRequest customRequest) {
-		String result = smscDAOImpl.saveCustom(customRequest);
+			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Request body for Custom Entry", required = true, content = @Content(schema = @Schema(implementation = CustomRequest.class))) @RequestBody CustomRequest customRequest, @RequestHeader("username") String username) {
+		String result = smscDAOImpl.saveCustom(customRequest, username);
 		return new ResponseEntity<>(result, HttpStatus.CREATED);
 	}
 
 	@Operation(summary = "Save Group", description = "Save the group in the system.")
 	@PostMapping("/group")
 	public ResponseEntity<String> saveGroup(
-			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Request body for Group", required = true, content = @Content(schema = @Schema(implementation = GroupRequest.class))) @RequestBody GroupRequest groupRequest) {
-		String result = smscDAOImpl.saveGroup(groupRequest);
+			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Request body for Group", required = true, content = @Content(schema = @Schema(implementation = GroupRequest.class))) @RequestBody GroupRequest groupRequest, @RequestHeader("username") String username) {
+		String result = smscDAOImpl.saveGroup(groupRequest, username);
 		return new ResponseEntity<>(result, HttpStatus.CREATED);
 	}
 
 	@Operation(summary = "Save Group Member", description = "Save the group member in the system.")
 	@PostMapping("/groupMember")
 	public ResponseEntity<String> saveGroupMember(
-			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Request body for Group Member", required = true, content = @Content(schema = @Schema(implementation = GroupMemberRequest.class))) @RequestBody GroupMemberRequest groupMemberRequest) {
-		String result = smscDAOImpl.saveGroupMember(groupMemberRequest);
+			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Request body for Group Member", required = true, content = @Content(schema = @Schema(implementation = GroupMemberRequest.class))) @RequestBody GroupMemberRequest groupMemberRequest, @RequestHeader("username") String username) {
+		String result = smscDAOImpl.saveGroupMember(groupMemberRequest, username);
 		return new ResponseEntity<>(result, HttpStatus.CREATED);
 	}
-
+	
 	@Operation(summary = "Save Limit", description = "Save the limit in the system.")
 	@PostMapping("/limit")
 	public ResponseEntity<String> saveLimit(
-			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Request body for Limit", required = true, content = @Content(schema = @Schema(implementation = LimitRequest.class))) @RequestBody LimitRequest limitRequest) {
-		String result = smscDAOImpl.saveLimit(limitRequest);
+			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Request body for Limit", required = true, content = @Content(schema = @Schema(implementation = LimitRequest.class))) @RequestBody LimitRequest limitRequest, @RequestHeader("username") String username) {
+		String result = smscDAOImpl.saveLimit(limitRequest, username);
 		return new ResponseEntity<>(result, HttpStatus.CREATED);
 	}
 
 	@Operation(summary = "Update SMS Entry", description = "Update the SMS entry in the system.")
 	@PutMapping("/smsc/{smscId}")
 	public ResponseEntity<String> updateSmscEntry(@PathVariable int smscId,
-			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Request body for SMS Entry", required = true, content = @Content(schema = @Schema(implementation = SmscEntryRequest.class))) @RequestBody SmscEntryRequest smscEntryRequest) {
-		String result = smscDAOImpl.update(smscId, smscEntryRequest);
+			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Request body for SMS Entry", required = true, content = @Content(schema = @Schema(implementation = SmscEntryRequest.class))) @RequestBody SmscEntryRequest smscEntryRequest, @RequestHeader("username") String username) {
+		String result = smscDAOImpl.update(smscId, smscEntryRequest, username);
 		if (result == null) {
 			return new ResponseEntity<>("Smsc entry not found for id: " + smscId, HttpStatus.NOT_FOUND);
 		}
@@ -103,29 +103,29 @@ public class SmscController {
 
 	@Operation(summary = "Delete SMS Entry", description = "Delete the SMS entry from the system.")
 	@DeleteMapping("smsc/{id}")
-	public ResponseEntity<String> deleteSmscEntry(@PathVariable int id) {
-		String result = smscDAOImpl.delete(id);
+	public ResponseEntity<String> deleteSmscEntry(@PathVariable int id, @RequestHeader("username") String username) {
+		String result = smscDAOImpl.delete(id, username);
 		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
 
 	@Operation(summary = "List Bound Status", description = "List status entries based on the bound parameter.")
 	@GetMapping("/status/listBound")
-	public ResponseEntity<List<StatusEntry>> listBound(@RequestParam boolean bound) {
-		List<StatusEntry> statusEntries = smscDAOImpl.listBound(bound);
+	public ResponseEntity<List<StatusEntry>> listBound(@RequestParam boolean bound, @RequestHeader("username") String username) {
+		List<StatusEntry> statusEntries = smscDAOImpl.listBound(bound, username);
 		return new ResponseEntity<>(statusEntries, HttpStatus.OK);
 	}
 
 	@Operation(summary = "List Custom Entries", description = "List all custom entries.")
 	@GetMapping("/custom/listCustom")
-	public ResponseEntity<List<CustomEntry>> listCustom() {
-		List<CustomEntry> customEntries = smscDAOImpl.listCustom();
+	public ResponseEntity<List<CustomEntry>> listCustom(@RequestHeader("username") String username) {
+		List<CustomEntry> customEntries = smscDAOImpl.listCustom(username);
 		return new ResponseEntity<>(customEntries, HttpStatus.OK);
 	}
 
 	@Operation(summary = "Get Custom Entry", description = "Get a custom entry based on the provided ID.")
 	@GetMapping("/custom/{smscId}")
-	public ResponseEntity<CustomEntry> getCustomEntry(@PathVariable int smscId) {
-		CustomEntry customEntry = smscDAOImpl.getCustomEntry(smscId);
+	public ResponseEntity<CustomEntry> getCustomEntry(@PathVariable int smscId, @RequestHeader("username") String username) {
+		CustomEntry customEntry = smscDAOImpl.getCustomEntry(smscId, username);
 		if (customEntry != null) {
 			return new ResponseEntity<>(customEntry, HttpStatus.OK);
 		} else {
@@ -135,7 +135,7 @@ public class SmscController {
 
 	@Operation(summary = "Update Custom Entry", description = "Update the custom entry with the provided ID.")
 	@PutMapping("/custom/{customId}")
-	public ResponseEntity<String> updateCustom(@PathVariable int customId, @RequestBody CustomRequest customRequest) {
+	public ResponseEntity<String> updateCustom(@PathVariable int customId, @RequestBody CustomRequest customRequest, @RequestHeader("username") String username) {
 		smscDAOImpl.updateCustom(customId, customRequest);
 		return new ResponseEntity<>("CustomEntry with ID " + customId + " successfully updated.", HttpStatus.OK);
 	}

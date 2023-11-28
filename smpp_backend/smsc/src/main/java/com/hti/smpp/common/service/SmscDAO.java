@@ -25,23 +25,23 @@ public interface SmscDAO {
 
 	public String save(SmscEntryRequest smscEntryRequest, String username);
 
-	public String update(int smscId, SmscEntryRequest smscEntryRequest);
+	public String update(int smscId, SmscEntryRequest smscEntryRequest, String username);
 
-	public String delete(int smscId);
+	public String delete(int smscId, String username);
 
-	public List<StatusEntry> listBound(boolean bound);
+	public List<StatusEntry> listBound(boolean bound, String username);
 
-	public List<CustomEntry> listCustom();
+	public List<CustomEntry> listCustom(String username);
 
-	public CustomEntry getCustomEntry(int smscId);
+	public CustomEntry getCustomEntry(int smscId, String username);
 
-	public String saveCustom(CustomRequest customRequest);
+	public String saveCustom(CustomRequest customRequest, String username);
 
 	public String updateCustom(int customId, CustomRequest customRequest);
 
 	public String deleteCustom(int customId);
 
-	public String saveLimit(LimitRequest limitRequest);
+	public String saveLimit(LimitRequest limitRequest, String username);
 
 	public String updateLimit(int limitId, LimitRequest limitRequest);
 
@@ -50,7 +50,7 @@ public interface SmscDAO {
 	public List<LimitEntry> listLimit();
 
 	// --------- Grouping ---------------
-	public String saveGroup(GroupRequest groupRequest);
+	public String saveGroup(GroupRequest groupRequest, String username);
 
 	public String updateGroup(GroupRequest groupRequest);
 
@@ -59,7 +59,7 @@ public interface SmscDAO {
 	public List<GroupEntry> listGroup();
 
 	// ---------- Group Members ----------
-	public String saveGroupMember(GroupMemberRequest groupMemberRequest);
+	public String saveGroupMember(GroupMemberRequest groupMemberRequest, String username);
 
 	public String updateGroupMember(GroupMemberRequest groupMemberRequest);
 

@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
+import com.hti.smpp.common.exception.NotFoundException;
+import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.login.dto.User;
 import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.request.TemplatesRequest;
@@ -15,6 +17,7 @@ import com.hti.smpp.common.responce.TemplatesResponse;
 import com.hti.smpp.common.service.TemplatesService;
 import com.hti.smpp.common.templates.dto.TemplatesDTO;
 import com.hti.smpp.common.templates.repository.TemplatesRepository;
+import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.Converter;
 
 import jakarta.transaction.Transactional;
@@ -34,9 +37,19 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 	@Override
 	public TemplatesResponse createTemplate(TemplatesRequest request, String username) {
+		
+		Optional<User> userOptional = userRepository.findByUsername(username);
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+			if (!Access.isAuthorizedAll(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		TemplatesDTO template = new TemplatesDTO();
 		template.setMessage(Converter.UTF16(request.getMessage()));
-		Optional<User> userOptional = userRepository.findByUsername(username);
 		if (userOptional.isPresent()) {
 			template.setMasterId(userOptional.get().getSystem_id());
 		}
@@ -53,7 +66,17 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 	@Override
 	public TemplatesResponse getTemplateById(int id, String username) {
+		
 		Optional<User> userOptional = userRepository.findByUsername(username);
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+			if (!Access.isAuthorizedAll(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		Long system_id = null;
 		if (userOptional.isPresent()) {
 			system_id = userOptional.get().getSystem_id();
@@ -72,7 +95,17 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 	@Override
 	public List<TemplatesResponse> getAllTemplates(String username) {
+		
 		Optional<User> userOptional = userRepository.findByUsername(username);
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+			if (!Access.isAuthorizedAll(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		Long system_id = null;
 		if (userOptional.isPresent()) {
 			system_id = userOptional.get().getSystem_id();
@@ -92,6 +125,16 @@ public class TemplatesServiceImpl implements TemplatesService {
 	@Override
 	public TemplatesResponse updateTemplate(int id, TemplatesRequest request, String username) {
 		Optional<User> userOptional = userRepository.findByUsername(username);
+		
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+			if (!Access.isAuthorizedAll(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		Long system_id = null;
 		if (userOptional.isPresent()) {
 			system_id = userOptional.get().getSystem_id();
@@ -118,6 +161,16 @@ public class TemplatesServiceImpl implements TemplatesService {
 	@Override
 	public boolean deleteTemplate(int id, String username) {
 		Optional<User> userOptional = userRepository.findByUsername(username);
+		
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+			if (!Access.isAuthorizedAll(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		Long system_id = null;
 		if (userOptional.isPresent()) {
 			system_id = userOptional.get().getSystem_id();

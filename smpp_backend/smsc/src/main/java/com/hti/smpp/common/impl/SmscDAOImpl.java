@@ -17,9 +17,13 @@ import com.hti.smpp.common.contacts.dto.GroupEntry;
 import com.hti.smpp.common.contacts.dto.GroupMemberEntry;
 import com.hti.smpp.common.contacts.repository.GroupEntryRepository;
 import com.hti.smpp.common.contacts.repository.GroupMemberEntryRepository;
+import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.SmscDataAccessException;
 import com.hti.smpp.common.exception.SmscInternalServerException;
 import com.hti.smpp.common.exception.SmscNotFoundException;
+import com.hti.smpp.common.exception.UnauthorizedException;
+import com.hti.smpp.common.login.dto.User;
+import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.request.CustomRequest;
 import com.hti.smpp.common.request.GroupMemberRequest;
 import com.hti.smpp.common.request.GroupRequest;
@@ -42,6 +46,7 @@ import com.hti.smpp.common.smsc.repository.StatusEntryRepository;
 import com.hti.smpp.common.smsc.repository.TrafficScheduleEntryRepository;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
+import com.hti.smpp.common.util.Access;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -82,9 +87,23 @@ public class SmscDAOImpl implements SmscDAO {
 
 	@Autowired
 	private UserEntryRepository userRepository;
+	
+	@Autowired
+	private UserRepository loginRepository;
 
 	@Override
 	public String save(SmscEntryRequest smscEntryRequest, String username) {
+		
+		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		try {
 			// Logging the username
 			System.out.println("Username: " + username);
@@ -125,7 +144,18 @@ public class SmscDAOImpl implements SmscDAO {
 	}
 
 	@Override
-	public String update(int smscId, SmscEntryRequest smscEntryRequest) {
+	public String update(int smscId, SmscEntryRequest smscEntryRequest, String username) {
+		
+		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		try {
 			if (smscEntryRepository.existsById(smscId)) {
 				SmscEntry convertRequest = ConvertRequest(smscEntryRequest);
@@ -148,7 +178,18 @@ public class SmscDAOImpl implements SmscDAO {
 	}
 
 	@Override
-	public String delete(int smscId) {
+	public String delete(int smscId, String username) {
+		
+		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		try {
 			Optional<SmscEntry> smscEntryOptional = smscEntryRepository.findById(smscId);
 			if (!smscEntryOptional.isPresent()) {
@@ -170,7 +211,18 @@ public class SmscDAOImpl implements SmscDAO {
 	}
 
 	@Override
-	public List<StatusEntry> listBound(boolean bound) {
+	public List<StatusEntry> listBound(boolean bound, String username) {
+		
+		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		try {
 			List<StatusEntry> list;
 			if (bound) {
@@ -191,7 +243,18 @@ public class SmscDAOImpl implements SmscDAO {
 	}
 
 	@Override
-	public List<CustomEntry> listCustom() {
+	public List<CustomEntry> listCustom(String username) {
+		
+		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		try {
 			List<CustomEntry> list = customEntryRepository.findAll();
 			return list;
@@ -207,7 +270,18 @@ public class SmscDAOImpl implements SmscDAO {
 	}
 
 	@Override
-	public CustomEntry getCustomEntry(int smscId) {
+	public CustomEntry getCustomEntry(int smscId, String username) {
+		
+		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		try {
 			Optional<CustomEntry> optionalEntry = customEntryRepository.findById(smscId);
 			if (optionalEntry.isPresent()) {
@@ -232,7 +306,18 @@ public class SmscDAOImpl implements SmscDAO {
 	}
 
 	@Override
-	public String saveCustom(CustomRequest customRequest) {
+	public String saveCustom(CustomRequest customRequest, String username) {
+		
+		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		try {
 			CustomEntry convertedRequest = ConvertRequest(customRequest);
 			customEntryRepository.save(convertedRequest);
@@ -294,7 +379,18 @@ public class SmscDAOImpl implements SmscDAO {
 	}
 
 	@Override
-	public String saveLimit(LimitRequest limitRequest) {
+	public String saveLimit(LimitRequest limitRequest, String username) {
+		
+		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedAll(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		try {
 			List<LimitEntry> convertRequest = ConvertRequest(limitRequest);
 			limitEntryRepository.saveAll(convertRequest);
@@ -373,7 +469,18 @@ public class SmscDAOImpl implements SmscDAO {
 	}
 
 	@Override
-	public String saveGroup(GroupRequest groupRequest) {
+	public String saveGroup(GroupRequest groupRequest, String username) {
+		
+		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		try {
 			List<GroupEntry> convertedRequest = ConvertRequest(groupRequest);
 			groupEntryRepository.saveAll(convertedRequest);
@@ -451,7 +558,18 @@ public class SmscDAOImpl implements SmscDAO {
 	}
 
 	@Override
-	public String saveGroupMember(GroupMemberRequest groupMemberRequest) {
+	public String saveGroupMember(GroupMemberRequest groupMemberRequest, String username) {
+		
+		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		try {
 			List<GroupMemberEntry> convertRequest = ConvertRequest(groupMemberRequest);
 			for (GroupMemberEntry entry : convertRequest) {

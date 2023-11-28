@@ -32,6 +32,10 @@ import com.hazelcast.query.PredicateBuilder.EntryObject;
 import com.hazelcast.query.impl.PredicateBuilderImpl;
 import com.hti.smpp.common.contacts.dto.GroupEntry;
 import com.hti.smpp.common.contacts.repository.GroupEntryRepository;
+import com.hti.smpp.common.exception.NotFoundException;
+import com.hti.smpp.common.exception.UnauthorizedException;
+import com.hti.smpp.common.login.dto.User;
+import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.request.OptEntryArrForm;
 import com.hti.smpp.common.request.RouteRequest;
@@ -58,6 +62,7 @@ import com.hti.smpp.common.smsc.repository.SmscEntryRepository;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
+import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.Constants;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
@@ -98,6 +103,9 @@ public class RouteServiceImpl implements RouteServices {
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
+	
+	@Autowired
+	private UserRepository loginRepository;
 
 	@Autowired
 	private OptionalRouteEntryScheduleRepository optionalRouteEntryScheduleRepository;
@@ -105,6 +113,17 @@ public class RouteServiceImpl implements RouteServices {
 	@Override
 	@Transactional
 	public String saveRoute(RouteRequest RouteRequest, String username) {
+		
+		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		String target = IConstants.FAILURE_KEY;
 		// Logging the username
 		System.out.println("Username: " + username);
@@ -1077,6 +1096,17 @@ public class RouteServiceImpl implements RouteServices {
 
 	@Override
 	public OptionRouteResponse updateOptionalRoute(OptEntryArrForm optRouteEntry, String username) {
+		
+		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		OptionRouteResponse responce = new OptionRouteResponse();
 		System.out.println("Username: " + username);
 		String target = IConstants.FAILURE_KEY;
@@ -1425,6 +1455,17 @@ public class RouteServiceImpl implements RouteServices {
 
 	@Override
 	public OptionRouteResponse undo(OptEntryArrForm optRouteEntry, String username) {
+		
+		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
 		String target = IConstants.FAILURE_KEY;
 		OptionRouteResponse responce = new OptionRouteResponse();
 		String masterid = null;
@@ -1496,6 +1537,16 @@ public class RouteServiceImpl implements RouteServices {
 
 	@Override
 	public OptionRouteResponse previous(OptEntryArrForm routingForm, String username) {
+		
+		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 
 		OptionRouteResponse response = new OptionRouteResponse();
 		String target = IConstants.FAILURE_KEY;
