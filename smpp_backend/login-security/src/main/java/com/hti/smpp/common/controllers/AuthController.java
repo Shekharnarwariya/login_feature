@@ -185,6 +185,7 @@ public class AuthController {
 			user.setLastName(signUpRequest.getLastName());
 			user.setCountry(signUpRequest.getCountry());
 			user.setContactNo(signUpRequest.getContactNo());
+			user.setCurrency(signUpRequest.getCurrency());
 			Set<String> strRoles = signUpRequest.getRole();
 			Set<Role> roles = new HashSet<>();
 
@@ -342,7 +343,7 @@ public class AuthController {
 			profileResponse.setLastName(user.getLastName());
 			profileResponse.setRoles(user.getRoles());
 			profileResponse.setContactNo(user.getContactNo());
-
+			profileResponse.setCurrency(user.getCurrency());
 			return ResponseEntity.ok(profileResponse);
 		} else {
 			throw new NotFoundException("Error: User not found!");
@@ -368,7 +369,7 @@ public class AuthController {
 		if (EmailValidator.isEmailValid(user.getEmail())) {
 			emailSender.sendEmail(user.getEmail(), Constant.PASSWORD_FORGOT_SUBJECT, Constant.TEMPLATE_PATH,
 					emailSender.createSourceMap(Constant.MESSAGE_FOR_FORGOT_PASSWORD,
-							"username:- " + user.getSystemId() + "  password:- " + newPassword));
+							user.getFirstName() + " " + user.getLastName(), Constant.FORGOT_FLAG_SUBJECT));
 		}
 
 		return ResponseEntity.ok(new MessageResponse("Password Reset Successfully!"));
@@ -394,7 +395,9 @@ public class AuthController {
 
 				// Send Email with OTP
 				emailSender.sendEmail(user.getEmail(), Constant.OTP_SUBJECT, Constant.TEMPLATE_PATH,
-						emailSender.createSourceMap(Constant.MESSAGE_FOR_OTP, generateOTP));
+						emailSender.createSourceMap(Constant.MESSAGE_FOR_OTP, generateOTP,
+								Constant.SECOND_MESSAGE_FOR_OTP, Constant.OTP_FLAG_SUBJECT,
+								user.getFirstName() + " " + user.getLastName()));
 
 				// Save User with Updated OTP
 				userRepository.save(user);
@@ -431,8 +434,8 @@ public class AuthController {
 				userRepository.save(user);
 				if (EmailValidator.isEmailValid(user.getEmail())) {
 					emailSender.sendEmail(user.getEmail(), Constant.PASSWORD_UPDATE_SUBJECT, Constant.TEMPLATE_PATH,
-							emailSender.createSourceMap(Constant.MESSAGE_FOR_PASSWORD_UPDATE, "username:- "
-									+ user.getSystemId() + "  password:- " + passwordUpdateRequest.getNewPassword()));
+							emailSender.createSourceMap(Constant.MESSAGE_FOR_PASSWORD_UPDATE,
+									user.getFirstName() + " " + user.getLastName(), Constant.UPDATE_FLAG_SUBJECT));
 				}
 				return ResponseEntity.ok(new MessageResponse("Password Updated Successfully!"));
 			} else {

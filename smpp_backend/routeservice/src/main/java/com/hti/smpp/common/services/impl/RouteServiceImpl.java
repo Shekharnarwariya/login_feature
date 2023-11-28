@@ -69,6 +69,7 @@ import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MultiUtility;
 
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.InternalServerErrorException;
 
 @Service
 public class RouteServiceImpl implements RouteServices {
@@ -1587,4 +1588,55 @@ public class RouteServiceImpl implements RouteServices {
 		response.setStatus(target);
 		return response;
 	}
+
+	@Override
+	public OptionRouteResponse basic(OptEntryArrForm routingForm, String username) {
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		String target = IConstants.FAILURE_KEY;
+		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
+		int[] id = routingForm.getRouteId();
+		try {
+
+			if (id != null && id.length > 0) {
+				List<RouteEntryExt> list = routeEntryRepository.findAllByCustomQuery(routingForm.getCriterionEntries());
+				if (!list.isEmpty()) {
+					Map<Integer, String> smscnames = listNames();
+					Map<Integer, String> smsclist = new HashMap<Integer, String>();
+					Map<Integer, Set<String>> group_mapping = getSmscGroupMapping();
+					for (int smsc_id : smscnames.keySet()) {
+						String smsc_name = smscnames.get(smsc_id);
+						if (group_mapping.containsKey(smsc_id)) {
+							smsclist.put(smsc_id, smsc_name + " " + group_mapping.get(smsc_id));
+						} else {
+							smsclist.put(smsc_id, smsc_name + " [NONE]");
+						}
+					}
+					smsclist.put(0, "DOWN [NONE]");
+					optionRouteResponse.setRoutinglist(list);
+					optionRouteResponse.setSmsclist(smsclist);
+					optionRouteResponse.setGroupDetail(listGroupNames());
+					target = "basic";
+				} else {
+					logger.error("error.record.unavailable");
+				}
+			} else {
+				logger.error("error.record.unavailable");
+			}
+		} catch (Exception ex) {
+			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			throw new InternalServerErrorException("Process Error: " + ex.getMessage());
+		}
+		optionRouteResponse.setStatus(target);
+
+		return optionRouteResponse;
+	}
+
 }

@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
@@ -72,5 +74,12 @@ public class RouteController {
 	public OptionRouteResponse previous(@RequestBody OptEntryArrForm optEntryArrForm,
 			@RequestHeader("username") String username) {
 		return routeService.previous(optEntryArrForm, username);
+	}
+
+	@PostMapping("/basic")
+	@Operation(summary = "Perform a basic operation", description = "This endpoint performs a basic operation.")
+	public OptionRouteResponse basic(@RequestBody OptEntryArrForm optEntryArrForm,
+			@Parameter(description = "The username provided in the request header", required = true, example = "john_doe") @RequestHeader("username") String username) {
+		return routeService.basic(optEntryArrForm, username);
 	}
 }

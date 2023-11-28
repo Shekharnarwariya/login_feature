@@ -43,11 +43,12 @@ spring:
             - AuthenticationFilter
        
         - id: front-end
-          uri: http://localhost:8100/
+          uri: http://localhost:3000/
           predicates:
-            - Path=/**
-          filters:
-            - AuthenticationFilter
+           - Path=/**
+
+
+   
         
   application:
     name: API-GATEWAY-SERVICE

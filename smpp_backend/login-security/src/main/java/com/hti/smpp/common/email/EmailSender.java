@@ -1,5 +1,8 @@
 package com.hti.smpp.common.email;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,11 +13,9 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Component
 public class EmailSender {
@@ -65,19 +66,19 @@ public class EmailSender {
 		helper.setSubject(subject);
 		helper.setText(emailContent, true);
 		ClassPathResource imageResource = new ClassPathResource(INLINE_IMAGE_RESOURCE);
-		ClassPathResource backgroundImageResource = new ClassPathResource(INLINE_BACKGROUND_IMAGE_RESOURCE );
+		ClassPathResource backgroundImageResource = new ClassPathResource(INLINE_BACKGROUND_IMAGE_RESOURCE);
 		helper.addInline("htiLogo", imageResource);
 		helper.addInline("background", backgroundImageResource);
 	}
 
-	public Map<String, String> createSourceMap(String message, String otp, String username, String password) {
-		Map<String, String> sourceMap = new HashMap<>();
-		sourceMap.put("message", message);
-		sourceMap.put("otp", otp);
-		sourceMap.put("username", username);
-		sourceMap.put("password", password);
-		return sourceMap;
-	}
+//	public Map<String, String> createSourceMap(String message, String otp, String username, String password) {
+//		Map<String, String> sourceMap = new HashMap<>();
+//		sourceMap.put("message", message);
+//		sourceMap.put("otp", otp);
+//		sourceMap.put("username", username);
+//		sourceMap.put("password", password);
+//		return sourceMap;
+//	}
 
 	public Map<String, String> createSourceMap(String message) {
 		Map<String, String> sourceMap = new HashMap<String, String>();
@@ -85,21 +86,25 @@ public class EmailSender {
 		return sourceMap;
 	}
 
-	public Map<String, String> createSourceMap(String message, String username, String password) {
+	public Map<String, String> createSourceMap(String message, String username, String flag) {
 		Map<String, String> sourceMap = new HashMap<String, String>();
 		sourceMap.put("message", message);
 		sourceMap.put("username", username);
-		sourceMap.put("password", password);
+		sourceMap.put("flag", flag);
 		return sourceMap;
 
 	}
 
-	public Map<String, String> createSourceMap(String message, String otp) {
+	public Map<String, String> createSourceMap(String message, String otp, String secondMessage, String flag,
+			String username) {
 		Map<String, String> sourceMap = new HashMap<String, String>();
 		sourceMap.put("message", message);
 		sourceMap.put("otp", otp);
+		sourceMap.put("secondMessage", secondMessage);
+		sourceMap.put("flag", flag);
+		sourceMap.put("username", username);
 		return sourceMap;
 
 	}
-	
+
 }

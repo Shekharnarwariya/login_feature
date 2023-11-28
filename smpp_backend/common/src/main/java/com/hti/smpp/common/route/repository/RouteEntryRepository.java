@@ -56,4 +56,10 @@ public interface RouteEntryRepository extends JpaRepository<RouteEntry, Integer>
 			+ "AND B.regGroupId = H.id " + "ORDER BY B.affectedOn DESC", nativeQuery = true)
 	public List<RouteEntryExt> getOptRoutingLog(@Param("ids") List<Long> ids);
 
+	@Query(value = "SELECT A.id, A.user_id, A.smsc_id, A.group_id, A.network_id, CAST(A.cost AS CHAR) AS cost, A.smsc_type, A.editBy, A.edit_on, A.remarks, "
+			+ "B.country, B.operator, B.mcc, B.mnc, C.name, D.system_id, D.master_id, D.currency, E.acc_type, F.name "
+			+ "FROM routemaster A, network B, smscmaster C, usermaster D, web_master E, smsc_group F "
+			+ "WHERE A.id IN (?1) AND A.user_id = D.id AND A.smsc_id = C.id AND A.network_id = B.id AND A.group_id = F.id AND A.user_id = E.user_id", nativeQuery = true)
+	public List<RouteEntryExt> findAllByCustomQuery(String criterianEntries);
+
 }

@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Update Notification</title>
+    <title>Notification</title>
+    <link rel="stylesheet" href="styles.css"> <!-- External stylesheet -->
+
     <style>
         body {
             margin: 0;
@@ -48,6 +50,9 @@
         }
 
         .footer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             text-align: center;
             padding: 1rem;
             background-color: #334163;
@@ -74,22 +79,20 @@
 <body>
     <div class="main-div">
         <div class="logo">
-            <img src="cid:htiLogo" alt="hti company Logo">
+            <img src="cid:htiLogo" alt="HTI Company Logo"> <!-- Added alt text -->
         </div>
 
         <div class="header">
             <div style="display: flex; justify-content: center; align-items: center;">
-                <h3>Password Updated</h3>
+                  <h4 th:text="${flag}"> </h4>
             </div>
         </div>
 
         <div class="content">
             Hello <b th:text="${username}"></b>,<br/><br/>
-
-            We’ve changed your password, as you asked. To view or change your account information, <a href="#">visit your Account</a>.<br/><br/>
-
-            If you did not ask to change your password, we are here to help secure your account – just <a href="#">contact us</a>.<br/><br/>
-
+            <p th:text="${message}"></p><br/><br/>
+             OTP: <b th:text="${otp}"></b><br/><br/>
+              <p th:text="${secondMessage}"></p>
             Warm regards,<br/>
             SMPP Team<br/><br/>
         </div>
@@ -97,10 +100,8 @@
         <hr>
 
         <div class="footer">
-            The Broad Net | Kemp House 152-160 City Road London, England, EC1V 2NX.
-        </div>
-        <div class="footer">
-            © 2023 Broadnet. All Rights Reserved.
+            <p>The Broad Net | Kemp House 152-160 City Road London, England, EC1V 2NX.</p>
+            <p>© 2023 Broadnet. All Rights Reserved.</p>
         </div>
     </div>
 </body>

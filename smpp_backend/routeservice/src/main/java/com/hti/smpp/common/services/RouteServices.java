@@ -29,6 +29,8 @@ public interface RouteServices {
 
 	public OptionRouteResponse previous(OptEntryArrForm optEntryArrForm, String username);
 
+	public OptionRouteResponse basic(OptEntryArrForm optEntryArrForm, String username);
+
 	public void saveRouteEntry(RouteEntryExt entry);
 
 	public void saveDefaultEntries(RouteEntry entry);
