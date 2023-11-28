@@ -37,8 +37,8 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 	@Override
 	public TemplatesResponse createTemplate(TemplatesRequest request, String username) {
-		
-		Optional<User> userOptional = userRepository.findByUsername(username);
+
+		Optional<User> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			User user = userOptional.get();
 			if (!Access.isAuthorizedAll(user.getRoles())) {
@@ -47,13 +47,10 @@ public class TemplatesServiceImpl implements TemplatesService {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
+
 		TemplatesDTO template = new TemplatesDTO();
 		template.setMessage(Converter.UTF16(request.getMessage()));
-<<<<<<< HEAD
-=======
-		Optional<User> userOptional = userRepository.findBySystemId(username);
->>>>>>> e0ad23f17ffc83219e92ff45cebe0b2674114e3d
+		userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			template.setMasterId(userOptional.get().getUserId());
 		}
@@ -70,9 +67,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 	@Override
 	public TemplatesResponse getTemplateById(int id, String username) {
-<<<<<<< HEAD
-		
-		Optional<User> userOptional = userRepository.findByUsername(username);
+		Optional<User> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			User user = userOptional.get();
 			if (!Access.isAuthorizedAll(user.getRoles())) {
@@ -81,10 +76,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
-=======
-		Optional<User> userOptional = userRepository.findBySystemId(username);
->>>>>>> e0ad23f17ffc83219e92ff45cebe0b2674114e3d
+		userOptional = userRepository.findBySystemId(username);
 		Long system_id = null;
 		if (userOptional.isPresent()) {
 			system_id = userOptional.get().getUserId();
@@ -103,9 +95,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 	@Override
 	public List<TemplatesResponse> getAllTemplates(String username) {
-<<<<<<< HEAD
-		
-		Optional<User> userOptional = userRepository.findByUsername(username);
+		Optional<User> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			User user = userOptional.get();
 			if (!Access.isAuthorizedAll(user.getRoles())) {
@@ -114,10 +104,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
-=======
-		Optional<User> userOptional = userRepository.findBySystemId(username);
->>>>>>> e0ad23f17ffc83219e92ff45cebe0b2674114e3d
+		userOptional = userRepository.findBySystemId(username);
 		Long system_id = null;
 		if (userOptional.isPresent()) {
 			system_id = userOptional.get().getUserId();
@@ -136,9 +123,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 	@Override
 	public TemplatesResponse updateTemplate(int id, TemplatesRequest request, String username) {
-<<<<<<< HEAD
-		Optional<User> userOptional = userRepository.findByUsername(username);
-		
+		Optional<User> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			User user = userOptional.get();
 			if (!Access.isAuthorizedAll(user.getRoles())) {
@@ -147,10 +132,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
-=======
-		Optional<User> userOptional = userRepository.findBySystemId(username);
->>>>>>> e0ad23f17ffc83219e92ff45cebe0b2674114e3d
+		userOptional = userRepository.findBySystemId(username);
 		Long system_id = null;
 		if (userOptional.isPresent()) {
 			system_id = userOptional.get().getUserId();
@@ -176,9 +158,8 @@ public class TemplatesServiceImpl implements TemplatesService {
 	@Transactional
 	@Override
 	public boolean deleteTemplate(int id, String username) {
-<<<<<<< HEAD
-		Optional<User> userOptional = userRepository.findByUsername(username);
-		
+		Optional<User> userOptional = userRepository.findBySystemId(username);
+
 		if (userOptional.isPresent()) {
 			User user = userOptional.get();
 			if (!Access.isAuthorizedAll(user.getRoles())) {
@@ -187,10 +168,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
-=======
-		Optional<User> userOptional = userRepository.findBySystemId(username);
->>>>>>> e0ad23f17ffc83219e92ff45cebe0b2674114e3d
+		userOptional = userRepository.findBySystemId(username);
 		Long system_id = null;
 		if (userOptional.isPresent()) {
 			system_id = userOptional.get().getUserId();

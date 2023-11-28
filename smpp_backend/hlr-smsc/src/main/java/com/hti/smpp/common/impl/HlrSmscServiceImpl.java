@@ -3,7 +3,6 @@ package com.hti.smpp.common.impl;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +16,6 @@ import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.hlr.dto.HlrSmscEntry;
 import com.hti.smpp.common.hlr.repository.HlrSmscRepository;
-import com.hti.smpp.common.login.dto.Role;
 import com.hti.smpp.common.login.dto.User;
 import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.request.HlrSmscEntryRequest;
@@ -74,7 +72,7 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 
 	@Override
 	public ResponseEntity<HlrSmscEntry> update(int id, HlrSmscEntryRequest hlrSmscEntryRequest, String username) {
-		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
 		if (optionalUser.isPresent()) {
 			User user = optionalUser.get();
 			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
@@ -83,14 +81,12 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
-		try {
-			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-			String systemId = userOptional.map(user -> String.valueOf(user.getSystemId())).orElse(null);
 
-			Optional<HlrSmscEntry> existingEntry = hlrSmscRepository.findByIdAndSystemId(id, systemId);
+		try {
+
+			Optional<HlrSmscEntry> existingEntry = hlrSmscRepository.findByIdAndSystemId(id, username);
 			if (existingEntry.isEmpty()) {
-				logger.warn("HlrSmscEntry with ID {} and systemId {} not found", id, systemId);
+				logger.warn("HlrSmscEntry with ID {} and systemId {} not found", id, username);
 				return ResponseEntity.notFound().build();
 			}
 
@@ -110,8 +106,8 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 
 	@Override
 	public ResponseEntity<Void> delete(int id, String username) {
-		
-		Optional<User> optionalUser = loginRepository.findByUsername(username);
+
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
 		if (optionalUser.isPresent()) {
 			User user = optionalUser.get();
 			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
@@ -144,7 +140,7 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 
 	@Override
 	public ResponseEntity<HlrSmscEntry> getEntry(int id, String username) {
-		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
 		if (optionalUser.isPresent()) {
 			User user = optionalUser.get();
 			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
@@ -175,8 +171,8 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 
 	@Override
 	public List<HlrSmscEntry> list(String username) {
-		
-		Optional<User> optionalUser = loginRepository.findByUsername(username);
+
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
 		if (optionalUser.isPresent()) {
 			User user = optionalUser.get();
 			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
@@ -185,7 +181,7 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
+
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			String systemId = userOptional.map(user -> String.valueOf(user.getSystemId())).orElse(null);

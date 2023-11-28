@@ -239,9 +239,8 @@ public class SmsServiceImpl implements SmsService {
 	}
 
 	public SmsResponse sendSms(SmsRequest smsRequest, String username) {
-<<<<<<< HEAD
-		Optional<User> userOptional = userRepository.findByUsername(username);
-		
+		Optional<User> userOptional = userRepository.findBySystemId(username);
+
 		if (userOptional.isPresent()) {
 			User user = userOptional.get();
 			if (!Access.isAuthorizedAll(user.getRoles())) {
@@ -250,10 +249,7 @@ public class SmsServiceImpl implements SmsService {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-=======
-		Optional<User> userOptional = userRepository.findBySystemId(username);
->>>>>>> e0ad23f17ffc83219e92ff45cebe0b2674114e3d
-
+		userOptional = userRepository.findBySystemId(username);
 		User user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
@@ -1131,8 +1127,8 @@ public class SmsServiceImpl implements SmsService {
 
 	@Override
 	public BulkResponse sendBulkSms(BulkRequest bulkRequest, String username, MultipartFile destinationNumberFile) {
-		Optional<User> userOptional = userRepository.findByUsername(username);
-		
+		Optional<User> userOptional = userRepository.findBySystemId(username);
+
 		if (userOptional.isPresent()) {
 			User user = userOptional.get();
 			if (!Access.isAuthorizedAll(user.getRoles())) {
@@ -1141,19 +1137,14 @@ public class SmsServiceImpl implements SmsService {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
+
 		double totalcost = 0, adminCost = 0;// total_defcost = 0;
 		String unicodeMsg = "";
 		String target = IConstants.FAILURE_KEY;
 		List<String> destinationList = null;
 		List<String> temp_number_list = new ArrayList<String>();
 		ProgressEvent progressEvent = new ProgressEvent(session1);
-<<<<<<< HEAD
-		
-=======
-		Optional<User> userOptional = userRepository.findBySystemId(username);
-
->>>>>>> e0ad23f17ffc83219e92ff45cebe0b2674114e3d
+		userOptional = userRepository.findBySystemId(username);
 		User user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
@@ -2158,7 +2149,7 @@ public class SmsServiceImpl implements SmsService {
 
 	@Override
 	public BulkResponse sendBulkCustome(BulkRequest bulkRequest, String username, MultipartFile destinationNumberFile) {
-		Optional<User> userOptional = userRepository.findByUsername(username);
+		Optional<User> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			User user = userOptional.get();
 			if (!Access.isAuthorizedAll(user.getRoles())) {
@@ -2167,7 +2158,7 @@ public class SmsServiceImpl implements SmsService {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
+
 		double totalcost = 0, adminCost = 0;// total_defcost = 0;
 		String unicodeMsg = "";
 		int no_of_msg = 0;
@@ -2175,10 +2166,7 @@ public class SmsServiceImpl implements SmsService {
 		ArrayList destinationList = null;
 		List<String> temp_number_list = new ArrayList<String>();
 		ProgressEvent progressEvent = new ProgressEvent(session1);
-<<<<<<< HEAD
-=======
-		Optional<User> userOptional = userRepository.findBySystemId(username);
->>>>>>> e0ad23f17ffc83219e92ff45cebe0b2674114e3d
+		userOptional = userRepository.findBySystemId(username);
 		User user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
