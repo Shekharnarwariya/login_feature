@@ -36,7 +36,7 @@ public class ProfessionEntry implements Serializable {
 	@Column(name = "logo_file_type")
 	private String logoFileName;
 	@Column(name = "logo_file")
-	private byte[] logoFile;
+	private String logoFile;
 
 	public int getUserId() {
 		return userId;
@@ -134,11 +134,11 @@ public class ProfessionEntry implements Serializable {
 		this.logoFileName = logoFileName;
 	}
 
-	public byte[] getLogoFile() {
+	public String getLogoFile() {
 		return logoFile;
 	}
 
-	public void setLogoFile(byte[] logoFile) {
+	public void setLogoFile(String logoFile) {
 		this.logoFile = logoFile;
 	}
 

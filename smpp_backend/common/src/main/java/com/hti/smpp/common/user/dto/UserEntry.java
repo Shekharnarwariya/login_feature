@@ -21,8 +21,6 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 	private String systemId;
 	@Column(name = "master_id")
 	private String masterId;
-	@Column(name = "password")
-	private String password;
 	@Column(name = "admindepend")
 	private boolean adminDepend;
 	@Column(name = "expiryday")
@@ -33,8 +31,6 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 	private String currency;
 	@Column(name = "system_type")
 	private String systemType;
-	@Column(name = "role")
-	private String role;
 	@Column(name = "sleep_time")
 	private int sleep;
 	@Column(name = "Remark")
@@ -103,14 +99,12 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 		UserEntry entry = (UserEntry) o;
 		return (id == entry.id) && (systemId == null ? entry.systemId == null : systemId.equals(entry.systemId))
 				&& (masterId == null ? entry.masterId == null : masterId.equals(entry.masterId))
-				&& (password == null ? entry.password == null : password.equals(entry.password))
 				&& (adminDepend == entry.adminDepend) && (hlr == entry.hlr) && (priority == entry.priority)
 				&& (systemType == null ? entry.systemType == null : systemType.equals(entry.systemType))
 				&& (expiry == null ? entry.expiry == null : expiry.equals(entry.expiry)) && (sleep == entry.sleep)
 				&& (timeout == entry.timeout)
 				&& (currency == null ? entry.currency == null : currency.equals(entry.currency))
-				&& (role == null ? entry.role == null : role.equals(entry.role)) && (forceDelay == entry.forceDelay)
-				&& (logging == entry.logging) && (logDays == entry.logDays)
+				&& (forceDelay == entry.forceDelay) && (logging == entry.logging) && (logDays == entry.logDays)
 				&& (accessIp == null ? entry.accessIp == null : accessIp.equals(entry.accessIp));
 	}
 
@@ -143,14 +137,6 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 
 	public void setSystemId(String systemId) {
 		this.systemId = systemId;
-	}
-
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
 	}
 
 	public String getMasterId() {
@@ -199,14 +185,6 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 
 	public void setAdminDepend(boolean adminDepend) {
 		this.adminDepend = adminDepend;
-	}
-
-	public String getRole() {
-		return role;
-	}
-
-	public void setRole(String role) {
-		this.role = role;
 	}
 
 	public int getSleep() {
@@ -442,9 +420,8 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 	}
 
 	public String toString() {
-		return "id=" + id + ",SystemId=" + systemId + ",Password=" + password + ",Role=" + role + ",MasterId="
-				+ masterId + ",AdminDepend=" + adminDepend + ",Currency=" + currency + ",hlr=" + hlr + ",timeout="
-				+ timeout + ",CreatedOn:" + createdOn;
+		return "id=" + id + ",SystemId=" + systemId + ",MasterId=" + masterId + ",AdminDepend=" + adminDepend
+				+ ",Currency=" + currency + ",hlr=" + hlr + ",timeout=" + timeout + ",CreatedOn:" + createdOn;
 	}
 
 	@Override

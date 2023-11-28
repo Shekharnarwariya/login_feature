@@ -50,8 +50,12 @@ public class TemplatesServiceImpl implements TemplatesService {
 		
 		TemplatesDTO template = new TemplatesDTO();
 		template.setMessage(Converter.UTF16(request.getMessage()));
+<<<<<<< HEAD
+=======
+		Optional<User> userOptional = userRepository.findBySystemId(username);
+>>>>>>> e0ad23f17ffc83219e92ff45cebe0b2674114e3d
 		if (userOptional.isPresent()) {
-			template.setMasterId(userOptional.get().getSystem_id());
+			template.setMasterId(userOptional.get().getUserId());
 		}
 		template.setTitle(Converter.UTF16(request.getTitle()));
 		TemplatesDTO savedTemplate = templatesRepository.save(template);
@@ -66,6 +70,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 	@Override
 	public TemplatesResponse getTemplateById(int id, String username) {
+<<<<<<< HEAD
 		
 		Optional<User> userOptional = userRepository.findByUsername(username);
 		if (userOptional.isPresent()) {
@@ -77,9 +82,12 @@ public class TemplatesServiceImpl implements TemplatesService {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 		
+=======
+		Optional<User> userOptional = userRepository.findBySystemId(username);
+>>>>>>> e0ad23f17ffc83219e92ff45cebe0b2674114e3d
 		Long system_id = null;
 		if (userOptional.isPresent()) {
-			system_id = userOptional.get().getSystem_id();
+			system_id = userOptional.get().getUserId();
 		}
 		TemplatesDTO template = templatesRepository.findByIdAndMasterId(id, system_id).orElse(null);
 		if (template != null) {
@@ -95,6 +103,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 	@Override
 	public List<TemplatesResponse> getAllTemplates(String username) {
+<<<<<<< HEAD
 		
 		Optional<User> userOptional = userRepository.findByUsername(username);
 		if (userOptional.isPresent()) {
@@ -106,9 +115,12 @@ public class TemplatesServiceImpl implements TemplatesService {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 		
+=======
+		Optional<User> userOptional = userRepository.findBySystemId(username);
+>>>>>>> e0ad23f17ffc83219e92ff45cebe0b2674114e3d
 		Long system_id = null;
 		if (userOptional.isPresent()) {
-			system_id = userOptional.get().getSystem_id();
+			system_id = userOptional.get().getUserId();
 		}
 		List<TemplatesDTO> templates = (List<TemplatesDTO>) templatesRepository.findByMasterId(system_id);
 		templates.forEach(template -> {
@@ -124,6 +136,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 	@Override
 	public TemplatesResponse updateTemplate(int id, TemplatesRequest request, String username) {
+<<<<<<< HEAD
 		Optional<User> userOptional = userRepository.findByUsername(username);
 		
 		if (userOptional.isPresent()) {
@@ -135,9 +148,12 @@ public class TemplatesServiceImpl implements TemplatesService {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 		
+=======
+		Optional<User> userOptional = userRepository.findBySystemId(username);
+>>>>>>> e0ad23f17ffc83219e92ff45cebe0b2674114e3d
 		Long system_id = null;
 		if (userOptional.isPresent()) {
-			system_id = userOptional.get().getSystem_id();
+			system_id = userOptional.get().getUserId();
 		}
 		TemplatesDTO template = templatesRepository.findByIdAndMasterId(id, system_id).orElse(null);
 		TemplatesDTO updatedTemplate = null;
@@ -160,6 +176,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 	@Transactional
 	@Override
 	public boolean deleteTemplate(int id, String username) {
+<<<<<<< HEAD
 		Optional<User> userOptional = userRepository.findByUsername(username);
 		
 		if (userOptional.isPresent()) {
@@ -171,9 +188,12 @@ public class TemplatesServiceImpl implements TemplatesService {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 		
+=======
+		Optional<User> userOptional = userRepository.findBySystemId(username);
+>>>>>>> e0ad23f17ffc83219e92ff45cebe0b2674114e3d
 		Long system_id = null;
 		if (userOptional.isPresent()) {
-			system_id = userOptional.get().getSystem_id();
+			system_id = userOptional.get().getUserId();
 		}
 
 		try {

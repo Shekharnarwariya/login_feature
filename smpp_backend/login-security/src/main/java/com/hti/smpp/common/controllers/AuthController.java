@@ -18,9 +18,11 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,11 +40,14 @@ import com.hti.smpp.common.login.repository.RoleRepository;
 import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.payload.request.LoginRequest;
 import com.hti.smpp.common.payload.request.PasswordUpdateRequest;
+import com.hti.smpp.common.payload.request.ProfileUpdateRequest;
 import com.hti.smpp.common.payload.request.SignupRequest;
 import com.hti.smpp.common.payload.response.JwtResponse;
 import com.hti.smpp.common.payload.response.MessageResponse;
+import com.hti.smpp.common.payload.response.ProfileResponse;
 import com.hti.smpp.common.security.jwt.JwtUtils;
 import com.hti.smpp.common.security.services.UserDetailsImpl;
+import com.hti.smpp.common.user.dto.BalanceEntry;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.BalanceEntryRepository;
 import com.hti.smpp.common.user.repository.DlrSettingEntryRepository;
@@ -61,6 +66,7 @@ import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
@@ -158,7 +164,7 @@ public class AuthController {
 	@Transactional
 	public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
 		try {
-			if (userRepository.existsByUsername(signUpRequest.getUsername())) {
+			if (userRepository.existsBySystemId(signUpRequest.getUsername())) {
 				return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
 			}
 
@@ -172,9 +178,13 @@ public class AuthController {
 			User user = new User();
 			user.setEmail(signUpRequest.getEmail());
 			user.setPassword(encoder.encode(signUpRequest.getPassword()));
-			user.setUsername(signUpRequest.getUsername());
+			user.setSystemId(signUpRequest.getUsername());
 			user.setBase64Password(signUpRequest.getPassword());
-
+			user.setFirstName(signUpRequest.getFirstName());
+			user.setLanguage(signUpRequest.getLanguage());
+			user.setLastName(signUpRequest.getLastName());
+			user.setCountry(signUpRequest.getCountry());
+			user.setContactNo(signUpRequest.getContactNo());
 			Set<String> strRoles = signUpRequest.getRole();
 			Set<Role> roles = new HashSet<>();
 
@@ -214,16 +224,16 @@ public class AuthController {
 			user.setRoles(roles);
 			User save = userRepository.save(user);
 			userEntryRepository.save(ConvertRequert(signUpRequest));
-			signUpRequest.getWebMasterEntry().setUserId(save.getSystem_id().intValue());
-			signUpRequest.getDlrSettingEntry().setUserId(save.getSystem_id().intValue());
-			signUpRequest.getProfessionEntry().setUserId(save.getSystem_id().intValue());
-			signUpRequest.getBalance().setUserId(save.getSystem_id().intValue());
-			signUpRequest.getBalance().setSystemId(save.getUsername());
-			signUpRequest.getRechargeEntry().setUserId(save.getSystem_id().intValue());
-			signUpRequest.getRechargeEntry().setSystemId(save.getUsername());
-			signUpRequest.getWebMenuAccessEntry().setUserId(save.getSystem_id().intValue());
+			signUpRequest.getWebMasterEntry().setUserId(save.getUserId().intValue());
+			signUpRequest.getDlrSettingEntry().setUserId(save.getUserId().intValue());
+			signUpRequest.getProfessionEntry().setUserId(save.getUserId().intValue());
+			signUpRequest.getBalance().setUserId(save.getUserId().intValue());
+			signUpRequest.getBalance().setSystemId(save.getSystemId());
+			signUpRequest.getRechargeEntry().setUserId(save.getUserId().intValue());
+			signUpRequest.getRechargeEntry().setSystemId(save.getSystemId());
+			signUpRequest.getWebMenuAccessEntry().setUserId(save.getUserId().intValue());
 
-			webMasterEntryRepository.save(signUpRequest.getWebMasterEntry());
+			webMenuAccessEntryRepository.save(signUpRequest.getWebMenuAccessEntry());
 			rechargeEntryRepository.save(signUpRequest.getRechargeEntry());
 			webMasterEntryRepository.save(signUpRequest.getWebMasterEntry());
 			dlrSettingEntryRepository.save(signUpRequest.getDlrSettingEntry());
@@ -262,7 +272,6 @@ public class AuthController {
 		entry.setLogging(signUpRequest.isLogging());
 		entry.setLoopSmscId(signUpRequest.getLoopSmscId());
 		entry.setMasterId(signUpRequest.getMasterId());
-		entry.setPassword(signUpRequest.getPassword());
 		entry.setPasswordExpiresOn(signUpRequest.getPasswordExpiresOn());
 		entry.setPriority(signUpRequest.getPriority());
 		entry.setRecordMnp(signUpRequest.isRecordMnp());
@@ -287,7 +296,7 @@ public class AuthController {
 		System.out.println("username..........." + username);
 		System.out.println("OTP ................" + otp);
 
-		Optional<User> optionalUser = userRepository.findByUsername(username);
+		Optional<User> optionalUser = userRepository.findBySystemId(username);
 
 		if (optionalUser.isPresent()) {
 			User user = optionalUser.get();
@@ -310,6 +319,36 @@ public class AuthController {
 		}
 	}
 
+	@Operation(summary = "Get user profile")
+	@ApiResponse(responseCode = "200", description = "Successfully retrieved user profile")
+	@ApiResponse(responseCode = "404", description = "Error: User not found")
+	@GetMapping("/profile")
+	public ResponseEntity<ProfileResponse> getUserProfile(@RequestHeader("username") String username) {
+		Optional<User> userOptional = userRepository.findBySystemId(username);
+		Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findBySystemId(username);
+
+		if (userOptional.isPresent() && balanceOptional.isPresent()) {
+			User user = userOptional.get();
+			BalanceEntry balanceEntry = balanceOptional.get();
+
+			ProfileResponse profileResponse = new ProfileResponse();
+			profileResponse.setUserName(user.getSystemId());
+			profileResponse.setBalance(String.valueOf(balanceEntry.getWalletAmount()));
+			profileResponse.setBase64Password(user.getBase64Password());
+			profileResponse.setCountry(user.getCountry());
+			profileResponse.setEmail(user.getEmail());
+			profileResponse.setFirstName(user.getFirstName());
+			profileResponse.setLanguage(user.getLanguage());
+			profileResponse.setLastName(user.getLastName());
+			profileResponse.setRoles(user.getRoles());
+			profileResponse.setContactNo(user.getContactNo());
+
+			return ResponseEntity.ok(profileResponse);
+		} else {
+			throw new NotFoundException("Error: User not found!");
+		}
+	}
+
 	@Operation(summary = "Reset user password")
 	@ApiResponse(responseCode = "200", description = "Password reset successfully")
 	@ApiResponse(responseCode = "404", description = "Error: User not found")
@@ -317,7 +356,7 @@ public class AuthController {
 	public ResponseEntity<?> forgotPassword(@RequestParam String newPassword, @RequestParam String username) {
 		System.out.println("username..........." + username);
 		System.out.println("newPassword ................" + newPassword);
-		Optional<User> userOptional = userRepository.findByUsername(username);
+		Optional<User> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isEmpty()) {
 			throw new NotFoundException("Error: User Not Found!");
 		}
@@ -329,7 +368,7 @@ public class AuthController {
 		if (EmailValidator.isEmailValid(user.getEmail())) {
 			emailSender.sendEmail(user.getEmail(), Constant.PASSWORD_FORGOT_SUBJECT, Constant.TEMPLATE_PATH,
 					emailSender.createSourceMap(Constant.MESSAGE_FOR_FORGOT_PASSWORD,
-							"username:- " + user.getUsername() + "  password:- " + newPassword));
+							"username:- " + user.getSystemId() + "  password:- " + newPassword));
 		}
 
 		return ResponseEntity.ok(new MessageResponse("Password Reset Successfully!"));
@@ -342,7 +381,7 @@ public class AuthController {
 	@PostMapping("/send/otp")
 	public ResponseEntity<?> sendOTP(@RequestParam String username) {
 		try {
-			Optional<User> userOptional = userRepository.findByUsername(username);
+			Optional<User> userOptional = userRepository.findBySystemId(username);
 
 			if (userOptional.isPresent()) {
 				// Generate OTP
@@ -376,11 +415,11 @@ public class AuthController {
 	@ApiResponse(responseCode = "200", description = "Password updated successfully")
 	@ApiResponse(responseCode = "400", description = "Error: Invalid old password")
 	@ApiResponse(responseCode = "404", description = "Error: User not found")
-	@PutMapping("/update")
+	@PutMapping("password/update")
 	public ResponseEntity<?> updatePassword(@Valid @RequestBody PasswordUpdateRequest passwordUpdateRequest) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		String currentUsername = authentication.getName();
-		Optional<User> optionalUser = userRepository.findByUsername(currentUsername);
+		Optional<User> optionalUser = userRepository.findBySystemId(currentUsername);
 
 		if (optionalUser.isPresent()) {
 			User user = optionalUser.get();
@@ -393,7 +432,7 @@ public class AuthController {
 				if (EmailValidator.isEmailValid(user.getEmail())) {
 					emailSender.sendEmail(user.getEmail(), Constant.PASSWORD_UPDATE_SUBJECT, Constant.TEMPLATE_PATH,
 							emailSender.createSourceMap(Constant.MESSAGE_FOR_PASSWORD_UPDATE, "username:- "
-									+ user.getUsername() + "  password:- " + passwordUpdateRequest.getNewPassword()));
+									+ user.getSystemId() + "  password:- " + passwordUpdateRequest.getNewPassword()));
 				}
 				return ResponseEntity.ok(new MessageResponse("Password Updated Successfully!"));
 			} else {
@@ -401,6 +440,44 @@ public class AuthController {
 			}
 		} else {
 			throw new NotFoundException("Error: User Not Found!");
+		}
+	}
+
+	@Operation(summary = "Update user profile")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Successfully updated user profile"),
+			@ApiResponse(responseCode = "404", description = "User not found"),
+			@ApiResponse(responseCode = "400", description = "Bad request") })
+	@PutMapping("/update/profile")
+	public ResponseEntity<String> updateUserProfile(@RequestParam String username,
+			@Valid @RequestBody ProfileUpdateRequest profileUpdateRequest) {
+		Optional<User> optionalUser = userRepository.findBySystemId(username);
+
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			updateUserData(user, profileUpdateRequest);
+			userRepository.save(user);
+			return ResponseEntity.ok("Profile updated successfully");
+		} else {
+			throw new NotFoundException("User not found!");
+		}
+	}
+
+	private void updateUserData(User user, ProfileUpdateRequest profileUpdateRequest) {
+		// Use null checks to update only non-null fields
+		if (profileUpdateRequest.getEmail() != null) {
+			user.setEmail(profileUpdateRequest.getEmail());
+		}
+		if (profileUpdateRequest.getFirstName() != null) {
+			user.setFirstName(profileUpdateRequest.getFirstName());
+		}
+		if (profileUpdateRequest.getLanguage() != null) {
+			user.setLanguage(profileUpdateRequest.getLanguage());
+		}
+		if (profileUpdateRequest.getLastName() != null) {
+			user.setLastName(profileUpdateRequest.getLastName());
+		}
+		if (profileUpdateRequest.getContact() != null) {
+			user.setContactNo(profileUpdateRequest.getContact());
 		}
 	}
 

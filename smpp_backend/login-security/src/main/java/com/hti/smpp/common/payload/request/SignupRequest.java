@@ -10,7 +10,12 @@ import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.dto.WebMenuAccessEntry;
 
 public class SignupRequest {
-
+	
+	private String firstName;
+	private String LastName;
+	private String country;
+	private String language;
+	private String contactNo;
 	private String username;
 	private String email;
 	private Set<String> role;
@@ -56,7 +61,6 @@ public class SignupRequest {
 	private ProfessionEntry professionEntry;
 	private RechargeEntry rechargeEntry;
 	private WebMenuAccessEntry webMenuAccessEntry;
-	
 
 	public String getUsername() {
 		return username;
@@ -105,8 +109,6 @@ public class SignupRequest {
 	public void setAdminDepend(boolean adminDepend) {
 		this.adminDepend = adminDepend;
 	}
-
-	
 
 	public String getExpiry() {
 		return expiry;
@@ -418,6 +420,46 @@ public class SignupRequest {
 
 	public void setWebMenuAccessEntry(WebMenuAccessEntry webMenuAccessEntry) {
 		this.webMenuAccessEntry = webMenuAccessEntry;
+	}
+
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public String getLastName() {
+		return LastName;
+	}
+
+	public void setLastName(String lastName) {
+		LastName = lastName;
+	}
+
+	public String getCountry() {
+		return country;
+	}
+
+	public void setCountry(String country) {
+		this.country = country;
+	}
+
+	public String getLanguage() {
+		return language;
+	}
+
+	public void setLanguage(String language) {
+		this.language = language;
+	}
+
+	public String getContactNo() {
+		return contactNo;
+	}
+
+	public void setContactNo(String contactNo) {
+		this.contactNo = contactNo;
 	}
 
 }

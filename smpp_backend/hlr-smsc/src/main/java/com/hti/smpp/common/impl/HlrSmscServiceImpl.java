@@ -42,7 +42,7 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 
 	@Override
 	public ResponseEntity<HlrSmscEntry> save(HlrSmscEntryRequest hlrSmscEntryRequest, String username) {
-		Optional<User> optionalUser = loginRepository.findByUsername(username);
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
 		if (optionalUser.isPresent()) {
 			User user = optionalUser.get();
 			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
