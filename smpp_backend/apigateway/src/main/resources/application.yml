@@ -1,3 +1,9 @@
+
+
+server:
+        port: 9090
+
+
 spring:
   cloud:
     gateway:
@@ -43,13 +49,11 @@ spring:
             - AuthenticationFilter
        
         - id: front-end
-          uri: http://localhost:3000/
+          uri: http://localhost:3000
           predicates:
-           - Path=/**
+            - Path=/**
 
-
-   
-        
+          
   application:
     name: API-GATEWAY-SERVICE
   eureka:

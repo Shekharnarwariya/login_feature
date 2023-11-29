@@ -70,10 +70,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/auth")
 @OpenAPIDefinition(info = @Info(title = "SMPP login  API..", version = "1.0", description = "API for managing SMPP login..."))
+@CrossOrigin(origins = "http://localhost:3000", maxAge = 3600)
 public class AuthController {
 	@Autowired
 	private AuthenticationManager authenticationManager;
@@ -149,6 +149,7 @@ public class AuthController {
 
 		} catch (AuthenticationException e) {
 			log.error("Authentication failed for user: {}", loginRequest.getUsername(), e);
+			System.out.println("error authentication........");
 			throw new AuthenticationExceptionFailed("Authentication failed" + e);
 
 		} catch (Exception e) {
