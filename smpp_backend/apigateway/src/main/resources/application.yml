@@ -1,12 +1,12 @@
-
-
 server:
-        port: 9090
-
+  port: 9090
 
 spring:
   cloud:
     gateway:
+      discovery:
+        locator:
+          enabled: true
       routes:
         - id: personal-service
           uri: lb://personal-service:8081/
@@ -32,28 +32,23 @@ spring:
             - Path=/sms/**
           filters:
             - AuthenticationFilter
-            
         - id: SMSC-SERVICE
-          uri: lb://SMSc-SERVICE:8085/
+          uri: lb://SMSC-SERVICE:8085/
           predicates:
             - Path=/smsc/**
           filters:
             - AuthenticationFilter
-            
-                  
         - id: HLR-SMSC-SERVICE
           uri: lb://HLR-SMSC-SERVICE:8084/
           predicates:
             - Path=/hlr/**
           filters:
             - AuthenticationFilter
-       
         - id: front-end
           uri: http://localhost:3000
           predicates:
             - Path=/**
 
-          
   application:
     name: API-GATEWAY-SERVICE
   eureka:
@@ -65,3 +60,4 @@ spring:
       register-with-eureka: true
       serviceUrl:
         defaultZone: http://localhost:8761/eureka/
+
