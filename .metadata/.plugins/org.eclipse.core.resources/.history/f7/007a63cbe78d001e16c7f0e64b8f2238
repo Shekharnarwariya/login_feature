@@ -1,0 +1,9 @@
+package com.hti.smpp.common.contacts.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.hti.smpp.common.contacts.dto.GroupEntryDTO;
+
+public interface GroupEntryDTORepository extends JpaRepository<GroupEntryDTO, Integer>{
+
+}

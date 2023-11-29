@@ -1,0 +1,5 @@
+package com.hti.smpp.addressbook.request;
+
+public class GroupDataEntryRequest {
+
+}

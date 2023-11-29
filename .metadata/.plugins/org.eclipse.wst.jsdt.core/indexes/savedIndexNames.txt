@@ -1,0 +1,9 @@
+INDEX VERSION 1.4+E:\smpp\smpp.twarit\.metadata\.plugins\org.eclipse.wst.jsdt.core\indexes
+1524286214.index
+4167969275.index
+1667140136.index
+758615375.index
+920102154.index
+4123442070.index
+1012749168.index
+479526178.index

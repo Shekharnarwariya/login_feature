@@ -25,12 +25,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hti.smpp.addressbook.request.GroupDataEntryRequest;
 import com.hti.smpp.addressbook.response.ContactForBulk;
 import com.hti.smpp.addressbook.services.GroupDataEntryService;
 import com.hti.smpp.addressbook.utils.Converters;
 import com.hti.smpp.common.contacts.dto.GroupDataEntry;
 import com.hti.smpp.common.contacts.repository.GroupDataEntryRepository;
+import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.templates.dto.TemplatesDTO;
 import com.hti.smpp.common.templates.repository.TemplatesRepository;
@@ -55,7 +58,20 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService{
 	private TemplatesRepository tempRepository;
 
 	@Override
-	public ResponseEntity<?> saveGroupData(GroupDataEntryRequest form, String username) {
+	public ResponseEntity<?> saveGroupData(String request, MultipartFile file,String username) {
+		
+		GroupDataEntryRequest form;
+
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			form = objectMapper.readValue(request, GroupDataEntryRequest.class);
+			form.setContactNumberFile(file);
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException(e.getMessage());
+		} catch (Exception ex) {
+			throw new InternalServerException(ex.getLocalizedMessage());
+		}
+		
 		String target = IConstants.FAILURE_KEY;
 		
 		try {

@@ -1,0 +1,23 @@
+package com.hti.smpp.addressbook.request;
+
+
+public class GroupEntryRequest {
+	
+	private int[] id;
+	private String[] name;
+	private int[] duration;
+	private int[] checkDuration;
+	private int[] checkVolume;
+	private int[] noOfRepeat;
+	private int[] keepRepeatDays;
+	private int[] primeMember;
+	private String[] remarks;
+	private String[] primeMemberName;
+	
+	public GroupEntryRequest() {
+	
+	}
+	
+	
+
+}

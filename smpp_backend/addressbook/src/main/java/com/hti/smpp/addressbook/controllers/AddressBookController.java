@@ -1,5 +1,7 @@
 package com.hti.smpp.addressbook.controllers;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -14,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hti.smpp.addressbook.request.ContactEntryRequest;
 import com.hti.smpp.addressbook.request.GroupDataEntryRequest;
 import com.hti.smpp.addressbook.request.GroupEntryRequest;
@@ -23,6 +23,7 @@ import com.hti.smpp.addressbook.response.ContactForBulk;
 import com.hti.smpp.addressbook.services.ContactEntryService;
 import com.hti.smpp.addressbook.services.GroupDataEntryService;
 import com.hti.smpp.addressbook.services.GroupEntryService;
+import com.hti.smpp.common.contacts.dto.ContactEntry;
 
 import jakarta.validation.Valid;
 
@@ -44,18 +45,7 @@ public class AddressBookController {
 			@RequestParam("contactEntryRequest") String contactEntryRequest,
 			@RequestHeader("username") String username) {
 
-		ContactEntryRequest request;
-
-		try {
-			ObjectMapper objectMapper = new ObjectMapper();
-			request = objectMapper.readValue(contactEntryRequest, ContactEntryRequest.class);
-			request.setFile(contactFile);
-			return this.contactEntryService.saveContactEntry(request, username);
-		} catch (JsonProcessingException e) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-		} catch (Exception ex) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-		}
+		return this.contactEntryService.saveContactEntry(contactEntryRequest, contactFile, username);
 
 	}
 
@@ -64,19 +54,7 @@ public class AddressBookController {
 			@RequestParam("groupDataEntryRequest") String groupDataEntryRequest,
 			@RequestHeader("username") String username) {
 
-		GroupDataEntryRequest request;
-
-		try {
-			ObjectMapper objectMapper = new ObjectMapper();
-			request = objectMapper.readValue(groupDataEntryRequest, GroupDataEntryRequest.class);
-			request.setContactNumberFile(contactNumberFile);
-			return this.groupDataEntryService.saveGroupData(request, username);
-		} catch (JsonProcessingException e) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-		} catch (Exception ex) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-		}
-
+		return this.groupDataEntryService.saveGroupData(groupDataEntryRequest, contactNumberFile, username);
 	}
 	
 	@PostMapping("/save/group-entry")
@@ -97,6 +75,28 @@ public class AddressBookController {
 	@GetMapping("/get/groupdata-for-bulk")
 	public ResponseEntity<?> groupDataForBulk(@RequestBody GroupDataEntryRequest request, @RequestHeader("username") String username){
 		ContactForBulk response = this.groupDataEntryService.groupDataForBulk(request, username);
+		if(response!=null) {
+			return ResponseEntity.ok(response);
+		}else {
+			return new ResponseEntity<>("No Contact for Bulk.",HttpStatus.BAD_REQUEST);
+		}
+	}
+	
+	@GetMapping("/get/view-search-contact")
+	public ResponseEntity<?> viewSearchContact(@RequestBody GroupEntryRequest groupEntryRequest, @RequestHeader("username") String username){
+		List<ContactEntry> list = this.contactEntryService.viewSearchContact(groupEntryRequest, username);
+		if(list.isEmpty()) {
+			return new ResponseEntity<>("No Contact found.",HttpStatus.NOT_FOUND);
+		}else if(!list.isEmpty()) {
+			return ResponseEntity.ok(list);
+		}else {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+		}
+	}
+	
+	@GetMapping("/get/proceed-search-contact")
+	public ResponseEntity<?> proceedSearchContact(@RequestBody GroupEntryRequest entryRequest, @RequestHeader("username") String username ){
+		ContactForBulk response = this.contactEntryService.proceedSearchContact(entryRequest, username);
 		if(response!=null) {
 			return ResponseEntity.ok(response);
 		}else {

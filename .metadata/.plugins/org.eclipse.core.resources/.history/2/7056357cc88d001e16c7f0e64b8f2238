@@ -1,0 +1,5 @@
+package com.hti.smpp.addressbook.services;
+
+public interface ContactEntryService {
+
+}

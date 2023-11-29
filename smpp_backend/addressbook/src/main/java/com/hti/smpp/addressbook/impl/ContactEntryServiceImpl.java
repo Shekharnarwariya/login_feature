@@ -25,12 +25,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hti.smpp.addressbook.request.ContactEntryRequest;
+import com.hti.smpp.addressbook.request.GroupEntryRequest;
 import com.hti.smpp.addressbook.response.ContactForBulk;
 import com.hti.smpp.addressbook.services.ContactEntryService;
 import com.hti.smpp.addressbook.utils.Converters;
 import com.hti.smpp.common.contacts.dto.ContactEntry;
 import com.hti.smpp.common.contacts.repository.ContactRepository;
+import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.templates.dto.TemplatesDTO;
 import com.hti.smpp.common.templates.repository.TemplatesRepository;
@@ -55,7 +59,19 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 	private TemplatesRepository tempRepository;
 
 	@Override
-	public ResponseEntity<?> saveContactEntry(ContactEntryRequest form, String username) {
+	public ResponseEntity<?> saveContactEntry(String reqdata, MultipartFile file, String username) {
+		
+		ContactEntryRequest form;
+
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			form = objectMapper.readValue(reqdata, ContactEntryRequest.class);
+			form.setFile(file);
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException(e.getMessage());
+		} catch (Exception ex) {
+			throw new InternalServerException(ex.getLocalizedMessage());
+		}
 		
 		String target = IConstants.FAILURE_KEY;
 		try {
@@ -285,13 +301,120 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 				target = IConstants.SUCCESS_KEY;
 			} else {
 				logger.info(systemId + " No Record Found For Selected Criteria");
-				response.setStatus(target);
 			}
+			response.setStatus(target);
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]");
 			logger.error(systemId, ex.fillInStackTrace());
 		}
 	
+		return response;
+	}
+
+	@Override
+	public List<ContactEntry> viewSearchContact(GroupEntryRequest form, String username) {
+		String systemId = null;
+		// Finding the user by system ID
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		if (userOptional.isPresent()) {
+			systemId = userOptional.get().getSystemId();
+		}
+		
+		logger.info("List Contact For Bulk Request by " + systemId);
+		List<ContactEntry> list = new ArrayList<ContactEntry>();
+		try {
+			if (form.getId() != null && form.getId().length > 0) {
+				for (int groupId : form.getId()) {
+					List<ContactEntry> part_list = this.contactRepo.findByGroupId(groupId);
+					if (!part_list.isEmpty()) {
+						for (ContactEntry entry : part_list) {
+							if (entry.getName() != null && entry.getName().length() > 0) {
+								entry.setName(new Converters().uniHexToCharMsg(entry.getName()));
+							}
+							list.add(entry);
+						}
+					}
+				}
+			}
+			
+		} catch (Exception ex) {
+			logger.error(systemId, ex.fillInStackTrace());
+		}
+
+		return list;
+	}
+
+	@Override
+	public ContactForBulk proceedSearchContact(GroupEntryRequest form, String username) {
+		String systemId = null;
+		// Finding the user by system ID
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		if (userOptional.isPresent()) {
+			systemId = userOptional.get().getSystemId();
+		}
+		logger.info("Proceed Contact For Bulk Request by " + systemId);
+		String target = IConstants.FAILURE_KEY;
+		String uploadedNumbers = "";
+		ContactForBulk response = new ContactForBulk();
+		
+		try {
+			// ContactDAService service = new ContactDAServiceImpl();
+			List<ContactEntry> list = new ArrayList<ContactEntry>();
+			if (form.getId() != null && form.getId().length > 0) {
+				for (int groupId : form.getId()) {
+					List<ContactEntry> part_list = this.contactRepo.findByGroupId(groupId);
+					if (!part_list.isEmpty()) {
+						list.addAll(part_list);
+					}
+				}
+			}
+			if (!list.isEmpty()) {
+				for (ContactEntry entry : list) {
+					uploadedNumbers += entry.getNumber() + "\n";
+				}
+//				request.setAttribute("uploadedNumbers", uploadedNumbers);
+				response.setUploadedNumbers(uploadedNumbers);
+//				request.setAttribute("totalNumbers", list.size() + "");
+				response.setTotalNumbers(list.size());
+//				TemplatesService templatesService = new TemplatesService();
+//				Collection templates = null;
+				List<TemplatesDTO> templates = null;
+				try {
+					templates = this.tempRepository.findByMasterId(Long.parseLong(systemId));
+				} catch (Exception ex) {
+					logger.error("Error: "+ex.getLocalizedMessage());
+					throw new NotFoundException("Templates not found.");
+				}
+				if (templates != null) {
+//					request.setAttribute("templates", templates);
+					response.setTemplates(templates);
+				} else {
+//					System.out.println("NO template Exist");
+					logger.info("NO template Exist");
+				}
+				WebMasterEntry webMasterEntry = GlobalVars.WebmasterEntries.get(userOptional.get().getId());
+				if (webMasterEntry != null) {
+					if (webMasterEntry.getSenderId() != null && webMasterEntry.getSenderId().length() > 1) {
+						Set<String> senders = new HashSet<String>(
+								Arrays.asList(webMasterEntry.getSenderId().split(",")));
+						logger.info(systemId + " Configured Senders: " + senders);
+//						request.setAttribute("senders", senders);
+						response.setSenders(senders);
+					} else {
+						logger.info(systemId + " No Senders Configured");
+					}
+				} else {
+					logger.error(systemId + " Webmaster Entry Not Found");
+				}
+				target = IConstants.SUCCESS_KEY;
+			} else {
+				logger.info(systemId + " No Record Found For Selected Criteria");
+			}
+			response.setStatus(target);
+		} catch (Exception ex) {
+			logger.error(systemId, ex.fillInStackTrace());
+		}
+		
 		return response;
 	}
 	

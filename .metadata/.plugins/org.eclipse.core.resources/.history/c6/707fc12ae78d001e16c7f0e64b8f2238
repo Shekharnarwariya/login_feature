@@ -1,0 +1,16 @@
+package com.hti.smpp.addressbook.request;
+
+
+public class GroupEntryRequest {
+	
+	private int[] id;
+	private String[] name;
+	private boolean[] groupData;
+	
+	public GroupEntryRequest() {
+	
+	}
+
+	
+	
+}

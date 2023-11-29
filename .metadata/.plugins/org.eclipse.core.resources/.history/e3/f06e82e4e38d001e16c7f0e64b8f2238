@@ -1,0 +1,5 @@
+package com.hti.smpp.addressbook.impl;
+
+public class GroupEntryServiceImpl {
+
+}

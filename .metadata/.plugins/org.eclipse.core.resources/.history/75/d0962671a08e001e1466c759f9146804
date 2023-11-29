@@ -1,0 +1,16 @@
+package com.hti.smpp.addressbook.services;
+
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+
+import com.hti.smpp.addressbook.request.GroupEntryRequest;
+import com.hti.smpp.common.contacts.dto.ContactEntry;
+
+public interface GroupEntryService {
+	
+	public ResponseEntity<?> saveGroupEntry(GroupEntryRequest groupEntryRequest, String username);
+	
+	
+
+}
