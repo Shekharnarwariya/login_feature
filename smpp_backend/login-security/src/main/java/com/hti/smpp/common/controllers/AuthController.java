@@ -17,7 +17,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -73,7 +72,6 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/auth")
 @OpenAPIDefinition(info = @Info(title = "SMPP login  API..", version = "1.0", description = "API for managing SMPP login..."))
-@CrossOrigin(origins = "http://localhost:3000", maxAge = 3600)
 public class AuthController {
 	@Autowired
 	private AuthenticationManager authenticationManager;
@@ -135,7 +133,6 @@ public class AuthController {
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 
 			String jwt = jwtUtils.generateJwtToken(authentication);
-
 			UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 			List<String> roles = userDetails.getAuthorities().stream().map(item -> item.getAuthority())
 					.collect(Collectors.toList());
@@ -294,7 +291,7 @@ public class AuthController {
 	@ApiResponse(responseCode = "401", description = "Error: Invalid OTP. Please enter the correct OTP")
 	@ApiResponse(responseCode = "404", description = "Error: User not found. Please check the username and try again")
 	@PostMapping("/otp/validate")
-	public ResponseEntity<String> validateOtp(@RequestParam String username, @RequestParam String otp) {
+	public ResponseEntity<String> validateOtp(@RequestHeader("username") String username, @RequestParam String otp) {
 		System.out.println("username..........." + username);
 		System.out.println("OTP ................" + otp);
 
@@ -355,7 +352,8 @@ public class AuthController {
 	@ApiResponse(responseCode = "200", description = "Password reset successfully")
 	@ApiResponse(responseCode = "404", description = "Error: User not found")
 	@PutMapping("/password/forgot")
-	public ResponseEntity<?> forgotPassword(@RequestParam String newPassword, @RequestParam String username) {
+	public ResponseEntity<?> forgotPassword(@RequestParam String newPassword,
+			@RequestHeader("username") String username) {
 		System.out.println("username..........." + username);
 		System.out.println("newPassword ................" + newPassword);
 		Optional<User> userOptional = userRepository.findBySystemId(username);
@@ -381,7 +379,7 @@ public class AuthController {
 	@ApiResponse(responseCode = "404", description = "Error: User not found")
 	@ApiResponse(responseCode = "500", description = "Internal server error")
 	@PostMapping("/send/otp")
-	public ResponseEntity<?> sendOTP(@RequestParam String username) {
+	public ResponseEntity<?> sendOTP(@RequestHeader("username") String username) {
 		try {
 			Optional<User> userOptional = userRepository.findBySystemId(username);
 
@@ -420,10 +418,9 @@ public class AuthController {
 	@ApiResponse(responseCode = "400", description = "Error: Invalid old password")
 	@ApiResponse(responseCode = "404", description = "Error: User not found")
 	@PutMapping("password/update")
-	public ResponseEntity<?> updatePassword(@Valid @RequestBody PasswordUpdateRequest passwordUpdateRequest) {
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		String currentUsername = authentication.getName();
-		Optional<User> optionalUser = userRepository.findBySystemId(currentUsername);
+	public ResponseEntity<?> updatePassword(@Valid @RequestBody PasswordUpdateRequest passwordUpdateRequest,
+			@RequestHeader("username") String username) {
+		Optional<User> optionalUser = userRepository.findBySystemId(username);
 
 		if (optionalUser.isPresent()) {
 			User user = optionalUser.get();
@@ -452,7 +449,7 @@ public class AuthController {
 			@ApiResponse(responseCode = "404", description = "User not found"),
 			@ApiResponse(responseCode = "400", description = "Bad request") })
 	@PutMapping("/update/profile")
-	public ResponseEntity<String> updateUserProfile(@RequestParam String username,
+	public ResponseEntity<String> updateUserProfile(@RequestHeader("username") String username,
 			@Valid @RequestBody ProfileUpdateRequest profileUpdateRequest) {
 		Optional<User> optionalUser = userRepository.findBySystemId(username);
 
