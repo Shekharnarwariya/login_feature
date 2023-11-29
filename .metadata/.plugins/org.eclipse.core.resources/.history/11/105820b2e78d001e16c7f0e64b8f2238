@@ -1,5 +1,0 @@
-package com.hti.smpp.common.contacts.repository;
-
-public interface GroupEntryDTORepository {
-
-}

@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Rename package &apos;com.hti.addressbook&apos; to &apos;com.hti.smpp.addressbook&apos;&#x0D;&#x0A;- Original project: &apos;addressbook&apos;&#x0D;&#x0A;- Original element: &apos;addressbook/src/main/java/com.hti.addressbook&apos;&#x0D;&#x0A;- Renamed element: &apos;addressbook/src/main/java/com.hti.smpp.addressbook&apos;&#x0D;&#x0A;- Update references to refactored element&#x0D;&#x0A;- Update textual occurrences in comments and strings" description="Rename package &apos;com.hti.addressbook&apos;" flags="589830" hierarchical="false" id="org.eclipse.jdt.ui.rename.package" input="/src\/main\/java=/optional=/true=/=/maven.pomderived=/true=/&lt;com.hti.addressbook" name="com.hti.smpp.addressbook" qualified="false" references="true" stamp="1701156922158" textual="false" version="1.0"/>
-</session>

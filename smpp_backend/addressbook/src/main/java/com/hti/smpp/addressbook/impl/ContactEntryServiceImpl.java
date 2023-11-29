@@ -358,7 +358,6 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		ContactForBulk response = new ContactForBulk();
 		
 		try {
-			// ContactDAService service = new ContactDAServiceImpl();
 			List<ContactEntry> list = new ArrayList<ContactEntry>();
 			if (form.getId() != null && form.getId().length > 0) {
 				for (int groupId : form.getId()) {
@@ -372,12 +371,8 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 				for (ContactEntry entry : list) {
 					uploadedNumbers += entry.getNumber() + "\n";
 				}
-//				request.setAttribute("uploadedNumbers", uploadedNumbers);
 				response.setUploadedNumbers(uploadedNumbers);
-//				request.setAttribute("totalNumbers", list.size() + "");
 				response.setTotalNumbers(list.size());
-//				TemplatesService templatesService = new TemplatesService();
-//				Collection templates = null;
 				List<TemplatesDTO> templates = null;
 				try {
 					templates = this.tempRepository.findByMasterId(Long.parseLong(systemId));
@@ -386,10 +381,8 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 					throw new NotFoundException("Templates not found.");
 				}
 				if (templates != null) {
-//					request.setAttribute("templates", templates);
 					response.setTemplates(templates);
 				} else {
-//					System.out.println("NO template Exist");
 					logger.info("NO template Exist");
 				}
 				WebMasterEntry webMasterEntry = GlobalVars.WebmasterEntries.get(userOptional.get().getId());
@@ -398,7 +391,6 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 						Set<String> senders = new HashSet<String>(
 								Arrays.asList(webMasterEntry.getSenderId().split(",")));
 						logger.info(systemId + " Configured Senders: " + senders);
-//						request.setAttribute("senders", senders);
 						response.setSenders(senders);
 					} else {
 						logger.info(systemId + " No Senders Configured");
