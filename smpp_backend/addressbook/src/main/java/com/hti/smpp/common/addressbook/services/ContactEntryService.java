@@ -1,13 +1,13 @@
-package com.hti.smpp.addressbook.services;
+package com.hti.smpp.common.addressbook.services;
 
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.hti.smpp.addressbook.request.ContactEntryRequest;
-import com.hti.smpp.addressbook.request.GroupEntryRequest;
-import com.hti.smpp.addressbook.response.ContactForBulk;
+import com.hti.smpp.common.addressbook.request.ContactEntryRequest;
+import com.hti.smpp.common.addressbook.request.GroupEntryRequest;
+import com.hti.smpp.common.addressbook.response.ContactForBulk;
 import com.hti.smpp.common.contacts.dto.ContactEntry;
 
 public interface ContactEntryService {

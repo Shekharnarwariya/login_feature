@@ -1,4 +1,4 @@
-package com.hti.smpp.addressbook.request;
+package com.hti.smpp.common.addressbook.request;
 
 
 public class GroupEntryRequest {

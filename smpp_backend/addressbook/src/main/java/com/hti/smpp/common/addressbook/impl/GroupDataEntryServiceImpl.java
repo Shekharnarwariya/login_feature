@@ -1,4 +1,4 @@
-package com.hti.smpp.addressbook.impl;
+package com.hti.smpp.common.addressbook.impl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -27,10 +27,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hti.smpp.addressbook.request.GroupDataEntryRequest;
-import com.hti.smpp.addressbook.response.ContactForBulk;
-import com.hti.smpp.addressbook.services.GroupDataEntryService;
-import com.hti.smpp.addressbook.utils.Converters;
+import com.hti.smpp.common.addressbook.request.GroupDataEntryRequest;
+import com.hti.smpp.common.addressbook.response.ContactForBulk;
+import com.hti.smpp.common.addressbook.services.GroupDataEntryService;
+import com.hti.smpp.common.addressbook.utils.Converters;
 import com.hti.smpp.common.contacts.dto.GroupDataEntry;
 import com.hti.smpp.common.contacts.repository.GroupDataEntryRepository;
 import com.hti.smpp.common.exception.InternalServerException;

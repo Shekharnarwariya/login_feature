@@ -1,10 +1,10 @@
-package com.hti.smpp.addressbook.services;
+package com.hti.smpp.common.addressbook.services;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.hti.smpp.addressbook.request.GroupDataEntryRequest;
-import com.hti.smpp.addressbook.response.ContactForBulk;
+import com.hti.smpp.common.addressbook.request.GroupDataEntryRequest;
+import com.hti.smpp.common.addressbook.response.ContactForBulk;
 
 public interface GroupDataEntryService {
 	

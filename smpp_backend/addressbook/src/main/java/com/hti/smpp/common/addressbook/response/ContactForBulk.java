@@ -1,4 +1,4 @@
-package com.hti.smpp.addressbook.response;
+package com.hti.smpp.common.addressbook.response;
 
 import java.util.List;
 import java.util.Set;

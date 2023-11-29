@@ -1,4 +1,4 @@
-package com.hti.smpp.addressbook.request;
+package com.hti.smpp.common.addressbook.request;
 
 import org.springframework.web.multipart.MultipartFile;
 

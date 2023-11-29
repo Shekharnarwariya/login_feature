@@ -1,4 +1,4 @@
-package com.hti.smpp.addressbook.impl;
+package com.hti.smpp.common.addressbook.impl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,9 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.hti.smpp.addressbook.request.GroupEntryRequest;
-import com.hti.smpp.addressbook.services.GroupEntryService;
-import com.hti.smpp.addressbook.utils.Converters;
+import com.hti.smpp.common.addressbook.request.GroupEntryRequest;
+import com.hti.smpp.common.addressbook.services.GroupEntryService;
+import com.hti.smpp.common.addressbook.utils.Converters;
 import com.hti.smpp.common.contacts.dto.GroupEntryDTO;
 import com.hti.smpp.common.contacts.repository.GroupEntryDTORepository;
 import com.hti.smpp.common.user.dto.UserEntry;

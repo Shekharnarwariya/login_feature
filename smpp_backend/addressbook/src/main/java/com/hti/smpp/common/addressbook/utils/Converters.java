@@ -1,4 +1,4 @@
-package com.hti.smpp.addressbook.utils;
+package com.hti.smpp.common.addressbook.utils;
 
 import java.math.BigInteger;
 

@@ -1,8 +1,8 @@
-package com.hti.smpp.addressbook.services;
+package com.hti.smpp.common.addressbook.services;
 
 import org.springframework.http.ResponseEntity;
 
-import com.hti.smpp.addressbook.request.GroupEntryRequest;
+import com.hti.smpp.common.addressbook.request.GroupEntryRequest;
 
 public interface GroupEntryService {
 	
