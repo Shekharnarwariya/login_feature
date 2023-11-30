@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -28,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hti.smpp.common.addressbook.request.GroupDataEntryRequest;
+import com.hti.smpp.common.addressbook.request.SearchCriteria;
 import com.hti.smpp.common.addressbook.response.ContactForBulk;
 import com.hti.smpp.common.addressbook.services.GroupDataEntryService;
 import com.hti.smpp.common.addressbook.utils.Converters;
@@ -35,6 +37,9 @@ import com.hti.smpp.common.contacts.dto.GroupDataEntry;
 import com.hti.smpp.common.contacts.repository.GroupDataEntryRepository;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
+import com.hti.smpp.common.login.dto.Role;
+import com.hti.smpp.common.login.dto.User;
+import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.templates.dto.TemplatesDTO;
 import com.hti.smpp.common.templates.repository.TemplatesRepository;
 import com.hti.smpp.common.user.dto.UserEntry;
@@ -56,7 +61,10 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService{
 	
 	@Autowired
 	private TemplatesRepository tempRepository;
-
+	
+	@Autowired
+	private UserRepository userLoginRepo;
+	
 	@Override
 	public ResponseEntity<?> saveGroupData(String request, MultipartFile file,String username) {
 		
@@ -73,6 +81,18 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService{
 		}
 		
 		String target = IConstants.FAILURE_KEY;
+		
+		String systemId = null;
+		// Finding the user by system ID
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		if (userOptional.isPresent()) {
+			systemId = userOptional.get().getSystemId();
+		}
+		
+		Optional<User> user = userLoginRepo.findBySystemId(systemId);
+		Set<Role> role = user.get().getRoles();
+		
+		logger.info(systemId + "[" + role + "]" + " Adding GroupData To Group: " + form.getGroupId());
 		
 		try {
 			int groupId = form.getGroupId();
@@ -332,13 +352,163 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService{
 				target = IConstants.SUCCESS_KEY;
 			} else {
 				logger.info(systemId + " No Record Found For Selected Criteria");
-				response.setStatus(target);
 			}
+			response.setStatus(target);
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]");
 			logger.error(systemId, ex.fillInStackTrace());
 		}
 	
+		return response;
+	}
+
+	@Override
+	public List<GroupDataEntry> viewSearchGroupData(GroupDataEntryRequest request, String username) {
+		
+		SearchCriteria criteria = new SearchCriteria();
+		criteria.setArea(request.getArea());
+		criteria.setCompany(request.getCompany());
+		criteria.setGender(request.getGender());
+		criteria.setGroupId(request.getGroupId());
+		criteria.setMaxAge(request.getMaxAge());
+		criteria.setMinAge(request.getMinAge());
+		criteria.setNumber(request.getNumber());
+		criteria.setProfession(request.getProfession());
+		String systemId = null;
+		// Finding the user by system ID
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		if (userOptional.isPresent()) {
+			systemId = userOptional.get().getSystemId();
+		}
+		logger.info(
+				"List Group Data[" + criteria.getGroupId() + "] For Bulk Request by " + systemId);
+		
+		int groupId = criteria.getGroupId();
+		int maxAge = criteria.getMaxAge();
+		int minAge = criteria.getMinAge();
+		long[] numberArray = criteria.getNumber();
+		List<Long> number = Arrays.stream(numberArray).boxed().collect(Collectors.toList());
+		List<String> gender = Arrays.asList(criteria.getGender());
+		List<String> area = Arrays.asList(criteria.getArea());
+		List<String> profession = Arrays.asList(criteria.getProfession());
+		List<String> company = Arrays.asList(criteria.getCompany());
+		
+		List<GroupDataEntry> list = new ArrayList<GroupDataEntry>();
+		try {
+			// ContactDAService service = new ContactDAServiceImpl();
+			List<GroupDataEntry> templist = this.groupDataEntryRepository.findByGroupIdAndProfessionInAndCompanyInAndAreaInAndGenderInAndNumberInAndAgeBetween(groupId, profession, company, area, gender, number, minAge, maxAge);
+			
+			if (templist != null && !templist.isEmpty()) {
+				Converters cc = new Converters();
+				
+				for (GroupDataEntry entry : templist) {
+					if (entry.getInitials() != null && entry.getInitials().length() > 0) {
+						entry.setInitials(cc.uniHexToCharMsg(entry.getInitials()));
+					}
+					if (entry.getFirstName() != null && entry.getFirstName().length() > 0) {
+						entry.setFirstName(cc.uniHexToCharMsg(entry.getFirstName()));
+					}
+					if (entry.getMiddleName() != null && entry.getMiddleName().length() > 0) {
+						entry.setMiddleName(cc.uniHexToCharMsg(entry.getMiddleName()));
+					}
+					if (entry.getLastName() != null && entry.getLastName().length() > 0) {
+						entry.setLastName(cc.uniHexToCharMsg(entry.getLastName()));
+					}
+					list.add(entry);
+				}
+
+			} else {
+				logger.info(systemId + " No Record Found For Selected Criteria");
+			}
+		} catch (Exception ex) {
+			logger.error(systemId, ex.fillInStackTrace());
+			throw new InternalServerException("Error: "+ex.getLocalizedMessage());
+		}
+		
+		return list;
+	}
+
+	@Override
+	public ContactForBulk proceedSearchGroupData(GroupDataEntryRequest request, String username) {
+		
+		SearchCriteria criteria = new SearchCriteria();
+		criteria.setArea(request.getArea());
+		criteria.setCompany(request.getCompany());
+		criteria.setGender(request.getGender());
+		criteria.setGroupId(request.getGroupId());
+		criteria.setMaxAge(request.getMaxAge());
+		criteria.setMinAge(request.getMinAge());
+		criteria.setNumber(request.getNumber());
+		criteria.setProfession(request.getProfession());
+		
+		String systemId = null;
+		// Finding the user by system ID
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		if (userOptional.isPresent()) {
+			systemId = userOptional.get().getSystemId();
+		}
+		logger.info("Send Group Data[" + request.getGroupId() + "] Request by " + systemId);
+		
+		String target = IConstants.FAILURE_KEY;
+		String uploadedNumbers = "";
+		ContactForBulk response = new ContactForBulk();
+		try {
+			// ContactDAService service = new ContactDAServiceImpl();
+			int groupId = criteria.getGroupId();
+			int maxAge = criteria.getMaxAge();
+			int minAge = criteria.getMinAge();
+			long[] numberArray = criteria.getNumber();
+			List<Long> number = Arrays.stream(numberArray).boxed().collect(Collectors.toList());
+			List<String> gender = Arrays.asList(criteria.getGender());
+			List<String> area = Arrays.asList(criteria.getArea());
+			List<String> profession = Arrays.asList(criteria.getProfession());
+			List<String> company = Arrays.asList(criteria.getCompany());
+			
+			List<GroupDataEntry> list = this.groupDataEntryRepository.findByGroupIdAndProfessionInAndCompanyInAndAreaInAndGenderInAndNumberInAndAgeBetween(groupId, profession, company, area, gender, number, minAge, maxAge);
+			
+			if (list != null && !list.isEmpty()) {
+				for (GroupDataEntry entry : list) {
+					uploadedNumbers += entry.getNumber() + "\n";
+				}
+				response.setUploadedNumbers(uploadedNumbers);
+				response.setTotalNumbers(list.size());
+				response.setGroupId(criteria.getGroupId());
+				List<TemplatesDTO> templates = null;
+				try {
+					templates = this.tempRepository.findByMasterId(Long.parseLong(systemId));
+				} catch (Exception ex) {
+					logger.error("Error: "+ex.getLocalizedMessage());
+					throw new NotFoundException("Templates not found.");
+				}
+				if (templates != null) {
+					response.setTemplates(templates);
+				} else {
+					logger.info("No templates exist.");
+				}
+				
+				WebMasterEntry webMasterEntry = GlobalVars.WebmasterEntries.get(userOptional.get().getId());
+				if (webMasterEntry != null) {
+					if (webMasterEntry.getSenderId() != null && webMasterEntry.getSenderId().length() > 1) {
+						Set<String> senders = new HashSet<String>(
+								Arrays.asList(webMasterEntry.getSenderId().split(",")));
+						logger.info(systemId + " Configured Senders: " + senders);
+						response.setSenders(senders);
+					} else {
+						logger.info(systemId + " No Senders Configured");
+					}
+				} else {
+					logger.error(systemId + " Webmaster Entry Not Found");
+				}
+				target = "proceed";
+			} else {
+				logger.info(systemId + " No Record Found For Selected Criteria");
+				response.setStatus(target);
+			}
+		} catch (Exception ex) {
+			logger.error(systemId, ex.fillInStackTrace());
+			throw new InternalServerException("Error: "+ex.getLocalizedMessage());
+		}
+		
 		return response;
 	}
 

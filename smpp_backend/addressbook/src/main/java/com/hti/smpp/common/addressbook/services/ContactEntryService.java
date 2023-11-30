@@ -16,4 +16,6 @@ public interface ContactEntryService {
 	public ContactForBulk contactForBulk(ContactEntryRequest request, String username);
 	public List<ContactEntry> viewSearchContact(GroupEntryRequest groupEntryRequest,String username);
 	public ContactForBulk proceedSearchContact(GroupEntryRequest entryRequest, String username);
+	public ResponseEntity<?> modifyContactUpdate(ContactEntryRequest request, String username);
+	
 }

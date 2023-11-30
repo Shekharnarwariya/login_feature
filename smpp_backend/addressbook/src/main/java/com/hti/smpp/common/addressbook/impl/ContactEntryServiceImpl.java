@@ -36,6 +36,9 @@ import com.hti.smpp.common.contacts.dto.ContactEntry;
 import com.hti.smpp.common.contacts.repository.ContactRepository;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
+import com.hti.smpp.common.login.dto.Role;
+import com.hti.smpp.common.login.dto.User;
+import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.templates.dto.TemplatesDTO;
 import com.hti.smpp.common.templates.repository.TemplatesRepository;
 import com.hti.smpp.common.user.dto.UserEntry;
@@ -57,6 +60,9 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 	
 	@Autowired
 	private TemplatesRepository tempRepository;
+	
+	@Autowired
+	private UserRepository userLoginRepo;
 
 	@Override
 	public ResponseEntity<?> saveContactEntry(String reqdata, MultipartFile file, String username) {
@@ -74,6 +80,17 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		}
 		
 		String target = IConstants.FAILURE_KEY;
+		String systemId = null;
+		// Finding the user by system ID
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		if (userOptional.isPresent()) {
+			systemId = userOptional.get().getSystemId();
+		}
+		
+		Optional<User> user = userLoginRepo.findBySystemId(systemId);
+		Set<Role> role = user.get().getRoles();
+		
+		logger.info(systemId + "[" + role + "]" + " Adding Contact To Group: " + form.getGroupId());
 		try {
 			int groupId = form.getGroupId();
 			String mode = form.getType();
@@ -398,7 +415,7 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 				} else {
 					logger.error(systemId + " Webmaster Entry Not Found");
 				}
-				target = IConstants.SUCCESS_KEY;
+				target = "proceed";
 			} else {
 				logger.info(systemId + " No Record Found For Selected Criteria");
 			}
@@ -409,7 +426,55 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		
 		return response;
 	}
-	
-	
 
+	@Override
+	public ResponseEntity<?> modifyContactUpdate(ContactEntryRequest form, String username) {
+		String target = IConstants.FAILURE_KEY;
+		String systemId = null;
+		// Finding the user by system ID
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		if (userOptional.isPresent()) {
+			systemId = userOptional.get().getSystemId();
+		}
+		
+		Optional<User> user = userLoginRepo.findBySystemId(systemId);
+		Set<Role> role = user.get().getRoles();
+		int groupId = form.getGroupId();
+		logger.info(systemId + "[" + role + "]" + " Modify Contact Request For GroupId: " + groupId);
+		ContactEntry entry = null;
+		List<ContactEntry> list = new ArrayList<ContactEntry>();
+		int[] id = form.getId();
+		String[] names = form.getName();
+		String[] emails = form.getEmail();
+		long[] numbers = form.getNumber();
+		
+		if (id != null && id.length > 0) {
+			try {
+				for (int i = 0; i < id.length; i++) {
+					if (names[i] != null && names[i].length() > 0) {
+						entry = new ContactEntry(new Converters().UTF16(names[i]), numbers[i], emails[i], groupId);
+					} else {
+						entry = new ContactEntry(null, numbers[i], emails[i], groupId);
+					}
+					entry.setId(id[i]);
+					list.add(entry);
+					logger.info(entry.toString());
+				}
+				if(!list.isEmpty()) {
+					this.contactRepo.saveAll(list);
+					target = IConstants.SUCCESS_KEY;
+				}
+			} catch (Exception e) {
+				logger.error(systemId, e.getLocalizedMessage());
+				throw new InternalServerException(e.getLocalizedMessage());
+			}
+		} else {
+			logger.info(systemId + " No Records Selected");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+		}
+		logger.info(systemId + " modify Contact Target:" + target);
+		
+		return new ResponseEntity<>(target,HttpStatus.CREATED);
+	}
+	
 }

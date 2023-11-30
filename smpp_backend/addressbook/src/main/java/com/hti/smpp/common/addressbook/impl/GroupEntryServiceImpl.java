@@ -3,6 +3,7 @@ package com.hti.smpp.common.addressbook.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,8 +17,13 @@ import com.hti.smpp.common.addressbook.services.GroupEntryService;
 import com.hti.smpp.common.addressbook.utils.Converters;
 import com.hti.smpp.common.contacts.dto.GroupEntryDTO;
 import com.hti.smpp.common.contacts.repository.GroupEntryDTORepository;
+import com.hti.smpp.common.login.dto.Role;
+import com.hti.smpp.common.login.dto.User;
+import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.user.dto.UserEntry;
+import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
+import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.IConstants;
 
 @Service
@@ -31,6 +37,12 @@ public class GroupEntryServiceImpl implements GroupEntryService{
 	@Autowired
 	private UserEntryRepository userRepository;
 	
+	@Autowired
+	private WebMasterEntryRepository webMasterRepo;
+	
+	@Autowired
+	private UserRepository userLoginRepo;
+	
 	@Override
 	public ResponseEntity<?> saveGroupEntry(GroupEntryRequest form, String username) {
 		
@@ -40,12 +52,18 @@ public class GroupEntryServiceImpl implements GroupEntryService{
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
 		}
+		
+		Optional<User> user = userLoginRepo.findBySystemId(systemId);
+		Set<Role> role = user.get().getRoles();
+		
+		logger.info(systemId + "[" + role + "]" + " Add Contact Group Request");
 		String target = IConstants.FAILURE_KEY;
 		GroupEntryDTO entry = null;
 		int total = form.getName().length;
 		List<GroupEntryDTO> list = new ArrayList<GroupEntryDTO>();
 		String[] names = form.getName();
 		boolean[] groupData = form.getGroupData();
+		
 		try {
 			for (int i = 0; i < total; i++) {
 				entry = new GroupEntryDTO();
@@ -60,7 +78,14 @@ public class GroupEntryServiceImpl implements GroupEntryService{
 //					} else {
 //						entry.setCreatedBy(systemId);
 //					}
-					entry.setCreatedBy(systemId);
+					// to review and implement like above code
+					WebMasterEntry webEntry = this.webMasterRepo.findByUserId(Integer.parseInt(systemId));
+					if(webEntry.isMultiUserAccess()) {
+						//TODO
+					}else {
+						entry.setCreatedBy(systemId);
+					}
+					
 					list.add(entry);
 					logger.info(entry.toString());
 				} else {
