@@ -1,15 +1,18 @@
-package com.hti.smpp.common.user.dto;
+package com.hti.user.dto;
 
 import java.io.Serializable;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 
+/**
+ * Entity bean with JPA annotations
+ */
 @Entity
 @Table(name = "usermaster")
 public class UserEntry implements Serializable, Comparable<UserEntry> {
@@ -17,11 +20,13 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
-	@Column(name = "system_id")
+	@Column(name = "system_id", unique = true, nullable = false, updatable = false)
 	private String systemId;
-	@Column(name = "master_id")
+	@Column(name = "master_id", nullable = false, updatable = false)
 	private String masterId;
-	@Column(name = "admindepend")
+	@Column(name = "password", nullable = false, updatable = false)
+	private String password;
+	@Column(name = "admindepend", updatable = false)
 	private boolean adminDepend;
 	@Column(name = "expiryday")
 	private String expiry;
@@ -31,6 +36,8 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 	private String currency;
 	@Column(name = "system_type")
 	private String systemType;
+	@Column(name = "role")
+	private String role;
 	@Column(name = "sleep_time")
 	private int sleep;
 	@Column(name = "Remark")
@@ -41,7 +48,7 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 	private double forceDelay;
 	@Column(name = "timeout")
 	private int timeout = 60;
-	@Column(name = "createdon")
+	@Column(name = "createdon", insertable = false, updatable = false, nullable = false)
 	private String createdOn;
 	@Column(name = "access_ip")
 	private String accessIp;
@@ -49,11 +56,11 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 	private boolean logging;
 	@Column(name = "log_days")
 	private int logDays;
-	@Column(name = "createdby")
+	@Column(name = "createdby", updatable = false)
 	private String createdBy;
 	@Column(name = "editby")
 	private String editBy;
-	@Column(name = "editOn")
+	@Column(name = "editOn", insertable = false, updatable = false, nullable = false)
 	private String editOn;
 	@Column(name = "sender_length")
 	private int senderLength;
@@ -79,7 +86,7 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 	private boolean skipContent;
 	@Column(name = "loop_smsc_id")
 	private int loopSmscId;
-	@Column(name = "pwd_expires_on")
+	@Column(name = "pwd_expires_on", insertable = false, updatable = false, nullable = false)
 	private String passwordExpiresOn;
 	@Column(name = "force_pwd_change")
 	private boolean forcePasswordChange;
@@ -87,7 +94,10 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 	private String accessCountry;
 	@Column(name = "record_mnp")
 	private boolean recordMnp;
-
+	@Column(name = "optout")
+	private boolean optOut;
+	@Column(name = "short_code")
+	private String shortCode;
 	@Transient
 	private String flagStatus;
 
@@ -100,12 +110,14 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 		UserEntry entry = (UserEntry) o;
 		return (id == entry.id) && (systemId == null ? entry.systemId == null : systemId.equals(entry.systemId))
 				&& (masterId == null ? entry.masterId == null : masterId.equals(entry.masterId))
+				&& (password == null ? entry.password == null : password.equals(entry.password))
 				&& (adminDepend == entry.adminDepend) && (hlr == entry.hlr) && (priority == entry.priority)
 				&& (systemType == null ? entry.systemType == null : systemType.equals(entry.systemType))
 				&& (expiry == null ? entry.expiry == null : expiry.equals(entry.expiry)) && (sleep == entry.sleep)
 				&& (timeout == entry.timeout)
 				&& (currency == null ? entry.currency == null : currency.equals(entry.currency))
-				&& (forceDelay == entry.forceDelay) && (logging == entry.logging) && (logDays == entry.logDays)
+				&& (role == null ? entry.role == null : role.equals(entry.role)) && (forceDelay == entry.forceDelay)
+				&& (logging == entry.logging) && (logDays == entry.logDays)
 				&& (accessIp == null ? entry.accessIp == null : accessIp.equals(entry.accessIp));
 	}
 
@@ -138,6 +150,14 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 
 	public void setSystemId(String systemId) {
 		this.systemId = systemId;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
 	}
 
 	public String getMasterId() {
@@ -186,6 +206,14 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 
 	public void setAdminDepend(boolean adminDepend) {
 		this.adminDepend = adminDepend;
+	}
+
+	public String getRole() {
+		return role;
+	}
+
+	public void setRole(String role) {
+		this.role = role;
 	}
 
 	public int getSleep() {
@@ -420,9 +448,26 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 		this.recordMnp = recordMnp;
 	}
 
+	public boolean isOptOut() {
+		return optOut;
+	}
+
+	public void setOptOut(boolean optOut) {
+		this.optOut = optOut;
+	}
+
+	public String getShortCode() {
+		return shortCode;
+	}
+
+	public void setShortCode(String shortCode) {
+		this.shortCode = shortCode;
+	}
+
 	public String toString() {
-		return "id=" + id + ",SystemId=" + systemId + ",MasterId=" + masterId + ",AdminDepend=" + adminDepend
-				+ ",Currency=" + currency + ",hlr=" + hlr + ",timeout=" + timeout + ",CreatedOn:" + createdOn;
+		return "id=" + id + ",SystemId=" + systemId + ",Password=" + password + ",Role=" + role + ",MasterId="
+				+ masterId + ",AdminDepend=" + adminDepend + ",Currency=" + currency + ",hlr=" + hlr + ",timeout="
+				+ timeout + ",CreatedOn:" + createdOn;
 	}
 
 	@Override
