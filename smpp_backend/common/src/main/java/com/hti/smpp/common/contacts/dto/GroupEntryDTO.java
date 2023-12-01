@@ -39,6 +39,13 @@ public class GroupEntryDTO {
 		this.createdBy = createdBy;
 		this.members = members;
 	}
+	
+	public GroupEntryDTO(String name, String masterId, boolean groupData) {
+		this.name = name;
+		this.masterId = masterId;
+		this.groupData = groupData;
+	}
+	
 	public int getId() {
 		return id;
 	}

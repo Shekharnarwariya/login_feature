@@ -1,7 +1,11 @@
 package com.hti.smpp.common.addressbook.impl;
 
+import java.awt.Color;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,15 +17,24 @@ import java.util.stream.Collectors;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -510,6 +523,317 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService{
 		}
 		
 		return response;
+	}
+
+	@Override
+	public ResponseEntity<?> modifyGroupDataUpdate(GroupDataEntryRequest form, String username) {
+		String target = IConstants.FAILURE_KEY;
+		String systemId = null;
+		// Finding the user by system ID
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		if (userOptional.isPresent()) {
+			systemId = userOptional.get().getSystemId();
+		}
+		logger.info("Group Data Update Request by " + systemId);
+		
+		if (form.getId() != null && form.getId().length > 0) {
+			int groupId = form.getGroupId();
+			GroupDataEntry entry = null;
+			List<GroupDataEntry> list = new ArrayList<GroupDataEntry>();
+			try {
+				int[] id = form.getId();
+				String[] initials = form.getInitials();
+				String[] firstName = form.getFirstName();
+				String[] middleName = form.getMiddleName();
+				String[] lastName = form.getLastName();
+				int[] age = form.getAge();
+				String[] gender = form.getGender();
+				String[] email = form.getEmail();
+				long[] number = form.getNumber();
+				String[] company = form.getCompany();
+				String[] profession = form.getProfession();
+				String[] area = form.getArea();
+				String first_name = null, middle_name = null, last_name = null, initial = null;
+				for (int i = 0; i < id.length; i++) {
+					initial = null;
+					first_name = null;
+					middle_name = null;
+					last_name = null;
+					if (initials[i] != null && initials[i].length() > 0) {
+						initial = new Converters().UTF16(initials[i]);
+					}
+					if (firstName[i] != null && firstName[i].length() > 0) {
+						first_name = new Converters().UTF16(firstName[i]);
+					}
+					if (middleName[i] != null && middleName[i].length() > 0) {
+						middle_name = new Converters().UTF16(middleName[i]);
+					}
+					if (lastName[i] != null && lastName[i].length() > 0) {
+						last_name = new Converters().UTF16(lastName[i]);
+					}
+					entry = new GroupDataEntry(groupId, initial, first_name, middle_name, last_name, number[i],
+							email[i], age[i], profession[i], company[i], area[i], gender[i]);
+					entry.setId(id[i]);
+					list.add(entry);
+				}
+				if(!list.isEmpty()) {
+					this.groupDataEntryRepository.saveAll(list);
+					target = IConstants.SUCCESS_KEY;
+				}
+				
+			} catch (Exception ex) {
+				logger.error(systemId, ex.getLocalizedMessage());
+				return new ResponseEntity<>(target,HttpStatus.INTERNAL_SERVER_ERROR);
+			}
+		} else {
+			logger.info(systemId + " No GroupData Records Found To Update");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+		}
+		
+		logger.info(systemId + " Modify GroupDataEntryUpdate Target:" + target);
+		
+		return new ResponseEntity<>(target,HttpStatus.CREATED);
+	}
+	
+	private void logDeletedGroupData(String username, List<Integer> deletedContactsIds) {
+        if (!deletedContactsIds.isEmpty()) {
+            logger.info("Deleted contacts by {}: {}", username, deletedContactsIds);
+        }
+    }
+
+    private void logFailedDeletions(String username, List<Integer> failedDeletionIds) {
+        if (!failedDeletionIds.isEmpty()) {
+            logger.warn("Failed to delete contacts by {}: {}", username, failedDeletionIds);
+        }
+    }
+
+	@Override
+	public ResponseEntity<?> modifyGroupDataDelete(List<Integer> ids, String username) {
+		String target = IConstants.FAILURE_KEY;
+        List<Integer> successfulDeletions = new ArrayList<>();
+        List<Integer> failedDeletionIds = new ArrayList<>();
+        
+        try {
+            if (!ids.isEmpty()) {
+                List<GroupDataEntry> groupdataToDelete = this.groupDataEntryRepository.findAllById(ids);
+                for (GroupDataEntry groupdata : groupdataToDelete) {
+                    try {
+                        this.groupDataEntryRepository.delete(groupdata);
+                        successfulDeletions.add(groupdata.getId());
+                    } catch (Exception e) {
+                        logger.error("Error deleting group data with ID {}: {}", groupdata.getId(), e.getMessage(), e);
+                        failedDeletionIds.add(groupdata.getId());
+                    }
+                }
+
+                target = IConstants.SUCCESS_KEY;
+                logDeletedGroupData(username, successfulDeletions);
+                logFailedDeletions(username, failedDeletionIds);
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(target);
+        } catch (Exception e) {
+            logger.error("Error deleting group data: {}", e.getMessage(), e);
+            target = IConstants.FAILURE_KEY;
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(target);
+        }
+	}
+	
+	private Workbook getWorkBook(List<GroupDataEntry> list) {
+		logger.info("Start Creating WorkBook.");
+		SXSSFWorkbook workbook = new SXSSFWorkbook();
+		int records_per_sheet = 500000;
+		int sheet_number = 0;
+		Sheet sheet = null;
+		Row row = null;
+		XSSFFont headerFont = (XSSFFont) workbook.createFont();
+		headerFont.setFontName("Arial");
+		headerFont.setFontHeightInPoints((short) 10);
+		headerFont.setColor(new XSSFColor(Color.WHITE));
+		XSSFCellStyle headerStyle = (XSSFCellStyle) workbook.createCellStyle();
+		headerStyle.setFont(headerFont);
+		headerStyle.setFillForegroundColor(new XSSFColor(Color.GRAY));
+		headerStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+		headerStyle.setAlignment(XSSFCellStyle.ALIGN_CENTER);
+		headerStyle.setVerticalAlignment(XSSFCellStyle.VERTICAL_CENTER);
+		headerStyle.setBorderBottom(BorderStyle.THIN);
+		headerStyle.setBorderBottom((short) 1);
+		headerStyle.setBottomBorderColor(new XSSFColor(Color.WHITE));
+		headerStyle.setBorderTop(BorderStyle.THIN);
+		headerStyle.setBorderTop((short) 1);
+		headerStyle.setTopBorderColor(new XSSFColor(Color.WHITE));
+		headerStyle.setBorderLeft(BorderStyle.THIN);
+		headerStyle.setBorderLeft((short) 1);
+		headerStyle.setLeftBorderColor(new XSSFColor(Color.WHITE));
+		headerStyle.setBorderRight(BorderStyle.THIN);
+		headerStyle.setBorderRight((short) 1);
+		headerStyle.setRightBorderColor(new XSSFColor(Color.WHITE));
+		XSSFFont rowFont = (XSSFFont) workbook.createFont();
+		rowFont.setFontName("Arial");
+		rowFont.setFontHeightInPoints((short) 9);
+		rowFont.setColor(new XSSFColor(Color.BLACK));
+		XSSFCellStyle rowStyle = (XSSFCellStyle) workbook.createCellStyle();
+		rowStyle.setFont(rowFont);
+		rowStyle.setFillForegroundColor(new XSSFColor(Color.LIGHT_GRAY));
+		rowStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+		rowStyle.setAlignment(XSSFCellStyle.ALIGN_LEFT);
+		rowStyle.setVerticalAlignment(XSSFCellStyle.VERTICAL_CENTER);
+		rowStyle.setBorderBottom(BorderStyle.THIN);
+		rowStyle.setBorderBottom((short) 1);
+		rowStyle.setBottomBorderColor(new XSSFColor(Color.WHITE));
+		rowStyle.setBorderTop(BorderStyle.THIN);
+		rowStyle.setBorderTop((short) 1);
+		rowStyle.setTopBorderColor(new XSSFColor(Color.WHITE));
+		rowStyle.setBorderLeft(BorderStyle.THIN);
+		rowStyle.setBorderLeft((short) 1);
+		rowStyle.setLeftBorderColor(new XSSFColor(Color.WHITE));
+		rowStyle.setBorderRight(BorderStyle.THIN);
+		rowStyle.setBorderRight((short) 1);
+		rowStyle.setRightBorderColor(new XSSFColor(Color.WHITE));
+		String[] headers = { "Initials", "FirstName", "MiddleName", "LastName", "Gender", "Age", "Email", "Number",
+				"Company", "Profession", "Area" };
+		while (!list.isEmpty()) {
+			int row_number = 0;
+			sheet = workbook.createSheet("Sheet(" + sheet_number + ")");
+			sheet.setDefaultColumnWidth(18);
+			logger.info("Creating Sheet: " + sheet_number);
+			while (!list.isEmpty()) {
+				row = sheet.createRow(row_number);
+				if (row_number == 0) {
+					int cell_number = 0;
+					for (String header : headers) {
+						Cell cell = row.createCell(cell_number);
+						cell.setCellValue(header);
+						cell.setCellStyle(headerStyle);
+						cell_number++;
+					}
+				} else {
+					GroupDataEntry entry = list.remove(0);
+					logger.debug("Add Row[" + row_number + "]: " + entry);
+					Cell cell = row.createCell(0);
+					cell.setCellValue(entry.getInitials());
+					cell.setCellStyle(rowStyle);
+					cell = row.createCell(1);
+					cell.setCellValue(entry.getFirstName());
+					cell.setCellStyle(rowStyle);
+					cell = row.createCell(2);
+					cell.setCellValue(entry.getMiddleName());
+					cell.setCellStyle(rowStyle);
+					cell = row.createCell(3);
+					cell.setCellValue(entry.getLastName());
+					cell.setCellStyle(rowStyle);
+					cell = row.createCell(4);
+					cell.setCellValue(entry.getGender());
+					cell.setCellStyle(rowStyle);
+					cell = row.createCell(5);
+					cell.setCellValue(entry.getAge());
+					cell.setCellStyle(rowStyle);
+					cell = row.createCell(6);
+					cell.setCellValue(entry.getEmail());
+					cell.setCellStyle(rowStyle);
+					cell = row.createCell(7);
+					cell.setCellValue(String.valueOf(entry.getNumber()));
+					cell.setCellStyle(rowStyle);
+					cell = row.createCell(8);
+					cell.setCellValue(entry.getCompany());
+					cell.setCellStyle(rowStyle);
+					cell = row.createCell(9);
+					cell.setCellValue(entry.getProfession());
+					cell.setCellStyle(rowStyle);
+					cell = row.createCell(10);
+					cell.setCellValue(entry.getArea());
+					cell.setCellStyle(rowStyle);
+				}
+				if (++row_number > records_per_sheet) {
+					logger.info("GroupData Sheet Created: " + sheet_number);
+					break;
+				}
+			}
+			sheet_number++;
+		}
+		logger.info("GroupData Workbook Created");
+		return workbook;
+	}
+
+	@Override
+	public ResponseEntity<?> modifyGroupDataExport(GroupDataEntryRequest form, String username) {
+		
+		String systemId = null;
+		// Finding the user by system ID
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		if (userOptional.isPresent()) {
+			systemId = userOptional.get().getSystemId();
+		}
+		logger.info("Group Data Export Request by " + systemId);
+		String target = IConstants.FAILURE_KEY;
+		if (form.getId() != null && form.getId().length > 0) {
+			int groupId = form.getGroupId();
+			GroupDataEntry entry = null;
+			List<GroupDataEntry> list = new ArrayList<GroupDataEntry>();
+			Converters cc = new Converters();
+			try {
+				int[] id = form.getId();
+				String[] initials = form.getInitials();
+				String[] firstName = form.getFirstName();
+				String[] middleName = form.getMiddleName();
+				String[] lastName = form.getLastName();
+				int[] age = form.getAge();
+				String[] gender = form.getGender();
+				String[] email = form.getEmail();
+				long[] number = form.getNumber();
+				String[] company = form.getCompany();
+				String[] profession = form.getProfession();
+				String[] area = form.getArea();
+				String first_name = null, middle_name = null, last_name = null, initial = null;
+				for (int i = 0; i < id.length; i++) {
+					initial = null;
+					first_name = null;
+					middle_name = null;
+					last_name = null;
+					if (initials[i] != null && initials[i].length() > 0) {
+						initial = new Converters().UTF16(initials[i]);
+					}
+					if (firstName[i] != null && firstName[i].length() > 0) {
+						first_name = new Converters().UTF16(firstName[i]);
+					}
+					if (middleName[i] != null && middleName[i].length() > 0) {
+						middle_name = new Converters().UTF16(middleName[i]);
+					}
+					if (lastName[i] != null && lastName[i].length() > 0) {
+						last_name = new Converters().UTF16(lastName[i]);
+					}
+					entry = new GroupDataEntry(groupId, cc.uniHexToCharMsg(initial), cc.uniHexToCharMsg(first_name),
+							cc.uniHexToCharMsg(middle_name), cc.uniHexToCharMsg(last_name), number[i], email[i], age[i],
+							profession[i], company[i], area[i], gender[i]);
+					entry.setId(id[i]);
+					list.add(entry);
+				}
+				Workbook workbook = getWorkBook(list);
+				String filename = systemId + "_GroupData[" + groupId + "]" + ".xlsx";
+				ByteArrayOutputStream bos = new ByteArrayOutputStream();
+				logger.info(systemId + " Creating GroupData XLSx ");
+				workbook.write(bos);
+				
+				try(InputStream in = new ByteArrayInputStream(bos.toByteArray())) {
+					HttpHeaders headers = new HttpHeaders();
+					headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+					headers.setContentDispositionFormData("attachment", filename);
+					InputStreamResource resource = new InputStreamResource(in);
+					target = "export";
+					logger.info(systemId + " Export Contact Target:" + target);
+					return new ResponseEntity<>(resource, headers, HttpStatus.OK);
+				}catch(IOException e) {
+					logger.error("Contact XLSx Download Error: {}", e.toString());
+		            return new ResponseEntity<>(target,HttpStatus.INTERNAL_SERVER_ERROR);
+				}
+				
+			} catch (Exception ex) {
+				logger.error(systemId, ex.toString());
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+			}
+		} else {
+			logger.info(systemId + " No GroupData Records Found To Export");
+		}
+		return ResponseEntity.status(HttpStatus.OK).build();
 	}
 
 }

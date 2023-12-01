@@ -17,5 +17,6 @@ public interface ContactEntryService {
 	public List<ContactEntry> viewSearchContact(GroupEntryRequest groupEntryRequest,String username);
 	public ContactForBulk proceedSearchContact(GroupEntryRequest entryRequest, String username);
 	public ResponseEntity<?> modifyContactUpdate(ContactEntryRequest request, String username);
-	
+	public ResponseEntity<?> modifyContactDelete(List<Integer> ids, String username);
+	public ResponseEntity<?> modifyContactExport(ContactEntryRequest request, String username);
 }

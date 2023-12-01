@@ -1,7 +1,11 @@
 package com.hti.smpp.common.addressbook.impl;
 
+import java.awt.Color;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,18 +13,26 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -466,7 +478,7 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 				}
 			} catch (Exception e) {
 				logger.error(systemId, e.getLocalizedMessage());
-				throw new InternalServerException(e.getLocalizedMessage());
+				return new ResponseEntity<>(target,HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		} else {
 			logger.info(systemId + " No Records Selected");
@@ -476,5 +488,209 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		
 		return new ResponseEntity<>(target,HttpStatus.CREATED);
 	}
+	
+	private void logDeletedContacts(String username, List<Integer> deletedContactsIds) {
+        if (!deletedContactsIds.isEmpty()) {
+            logger.info("Deleted contacts by {}: {}", username, deletedContactsIds);
+        }
+    }
+
+    private void logFailedDeletions(String username, List<Integer> failedDeletionIds) {
+        if (!failedDeletionIds.isEmpty()) {
+            logger.warn("Failed to delete contacts by {}: {}", username, failedDeletionIds);
+        }
+    }
+	
+
+	@Override
+	public ResponseEntity<?> modifyContactDelete(List<Integer> ids, String username) {
+		String target = IConstants.FAILURE_KEY;
+        List<Integer> successfulDeletions = new ArrayList<>();
+        List<Integer> failedDeletionIds = new ArrayList<>();
+
+        try {
+            if (!ids.isEmpty()) {
+                List<ContactEntry> contactsToDelete = contactRepo.findAllById(ids);
+                for (ContactEntry contact : contactsToDelete) {
+                    try {
+                        contactRepo.delete(contact);
+                        successfulDeletions.add(contact.getId());
+                    } catch (Exception e) {
+                        logger.error("Error deleting contact with ID {}: {}", contact.getId(), e.getMessage(), e);
+                        failedDeletionIds.add(contact.getId());
+                    }
+                }
+
+                target = IConstants.SUCCESS_KEY;
+                logDeletedContacts(username, successfulDeletions);
+                logFailedDeletions(username, failedDeletionIds);
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(target);
+        } catch (Exception e) {
+            logger.error("Error deleting contacts: {}", e.getMessage(), e);
+            target = IConstants.FAILURE_KEY;
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(target);
+        }
+	}
+	
+	private Workbook getWorkBook(List<ContactEntry> list) {
+		logger.info("Start Creating WorkBook.");
+		SXSSFWorkbook workbook = new SXSSFWorkbook();
+		int records_per_sheet = 500000;
+		int sheet_number = 0;
+		Sheet sheet = null;
+		Row row = null;
+		XSSFFont headerFont = (XSSFFont) workbook.createFont();
+		headerFont.setFontName("Arial");
+		headerFont.setFontHeightInPoints((short) 10);
+		headerFont.setColor(new XSSFColor(Color.WHITE));
+		XSSFCellStyle headerStyle = (XSSFCellStyle) workbook.createCellStyle();
+		headerStyle.setFont(headerFont);
+		headerStyle.setFillForegroundColor(new XSSFColor(Color.GRAY));
+		headerStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+		headerStyle.setAlignment(XSSFCellStyle.ALIGN_CENTER);
+		headerStyle.setVerticalAlignment(XSSFCellStyle.VERTICAL_CENTER);
+		headerStyle.setBorderBottom(BorderStyle.THIN);
+		headerStyle.setBorderBottom((short) 1);
+		headerStyle.setBottomBorderColor(new XSSFColor(Color.WHITE));
+		headerStyle.setBorderTop(BorderStyle.THIN);
+		headerStyle.setBorderTop((short) 1);
+		headerStyle.setTopBorderColor(new XSSFColor(Color.WHITE));
+		headerStyle.setBorderLeft(BorderStyle.THIN);
+		headerStyle.setBorderLeft((short) 1);
+		headerStyle.setLeftBorderColor(new XSSFColor(Color.WHITE));
+		headerStyle.setBorderRight(BorderStyle.THIN);
+		headerStyle.setBorderRight((short) 1);
+		headerStyle.setRightBorderColor(new XSSFColor(Color.WHITE));
+		XSSFFont rowFont = (XSSFFont) workbook.createFont();
+		rowFont.setFontName("Arial");
+		rowFont.setFontHeightInPoints((short) 9);
+		rowFont.setColor(new XSSFColor(Color.BLACK));
+		XSSFCellStyle rowStyle = (XSSFCellStyle) workbook.createCellStyle();
+		rowStyle.setFont(rowFont);
+		rowStyle.setFillForegroundColor(new XSSFColor(Color.LIGHT_GRAY));
+		rowStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+		rowStyle.setAlignment(XSSFCellStyle.ALIGN_LEFT);
+		rowStyle.setVerticalAlignment(XSSFCellStyle.VERTICAL_CENTER);
+		rowStyle.setBorderBottom(BorderStyle.THIN);
+		rowStyle.setBorderBottom((short) 1);
+		rowStyle.setBottomBorderColor(new XSSFColor(Color.WHITE));
+		rowStyle.setBorderTop(BorderStyle.THIN);
+		rowStyle.setBorderTop((short) 1);
+		rowStyle.setTopBorderColor(new XSSFColor(Color.WHITE));
+		rowStyle.setBorderLeft(BorderStyle.THIN);
+		rowStyle.setBorderLeft((short) 1);
+		rowStyle.setLeftBorderColor(new XSSFColor(Color.WHITE));
+		rowStyle.setBorderRight(BorderStyle.THIN);
+		rowStyle.setBorderRight((short) 1);
+		rowStyle.setRightBorderColor(new XSSFColor(Color.WHITE));
+		String[] headers = { "Name", "Number", "Email" };
+		while (!list.isEmpty()) {
+			int row_number = 0;
+			sheet = workbook.createSheet("Sheet(" + sheet_number + ")");
+			sheet.setDefaultColumnWidth(20);
+			logger.info("Creating Sheet: " + sheet_number);
+			while (!list.isEmpty()) {
+				row = sheet.createRow(row_number);
+				if (row_number == 0) {
+					int cell_number = 0;
+					for (String header : headers) {
+						Cell cell = row.createCell(cell_number);
+						cell.setCellValue(header);
+						cell.setCellStyle(headerStyle);
+						cell_number++;
+					}
+				} else {
+					ContactEntry entry = list.remove(0);
+					logger.debug("Add Row[" + row_number + "]: " + entry);
+					Cell cell = row.createCell(0);
+					cell.setCellValue(entry.getName());
+					cell.setCellStyle(rowStyle);
+					cell = row.createCell(1);
+					cell.setCellValue(String.valueOf(entry.getNumber()));
+					cell.setCellStyle(rowStyle);
+					cell = row.createCell(2);
+					cell.setCellValue(entry.getEmail());
+					cell.setCellStyle(rowStyle);
+				}
+				if (++row_number > records_per_sheet) {
+					logger.info("Contact Sheet Created: " + sheet_number);
+					break;
+				}
+			}
+			sheet_number++;
+		}
+		logger.info("Contact Workbook Created");
+		return workbook;
+	}
+
+	@Override
+	public ResponseEntity<?> modifyContactExport(ContactEntryRequest form, String username) {
+
+		String target = IConstants.FAILURE_KEY;
+		ContactEntry entry = null;
+		String systemId = null;
+		// Finding the user by system ID
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		if (userOptional.isPresent()) {
+			systemId = userOptional.get().getSystemId();
+		}
+		
+		Optional<User> user = userLoginRepo.findBySystemId(systemId);
+		Set<Role> role = user.get().getRoles();
+		int groupId = form.getGroupId();
+		logger.info(systemId + "[" + role + "]" + " Export Contact Request For GroupId: " + groupId);
+		List<ContactEntry> list = new ArrayList<ContactEntry>();
+		int[] id = form.getId();
+		String[] names = form.getName();
+		String[] emails = form.getEmail();
+		long[] numbers = form.getNumber();
+		Converters cc = new Converters();
+		
+		if (id != null && id.length > 0) {
+			try {
+				for (int i = 0; i < id.length; i++) {
+					if (names[i] != null && names[i].length() > 0) {
+						String hex = new Converters().UTF16(names[i]);
+						entry = new ContactEntry(cc.uniHexToCharMsg(hex), numbers[i], emails[i], groupId);
+					} else {
+						entry = new ContactEntry(null, numbers[i], emails[i], groupId);
+					}
+					list.add(entry);
+					logger.debug(entry.toString());
+				}
+				Workbook workbook = getWorkBook(list);
+				String filename = systemId + "_Contact[" + groupId + "]" + ".xlsx";
+				ByteArrayOutputStream bos = new ByteArrayOutputStream();
+				logger.info(systemId + " Creating Contact XLSx ");
+				workbook.write(bos);
+				
+				try(InputStream in = new ByteArrayInputStream(bos.toByteArray())) {
+					HttpHeaders headers = new HttpHeaders();
+					headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+					headers.setContentDispositionFormData("attachment", filename);
+					InputStreamResource resource = new InputStreamResource(in);
+					target = "export";
+					logger.info(systemId + " Export Contact Target:" + target);
+					return new ResponseEntity<>(resource, headers, HttpStatus.OK);
+				}catch(IOException e) {
+					logger.error("Contact XLSx Download Error: {}", e.toString());
+		            return new ResponseEntity<>(target,HttpStatus.INTERNAL_SERVER_ERROR);
+				}
+
+			} catch (Exception e) {
+				logger.error(systemId, e.toString());
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+			}
+			
+		} else {
+			logger.info(systemId + " No Records Selected");
+		}
+		return ResponseEntity.status(HttpStatus.OK).build();
+		
+	}
+	
+	
+	
 	
 }

@@ -15,4 +15,7 @@ public interface GroupDataEntryService {
 	public ContactForBulk groupDataForBulk(GroupDataEntryRequest groupDataEntry, String username);
 	public List<GroupDataEntry> viewSearchGroupData(GroupDataEntryRequest request, String username);
 	public ContactForBulk proceedSearchGroupData(GroupDataEntryRequest request, String username);
+	public ResponseEntity<?> modifyGroupDataUpdate(GroupDataEntryRequest request, String username);
+	public ResponseEntity<?> modifyGroupDataDelete(List<Integer> ids, String username);
+	public ResponseEntity<?> modifyGroupDataExport(GroupDataEntryRequest request, String username);
 }

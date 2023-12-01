@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -27,7 +28,6 @@ import com.hti.smpp.common.addressbook.services.GroupEntryService;
 import com.hti.smpp.common.contacts.dto.ContactEntry;
 import com.hti.smpp.common.contacts.dto.GroupDataEntry;
 
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/addressbook")
@@ -60,7 +60,7 @@ public class AddressBookController {
 	}
 	
 	@PostMapping("/save/group-entry")
-	public ResponseEntity<?> saveGroupEntry(@Valid @RequestBody GroupEntryRequest entryRequest,@RequestHeader("username") String username){
+	public ResponseEntity<?> saveGroupEntry(@RequestBody GroupEntryRequest entryRequest,@RequestHeader("username") String username){
 		return this.entryService.saveGroupEntry(entryRequest, username);
 	}
 	
@@ -134,8 +134,39 @@ public class AddressBookController {
 		return this.contactEntryService.modifyContactUpdate(request, username);
 	}
 	
+	@DeleteMapping("/delete/contact")
+	public ResponseEntity<?> modifyContactDelete(@RequestBody List<Integer> ids, @RequestHeader("username") String username){
+		return this.contactEntryService.modifyContactDelete(ids, username);
+	}
 	
+	@GetMapping("/export/contact")
+	public ResponseEntity<?> modifyContactExport(@RequestBody ContactEntryRequest request, @RequestHeader("username") String username){
+		return this.contactEntryService.modifyContactExport(request, username);
+	}
 	
+	@PutMapping("/update/group-data-entry")
+	public ResponseEntity<?> modifyGroupDataUpdate(@RequestBody GroupDataEntryRequest request, @RequestHeader("username") String username){
+		return this.groupDataEntryService.modifyGroupDataUpdate(request, username);
+	}
 	
+	@DeleteMapping("/delete/group-data-entry")
+	public ResponseEntity<?> modifyGroupDataDelete(@RequestBody List<Integer> ids, @RequestHeader("username") String username){
+		return this.groupDataEntryService.modifyGroupDataDelete(ids, username);
+	}
+	
+	@GetMapping("/export/group-data-entry")
+	public ResponseEntity<?> modifyGroupDataExport(@RequestBody GroupDataEntryRequest request, @RequestHeader("username") String username){
+		return this.groupDataEntryService.modifyGroupDataExport(request, username);
+	}
+	
+	@PutMapping("/update/group-entry")
+	public ResponseEntity<?> modifyGroupEntryUpdate(@RequestBody GroupEntryRequest groupEntryRequest, @RequestHeader("username") String username){
+		return this.entryService.modifyGroupEntryUpdate(groupEntryRequest, username);
+	}
+	
+	@DeleteMapping("/delete/group-entry")
+	public ResponseEntity<?> modifyGroupEntryDelete(@RequestBody GroupEntryRequest groupEntryRequest, @RequestHeader("username") String username){
+		return this.entryService.modifyGroupEntryDelete(groupEntryRequest, username);
+	}
 
 }
