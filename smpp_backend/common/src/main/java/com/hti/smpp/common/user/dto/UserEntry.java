@@ -87,6 +87,7 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 	private String accessCountry;
 	@Column(name = "record_mnp")
 	private boolean recordMnp;
+
 	@Transient
 	private String flagStatus;
 

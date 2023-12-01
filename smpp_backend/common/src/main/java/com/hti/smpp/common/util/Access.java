@@ -37,4 +37,8 @@ public class Access {
 		return roles.stream().anyMatch(role -> role.getName().equals(ERole.ROLE_SUPERADMIN)
 				|| role.getName().equals(ERole.ROLE_SYSTEM) || role.getName().equals(ERole.ROLE_ADMIN));
 	}
+
+	public static boolean isAuthorizedAdmin(Set<Role> roles) {
+		return roles.stream().anyMatch(role -> role.getName().equals(ERole.ROLE_ADMIN));
+	}
 }
