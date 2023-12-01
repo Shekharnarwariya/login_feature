@@ -1,11 +1,13 @@
 package com.hti.smpp.common.services.impl;
 
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,6 +32,7 @@ import org.springframework.stereotype.Service;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.PredicateBuilder.EntryObject;
 import com.hazelcast.query.impl.PredicateBuilderImpl;
+import com.hazelcast.sql.impl.type.converter.Converters;
 import com.hti.smpp.common.contacts.dto.GroupEntry;
 import com.hti.smpp.common.contacts.repository.GroupEntryRepository;
 import com.hti.smpp.common.exception.NotFoundException;
@@ -37,7 +40,10 @@ import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.login.dto.User;
 import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.network.dto.NetworkEntry;
+import com.hti.smpp.common.network.repository.NetworkEntryRepository;
 import com.hti.smpp.common.request.OptEntryArrForm;
+import com.hti.smpp.common.request.RouteEntryArrForm;
+import com.hti.smpp.common.request.RouteEntryForm;
 import com.hti.smpp.common.request.RouteRequest;
 import com.hti.smpp.common.request.SearchCriteria;
 import com.hti.smpp.common.responce.OptionRouteResponse;
@@ -60,6 +66,7 @@ import com.hti.smpp.common.services.RouteServices;
 import com.hti.smpp.common.smsc.dto.SmscEntry;
 import com.hti.smpp.common.smsc.repository.SmscEntryRepository;
 import com.hti.smpp.common.user.dto.UserEntry;
+import com.hti.smpp.common.user.dto.UserSessionObject;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
@@ -1639,4 +1646,411 @@ public class RouteServiceImpl implements RouteServices {
 		return optionRouteResponse;
 	}
 
+	@Override
+	public OptionRouteResponse checkExisting(RouteEntryArrForm routeEntryArrForm, String username) {
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+
+		String target = IConstants.FAILURE_KEY;
+		RouteEntryArrForm routingForm = new RouteEntryArrForm();
+		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
+
+		Map<Integer, String> groupDetail = new HashMap<>(listGroupNames());
+		Collection<NetworkEntry> networks = null;
+		if (routingForm.isCountryWise()) {
+			System.out.println("Countries: " + String.join(",", routingForm.getCriteria().getMcc()));
+			if (routingForm.getCriteria().getMcc() != null && routingForm.getCriteria().getMcc().length > 0) {
+				Predicate p = new PredicateBuilderImpl().getEntryObject().get("mcc")
+						.in(routingForm.getCriteria().getMcc());
+				networks = GlobalVars.NetworkEntries.values(p);
+			} else {
+				networks = GlobalVars.NetworkEntries.values();
+			}
+		} else {
+			Predicate p = new PredicateBuilderImpl().getEntryObject().get("id")
+					.in(Arrays.stream(routingForm.getNetworkId()).boxed().toArray(Integer[]::new));
+			networks = GlobalVars.NetworkEntries.values(p);
+		}
+
+		System.out.println("Total: " + networks.size());
+		Set<Integer> user_id_list = new HashSet<>();
+		if (routingForm.getCriteria().getAccountType() != null) {
+			EntryObject entryObject = new PredicateBuilderImpl().getEntryObject();
+			Predicate p = new PredicateBuilderImpl().getEntryObject().get("id")
+					.in(Arrays.stream(routingForm.getNetworkId()).boxed().toArray(Integer[]::new));
+			networks = GlobalVars.NetworkEntries.values(p);
+			user_id_list.addAll(GlobalVars.WebmasterEntries.keySet(p));
+		} else {
+			user_id_list.addAll(Arrays.stream(routingForm.getUserId()).boxed().collect(Collectors.toSet()));
+		}
+		Map<Integer, String> smscnames = listNames();
+		int smscId = 0;
+		if (routingForm.getSmscId() != null) {
+			smscId = routingForm.getSmscId()[0];
+		}
+		int groupId = routingForm.getGroupId()[0];
+		double cost = routingForm.getCost()[0];
+		String smscType = routingForm.getSmscType()[0];
+		String remarks = routingForm.getRemarks()[0];
+		String smsc = smscnames.get(smscId);
+		String group = groupDetail.get(groupId);
+		Set<Integer> network_id_list = new HashSet<>();
+		for (NetworkEntry networkEntry : networks) {
+			logger.info("Adding Network: " + networkEntry.getId());
+			network_id_list.add(networkEntry.getId());
+		}
+		Map<Integer, Double> smsc_pricing = getSmscPricing(smsc,
+				network_id_list.stream().map(String::valueOf).collect(Collectors.toSet()));
+		EntryObject entryObj = new PredicateBuilderImpl().getEntryObject();
+		Predicate<Integer, RouteEntry> p = entryObj.get("userId")
+				.in(user_id_list.toArray(new Integer[user_id_list.size()]))
+				.and(entryObj.get("networkId").in(network_id_list.toArray(new Integer[network_id_list.size()])));
+		Map<Integer, Set<Integer>> existUserRoutes = new HashMap<>();
+		for (RouteEntry entry : GlobalVars.BasicRouteEntries.values(p)) {
+			Set<Integer> set = existUserRoutes.computeIfAbsent(entry.getUserId(), k -> new HashSet<>());
+			set.add(entry.getNetworkId());
+			existUserRoutes.put(entry.getUserId(), set);
+		}
+		Map<Integer, Set<String>> group_mapping = getSmscGroupMapping();
+		if (smscId > 0) {
+			if (group_mapping.containsKey(smscId)) {
+				smsc += " " + group_mapping.get(smscId);
+			} else {
+				smsc += " [NONE]";
+			}
+		} else {
+			smsc += " [NONE]";
+		}
+		Map<Integer, String> smsclist = new HashMap<>();
+		for (int smsc_id : smscnames.keySet()) {
+			String smsc_name = smscnames.get(smsc_id);
+			if (group_mapping.containsKey(smsc_id)) {
+				smsclist.put(smsc_id, smsc_name + " " + group_mapping.get(smsc_id));
+			} else {
+				smsclist.put(smsc_id, smsc_name + " [NONE]");
+			}
+		}
+		smsclist.put(0, "DOWN [NONE]");
+		List<RouteEntryExt> routelist = new ArrayList<>();
+		int auto_incr_id = 0;
+		for (int user : user_id_list) {
+			String systemId = GlobalVars.UserEntries.get(user).getSystemId();
+			String accountType = GlobalVars.WebmasterEntries.get(user).getAccountType();
+			Set<Integer> existNetworks = existUserRoutes.get(user);
+			logger.info(systemId + " Configured Networks: " + existNetworks);
+			for (NetworkEntry networkEntry : networks) {
+				int networkId = networkEntry.getId();
+				if (existNetworks != null) {
+					if (!existNetworks.contains(networkId)) {
+						RouteEntry entry = new RouteEntry(user, networkId, smscId, groupId, cost, smscType, null, null,
+								remarks);
+						entry.setId(++auto_incr_id);
+						RouteEntryExt ext = new RouteEntryExt(entry);
+						ext.setSystemId(systemId);
+						ext.setCountry(networkEntry.getCountry());
+						ext.setOperator(networkEntry.getOperator());
+						ext.setMcc(networkEntry.getMcc());
+						ext.setMnc(networkEntry.getMnc());
+						ext.setSmsc(smsc);
+						ext.setGroup(group);
+						ext.setAccountType(accountType);
+						if (smsc_pricing.containsKey(networkId)) {
+							ext.setSmscCost(smsc_pricing.get(networkId));
+						}
+						routelist.add(ext);
+					} else {
+						logger.info(systemId + " Already Has Network: " + networkId);
+					}
+				} else {
+					RouteEntry entry = new RouteEntry(user, networkId, smscId, groupId, cost, smscType, null, null,
+							remarks);
+					entry.setId(++auto_incr_id);
+					RouteEntryExt ext = new RouteEntryExt(entry);
+					ext.setSystemId(systemId);
+					ext.setCountry(networkEntry.getCountry());
+					ext.setOperator(networkEntry.getOperator());
+					ext.setMcc(networkEntry.getMcc());
+					ext.setMnc(networkEntry.getMnc());
+					ext.setSmsc(smsc);
+					ext.setGroup(group);
+					ext.setAccountType(accountType);
+					if (smsc_pricing.containsKey(networkId)) {
+						ext.setSmscCost(smsc_pricing.get(networkId));
+					}
+					routelist.add(ext);
+				}
+			}
+
+			optionRouteResponse.setRoutinglist(routelist);
+			optionRouteResponse.setSmsclist(smsclist);
+			optionRouteResponse.setGroupDetail(listGroupNames());
+			target = IConstants.SUCCESS_KEY;
+
+		}
+		optionRouteResponse.setStatus(target);
+
+		return optionRouteResponse;
+
+	}
+
+	public Map<Integer, Double> getSmscPricing(String smsc, Set<String> networks) {
+		Map<Integer, Double> smscPricing = new HashMap<>();
+		List<Object[]> results = optionalRouteEntryRepository.findSmscPricing(smsc, networks);
+		for (Object[] result : results) {
+			Integer networkId = (Integer) result[0];
+			Double newCost = (Double) result[1];
+			smscPricing.put(networkId, newCost);
+		}
+
+		return smscPricing;
+	}
+
+/////////////CopyRouting
+	@Override
+	public String execute(String username) {
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		User user = null;
+		
+		
+		UserSessionObject	userSessionObject = new UserSessionObject();
+		
+		NetworkEntry listExistNetwork = null;
+		if (optionalUser.isPresent()) {
+			user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+
+		String target = IConstants.FAILURE_KEY;
+		boolean proceed = true;
+		RouteEntryForm routingForm = new RouteEntryForm();
+		boolean includeHlr, includeOpt;
+		boolean replaceExist = routingForm.isReplaceExisting();
+		int from = routingForm.getUserId();
+		int[] to_user = routingForm.getSubUserId();
+		String margin_str = routingForm.getMargin();
+		String systemId = user.getSystemId();
+
+		if (!Access.isAuthorizedAdminAndUser(user.getRoles())) {
+			Map<Integer, String> users = listUsersUnderMaster(systemId);
+			Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject().get("secondaryMaster")
+					.equal(systemId);
+			for (WebMasterEntry webEntry : GlobalVars.WebmasterEntries.values(p)) {
+				UserEntry userEntry = GlobalVars.UserEntries.get(webEntry.getUserId());
+				users.put(userEntry.getId(), userEntry.getSystemId());
+			}
+			if (from != user.getUserId()) {
+				if (!users.containsKey(from)) {
+
+					proceed = false;
+				}
+			}
+			if (proceed) {
+				for (int i = 0; i < to_user.length; i++) {
+					if (!users.containsKey(to_user[i])) {
+						logger.info(systemId + "[" + userSessionObject.getRole() + "] Invalid To User [" + to_user[i]
+								+ "]");
+						proceed = false;
+						break;
+					}
+				}
+			}
+		}
+		if (proceed) {
+			boolean isPercent = false;
+			double margin = 0;
+			if (margin_str.contains("%")) {
+				isPercent = true;
+				margin_str = margin_str.substring(0, margin_str.indexOf("%")).trim();
+			}
+			try {
+				margin = Double.parseDouble(margin_str);
+			} catch (Exception ex) {
+				logger.info(from + "Invalid margin: " + margin_str);
+			}
+			if (Access.isAuthorizedAdminAndUser(user.getRoles())) {
+				includeHlr = true;
+				includeOpt = true;
+				if (userSessionObject.getBalance().getWalletFlag().equalsIgnoreCase("yes")) {
+					if (margin > 0) {
+						logger.error(systemId + " valid Margin: " + margin);
+					} else {
+						logger.error(systemId + " Invalid Margin: " + margin);
+						proceed = false;
+					}
+				}
+			} else {
+				includeHlr = routingForm.isHlr();
+				includeOpt = routingForm.isOptional();
+			}
+			if (proceed) {
+				logger.info(from + " Checking For Routing Entries");
+				Map<Integer, RouteEntryExt> map = listRouteEntries(from, includeHlr, includeOpt, false);
+				logger.info(from + " Routing Entries Found: " + map.size());
+				String country = routingForm.getMcc();
+				Set<Integer> networks = new HashSet<Integer>();
+				System.out.println("MCC: " + country);
+				System.out.println("MNC: " + Arrays.toString(routingForm.getMnc()));
+				if (!country.equalsIgnoreCase("%")) {
+					Set<String> operators = new HashSet<String>();
+					for (String mnc : routingForm.getMnc()) {
+						if (mnc.equalsIgnoreCase("%")) {
+							break;
+						} else {
+							operators.add(mnc);
+						}
+					}
+					Predicate<Integer, NetworkEntry> p = new PredicateBuilderImpl().getEntryObject().get("mcc")
+							.equal(country);
+					for (NetworkEntry network : GlobalVars.NetworkEntries.values(p)) {
+						if (!operators.isEmpty()) {
+							if (operators.contains(network.getMnc())) {
+								networks.add(network.getId());
+							}
+						} else {
+							networks.add(network.getId());
+						}
+					}
+				}
+				System.out.println("networks: " + networks);
+				//database.IDatabaseService dbService = com.hti.webems.database.HtiSmsDB
+				for (int i = 0; i < to_user.length; i++) {
+					System.out.println("Processing For " + to_user[i]);
+					String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+					List<RouteEntryExt> routinglist = new ArrayList<RouteEntryExt>();
+					Set<Integer> exist_networks = null, to_be_replaced = null;
+					if (!replaceExist) {
+						exist_networks = NetworkEntryRepository.listExistNetwork(to_user[i]);
+						to_be_replaced = new HashSet<Integer>();
+					}
+					double cost = 0;
+					for (RouteEntryExt toRouteExt : map.values()) {
+						RouteEntry toRoute = toRouteExt.getBasic();
+						if (!networks.isEmpty()) {
+							if (!networks.contains(toRoute.getNetworkId())) {
+								logger.info("Skipping Copy Routing For: " + toRoute.getNetworkId());
+								continue;
+							}
+						}
+						if (!replaceExist) {
+							if (exist_networks.contains(toRoute.getNetworkId())) {
+								logger.info("Skipping Copy Routing For Exist: " + toRoute.getNetworkId());
+								continue;
+							} else {
+								to_be_replaced.add(toRoute.getNetworkId());
+							}
+						}
+						RouteEntry route = new RouteEntry(toRoute.getUserId(), toRoute.getNetworkId(),
+								toRoute.getSmscId(), toRoute.getGroupId(), toRoute.getCost(), toRoute.getSmscType(),
+								systemId, editOn, null);
+						cost = route.getCost();
+						if (isPercent) {
+							cost = cost + ((cost * margin) / 100);
+						} else {
+							cost = cost + margin;
+						}
+						route.setId(0);
+						route.setCost(Double.valueOf(new DecimalFormat("#.#####").format(cost)));
+						route.setUserId(to_user[i]);
+						RouteEntryExt ext = new RouteEntryExt(route);
+						if (!includeHlr) {
+							ext.setHlrRouteEntry(new HlrRouteEntry(systemId, editOn));
+						} else {
+							if (toRouteExt.getHlrRouteEntry() != null) {
+								HlrRouteEntry toHlr = toRouteExt.getHlrRouteEntry();
+								ext.setHlrRouteEntry(new HlrRouteEntry(0, toHlr.isHlr(), toHlr.getSmsc(),
+										toHlr.getHlrCache(), toHlr.getCost(), systemId, editOn, toHlr.isMnp()));
+							} else {
+								ext.setHlrRouteEntry(new HlrRouteEntry(systemId, editOn));
+							}
+						}
+						if (!includeOpt) {
+							ext.setRouteOptEntry(new OptionalRouteEntry(systemId, editOn));
+						} else {
+							if (toRouteExt.getRouteOptEntry() != null) {
+								OptionalRouteEntry toOptRouteEntry = toRouteExt.getRouteOptEntry();
+								String msgAppender = toOptRouteEntry.getMsgAppender();
+								String msgAppenderConverted = null;
+								if (msgAppender != null && msgAppender.length() > 0) {
+									// logger.info("msgAppender: " + msgAppender);
+									if (msgAppender.contains("^") || msgAppender.contains("$")) {
+										// convert to hex
+										msgAppenderConverted =(msgAppender);
+									      	} else {
+										msgAppenderConverted = null;
+									}
+								} else {
+									msgAppenderConverted = null;
+								}
+								ext.setRouteOptEntry(new OptionalRouteEntry(0, toOptRouteEntry.getNumSmscId(),
+										toOptRouteEntry.getBackupSmscId(), toOptRouteEntry.getForceSenderNum(),
+										toOptRouteEntry.getForceSenderAlpha(), toOptRouteEntry.getExpiredOn(),
+										toOptRouteEntry.getSmsLength(), toOptRouteEntry.isRefund(),
+										toOptRouteEntry.getRegSender(), toOptRouteEntry.getRegSmscId(),
+										toOptRouteEntry.getCodeLength(), toOptRouteEntry.isReplaceContent(),
+										toOptRouteEntry.getReplacement(), msgAppenderConverted,
+										toOptRouteEntry.getSourceAppender(), systemId, editOn));
+								ext.getRouteOptEntry().setRegGroupId(toOptRouteEntry.getRegGroupId());
+							} else {
+								ext.setRouteOptEntry(new OptionalRouteEntry(systemId, editOn));
+							}
+						}
+						routinglist.add(ext);
+					}
+					logger.info(to_user[i] + " To be Copied Routing Entries: " + routinglist.size());
+					if (replaceExist) {
+						if (networks.isEmpty()) {
+							deleteRouteEntries(to_user[i]);
+						} else {
+							deleteRouteEntries(to_user[i], networks);
+						}
+					} else {
+						// skip existing networks
+						deleteRouteEntries(to_user[i], to_be_replaced);
+					}
+					logger.info(to_user[i] + " All Routing Entries Deleted");
+					saveEntries(routinglist);
+					logger.info(to_user[i] + " All Routing Copied");
+					MultiUtility.refreshRouting(to_user[i]);
+				}
+				MultiUtility.changeFlag(Constants.CLIENT_FLAG_FILE, "707");
+				target = IConstants.SUCCESS_KEY;
+			}
+		} else {
+			target = "invalidRequest";
+		}
+
+	return target;
+
 }
+     
+
+
+
+public Map<Integer, String> listUsersUnderMaster(String systemId) {
+		Map<Integer, String> sortedMap = GlobalVars.UserEntries.values().stream()
+            .filter(entry -> entry.getMasterId().equalsIgnoreCase(systemId))
+            .collect(Collectors.toMap(UserEntry::getId, UserEntry::getSystemId,
+                    (e1, e2) -> e1, // Merge function in case of duplicate keys
+                    LinkedHashMap::new));
+
+    // Sorting by value (case-insensitive)
+    sortedMap = sortedMap.entrySet().stream()
+            .sorted(Map.Entry.comparingByValue(String.CASE_INSENSITIVE_ORDER))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+
+    return sortedMap;
+}
+
+}
+

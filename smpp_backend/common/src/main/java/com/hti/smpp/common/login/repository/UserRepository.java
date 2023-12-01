@@ -11,7 +11,7 @@ import com.hti.smpp.common.login.dto.User;
 public interface UserRepository extends JpaRepository<User, Long> {
 
 	Optional<User> findBySystemId(String username);
-
+				
 	Boolean existsBySystemId(String username);
 
 	Boolean existsByEmail(String email);

@@ -7,6 +7,7 @@ import java.util.Set;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.request.OptEntryArrForm;
+import com.hti.smpp.common.request.RouteEntryArrForm;
 import com.hti.smpp.common.request.RouteRequest;
 import com.hti.smpp.common.request.SearchCriteria;
 import com.hti.smpp.common.responce.OptionRouteResponse;
@@ -31,6 +32,10 @@ public interface RouteServices {
 
 	public OptionRouteResponse basic(OptEntryArrForm optEntryArrForm, String username);
 
+	public OptionRouteResponse checkExisting(RouteEntryArrForm routeEntryArrForm, String username);
+	
+	public   String  execute(String username);
+		
 	public void saveRouteEntry(RouteEntryExt entry);
 
 	public void saveDefaultEntries(RouteEntry entry);
@@ -76,4 +81,6 @@ public interface RouteServices {
 
 	public double calculateRoutingCost(int userId, Map<String, Integer> numbersParts);
 
+	public Map<Integer, Double> getSmscPricing(String smsc, Set<String> networkIds);
+				
 }

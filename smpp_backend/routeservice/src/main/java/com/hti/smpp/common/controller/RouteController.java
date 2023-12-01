@@ -3,12 +3,15 @@ package com.hti.smpp.common.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hti.smpp.common.request.OptEntryArrForm;
+import com.hti.smpp.common.request.RouteEntryArrForm;
 import com.hti.smpp.common.request.RouteRequest;
 import com.hti.smpp.common.responce.OptionRouteResponse;
 import com.hti.smpp.common.services.RouteServices;
@@ -17,8 +20,6 @@ import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.info.Info;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
@@ -26,7 +27,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 @RestController
 @RequestMapping("/api/routes")
 public class RouteController {
-
+			
 	@Autowired
 	private RouteServices routeService;
 
@@ -82,4 +83,17 @@ public class RouteController {
 			@Parameter(description = "The username provided in the request header", required = true, example = "john_doe") @RequestHeader("username") String username) {
 		return routeService.basic(optEntryArrForm, username);
 	}
+
+	@PostMapping("/check-existing")
+	@Operation(summary = "Check Existing Route", description = "Check if a route already exists.")
+	public OptionRouteResponse checkExisting(@RequestBody RouteEntryArrForm routeEntryArrForm, String username) {
+
+		return routeService.checkExisting(routeEntryArrForm, username);
+	}
+	
+	   @GetMapping("/CopyRouting")
+	   @Operation(summary = "", description = "Check if  copy route exists.")
+		  public String execute(@PathVariable String username) {
+	        return routeService.execute(username);
+	    }
 }
