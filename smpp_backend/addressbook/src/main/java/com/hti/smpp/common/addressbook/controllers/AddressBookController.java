@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -167,6 +168,11 @@ public class AddressBookController {
 	@DeleteMapping("/delete/group-entry")
 	public ResponseEntity<?> modifyGroupEntryDelete(@RequestBody GroupEntryRequest groupEntryRequest, @RequestHeader("username") String username){
 		return this.entryService.modifyGroupEntryDelete(groupEntryRequest, username);
+	}
+	
+	@GetMapping("/search/group-data/{groupId}")
+	public ResponseEntity<?> editGroupDataSearch(@PathVariable("groupId") int groupId, @RequestHeader("username") String username){
+		return this.groupDataEntryService.editGroupDataSearch(groupId, username);
 	}
 
 }
