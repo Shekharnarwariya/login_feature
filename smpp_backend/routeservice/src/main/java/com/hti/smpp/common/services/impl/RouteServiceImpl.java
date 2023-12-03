@@ -1,5 +1,10 @@
 package com.hti.smpp.common.services.impl;
 
+import java.awt.Color;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -7,7 +12,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,6 +27,16 @@ import java.util.TimerTask;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +46,6 @@ import org.springframework.stereotype.Service;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.PredicateBuilder.EntryObject;
 import com.hazelcast.query.impl.PredicateBuilderImpl;
-import com.hazelcast.sql.impl.type.converter.Converters;
 import com.hti.smpp.common.contacts.dto.GroupEntry;
 import com.hti.smpp.common.contacts.repository.GroupEntryRepository;
 import com.hti.smpp.common.exception.NotFoundException;
@@ -75,6 +88,7 @@ import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MultiUtility;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.InternalServerErrorException;
 
@@ -117,6 +131,9 @@ public class RouteServiceImpl implements RouteServices {
 
 	@Autowired
 	private OptionalRouteEntryScheduleRepository optionalRouteEntryScheduleRepository;
+
+	@Autowired
+	private UserRepository userRepo;
 
 	@Override
 	@Transactional
@@ -1817,10 +1834,9 @@ public class RouteServiceImpl implements RouteServices {
 	public String execute(String username) {
 		Optional<User> optionalUser = loginRepository.findBySystemId(username);
 		User user = null;
-		
-		
-		UserSessionObject	userSessionObject = new UserSessionObject();
-		
+
+		UserSessionObject userSessionObject = new UserSessionObject();
+
 		NetworkEntry listExistNetwork = null;
 		if (optionalUser.isPresent()) {
 			user = optionalUser.get();
@@ -1923,14 +1939,14 @@ public class RouteServiceImpl implements RouteServices {
 					}
 				}
 				System.out.println("networks: " + networks);
-				//database.IDatabaseService dbService = com.hti.webems.database.HtiSmsDB
+				// database.IDatabaseService dbService = com.hti.webems.database.HtiSmsDB
 				for (int i = 0; i < to_user.length; i++) {
 					System.out.println("Processing For " + to_user[i]);
 					String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 					List<RouteEntryExt> routinglist = new ArrayList<RouteEntryExt>();
 					Set<Integer> exist_networks = null, to_be_replaced = null;
 					if (!replaceExist) {
-						exist_networks = NetworkEntryRepository.listExistNetwork(to_user[i]);
+					//	exist_networks = NetworkEntryRepository.listExistNetwork(to_user[i]);
 						to_be_replaced = new HashSet<Integer>();
 					}
 					double cost = 0;
@@ -1985,8 +2001,8 @@ public class RouteServiceImpl implements RouteServices {
 									// logger.info("msgAppender: " + msgAppender);
 									if (msgAppender.contains("^") || msgAppender.contains("$")) {
 										// convert to hex
-										msgAppenderConverted =(msgAppender);
-									      	} else {
+										msgAppenderConverted = (msgAppender);
+									} else {
 										msgAppenderConverted = null;
 									}
 								} else {
@@ -2030,27 +2046,230 @@ public class RouteServiceImpl implements RouteServices {
 			target = "invalidRequest";
 		}
 
-	return target;
+		return target;
 
-}
-     
+	}
 
-
-
-public Map<Integer, String> listUsersUnderMaster(String systemId) {
+	public Map<Integer, String> listUsersUnderMaster(String systemId) {
 		Map<Integer, String> sortedMap = GlobalVars.UserEntries.values().stream()
-            .filter(entry -> entry.getMasterId().equalsIgnoreCase(systemId))
-            .collect(Collectors.toMap(UserEntry::getId, UserEntry::getSystemId,
-                    (e1, e2) -> e1, // Merge function in case of duplicate keys
-                    LinkedHashMap::new));
+				.filter(entry -> entry.getMasterId().equalsIgnoreCase(systemId))
+				.collect(Collectors.toMap(UserEntry::getId, UserEntry::getSystemId, (e1, e2) -> e1, // Merge function in
+																									// case of duplicate
+																									// keys
+						LinkedHashMap::new));
 
-    // Sorting by value (case-insensitive)
-    sortedMap = sortedMap.entrySet().stream()
-            .sorted(Map.Entry.comparingByValue(String.CASE_INSENSITIVE_ORDER))
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+		// Sorting by value (case-insensitive)
+		sortedMap = sortedMap.entrySet().stream().sorted(Map.Entry.comparingByValue(String.CASE_INSENSITIVE_ORDER))
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
-    return sortedMap;
+		return sortedMap;
+	}
+
+	@Override
+	public String downloadRoute(String username, RouteEntryArrForm routingForm, HttpServletResponse response) {
+
+		Optional<User> userOptional = userRepo.findBySystemId(username);
+		User user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorizedAll(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		Optional<UserEntry> userEntityOptional = userRepository.findBySystemId(username);
+		UserEntry userEntry = null;
+		if (userEntityOptional.isPresent()) {
+			userEntry = userEntityOptional.get();
+		}
+		String target = IConstants.FAILURE_KEY;
+		String masterid = userEntry.getMasterId();
+		logger.info("Download Routing Requested By " + masterid + " [" + user.getRoles() + "]");
+		try {
+			if (Access.isAuthorizedUser(null)) {
+				boolean proceed = true;
+				// RouteDAService routeService = new RouteDAServiceImpl();
+				List<RouteEntryExt> routinglist = new ArrayList<RouteEntryExt>();
+				int[] useridarr = routingForm.getUserId();
+				if (useridarr != null && useridarr.length > 0) {
+					if (Access.isAuthorizedAdmin(user.getRoles())) {
+						Map<Integer, String> users = listUsersUnderMaster(masterid);
+						Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject()
+								.get("secondaryMaster").equal(masterid);
+						for (WebMasterEntry webEntry : GlobalVars.WebmasterEntries.values(p)) {
+							UserEntry userEntry1 = GlobalVars.UserEntries.get(webEntry.getUserId());
+							users.put(userEntry1.getId(), userEntry1.getSystemId());
+						}
+						for (int user_id : useridarr) {
+							if (!users.containsKey(user_id)) {
+								logger.info(masterid + "[" + user.getRoles() + "] Invalid User[" + user_id
+										+ "] Download Routing Request");
+								proceed = false;
+								break;
+							}
+						}
+					}
+					if (proceed) {
+						for (int user1 : useridarr) {
+							logger.info("Listing Routing For " + user1);
+							Map<Integer, RouteEntryExt> routingmap = listRouteEntries(user1, false, false, true);
+							routinglist.addAll(routingmap.values());
+						}
+						logger.info(masterid + " Download Routinglist Size: " + routinglist.size());
+						if (!routinglist.isEmpty()) {
+							Workbook workbook = getWorkBook(routinglist);
+							String filename = "Routing_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())
+									+ ".xlsx";
+							response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\";");
+							ByteArrayOutputStream bos = new ByteArrayOutputStream();
+							logger.info(masterid + " Creating Routing XLSx ");
+							workbook.write(bos);
+							InputStream is = null;
+							OutputStream out = null;
+							try {
+								is = new ByteArrayInputStream(bos.toByteArray());
+								// byte[] buffer = new byte[8789];
+								int curByte = -1;
+								out = response.getOutputStream();
+								logger.info(masterid + " Starting Routing xlsx Download ");
+								while ((curByte = is.read()) != -1) {
+									out.write(curByte);
+								}
+								out.flush();
+							} catch (Exception ex) {
+								logger.error(masterid + " Routing XLSx Download Error: " + ex.toString());
+							} finally {
+								try {
+									if (is != null) {
+										is.close();
+									}
+									if (out != null) {
+										out.close();
+									}
+								} catch (Exception ex) {
+								}
+							}
+							target = IConstants.SUCCESS_KEY;
+						} else {
+							logger.error("error.record.unavailable");
+						}
+					} else {
+						target = "invalidRequest";
+					}
+				} else {
+					logger.error("error.record.unavailable");
+				}
+			} else {
+				logger.error("Authorization Failed[" + user.getRoles() + "] :" + masterid);
+				target = "invalidRequest";
+			}
+		} catch (Exception ex) {
+			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+		}
+		return target;
+
+	}
+
+	private Workbook getWorkBook(List<RouteEntryExt> routinglist) {
+		logger.info("Start Creating WorkBook.");
+		SXSSFWorkbook workbook = new SXSSFWorkbook();
+		int records_per_sheet = 500000;
+		int sheet_number = 0;
+		Sheet sheet = null;
+		Row row = null;
+		XSSFFont headerFont = (XSSFFont) workbook.createFont();
+		headerFont.setFontName("Arial");
+		headerFont.setFontHeightInPoints((short) 10);
+		headerFont.setColor(new XSSFColor(Color.WHITE));
+		XSSFCellStyle headerStyle = (XSSFCellStyle) workbook.createCellStyle();
+		headerStyle.setFont(headerFont);
+		headerStyle.setFillForegroundColor(new XSSFColor(Color.GRAY));
+		headerStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+		headerStyle.setAlignment(XSSFCellStyle.ALIGN_CENTER);
+		headerStyle.setVerticalAlignment(XSSFCellStyle.VERTICAL_CENTER);
+		headerStyle.setBorderBottom(BorderStyle.THIN);
+		headerStyle.setBorderBottom((short) 1);
+		headerStyle.setBottomBorderColor(new XSSFColor(Color.WHITE));
+		headerStyle.setBorderTop(BorderStyle.THIN);
+		headerStyle.setBorderTop((short) 1);
+		headerStyle.setTopBorderColor(new XSSFColor(Color.WHITE));
+		headerStyle.setBorderLeft(BorderStyle.THIN);
+		headerStyle.setBorderLeft((short) 1);
+		headerStyle.setLeftBorderColor(new XSSFColor(Color.WHITE));
+		headerStyle.setBorderRight(BorderStyle.THIN);
+		headerStyle.setBorderRight((short) 1);
+		headerStyle.setRightBorderColor(new XSSFColor(Color.WHITE));
+		XSSFFont rowFont = (XSSFFont) workbook.createFont();
+		rowFont.setFontName("Arial");
+		rowFont.setFontHeightInPoints((short) 9);
+		rowFont.setColor(new XSSFColor(Color.BLACK));
+		XSSFCellStyle rowStyle = (XSSFCellStyle) workbook.createCellStyle();
+		rowStyle.setFont(rowFont);
+		rowStyle.setFillForegroundColor(new XSSFColor(Color.LIGHT_GRAY));
+		rowStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+		rowStyle.setAlignment(XSSFCellStyle.ALIGN_LEFT);
+		rowStyle.setVerticalAlignment(XSSFCellStyle.VERTICAL_CENTER);
+		rowStyle.setBorderBottom(BorderStyle.THIN);
+		rowStyle.setBorderBottom((short) 1);
+		rowStyle.setBottomBorderColor(new XSSFColor(Color.WHITE));
+		rowStyle.setBorderTop(BorderStyle.THIN);
+		rowStyle.setBorderTop((short) 1);
+		rowStyle.setTopBorderColor(new XSSFColor(Color.WHITE));
+		rowStyle.setBorderLeft(BorderStyle.THIN);
+		rowStyle.setBorderLeft((short) 1);
+		rowStyle.setLeftBorderColor(new XSSFColor(Color.WHITE));
+		rowStyle.setBorderRight(BorderStyle.THIN);
+		rowStyle.setBorderRight((short) 1);
+		rowStyle.setRightBorderColor(new XSSFColor(Color.WHITE));
+		String[] headers = { "SystemId", "Country", "Operator", "Mcc", "Mnc", "Cost" };
+		while (!routinglist.isEmpty()) {
+			int row_number = 0;
+			sheet = workbook.createSheet("Sheet(" + sheet_number + ")");
+			sheet.setDefaultColumnWidth(14);
+			logger.info("Creating Sheet: " + sheet_number);
+			while (!routinglist.isEmpty()) {
+				row = sheet.createRow(row_number);
+				if (row_number == 0) {
+					int cell_number = 0;
+					for (String header : headers) {
+						Cell cell = row.createCell(cell_number);
+						cell.setCellValue(header);
+						cell.setCellStyle(headerStyle);
+						cell_number++;
+					}
+				} else {
+					RouteEntryExt routeEntry = routinglist.remove(0);
+					logger.debug("Add Row[" + row_number + "]: " + routeEntry.getSystemId() + " -> " + routeEntry);
+					Cell cell = row.createCell(0);
+					cell.setCellValue(routeEntry.getSystemId());
+					cell.setCellStyle(rowStyle);
+					cell = row.createCell(1);
+					cell.setCellValue(routeEntry.getCountry());
+					cell.setCellStyle(rowStyle);
+					cell = row.createCell(2);
+					cell.setCellValue(routeEntry.getOperator());
+					cell.setCellStyle(rowStyle);
+					cell = row.createCell(3);
+					cell.setCellValue(routeEntry.getMcc());
+					cell.setCellStyle(rowStyle);
+					cell = row.createCell(4);
+					cell.setCellValue(routeEntry.getMnc());
+					cell.setCellStyle(rowStyle);
+					cell = row.createCell(5);
+					cell.setCellValue(routeEntry.getBasic().getCost());
+					cell.setCellStyle(rowStyle);
+				}
+				if (++row_number > records_per_sheet) {
+					logger.info("Routing Sheet Created: " + sheet_number);
+					break;
+				}
+			}
+			sheet_number++;
+		}
+		logger.info("Routing Workbook Created");
+		return workbook;
+	}
+
 }
-
-}
-

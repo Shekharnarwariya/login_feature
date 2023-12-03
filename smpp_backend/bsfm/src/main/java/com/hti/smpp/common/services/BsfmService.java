@@ -1,5 +1,8 @@
 package com.hti.smpp.common.services;
 
+import java.util.List;
+
+import com.hti.smpp.common.bsfm.dto.Bsfm;
 import com.hti.smpp.common.request.BsfmFilterFrom;
 import com.hti.smpp.common.response.BSFMResponse;
 import com.hti.smpp.common.response.DeleteProfileResponse;
@@ -12,6 +15,12 @@ public interface BsfmService {
 
 	public DeleteProfileResponse deleteProfile(String username, int id);
 
-	public void showBsfmProfile(String username);
+	public List<Bsfm> showBsfmProfile(String username);
+
+	public String updateBsfmProfil(BsfmFilterFrom bsfmFilterFrom, String username);
+
+	public String delete(String username, BsfmFilterFrom bsfmForm);
+
+	public String updateBsfmProfileFlag(String username, BsfmFilterFrom bsfmForm);
 
 }

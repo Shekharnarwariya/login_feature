@@ -1,79 +1,90 @@
 package com.hti.smpp.common.controllers;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hti.smpp.common.bsfm.dto.Bsfm;
 import com.hti.smpp.common.request.BsfmFilterFrom;
+import com.hti.smpp.common.response.BSFMResponse;
+import com.hti.smpp.common.response.DeleteProfileResponse;
 import com.hti.smpp.common.services.BsfmService;
+
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @RestController
 @RequestMapping("/bsfm")
+@OpenAPIDefinition(info = @Info(title = "SMPP Bsfm  API..", version = "1.0", description = "API for managing SMPP  Bsfm..."))
 public class BsfmController {
 
 	@Autowired
 	private BsfmService bsfmService;
 
-	@PostMapping("/save")
-	public ResponseEntity<?> saveBsfm(@RequestHeader("username") String username,
-			@RequestBody BsfmFilterFrom bsfmFilterFrom) {
-		try {
-			this.bsfmService.addBsfmProfile(bsfmFilterFrom, username);
-			return ResponseEntity.status(HttpStatus.CREATED).build();
-		} catch (Exception e) {
-			// Provide more information in the response body for debugging
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error saving Bsfm: " + e.getMessage());
-		}
+	@Operation(summary = "Add Bsfm Profile", description = "Add a new Bsfm profile")
+	@PostMapping("/add")
+	public String addBsfmProfile(@RequestBody BsfmFilterFrom bsfmFilterFrom,
+			@Parameter(description = "Username of the profile owner", required = true) @RequestParam String username)
+			throws Exception {
+		return bsfmService.addBsfmProfile(bsfmFilterFrom, username);
 	}
 
-//	@GetMapping("/showprofiles/{masterid}")
-//	public ResponseEntity<?> showBsfmProfiles(@PathVariable("masterid") String masterid) {
-//		List<Bsfm> profiles = this.bsfmService.showBsfmProfile(masterid);
-//
-//		if (profiles.isEmpty()) {
-//			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-//		} else {
-//			return ResponseEntity.ok(profiles);
-//		}
-//	}
-//
-//	@PutMapping("/update")
-//	public ResponseEntity<?> updateBsfmProfiles(@RequestHeader("username") String username, @RequestBody BsfmDto bsfm) {
-//		try {
-//			this.bsfmService.updateBsfmProfile(bsfm, username);
-//			return ResponseEntity.status(HttpStatus.CREATED).build();
-//		} catch (Exception e) {
-//			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error updating Bsfm: " + e.getMessage());
-//		}
-//	}
-//
-//	@DeleteMapping("/delete/activeprofile/{profilename}")
-//	public ResponseEntity<?> bsfmActiveProfileDelete(@PathVariable("profilename") String profilename) {
-//		try {
-//			this.bsfmService.deleteBsfmActiveProfile(profilename);
-//			return ResponseEntity.status(HttpStatus.OK).build();
-//		} catch (Exception e) {
-//			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//					.body("Error deleting Bsfm active profile: " + e.getMessage());
-//		}
-//	}
-//
-//	@PutMapping("/update/flag")
-//	public ResponseEntity<?> updateProfileFlag(@RequestParam("flag") String flag) {
-//		try {
-//			boolean isUpdated = this.bsfmService.updateBsfmProfileFlag(flag);
-//			if (!isUpdated) {
-//				return new ResponseEntity<>("Flag Not Updated.", HttpStatus.CONFLICT);
-//			}
-//			return new ResponseEntity<>("Flag Updated Successfully.", HttpStatus.OK);
-//		} catch (Exception e) {
-//			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//					.body("Error updating Bsfm profile flag: " + e.getMessage());
-//		}
-//	}
+	@Operation(summary = "Check Bsfm Profile", description = "Check Bsfm profile by username")
+	@GetMapping("/check/{username}")
+	public BSFMResponse checked(
+			@Parameter(description = "Username of the profile owner", required = true) @PathVariable String username) {
+		return bsfmService.checked(username);
+	}
+
+	@Operation(summary = "Delete Bsfm Profile", description = "Delete Bsfm profile by username and profile ID")
+	@ApiResponse(responseCode = "200", description = "Profile deleted successfully")
+	@ApiResponse(responseCode = "404", description = "Profile not found")
+	@DeleteMapping("/delete/{username}/{id}")
+	public DeleteProfileResponse deleteProfile(
+			@Parameter(description = "Username of the profile owner", required = true) @PathVariable String username,
+			@Parameter(description = "ID of the profile to be deleted", required = true) @PathVariable int id) {
+		return bsfmService.deleteProfile(username, id);
+	}
+
+	@Operation(summary = "Show Bsfm Profiles", description = "Show all Bsfm profiles for a given username")
+	@GetMapping("/show/{username}")
+	public List<Bsfm> showBsfmProfile(
+			@Parameter(description = "Username of the profile owner", required = true) @PathVariable String username) {
+		return bsfmService.showBsfmProfile(username);
+	}
+
+	@Operation(summary = "Update Bsfm Profile", description = "Update an existing Bsfm profile")
+	@PutMapping("/update")
+	public String updateBsfmProfile(@RequestBody BsfmFilterFrom bsfmFilterFrom,
+			@Parameter(description = "Username of the profile owner", required = true) @RequestParam String username) {
+		return bsfmService.updateBsfmProfil(bsfmFilterFrom, username);
+	}
+
+	@Operation(summary = "Delete Bsfm Profile", description = "Delete Bsfm profile by username and profile details")
+	@DeleteMapping("/delete")
+	public String delete(
+			@Parameter(description = "Username of the profile owner", required = true) @RequestParam String username,
+			@RequestBody BsfmFilterFrom bsfmFilterFrom) {
+		return bsfmService.delete(username, bsfmFilterFrom);
+	}
+
+	@Operation(summary = "Update Bsfm Profile Flag", description = "Update flag of an existing Bsfm profile")
+	@PutMapping("/updateFlag/{username}")
+	public String updateBsfmProfileFlag(
+			@Parameter(description = "Username of the profile owner", required = true) @PathVariable String username,
+			@RequestBody BsfmFilterFrom bsfmFilterFrom) {
+		return bsfmService.updateBsfmProfileFlag(username, bsfmFilterFrom);
+	}
 }

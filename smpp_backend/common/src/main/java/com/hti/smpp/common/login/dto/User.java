@@ -4,6 +4,7 @@ import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -22,58 +23,37 @@ import jakarta.validation.constraints.Size;
 public class User {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "user_id")
 	private Long userId;
 
 	@NotBlank
 	@Size(max = 20)
+	@Column(name = "system_id")
 	private String systemId;
 
 	@NotBlank
 	@Size(max = 50)
 	@Email
+	@Column(name = "email")
 	private String email;
 
 	@NotBlank
 	@Size(max = 120)
+	@Column(name = "password")
 	private String password;
 
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "user_master", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
 	private Set<Role> roles = new HashSet<>();
 
+	@Column(name = "Base64Password")
 	private String Base64Password;
 
+	@Column(name = "otpSecretKey")
 	private String otpSecretKey;
 
+	@Column(name = "otpSendTime")
 	private LocalTime otpSendTime;
-
-	private String firstName;
-
-	private String LastName;
-
-	private String country;
-
-	private String language;
-
-	private String contactNo;
-
-	private String currency;
-
-	public String getCurrency() {
-		return currency;
-	}
-
-	public void setCurrency(String currency) {
-		this.currency = currency;
-	}
-
-	public String getContactNo() {
-		return contactNo;
-	}
-
-	public void setContactNo(String contactNo) {
-		this.contactNo = contactNo;
-	}
 
 	public Long getUserId() {
 		return userId;
@@ -139,42 +119,9 @@ public class User {
 		this.otpSendTime = otpSendTime;
 	}
 
-	public String getFirstName() {
-		return firstName;
-	}
-
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
-
-	public String getLastName() {
-		return LastName;
-	}
-
-	public void setLastName(String lastName) {
-		LastName = lastName;
-	}
-
-	public String getCountry() {
-		return country;
-	}
-
-	public void setCountry(String country) {
-		this.country = country;
-	}
-
-	public String getLanguage() {
-		return language;
-	}
-
-	public void setLanguage(String language) {
-		this.language = language;
-	}
-
 	public User(Long userId, @NotBlank @Size(max = 20) String systemId, @NotBlank @Size(max = 50) @Email String email,
 			@NotBlank @Size(max = 120) String password, Set<Role> roles, String base64Password, String otpSecretKey,
-			LocalTime otpSendTime, String firstName, String lastName, String country, String language,
-			String contactNo) {
+			LocalTime otpSendTime) {
 		super();
 		this.userId = userId;
 		this.systemId = systemId;
@@ -184,15 +131,11 @@ public class User {
 		Base64Password = base64Password;
 		this.otpSecretKey = otpSecretKey;
 		this.otpSendTime = otpSendTime;
-		this.firstName = firstName;
-		LastName = lastName;
-		this.country = country;
-		this.language = language;
-		this.contactNo = contactNo;
 	}
 
 	public User() {
 		super();
+
 	}
 
 }

@@ -122,7 +122,7 @@ public class AuthController {
 	@Operation(summary = "Authenticate user", description = "Endpoint to authenticate a user.")
 	@ApiResponse(responseCode = "200", description = "Authentication successful", content = @Content(mediaType = "application/json", schema = @Schema(implementation = JwtResponse.class)))
 	@ApiResponse(responseCode = "500", description = "Internal server error")
-	@PostMapping("/smppLogin")
+	@PostMapping("/login")
 	public ResponseEntity<JwtResponse> authenticateUser(@RequestBody LoginRequest loginRequest) {
 		try {
 			log.info("Attempting to authenticate user: {}", loginRequest.getUsername());
@@ -281,6 +281,7 @@ public class AuthController {
 		entry.setSystemId(signUpRequest.getUsername());
 		entry.setSystemType(signUpRequest.getSystemType());
 		entry.setTimeout(signUpRequest.getTimeout());
+		entry.setPassword(signUpRequest.getPassword());
 
 		return entry;
 	}

@@ -44,6 +44,12 @@ spring:
             - Path=/hlr/**
           filters:
             - AuthenticationFilter
+        - id: BSFM-SERVICE
+          uri: lb://BSFM-SERVICE:8087/
+          predicates:
+            - Path=/bsfm/**
+          filters:
+            - AuthenticationFilter
         - id: front-end
           uri: http://localhost:3000
           predicates:

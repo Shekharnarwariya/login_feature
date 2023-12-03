@@ -39,6 +39,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 	public TemplatesResponse createTemplate(TemplatesRequest request, String username) {
 
 		Optional<User> userOptional = userRepository.findBySystemId(username);
+		System.out.println(userOptional.get());
 		if (userOptional.isPresent()) {
 			User user = userOptional.get();
 			if (!Access.isAuthorizedAll(user.getRoles())) {

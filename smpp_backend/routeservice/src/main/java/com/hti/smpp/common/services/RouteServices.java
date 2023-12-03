@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.request.OptEntryArrForm;
@@ -19,6 +20,8 @@ import com.hti.smpp.common.route.dto.RouteEntry;
 import com.hti.smpp.common.route.dto.RouteEntryExt;
 import com.hti.smpp.common.route.dto.RouteEntryLog;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 @Service
 public interface RouteServices {
 
@@ -33,9 +36,11 @@ public interface RouteServices {
 	public OptionRouteResponse basic(OptEntryArrForm optEntryArrForm, String username);
 
 	public OptionRouteResponse checkExisting(RouteEntryArrForm routeEntryArrForm, String username);
-	
-	public   String  execute(String username);
-		
+
+	public String execute(String username);
+
+	public String downloadRoute(String username, RouteEntryArrForm routingForm, HttpServletResponse response);
+
 	public void saveRouteEntry(RouteEntryExt entry);
 
 	public void saveDefaultEntries(RouteEntry entry);
@@ -82,5 +87,5 @@ public interface RouteServices {
 	public double calculateRoutingCost(int userId, Map<String, Integer> numbersParts);
 
 	public Map<Integer, Double> getSmscPricing(String smsc, Set<String> networkIds);
-				
+
 }
