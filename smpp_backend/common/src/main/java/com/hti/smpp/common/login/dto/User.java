@@ -55,6 +55,16 @@ public class User {
 	@Column(name = "otpSendTime")
 	private LocalTime otpSendTime;
 
+	private String language;
+
+	public String getLanguage() {
+		return language;
+	}
+
+	public void setLanguage(String language) {
+		this.language = language;
+	}
+
 	public Long getUserId() {
 		return userId;
 	}
