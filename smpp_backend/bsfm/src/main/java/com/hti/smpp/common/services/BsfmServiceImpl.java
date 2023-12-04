@@ -1,9 +1,14 @@
 package com.hti.smpp.common.services;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
 import java.math.BigInteger;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -15,15 +20,10 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.struts.action.ActionMessage;
-import org.apache.struts.action.ActionMessages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.hazelcast.query.Predicate;
@@ -32,6 +32,7 @@ import com.hti.smpp.common.bsfm.dto.Bsfm;
 import com.hti.smpp.common.bsfm.repository.BsfmProfileRepository;
 import com.hti.smpp.common.contacts.dto.GroupEntry;
 import com.hti.smpp.common.contacts.repository.GroupEntryRepository;
+import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.login.dto.User;
@@ -50,11 +51,6 @@ import com.hti.smpp.common.util.Constants;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MultiUtility;
-import com.hti.webems.bsfm.BsfmDTO;
-import com.hti.webems.database.HtiSmsDB;
-import com.hti.webems.database.IDatabaseService;
-import com.hti.webems.session.UserSessionObject;
-import com.hti.webems.util.SessionHelper;
 
 import jakarta.transaction.Transactional;
 
@@ -74,15 +70,6 @@ public class BsfmServiceImpl implements BsfmService {
 
 	@Autowired
 	private GroupEntryRepository groupEntryRepository;
-
-	@Value("${flag.file.path}")
-	String hostConfig;
-
-	@Value("${load.success}")
-	String successMsg;
-
-	@Value("${load.failure}")
-	String failureMsg;
 
 	@Autowired
 	private UserRepository loginRepository;
@@ -638,35 +625,214 @@ public class BsfmServiceImpl implements BsfmService {
 
 	@Override
 	public List<Bsfm> showBsfmProfile(String username) {
-	    Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
 
-	    if (optionalUser.isPresent()) {
-	        User user = optionalUser.get();
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
 
-	        if (!Access.isAuthorizedSuperAdminAndSystemAndAdmin(user.getRoles())) {
-	            throw new UnauthorizedException("User does not have the required roles for this operation.");
-	        }
+			if (!Access.isAuthorizedSuperAdminAndSystemAndAdmin(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
 
-	        if (menuAccessEntryRepository.findById(user.getUserId().intValue()).get().isBsfm()) {
-	            List<Bsfm> list;
-	            if (Access.isAuthorizedAdmin(user.getRoles())) {
-	                list = bsfmRepo.findByMasterIdOrderByPriority(user.getSystemId());
-	            } else {
-	                list = bsfmRepo.findByMasterIdOrderByPriority(null);
-	            }
+			if (menuAccessEntryRepository.findById(user.getUserId().intValue()).get().isBsfm()) {
+				List<Bsfm> list;
+				if (Access.isAuthorizedAdmin(user.getRoles())) {
+					list = bsfmRepo.findByMasterIdOrderByPriority(user.getSystemId());
+				} else {
+					list = bsfmRepo.findByMasterIdOrderByPriority(null);
+				}
 
-	            if (!list.isEmpty()) {
-	                return list;
-	            } else {
-	                logger.error("error.record.unavailable");
-	            }
-	        } else {
-	            throw new InvalidRequestException("Invalid request for user without Bsfm access.");
-	        }
-	    } else {
-	        throw new NotFoundException("User not found with the provided username.");
-	    }
-	    return Collections.emptyList(); // Return an empty list if no data is found
+				if (!list.isEmpty()) {
+					return list;
+				} else {
+					logger.error("error.record.unavailable");
+				}
+			} else {
+				throw new InternalServerException("Invalid request for user without Bsfm access.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		return Collections.emptyList(); // Return an empty list if no data is found
+	}
+
+	@Override
+	public String updateBsfmProfil(BsfmFilterFrom bsfmForm, String username) {
+
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		User user = null;
+		if (optionalUser.isPresent()) {
+			user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystemAndAdmin(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		String target = IConstants.FAILURE_KEY;
+		String systemid = user.getSystemId();
+		logger.info(systemid + "[" + user.getRoles() + "] Update Spam Profile: " + bsfmForm.getProfilename());
+		Bsfm bdto = new Bsfm();
+		BeanUtils.copyProperties(bdto, bsfmForm);
+		boolean proceed = true;
+		if (Access.isAuthorizedAdmin(user.getRoles())) {
+			if (bsfmForm.getUsername() != null && bsfmForm.getUsername().length > 0) {
+				bdto.setUsername(String.join(",", bsfmForm.getUsername()));
+			} else {
+				logger.error(systemid + "[" + user.getRoles() + "]  No User Selected.");
+				proceed = false;
+			}
+		} else {
+			if (bsfmForm.getUsername() != null && bsfmForm.getUsername().length > 0) {
+				bdto.setUsername(String.join(",", bsfmForm.getUsername()));
+			}
+		}
+		if (proceed) {
+			if (bsfmForm.getSmsc() != null && bsfmForm.getSmsc().length > 0) {
+				bdto.setSmsc(String.join(",", bsfmForm.getSmsc()));
+			}
+			if (bsfmForm.getNetworks() != null && bsfmForm.getNetworks().length > 0) {
+				bdto.setNetworks(String.join(",", bsfmForm.getNetworks()));
+			}
+			if (bsfmForm.getSenderType() != null && bsfmForm.getSenderType().length() > 0) {
+				bdto.setSenderType(UTF16(bsfmForm.getSenderType()));
+			} else {
+				bdto.setSenderType(null);
+			}
+			if (bsfmForm.getContent() != null && bsfmForm.getContent().trim().length() > 0) {
+				// StringTokenizer tokens = new StringTokenizer(getContent(), ",");
+				String encoded_content = "";
+				for (String content_token : bsfmForm.getContent().split(",")) {
+					try {
+						encoded_content += UTF16(content_token) + ",";
+					} catch (Exception e) {
+						logger.error(systemid + "[" + user.getRoles() + "]  [" + content_token + "]", e);
+					}
+				}
+				if (encoded_content.length() > 0) {
+					encoded_content = encoded_content.substring(0, encoded_content.length() - 1);
+					bdto.setContent(encoded_content);
+				} else {
+					bdto.setContent(null);
+				}
+			} else {
+				bdto.setContent(null);
+			}
+			if (bdto.getReroute() != null && bdto.getReroute().trim().length() == 0) {
+				bdto.setReroute(null);
+			}
+			if (bdto.isSchedule()) {
+				if (bdto.getDayTime() == null || bdto.getDayTime().length() < 19) {
+					logger.info(bdto.getProfilename() + " Invalid DayTime Configured: " + bdto.getDayTime());
+					bdto.setSchedule(false);
+				}
+			}
+			bdto.setEditBy(systemid);
+			boolean isUpdated = updatedBsfmProfile(bdto);
+			if (isUpdated) {
+				logger.info("message.operation.success");
+				target = IConstants.SUCCESS_KEY;
+				String bsfm_flag = MultiUtility.readFlag(Constants.BSFM_FLAG_FILE);
+				if (bsfm_flag != null && bsfm_flag.equalsIgnoreCase("100")) {
+					MultiUtility.changeFlag(Constants.BSFM_FLAG_FILE, "707");
+				}
+			} else {
+				logger.error("error.processError");
+			}
+		} else {
+			logger.error("error.noUserforSelectedmode");
+		}
+		return target;
+	}
+
+	private boolean updatedBsfmProfile(Bsfm bdto) {
+		try {
+			bsfmRepo.save(bdto);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	@Override
+	public String delete(String username, BsfmFilterFrom bsfmFilterFrom) {
+		String target = IConstants.FAILURE_KEY;
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		User user = null;
+		if (optionalUser.isPresent()) {
+			user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystemAndAdmin(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		Bsfm bdto = new Bsfm();
+		BeanUtils.copyProperties(bdto, bsfmFilterFrom);
+		String profileName = bdto.getProfilename();
+		boolean isDeleted = deleteBsfmActiveProfile(profileName);
+		System.err.println("isdeleted valie" + isDeleted);
+		if (isDeleted) {
+			logger.info("message.operation.success");
+			target = IConstants.SUCCESS_KEY;
+			String bsfm_flag = MultiUtility.readFlag(Constants.BSFM_FLAG_FILE);
+			if (bsfm_flag != null && bsfm_flag.equalsIgnoreCase("100")) {
+				MultiUtility.changeFlag(Constants.BSFM_FLAG_FILE, "707");
+			}
+		} else {
+			logger.error("error.processError");
+			target = IConstants.FAILURE_KEY;
+		}
+		return target;
+	}
+
+	@Transactional
+	public boolean deleteBsfmActiveProfile(String profileName) {
+		try {
+			long count = bsfmRepo.deleteByProfilename(profileName);
+
+			return count > 0;
+		} catch (Exception e) {
+			logger.error("Error deleting BsfmActiveProfile", e);
+			return false;
+		}
+	}
+
+	@Override
+	public String updateBsfmProfileFlag(String username, BsfmFilterFrom filterFrom) {
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		User user = null;
+		if (optionalUser.isPresent()) {
+			user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystemAndAdmin(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		String target = IConstants.FAILURE_KEY;
+		// System.err.println("inside of the action class ::::" + bdto.getFlagValue());
+		String hostConfig = IConstants.CAAS_FLAG_DIR;
+		String flagValue = filterFrom.getFlag();
+		String text = "FLAG = " + flagValue;
+		try {
+			File file = new File(hostConfig + "BSFM.flag");
+			Writer output = null;
+			output = new BufferedWriter(new FileWriter(file));
+			output.write(text);
+			output.close();
+			target = IConstants.SUCCESS_KEY;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY)) {
+			logger.info("message.ChangeFlagVaueSuccessfully");
+		}
+		if (target.equalsIgnoreCase(IConstants.FAILURE_KEY)) {
+			logger.error("message.ChangeFlagFailure");
+		}
+
+		return target;
 	}
 
 }

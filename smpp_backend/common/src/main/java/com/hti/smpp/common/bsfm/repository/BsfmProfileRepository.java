@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 
 import com.hti.smpp.common.bsfm.dto.Bsfm;
 
+import jakarta.transaction.Transactional;
+
 @Repository
 public interface BsfmProfileRepository extends JpaRepository<Bsfm, Integer> {
 	@Query("SELECT MAX(b.priority) FROM Bsfm b")
@@ -19,4 +21,7 @@ public interface BsfmProfileRepository extends JpaRepository<Bsfm, Integer> {
 	public Bsfm findByUsername(String username);
 
 	public Bsfm findByProfilename(@Param("profilename") String profilename);
+
+	@Transactional
+	public long deleteByProfilename(String profileName);
 }

@@ -87,6 +87,16 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 	private String accessCountry;
 	@Column(name = "record_mnp")
 	private boolean recordMnp;
+	@Column(name = "password", nullable = false, updatable = false)
+	private String password;
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
 
 	@Transient
 	private String flagStatus;

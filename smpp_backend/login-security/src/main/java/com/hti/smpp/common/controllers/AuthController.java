@@ -47,6 +47,7 @@ import com.hti.smpp.common.payload.response.ProfileResponse;
 import com.hti.smpp.common.security.jwt.JwtUtils;
 import com.hti.smpp.common.security.services.UserDetailsImpl;
 import com.hti.smpp.common.user.dto.BalanceEntry;
+import com.hti.smpp.common.user.dto.ProfessionEntry;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.BalanceEntryRepository;
 import com.hti.smpp.common.user.repository.DlrSettingEntryRepository;
@@ -122,7 +123,7 @@ public class AuthController {
 	@Operation(summary = "Authenticate user", description = "Endpoint to authenticate a user.")
 	@ApiResponse(responseCode = "200", description = "Authentication successful", content = @Content(mediaType = "application/json", schema = @Schema(implementation = JwtResponse.class)))
 	@ApiResponse(responseCode = "500", description = "Internal server error")
-	@PostMapping("/smppLogin")
+	@PostMapping("/login")
 	public ResponseEntity<JwtResponse> authenticateUser(@RequestBody LoginRequest loginRequest) {
 		try {
 			log.info("Attempting to authenticate user: {}", loginRequest.getUsername());
@@ -178,12 +179,7 @@ public class AuthController {
 			user.setPassword(encoder.encode(signUpRequest.getPassword()));
 			user.setSystemId(signUpRequest.getUsername());
 			user.setBase64Password(signUpRequest.getPassword());
-			user.setFirstName(signUpRequest.getFirstName());
 			user.setLanguage(signUpRequest.getLanguage());
-			user.setLastName(signUpRequest.getLastName());
-			user.setCountry(signUpRequest.getCountry());
-			user.setContactNo(signUpRequest.getContactNo());
-			user.setCurrency(signUpRequest.getCurrency());
 			Set<String> strRoles = signUpRequest.getRole();
 			Set<Role> roles = new HashSet<>();
 
@@ -281,6 +277,7 @@ public class AuthController {
 		entry.setSystemId(signUpRequest.getUsername());
 		entry.setSystemType(signUpRequest.getSystemType());
 		entry.setTimeout(signUpRequest.getTimeout());
+		entry.setPassword(signUpRequest.getPassword());
 
 		return entry;
 	}
@@ -325,23 +322,35 @@ public class AuthController {
 	public ResponseEntity<ProfileResponse> getUserProfile(@RequestHeader("username") String username) {
 		Optional<User> userOptional = userRepository.findBySystemId(username);
 		Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findBySystemId(username);
+		Optional<UserEntry> userEntityOptional = userEntryRepository.findBySystemId(username);
 
-		if (userOptional.isPresent() && balanceOptional.isPresent()) {
+		if (userOptional.isPresent() && balanceOptional.isPresent() && userEntityOptional.isPresent()) {
 			User user = userOptional.get();
 			BalanceEntry balanceEntry = balanceOptional.get();
+			UserEntry userEntry = userEntityOptional.get();
+
+			// Use map to simplify getting profession entry
+			ProfessionEntry professionEntry = professionEntryRepository.findById(user.getUserId().intValue())
+					.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
+
+			// Check if professionEntry is null before accessing its properties
+			if (professionEntry == null) {
+				throw new NotFoundException("Error: ProfessionEntry not found!");
+			}
 
 			ProfileResponse profileResponse = new ProfileResponse();
 			profileResponse.setUserName(user.getSystemId());
 			profileResponse.setBalance(String.valueOf(balanceEntry.getWalletAmount()));
 			profileResponse.setBase64Password(user.getBase64Password());
-			profileResponse.setCountry(user.getCountry());
+			profileResponse.setCountry(professionEntry.getCountry());
 			profileResponse.setEmail(user.getEmail());
-			profileResponse.setFirstName(user.getFirstName());
+			profileResponse.setFirstName(professionEntry.getFirstName());
 			profileResponse.setLanguage(user.getLanguage());
-			profileResponse.setLastName(user.getLastName());
+			profileResponse.setLastName(professionEntry.getLastName());
 			profileResponse.setRoles(user.getRoles());
-			profileResponse.setContactNo(user.getContactNo());
-			profileResponse.setCurrency(user.getCurrency());
+			profileResponse.setContactNo(professionEntry.getMobile());
+			profileResponse.setCurrency(userEntry.getCurrency());
+
 			return ResponseEntity.ok(profileResponse);
 		} else {
 			throw new NotFoundException("Error: User not found!");
@@ -360,15 +369,17 @@ public class AuthController {
 		if (userOptional.isEmpty()) {
 			throw new NotFoundException("Error: User Not Found!");
 		}
-
 		// Update User Password
 		User user = userOptional.get();
+		ProfessionEntry professionEntry = professionEntryRepository.findById(user.getUserId().intValue())
+				.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
 		user.setPassword(encoder.encode(newPassword));
 		userRepository.save(user);
 		if (EmailValidator.isEmailValid(user.getEmail())) {
 			emailSender.sendEmail(user.getEmail(), Constant.PASSWORD_FORGOT_SUBJECT, Constant.TEMPLATE_PATH,
 					emailSender.createSourceMap(Constant.MESSAGE_FOR_FORGOT_PASSWORD,
-							user.getFirstName() + " " + user.getLastName(), Constant.FORGOT_FLAG_SUBJECT));
+							professionEntry.getFirstName() + " " + professionEntry.getLastName(),
+							Constant.FORGOT_FLAG_SUBJECT));
 		}
 
 		return ResponseEntity.ok(new MessageResponse("Password Reset Successfully!"));
@@ -391,12 +402,13 @@ public class AuthController {
 				User user = userOptional.get();
 				user.setOtpSecretKey(generateOTP);
 				user.setOtpSendTime(LocalTime.now());
-
+				ProfessionEntry professionEntry = professionEntryRepository.findById(user.getUserId().intValue())
+						.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
 				// Send Email with OTP
 				emailSender.sendEmail(user.getEmail(), Constant.OTP_SUBJECT, Constant.TEMPLATE_PATH,
 						emailSender.createSourceMap(Constant.MESSAGE_FOR_OTP, generateOTP,
 								Constant.SECOND_MESSAGE_FOR_OTP, Constant.OTP_FLAG_SUBJECT,
-								user.getFirstName() + " " + user.getLastName()));
+								professionEntry.getFirstName() + " " + professionEntry.getLastName()));
 
 				// Save User with Updated OTP
 				userRepository.save(user);
@@ -429,11 +441,14 @@ public class AuthController {
 			if (encoder.matches(passwordUpdateRequest.getOldPassword(), currentPassword)) {
 				// Valid old password, update the password
 				user.setPassword(encoder.encode(passwordUpdateRequest.getNewPassword()));
+				ProfessionEntry professionEntry = professionEntryRepository.findById(user.getUserId().intValue())
+						.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
 				userRepository.save(user);
 				if (EmailValidator.isEmailValid(user.getEmail())) {
 					emailSender.sendEmail(user.getEmail(), Constant.PASSWORD_UPDATE_SUBJECT, Constant.TEMPLATE_PATH,
 							emailSender.createSourceMap(Constant.MESSAGE_FOR_PASSWORD_UPDATE,
-									user.getFirstName() + " " + user.getLastName(), Constant.UPDATE_FLAG_SUBJECT));
+									professionEntry.getFirstName() + " " + professionEntry.getLastName(),
+									Constant.UPDATE_FLAG_SUBJECT));
 				}
 				return ResponseEntity.ok(new MessageResponse("Password Updated Successfully!"));
 			} else {
@@ -452,33 +467,35 @@ public class AuthController {
 	public ResponseEntity<String> updateUserProfile(@RequestHeader("username") String username,
 			@Valid @RequestBody ProfileUpdateRequest profileUpdateRequest) {
 		Optional<User> optionalUser = userRepository.findBySystemId(username);
-
 		if (optionalUser.isPresent()) {
 			User user = optionalUser.get();
-			updateUserData(user, profileUpdateRequest);
+			ProfessionEntry professionEntry = professionEntryRepository.findById(user.getUserId().intValue())
+					.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
+			updateUserData(user, profileUpdateRequest, professionEntry);
 			userRepository.save(user);
+			professionEntryRepository.save(professionEntry);
 			return ResponseEntity.ok("Profile updated successfully");
 		} else {
 			throw new NotFoundException("User not found!");
 		}
 	}
 
-	private void updateUserData(User user, ProfileUpdateRequest profileUpdateRequest) {
+	private void updateUserData(User user, ProfileUpdateRequest profileUpdateRequest, ProfessionEntry professionEntry) {
 		// Use null checks to update only non-null fields
 		if (profileUpdateRequest.getEmail() != null) {
 			user.setEmail(profileUpdateRequest.getEmail());
 		}
 		if (profileUpdateRequest.getFirstName() != null) {
-			user.setFirstName(profileUpdateRequest.getFirstName());
+			professionEntry.setFirstName(profileUpdateRequest.getFirstName());
 		}
 		if (profileUpdateRequest.getLanguage() != null) {
 			user.setLanguage(profileUpdateRequest.getLanguage());
 		}
 		if (profileUpdateRequest.getLastName() != null) {
-			user.setLastName(profileUpdateRequest.getLastName());
+			professionEntry.setLastName(profileUpdateRequest.getLastName());
 		}
 		if (profileUpdateRequest.getContact() != null) {
-			user.setContactNo(profileUpdateRequest.getContact());
+			professionEntry.setMobile(profileUpdateRequest.getContact());
 		}
 	}
 
