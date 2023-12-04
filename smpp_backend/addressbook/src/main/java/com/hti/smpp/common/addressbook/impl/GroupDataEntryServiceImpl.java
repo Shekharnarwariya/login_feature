@@ -62,6 +62,8 @@ import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 
@@ -80,6 +82,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	private UserRepository userLoginRepo;
 
 	@Override
+	@Transactional
 	public ResponseEntity<?> saveGroupData(String request, MultipartFile file, String username) {
 
 		GroupDataEntryRequest form;
@@ -302,16 +305,16 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 				}
 			}
 			if (entry_list.isEmpty()) {
-				return new ResponseEntity<>(entry_list, HttpStatus.NO_CONTENT);
+				return new ResponseEntity<>(target, HttpStatus.NO_CONTENT);
 			} else {
 				List<GroupDataEntry> groupData = this.groupDataEntryRepository.saveAll(entry_list);
 				target = IConstants.SUCCESS_KEY;
 				logger.info("GroupDataEntry Saved Successfully. Message: " + target);
-				return ResponseEntity.ok(groupData);
+				return new ResponseEntity<>(target, HttpStatus.CREATED);
 			}
 		} catch (Exception e) {
 			logger.error("Error: " + e.getLocalizedMessage() + ", Message: " + target);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+			return new ResponseEntity<>(target, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
 	}

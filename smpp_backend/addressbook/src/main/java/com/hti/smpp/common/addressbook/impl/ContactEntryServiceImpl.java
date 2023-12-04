@@ -59,6 +59,8 @@ import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class ContactEntryServiceImpl implements ContactEntryService{
 	
@@ -75,8 +77,9 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 	
 	@Autowired
 	private UserRepository userLoginRepo;
-
+	
 	@Override
+	@Transactional
 	public ResponseEntity<?> saveContactEntry(String reqdata, MultipartFile file, String username) {
 		
 		ContactEntryRequest form;
@@ -267,16 +270,16 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 				}
 			}
 			if (entry_list.isEmpty()) {
-				return new ResponseEntity<>(entry_list, HttpStatus.NO_CONTENT);
+				return new ResponseEntity<>(target, HttpStatus.NO_CONTENT);
 			} else {
 				List<ContactEntry> contacts = this.contactRepo.saveAll(entry_list);
 				target = IConstants.SUCCESS_KEY;
 				logger.info("ContactEntry Saved Successfully. Message: "+target);
-				return ResponseEntity.ok(contacts);
+				return new ResponseEntity<>(target, HttpStatus.CREATED);
 			}
 		} catch (Exception e) {
 			logger.error("Error: "+e.getLocalizedMessage()+", Message: "+target);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+			return new ResponseEntity<>(target, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 

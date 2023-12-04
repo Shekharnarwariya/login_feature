@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.addressbook.request.GroupEntryRequest;
+import com.hti.smpp.common.addressbook.response.ListGroupResponse;
 import com.hti.smpp.common.addressbook.services.GroupEntryService;
 import com.hti.smpp.common.addressbook.utils.Converters;
 import com.hti.smpp.common.contacts.dto.ContactEntry;
@@ -22,14 +23,21 @@ import com.hti.smpp.common.contacts.repository.ContactRepository;
 import com.hti.smpp.common.contacts.repository.GroupDataEntryRepository;
 import com.hti.smpp.common.contacts.repository.GroupEntryDTORepository;
 import com.hti.smpp.common.exception.InternalServerException;
+import com.hti.smpp.common.exception.NotFoundException;
+import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.login.dto.Role;
 import com.hti.smpp.common.login.dto.User;
 import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
+import com.hti.smpp.common.user.dto.WebMenuAccessEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
+import com.hti.smpp.common.user.repository.WebMenuAccessEntryRepository;
+import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.IConstants;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class GroupEntryServiceImpl implements GroupEntryService{
@@ -54,8 +62,12 @@ public class GroupEntryServiceImpl implements GroupEntryService{
 	@Autowired
 	private ContactRepository contactRepo;
 	
+	@Autowired
+	private WebMenuAccessEntryRepository webMenuRepo;
+	
 	//WIP TODO
 	@Override
+	@Transactional
 	public ResponseEntity<?> saveGroupEntry(GroupEntryRequest form, String username) {
 		
 		String systemId = null;
@@ -66,6 +78,12 @@ public class GroupEntryServiceImpl implements GroupEntryService{
 		}
 		
 		Optional<User> user = userLoginRepo.findBySystemId(systemId);
+		User getUser = null;
+		if(user.isPresent()) {
+			getUser = user.get();
+		}else {
+			throw new UnauthorizedException("User does not exist.");
+		}
 		Set<Role> role = user.get().getRoles();
 		
 		logger.info(systemId + "[" + role + "]" + " Add Contact Group Request");
@@ -90,8 +108,9 @@ public class GroupEntryServiceImpl implements GroupEntryService{
 //					} else {
 //						entry.setCreatedBy(systemId);
 //					}
+					
 					// to review and implement like above code
-					WebMasterEntry webEntry = this.webMasterRepo.findByUserId(Integer.parseInt(systemId));
+					WebMasterEntry webEntry = this.webMasterRepo.findByUserId(getUser.getUserId().intValue());
 					if(webEntry.isMultiUserAccess()) {
 						//TODO
 					}else {
@@ -107,16 +126,16 @@ public class GroupEntryServiceImpl implements GroupEntryService{
 			}
 			if (list.isEmpty()) {
 				logger.info("[" + systemId + "]" + " No Valid Entry Found! ");
-				return new ResponseEntity<>(list, HttpStatus.NO_CONTENT);
+				return new ResponseEntity<>(target, HttpStatus.NO_CONTENT);
 			} else {
 				this.groupEntryDTORepository.saveAll(list);
 				target = IConstants.SUCCESS_KEY;
 				logger.info(systemId + " Add Contact Group Target:" + target);
-				return ResponseEntity.ok(list);
+				return new ResponseEntity<>(target, HttpStatus.CREATED);
 			}
 		} catch (Exception e) {
 			logger.error(systemId, e.getLocalizedMessage());
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+			return new ResponseEntity<>(target, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		
 	}
@@ -251,6 +270,152 @@ public class GroupEntryServiceImpl implements GroupEntryService{
 		
 		
 		return new ResponseEntity<>(target,HttpStatus.OK);
+	}
+	
+	private List<GroupEntryDTO> listGroupByCriteria(String masterid, boolean groupData){
+		List<GroupEntryDTO> list = this.groupEntryDTORepository.findByMasterIdAndGroupData(masterid, groupData);
+		if (list != null && !list.isEmpty()) {
+			for (GroupEntryDTO entry : list) {
+				if (entry.getName() != null && entry.getName().length() > 0) {
+					entry.setName(Converters.hexCodePointsToCharMsg(entry.getName()));
+				}
+				long count = 0;
+				if (entry.isGroupData()) {
+					count = this.groupDataEntryRepository.countByGroupId(entry.getId());
+				}else {
+					count = this.contactRepo.countByGroupId(entry.getId());
+				}
+				entry.setMembers(count);
+			}
+		}
+		
+		return list;
+	}
+	
+	private List<GroupEntryDTO> listGroupByCriteria(String masterid){
+		List<GroupEntryDTO> list = this.groupEntryDTORepository.findByMasterId(masterid);
+		if (list != null && !list.isEmpty()) {
+			for (GroupEntryDTO entry : list) {
+				if (entry.getName() != null && entry.getName().length() > 0) {
+					entry.setName(Converters.hexCodePointsToCharMsg(entry.getName()));
+				}
+				long count = 0;
+				if (entry.isGroupData()) {
+					count = this.groupDataEntryRepository.countByGroupId(entry.getId());
+				}else {
+					count = this.contactRepo.countByGroupId(entry.getId());
+				}
+				entry.setMembers(count);
+			}
+		}
+		
+		return list;
+	}
+
+
+	@Override
+	public ResponseEntity<?> listGroup(String purpose, String groupData, String username) {
+		
+		String target = IConstants.FAILURE_KEY;
+		User user = null;
+		Optional<User> optionalUser = userLoginRepo.findBySystemId(username);
+		if (optionalUser.isPresent()) {
+			user = optionalUser.get();
+			
+		} else {
+			logger.error("Error: Unable to found user with username: "+username);
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		Long id = user.getUserId();
+		
+		WebMenuAccessEntry webEntry = null;
+		Optional<WebMenuAccessEntry> webMenu = this.webMenuRepo.findById((int)id.longValue());
+		if(webMenu.isPresent()) {
+			webEntry = webMenu.get();
+			
+		}else {
+			logger.error("Error: Unable to found WebMEnuAccessEntry with userId: "+id);
+			throw new InternalServerException("Unable to found WebMEnuAccessEntry.");
+		}
+		
+		String systemId = null;
+		// Finding the user by system ID
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		if (userOptional.isPresent()) {
+			systemId = userOptional.get().getSystemId();
+		}
+		
+		logger.info(systemId + " Setup Contacts Group Request");
+		boolean proceed = true;
+		ListGroupResponse response = new ListGroupResponse();
+		try {
+			
+			if(purpose!=null) {
+				if (purpose.equalsIgnoreCase("sms")) {
+					if(Access.isAuthorizedSuperAdminAndSystem(user.getRoles()) || webEntry.isMessaging()) {
+					}else {
+						logger.error(systemId + "[" + user.getRoles() + "]" + " <- Invalid Request ->");
+						target = "invalidRequest";
+						proceed = false;
+					}
+				}else {
+					if(Access.isAuthorizedSuperAdminAndSystem(user.getRoles()) || webEntry.isAddbook()) {
+					}else {
+						logger.error(systemId + "[" + user.getRoles() + "]" + " <- Invalid Request ->");
+						target = "invalidRequest";
+						proceed = false;
+					}
+				}
+			}else {
+				if(Access.isAuthorizedSuperAdminAndSystem(user.getRoles()) || webEntry.isAddbook()) {
+				}else {
+					logger.error(systemId + "[" + user.getRoles() + "]" + " <- Invalid Request ->");
+					target = "invalidRequest";
+					proceed = false;
+				}
+			}
+			List<GroupEntryDTO> list = null;
+			if (proceed) {
+				
+				if(groupData!=null) {
+					if(groupData.equalsIgnoreCase("yes")) {
+						list = listGroupByCriteria(systemId, true);
+						if (purpose != null && purpose.equalsIgnoreCase("sms")) {
+							response.setCriteria("yes");
+						}
+						target = "GroupData";
+					}else {
+						list = listGroupByCriteria(systemId, false);
+						if (purpose != null && purpose.equalsIgnoreCase("sms")) {
+							target = "ContactSms";
+						} else {
+							target = "Contact";
+						}
+					}
+				}else {
+					list = listGroupByCriteria(systemId);
+					if (purpose.equalsIgnoreCase("add")) {
+						target = "AddGroup";
+					} else {
+						target = "ViewGroup";
+					}
+				}
+				
+				if (list != null && !list.isEmpty()) {
+					response.setList(list);
+				}else {
+					logger.info(systemId + " No Contact Groups Found.");
+				}
+			}
+			response.setTarget(target);
+		} catch (Exception e) {
+			logger.error(systemId, e.toString());
+			return new ResponseEntity<>(e.toString(),HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		
+		logger.info("Setup Contacts Group Target: " + target);
+		
+		return ResponseEntity.ok(response);
 	}
 	
 	

@@ -124,5 +124,45 @@ public class Converters {
 		}
 		return msg;
 	}
+	
+	public static String hexCodePointsToCharMsg(String msg)
+	{
+		// this mthd made decreasing codes, only.
+		//// This mthd will take msg who contain hex values of unicode, then it will convert this msg to Unicode from hex.
+		boolean reqNULL = false;
+		byte[] charsByt, var;
+		int x = 0;
+		if (msg.substring(0, 2).compareTo("00") == 0) // if true means first byte is null, then null is required in first byte, after header.
+		{
+			reqNULL = true;
+		}
+		charsByt = new BigInteger(msg, 16).toByteArray(); // this won't give null value in first byte if occured, so i have to append it .
+		if (charsByt[0] == '\0') // cut this null.
+		{
+			var = new byte[charsByt.length - 1];
+			for (int q = 1; q < charsByt.length; q++) {
+				var[q - 1] = charsByt[q];
+			}
+			charsByt = var;
+		}
+		if (reqNULL) {
+			var = new byte[charsByt.length + 1];
+			x = 0;
+			var[0] = '\0';
+			reqNULL = false;
+		} else {
+			var = new byte[charsByt.length];
+			x = -1;
+		}
+		for (int l = 0; l < charsByt.length; l++) {
+			var[++x] = charsByt[l];
+		}
+		try {
+			msg = new String(var, "UTF-16"); // charsTA msg Setted.
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return msg;
+	}
 
 }

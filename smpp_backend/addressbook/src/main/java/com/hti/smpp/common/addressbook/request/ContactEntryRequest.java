@@ -2,6 +2,8 @@ package com.hti.smpp.common.addressbook.request;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 public class ContactEntryRequest {
 	private int[] id;
 	private String[] name;
@@ -9,6 +11,7 @@ public class ContactEntryRequest {
 	private long[] number;
 	private String type;
 	private int groupId;
+	@Schema(hidden = true)
 	private MultipartFile file;
 	public ContactEntryRequest() {
 		

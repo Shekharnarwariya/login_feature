@@ -16,5 +16,7 @@ public interface GroupDataEntryRepository extends JpaRepository<GroupDataEntry, 
 	        List<String> gender, List<Long> number, int minAge, int maxAge);
 	
 	public List<GroupDataEntry> findByGroupId(int groupId);
+	
+	public long countByGroupId(int groupId);
 
 }

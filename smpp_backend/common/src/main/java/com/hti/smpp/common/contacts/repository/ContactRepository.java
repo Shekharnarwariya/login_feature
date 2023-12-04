@@ -11,4 +11,5 @@ import com.hti.smpp.common.contacts.dto.ContactEntry;
 public interface ContactRepository extends JpaRepository<ContactEntry, Integer> {
 	
 	public List<ContactEntry> findByGroupId(int groupId);
+	public long countByGroupId(int groupId);
 }

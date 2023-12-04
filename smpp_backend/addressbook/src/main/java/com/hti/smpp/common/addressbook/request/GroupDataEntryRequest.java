@@ -2,6 +2,8 @@ package com.hti.smpp.common.addressbook.request;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 public class GroupDataEntryRequest {
 	
 	private int[] id;
@@ -18,6 +20,7 @@ public class GroupDataEntryRequest {
 	private String[] gender;
 	private int groupId;
 	private String type;
+	@Schema(hidden = true)
 	private MultipartFile contactNumberFile;
 	private int minAge;
 	private int maxAge;
