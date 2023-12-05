@@ -104,10 +104,17 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
+		}else {
+			throw new NotFoundException("UserEntry not found.");
 		}
 
 		Optional<User> user = userLoginRepo.findBySystemId(systemId);
-		Set<Role> role = user.get().getRoles();
+		Set<Role> role = new HashSet<>();
+		if(user.isPresent()) {
+			role = user.get().getRoles();
+		}else {
+			throw new NotFoundException("User not found.");
+		}
 
 		logger.info(systemId + "[" + role + "]" + " Adding GroupData To Group: " + form.getGroupId());
 
@@ -329,6 +336,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
+		}else {
+			throw new NotFoundException("UserEntry not found.");
 		}
 		
 		Optional<User> user = userLoginRepo.findBySystemId(username);
@@ -336,7 +345,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		if (user.isPresent()) {
 			masterId = user.get().getUserId();
 		}else {
-			throw new InternalServerException("Error: Unable to found user.");
+			throw new NotFoundException("User not found.");
 		}
 		
 		logger.info("Proceed Contact For Bulk Request by " + systemId);
@@ -405,6 +414,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
+		}else {
+			throw new NotFoundException("UserEntry not found.");
 		}
 		logger.info("List Group Data[" + criteria.getGroupId() + "] For Bulk Request by " + systemId);
 
@@ -473,6 +484,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
+		}else {
+			throw new NotFoundException("UserEntry not found.");
 		}
 		
 		Optional<User> user = userLoginRepo.findBySystemId(username);
@@ -480,7 +493,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		if (user.isPresent()) {
 			masterId = user.get().getUserId();
 		}else {
-			throw new InternalServerException("Error: Unable to found user.");
+			throw new NotFoundException("Unable to found user.");
 		}
 		logger.info("Send Group Data[" + request.getGroupId() + "] Request by " + systemId);
 
@@ -558,6 +571,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
+		}else {
+			throw new NotFoundException("UserEntry not found.");
 		}
 		logger.info("Group Data Update Request by " + systemId);
 
@@ -788,6 +803,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
+		}else {
+			throw new NotFoundException("UserEntry not found.");
 		}
 		logger.info("Group Data Export Request by " + systemId);
 		String target = IConstants.FAILURE_KEY;
@@ -894,9 +911,16 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
+		}else {
+			throw new NotFoundException("No UserEntry found.");
 		}
 		Optional<User> user = userLoginRepo.findBySystemId(systemId);
-		Set<Role> role = user.get().getRoles();
+		Set<Role> role = new HashSet<>();
+		if(user.isPresent()) {
+			role = user.get().getRoles();
+		}else {
+			throw new NotFoundException("User not found.");
+		}
 		logger.info(systemId + "[" + role + "]" + " Search GroupData Request For Group: " + groupId);
 
 		EditGroupDataSearch response = new EditGroupDataSearch();

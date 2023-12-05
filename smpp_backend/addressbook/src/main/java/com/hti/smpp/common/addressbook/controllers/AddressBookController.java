@@ -59,7 +59,9 @@ public class AddressBookController {
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "201", description = "ContactEntry Saved Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "204", description = "No Content added to list.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) })
+			@ApiResponse(responseCode = "204", description = "No Content added to list.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+	})
 	@PostMapping(value = "/save/contact-entry", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<?> saveContactEntry(
 			@RequestPart(value = "contactFile", required = true) MultipartFile contactFile,
@@ -74,7 +76,10 @@ public class AddressBookController {
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "201", description = "GroupDataEntry Saved Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "204", description = "No Content added to list.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) })
+			@ApiResponse(responseCode = "204", description = "No Content added to list.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+			
+	})
 	@PostMapping(value = "/save/group-data-entry", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<?> saveGroupDataEntry(
 			@RequestPart(value = "contactNumberFile", required = true) MultipartFile contactNumberFile,
@@ -88,7 +93,8 @@ public class AddressBookController {
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "201", description = "GroupEntry Saved Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "204", description = "No Content added to list.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+			@ApiResponse(responseCode = "204", description = "No Content added to list.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
 	})
 	@PostMapping("/save/group-entry")
 	public ResponseEntity<?> saveGroupEntry(@Valid @RequestBody GroupEntryRequest entryRequest,
@@ -99,7 +105,8 @@ public class AddressBookController {
 	@Operation(summary = "Contact for bulk", description = "Gives the Contact For Bulk Response")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Successful response ContactForBulk"),
-			@ApiResponse(responseCode = "400", description = "Bad Request.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+			@ApiResponse(responseCode = "400", description = "Bad Request.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
 	})
 	@GetMapping("/get/contact-for-bulk")
 	public ResponseEntity<?> contactForBulk(@Parameter(description = "List of Numbers") @RequestParam(value = "numbers", required = true) List<Long> numbers, @Parameter(description = "Group Id") @RequestParam(value="groupId",required = true) int groupId,
@@ -115,7 +122,8 @@ public class AddressBookController {
 	@Operation(summary = "GroupData for Bulk", description = "Gives the Contact For Bulk Response")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Successful response ContactForBulk"),
-			@ApiResponse(responseCode = "400", description = "Bad Request.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+			@ApiResponse(responseCode = "400", description = "Bad Request.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
 	})
 	@GetMapping("/get/groupdata-for-bulk")
 	public ResponseEntity<?> groupDataForBulk(@Parameter(description = "List of Numbers") @RequestParam(value="numbers",required = true) List<Long> numbers,@Parameter(description = "Group Id") @RequestParam(value="groupId",required = true) int groupId,
@@ -132,7 +140,8 @@ public class AddressBookController {
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Successful response ContactEntry list"),
 			@ApiResponse(responseCode = "400", description = "Bad Request.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "404", description = "Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
 	})
 	@GetMapping("/get/view-search-contact")
 	public ResponseEntity<?> viewSearchContact(@Parameter(description = "List of Id's") @RequestParam(value="ids",required = true) List<Integer> ids,
@@ -150,7 +159,8 @@ public class AddressBookController {
 	@Operation(summary = "Proceed Search Contact", description = "Gives the ContactForBulk Response")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Successful response of ContactForBulk"),
-			@ApiResponse(responseCode = "400", description = "Bad Request.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+			@ApiResponse(responseCode = "400", description = "Bad Request.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
 	})
 	@GetMapping("/get/proceed-search-contact")
 	public ResponseEntity<?> proceedSearchContact(@Parameter(description = "List of Id's") @RequestParam(value="ids", required = true) List<Integer> ids,
@@ -187,7 +197,8 @@ public class AddressBookController {
 	@Operation(summary = "Proceed Search GroupData", description = "Gives the ContactForBulk Response")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Successful response of ContactForBulk"),
-			@ApiResponse(responseCode = "400", description = "Bad Request.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+			@ApiResponse(responseCode = "400", description = "Bad Request.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
 	})
 	@GetMapping("/get/proceed-search-groupdata")
 	public ResponseEntity<?> proceedSearchGroupData(@RequestBody GroupDataEntryRequest request,
@@ -204,7 +215,8 @@ public class AddressBookController {
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "201", description = "ContactEntry Updated Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "400", description = "No Record Selected.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+			@ApiResponse(responseCode = "400", description = "No Record Selected.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "404", description = "No Content Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
 	})
 	@PutMapping("/update/contact")
 	public ResponseEntity<?> modifyContactUpdate(@RequestBody ContactEntryRequest request,
@@ -229,7 +241,8 @@ public class AddressBookController {
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "ContactEntry Exported Successfully."),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "400", description = "Something went wrong.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+			@ApiResponse(responseCode = "400", description = "Something went wrong.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "404", description = "No Content Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
 	})
 	@GetMapping("/export/contact")
 	public ResponseEntity<?> modifyContactExport(@RequestBody ContactEntryRequest request,
@@ -241,7 +254,8 @@ public class AddressBookController {
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "201", description = "GroupDataEntry Updated Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "400", description = "No GroupData Records Found To Update.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+			@ApiResponse(responseCode = "400", description = "No GroupData Records Found To Update.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "404", description = "No Content Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
 	})
 	@PutMapping("/update/group-data-entry")
 	public ResponseEntity<?> modifyGroupDataUpdate(@RequestBody GroupDataEntryRequest request,
@@ -265,7 +279,9 @@ public class AddressBookController {
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "GroupDataEntry Exported Successfully."),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "400", description = "Something went wrong.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+			@ApiResponse(responseCode = "400", description = "Something went wrong.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "404", description = "No Content Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+	
 	})
 	@GetMapping("/export/group-data-entry")
 	public ResponseEntity<?> modifyGroupDataExport(@RequestBody GroupDataEntryRequest request,
@@ -285,11 +301,12 @@ public class AddressBookController {
 		return this.entryService.modifyGroupEntryUpdate(groupEntryRequest, username);
 	}
 	
+	//TODO
 	@Operation(summary = "Delete GroupEntry", description = "To delete the GroupEntry")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "GroupEntry Deleted Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "404", description = "No Records Found To Update.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+			@ApiResponse(responseCode = "404", description = "No Records Found To Delete.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
 	})
 	@DeleteMapping("/delete/group-entry")
 	public ResponseEntity<?> modifyGroupEntryDelete(@RequestBody GroupEntryRequest groupEntryRequest,
@@ -300,7 +317,9 @@ public class AddressBookController {
 	@Operation(summary = "GroupData Search", description = "To get the response of GroupDataSearch")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "GroupDataSearch Response."),
-			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "502", description = "Bad Gateway."),
+			@ApiResponse(responseCode = "404", description = "No Records Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
 	})
 	@GetMapping("/search/group-data/{groupId}")
 	public ResponseEntity<?> editGroupDataSearch(@Parameter(description = "Group Id") @PathVariable(value="groupId",required = true) int groupId,
@@ -311,7 +330,8 @@ public class AddressBookController {
 	@Operation(summary = "ListGroup", description = "To get response of ListGroup")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "ListGroup Response."),
-			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "404", description = "No Records Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
 	})
 	@GetMapping("/listgroup")
 	public ResponseEntity<?> listGroup(@Parameter(description = "Purpose") @RequestParam(value="purpose", required = true) String purpose,

@@ -100,10 +100,18 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
+		}else {
+			throw new NotFoundException("UserEntry not found");
 		}
 		
 		Optional<User> user = userLoginRepo.findBySystemId(systemId);
-		Set<Role> role = user.get().getRoles();
+		Set<Role> role = new HashSet<>();
+		if(user.isPresent()) {
+			role = user.get().getRoles();
+		}else {
+			throw new NotFoundException("User not found");
+		}
+		
 		
 		logger.info(systemId + "[" + role + "]" + " Adding Contact To Group: " + form.getGroupId());
 		try {
@@ -293,6 +301,8 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
+		}else {
+			throw new NotFoundException("UserEntry not found.");
 		}
 		
 		Optional<User> user = userLoginRepo.findBySystemId(username);
@@ -300,7 +310,7 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		if (user.isPresent()) {
 			masterId = user.get().getUserId();
 		}else {
-			throw new InternalServerException("Error: Unable to found user.");
+			throw new NotFoundException("User not found.");
 		}
 		
 		logger.info("Proceed Contact For Bulk Request by " + systemId);
@@ -359,6 +369,8 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
+		}else {
+			throw new NotFoundException("UserEntry not found.");
 		}
 		
 		logger.info("List Contact For Bulk Request by " + systemId);
@@ -379,7 +391,8 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 			}
 			
 		} catch (Exception ex) {
-			logger.error(systemId, ex.fillInStackTrace());
+			logger.error(systemId, ex.toString());
+			throw new InternalServerException(ex.toString());
 		}
 
 		return list;
@@ -392,6 +405,8 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
+		}else {
+			throw new NotFoundException("UserEntry not found.");
 		}
 		logger.info("Proceed Contact For Bulk Request by " + systemId);
 		String target = IConstants.FAILURE_KEY;
@@ -403,7 +418,7 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		if (user.isPresent()) {
 			masterId = user.get().getUserId();
 		}else {
-			throw new InternalServerException("Error: Unable to found user.");
+			throw new NotFoundException("Unable to found user.");
 		}
 		
 		try {
@@ -469,10 +484,18 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
+		}else {
+			throw new NotFoundException("UserEntry not found.");
 		}
 		
 		Optional<User> user = userLoginRepo.findBySystemId(systemId);
-		Set<Role> role = user.get().getRoles();
+		Set<Role> role = new HashSet<>();
+		if(user.isPresent()) {
+			role = user.get().getRoles();
+		}else {
+			throw new NotFoundException("User not found.");
+		}
+		
 		int groupId = form.getGroupId();
 		logger.info(systemId + "[" + role + "]" + " Modify Contact Request For GroupId: " + groupId);
 		ContactEntry entry = null;
@@ -657,10 +680,18 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
+		}else {
+			throw new NotFoundException("UserEntry not found.");
 		}
 		
 		Optional<User> user = userLoginRepo.findBySystemId(systemId);
-		Set<Role> role = user.get().getRoles();
+		Set<Role> role = new HashSet<>();
+		if(user.isPresent()) {
+			role = user.get().getRoles();
+		}else {
+			throw new NotFoundException("User not found.");
+		}
+		
 		int groupId = form.getGroupId();
 		logger.info(systemId + "[" + role + "]" + " Export Contact Request For GroupId: " + groupId);
 		List<ContactEntry> list = new ArrayList<ContactEntry>();

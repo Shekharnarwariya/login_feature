@@ -1,6 +1,7 @@
 package com.hti.smpp.common.addressbook.impl;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -75,6 +76,8 @@ public class GroupEntryServiceImpl implements GroupEntryService{
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
+		}else {
+			throw new NotFoundException("UserEntry not found.");
 		}
 		
 		Optional<User> user = userLoginRepo.findBySystemId(systemId);
@@ -82,7 +85,7 @@ public class GroupEntryServiceImpl implements GroupEntryService{
 		if(user.isPresent()) {
 			getUser = user.get();
 		}else {
-			throw new UnauthorizedException("User does not exist.");
+			throw new NotFoundException("User not found.");
 		}
 		Set<Role> role = user.get().getRoles();
 		
@@ -151,10 +154,17 @@ public class GroupEntryServiceImpl implements GroupEntryService{
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
+		}else {
+			throw new NotFoundException("UserEntry not found.");
 		}
 		
 		Optional<User> user = userLoginRepo.findBySystemId(systemId);
-		Set<Role> role = user.get().getRoles();
+		Set<Role> role = new HashSet<>();
+		if(user.isPresent()) {
+			role = user.get().getRoles();
+		}else {
+			throw new NotFoundException("User not found.");
+		}
 		
 		GroupEntryDTO entry = null;
 		logger.info(systemId + "[" + role + "]" + " Modify Contact Group Request");
@@ -234,10 +244,17 @@ public class GroupEntryServiceImpl implements GroupEntryService{
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
+		}else {
+			throw new NotFoundException("UserEntry not found.");
 		}
 		
 		Optional<User> user = userLoginRepo.findBySystemId(systemId);
-		Set<Role> role = user.get().getRoles();
+		Set<Role> role = new HashSet<>();
+		if(user.isPresent()) {
+			role = user.get().getRoles();
+		}else {
+			throw new NotFoundException("User not found.");
+		}
 		
 		GroupEntryDTO entry = null;
 		logger.info(systemId + "[" + role + "]" + " Remove Contact Group Request");
@@ -337,7 +354,7 @@ public class GroupEntryServiceImpl implements GroupEntryService{
 			
 		}else {
 			logger.error("Error: Unable to found WebMEnuAccessEntry with userId: "+id);
-			throw new InternalServerException("Unable to found WebMEnuAccessEntry.");
+			throw new NotFoundException("Unable to found WebMEnuAccessEntry.");
 		}
 		
 		String systemId = null;
@@ -345,6 +362,8 @@ public class GroupEntryServiceImpl implements GroupEntryService{
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
+		}else {
+			throw new NotFoundException("UserEntry not found.");
 		}
 		
 		logger.info(systemId + " Setup Contacts Group Request");
