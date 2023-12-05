@@ -284,7 +284,7 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 	}
 
 	@Override
-	public ContactForBulk contactForBulk(ContactEntryRequest form, String username) {
+	public ContactForBulk contactForBulk(List<Long> numbers, int groupId, String username) {
 		String target = IConstants.FAILURE_KEY;
 		String uploadedNumbers = "";
 		ContactForBulk response = new ContactForBulk();
@@ -294,20 +294,29 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
 		}
+		
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		Long masterId = null;
+		if (user.isPresent()) {
+			masterId = user.get().getUserId();
+		}else {
+			throw new InternalServerException("Error: Unable to found user.");
+		}
+		
 		logger.info("Proceed Contact For Bulk Request by " + systemId);
 		try {
-			if (form.getNumber() != null && form.getNumber().length > 0) {
+			if (numbers != null && numbers.size() > 0) {
 				int number_count = 0;
-				for (long number : form.getNumber()) {
+				for (long number : numbers) {
 					uploadedNumbers += number + "\n";
 					number_count++;
 				}
 				response.setUploadedNumbers(uploadedNumbers);
 				response.setTotalNumbers(number_count);
-				response.setGroupId(form.getGroupId());
+				response.setGroupId(groupId);
 				List<TemplatesDTO> templates = null;
 				try {
-					templates = this.tempRepository.findByMasterId(Long.parseLong(systemId));
+					templates = this.tempRepository.findByMasterId(masterId);
 				} catch (Exception ex) {
 					logger.error("Error: "+ex.getLocalizedMessage());
 					throw new NotFoundException("Templates not found.");
@@ -344,7 +353,7 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 	}
 
 	@Override
-	public List<ContactEntry> viewSearchContact(GroupEntryRequest form, String username) {
+	public List<ContactEntry> viewSearchContact(List<Integer> ids, String username) {
 		String systemId = null;
 		// Finding the user by system ID
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -355,8 +364,8 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		logger.info("List Contact For Bulk Request by " + systemId);
 		List<ContactEntry> list = new ArrayList<ContactEntry>();
 		try {
-			if (form.getId() != null && form.getId().length > 0) {
-				for (int groupId : form.getId()) {
+			if (ids != null && ids.size() > 0) {
+				for (int groupId : ids) {
 					List<ContactEntry> part_list = this.contactRepo.findByGroupId(groupId);
 					if (!part_list.isEmpty()) {
 						for (ContactEntry entry : part_list) {
@@ -377,7 +386,7 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 	}
 
 	@Override
-	public ContactForBulk proceedSearchContact(GroupEntryRequest form, String username) {
+	public ContactForBulk proceedSearchContact(List<Integer> ids, String username) {
 		String systemId = null;
 		// Finding the user by system ID
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -389,10 +398,18 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		String uploadedNumbers = "";
 		ContactForBulk response = new ContactForBulk();
 		
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		Long masterId = null;
+		if (user.isPresent()) {
+			masterId = user.get().getUserId();
+		}else {
+			throw new InternalServerException("Error: Unable to found user.");
+		}
+		
 		try {
 			List<ContactEntry> list = new ArrayList<ContactEntry>();
-			if (form.getId() != null && form.getId().length > 0) {
-				for (int groupId : form.getId()) {
+			if (ids != null && ids.size() > 0) {
+				for (int groupId : ids) {
 					List<ContactEntry> part_list = this.contactRepo.findByGroupId(groupId);
 					if (!part_list.isEmpty()) {
 						list.addAll(part_list);
@@ -407,7 +424,8 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 				response.setTotalNumbers(list.size());
 				List<TemplatesDTO> templates = null;
 				try {
-					templates = this.tempRepository.findByMasterId(Long.parseLong(systemId));
+					//todo
+					templates = this.tempRepository.findByMasterId(masterId);
 				} catch (Exception ex) {
 					logger.error("Error: "+ex.getLocalizedMessage());
 					throw new NotFoundException("Templates not found.");
@@ -443,6 +461,7 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntity<?> modifyContactUpdate(ContactEntryRequest form, String username) {
 		String target = IConstants.FAILURE_KEY;
 		String systemId = null;
@@ -506,6 +525,7 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 	
 
 	@Override
+	@Transactional
 	public ResponseEntity<?> modifyContactDelete(List<Integer> ids, String username) {
 		String target = IConstants.FAILURE_KEY;
         List<Integer> successfulDeletions = new ArrayList<>();

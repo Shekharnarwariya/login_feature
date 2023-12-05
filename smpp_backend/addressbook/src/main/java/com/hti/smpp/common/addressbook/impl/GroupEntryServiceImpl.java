@@ -142,6 +142,7 @@ public class GroupEntryServiceImpl implements GroupEntryService{
 
 
 	@Override
+	@Transactional
 	public ResponseEntity<?> modifyGroupEntryUpdate(GroupEntryRequest form, String username) {
 		String target = IConstants.FAILURE_KEY;
 		
@@ -224,6 +225,7 @@ public class GroupEntryServiceImpl implements GroupEntryService{
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntity<?> modifyGroupEntryDelete(GroupEntryRequest form, String username) {
 		String target = IConstants.FAILURE_KEY;
 		

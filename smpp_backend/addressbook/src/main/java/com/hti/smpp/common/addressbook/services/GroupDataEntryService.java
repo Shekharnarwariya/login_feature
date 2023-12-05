@@ -12,7 +12,7 @@ import com.hti.smpp.common.contacts.dto.GroupDataEntry;
 public interface GroupDataEntryService {
 	
 	public ResponseEntity<?> saveGroupData(String request, MultipartFile file, String username);
-	public ContactForBulk groupDataForBulk(GroupDataEntryRequest groupDataEntry, String username);
+	public ContactForBulk groupDataForBulk(List<Long>numbers,int groupId, String username);
 	public List<GroupDataEntry> viewSearchGroupData(GroupDataEntryRequest request, String username);
 	public ContactForBulk proceedSearchGroupData(GroupDataEntryRequest request, String username);
 	public ResponseEntity<?> modifyGroupDataUpdate(GroupDataEntryRequest request, String username);

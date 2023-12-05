@@ -320,7 +320,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	}
 
 	@Override
-	public ContactForBulk groupDataForBulk(GroupDataEntryRequest form, String username) {
+	public ContactForBulk groupDataForBulk(List<Long> numbers, int groupId, String username) {
 		String target = IConstants.FAILURE_KEY;
 		String uploadedNumbers = "";
 		ContactForBulk response = new ContactForBulk();
@@ -330,20 +330,29 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
 		}
+		
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		Long masterId = null;
+		if (user.isPresent()) {
+			masterId = user.get().getUserId();
+		}else {
+			throw new InternalServerException("Error: Unable to found user.");
+		}
+		
 		logger.info("Proceed Contact For Bulk Request by " + systemId);
 		try {
-			if (form.getNumber() != null && form.getNumber().length > 0) {
+			if (numbers != null && numbers.size() > 0) {
 				int number_count = 0;
-				for (long number : form.getNumber()) {
+				for (long number : numbers) {
 					uploadedNumbers += number + "\n";
 					number_count++;
 				}
 				response.setUploadedNumbers(uploadedNumbers);
 				response.setTotalNumbers(number_count);
-				response.setGroupId(form.getGroupId());
+				response.setGroupId(groupId);
 				List<TemplatesDTO> templates = null;
 				try {
-					templates = this.tempRepository.findByMasterId(Long.parseLong(systemId));
+					templates = this.tempRepository.findByMasterId(masterId);
 				} catch (Exception ex) {
 					logger.error("Error: " + ex.getLocalizedMessage());
 					throw new NotFoundException("Templates not found.");
@@ -465,6 +474,14 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
 		}
+		
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		Long masterId = null;
+		if (user.isPresent()) {
+			masterId = user.get().getUserId();
+		}else {
+			throw new InternalServerException("Error: Unable to found user.");
+		}
 		logger.info("Send Group Data[" + request.getGroupId() + "] Request by " + systemId);
 
 		String target = IConstants.FAILURE_KEY;
@@ -495,7 +512,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 				response.setGroupId(criteria.getGroupId());
 				List<TemplatesDTO> templates = null;
 				try {
-					templates = this.tempRepository.findByMasterId(Long.parseLong(systemId));
+					templates = this.tempRepository.findByMasterId(masterId);
 				} catch (Exception ex) {
 					logger.error("Error: " + ex.getLocalizedMessage());
 					throw new NotFoundException("Templates not found.");
@@ -533,6 +550,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntity<?> modifyGroupDataUpdate(GroupDataEntryRequest form, String username) {
 		String target = IConstants.FAILURE_KEY;
 		String systemId = null;
@@ -615,6 +633,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntity<?> modifyGroupDataDelete(List<Integer> ids, String username) {
 		String target = IConstants.FAILURE_KEY;
 		List<Integer> successfulDeletions = new ArrayList<>();
@@ -840,7 +859,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		} else {
 			logger.info(systemId + " No GroupData Records Found To Export");
 		}
-		return ResponseEntity.status(HttpStatus.OK).build();
+		return new ResponseEntity<>(target, HttpStatus.OK);
 	}
 
 	private String capitalize(String str) {
