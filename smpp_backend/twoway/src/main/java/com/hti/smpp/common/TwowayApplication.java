@@ -1,4 +1,4 @@
-package com.hti.smpp.twoway;
+package com.hti.smpp.common;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
