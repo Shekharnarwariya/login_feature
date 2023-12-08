@@ -45,4 +45,8 @@ public class Access {
 	public static boolean isAuthorizedUser(Set<Role> roles) {
 		return roles.stream().anyMatch(role -> role.getName().equals(ERole.ROLE_USER));
 	}
+
+	public static boolean isAuthorizedSystem(Set<Role> roles) {
+		return roles.stream().anyMatch(role -> role.getName().equals(ERole.ROLE_SYSTEM));
+	}
 }
