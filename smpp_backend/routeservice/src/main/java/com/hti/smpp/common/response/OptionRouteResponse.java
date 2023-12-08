@@ -1,4 +1,4 @@
-package com.hti.smpp.common.responce;
+package com.hti.smpp.common.response;
 
 import java.util.List;
 import java.util.Map;

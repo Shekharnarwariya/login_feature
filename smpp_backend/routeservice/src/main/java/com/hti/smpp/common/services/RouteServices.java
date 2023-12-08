@@ -4,14 +4,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.request.OptEntryArrForm;
 import com.hti.smpp.common.request.RouteEntryArrForm;
 import com.hti.smpp.common.request.RouteRequest;
 import com.hti.smpp.common.request.SearchCriteria;
-import com.hti.smpp.common.responce.OptionRouteResponse;
+import com.hti.smpp.common.response.OptionRouteResponse;
+import com.hti.smpp.common.response.RouteUserResponse;
 import com.hti.smpp.common.route.dto.HlrEntryLog;
 import com.hti.smpp.common.route.dto.HlrRouteEntry;
 import com.hti.smpp.common.route.dto.OptionalEntryLog;
@@ -29,11 +29,11 @@ public interface RouteServices {
 
 	public OptionRouteResponse updateOptionalRoute(OptEntryArrForm optEntryArrForm, String username);
 
-	public OptionRouteResponse undo(OptEntryArrForm optEntryArrForm, String username);
+	public OptionRouteResponse UpdateOptionalRouteUndo(OptEntryArrForm optEntryArrForm, String username);
 
-	public OptionRouteResponse previous(OptEntryArrForm optEntryArrForm, String username);
+	public OptionRouteResponse UpdateOptionalRoutePrevious(OptEntryArrForm optEntryArrForm, String username);
 
-	public OptionRouteResponse basic(OptEntryArrForm optEntryArrForm, String username);
+	public OptionRouteResponse UpdateOptionalRouteBasic(OptEntryArrForm optEntryArrForm, String username);
 
 	public OptionRouteResponse checkExisting(RouteEntryArrForm routeEntryArrForm, String username);
 
@@ -41,6 +41,31 @@ public interface RouteServices {
 
 	public String downloadRoute(String username, RouteEntryArrForm routingForm, HttpServletResponse response);
 
+	public RouteUserResponse RouteUserList(String username, String purpose);
+
+	public OptionRouteResponse SearchRoutingBasic(String username, RouteEntryArrForm routingForm);
+
+	public OptionRouteResponse SearchRoutingOptional(String username, RouteEntryArrForm routingForm);
+
+	public OptionRouteResponse SearchRoutingLookup(String username, RouteEntryArrForm routingForm);
+
+	public OptionRouteResponse BasicRouteBasicRoute(String username, RouteEntryArrForm routingForm);
+
+	public OptionRouteResponse deleteRouteBasicRoute(String username, RouteEntryArrForm routingForm);
+
+	public OptionRouteResponse undoRouteBasicRoute(String username, RouteEntryArrForm routingForm);
+
+	public OptionRouteResponse previousRouteBasicRoute(String username, RouteEntryArrForm routingForm);
+
+	public OptionRouteResponse hlrRouteBasicRoute(String username, RouteEntryArrForm routingForm);
+
+	public OptionRouteResponse optionalRouteBasicRoute(String username, RouteEntryArrForm routingForm);
+
+
+	
+	
+	
+	
 	public void saveRouteEntry(RouteEntryExt entry);
 
 	public void saveDefaultEntries(RouteEntry entry);

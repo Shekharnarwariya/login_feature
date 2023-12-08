@@ -9,6 +9,9 @@ import com.hti.smpp.common.sales.dto.SalesEntry;
 
 @Repository
 public interface SalesRepository extends JpaRepository<SalesEntry, Integer> {
-	public SalesEntry findByMasterId(String masterId);
-	public List<SalesEntry> findByMasterIdAndRole(String masterId, String role);
+
+	public SalesEntry findByMasterId(String systemId);
+
+	public List<SalesEntry> findByMasterIdAndRole(String mgrId, String role);
+
 }
