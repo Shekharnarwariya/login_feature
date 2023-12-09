@@ -13,10 +13,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import org.apache.poi.ss.usermodel.CellStyle;
+
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -40,7 +41,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hti.smpp.common.addressbook.request.ContactEntryRequest;
-import com.hti.smpp.common.addressbook.request.GroupEntryRequest;
 import com.hti.smpp.common.addressbook.response.ContactForBulk;
 import com.hti.smpp.common.addressbook.services.ContactEntryService;
 import com.hti.smpp.common.addressbook.utils.Converters;
@@ -62,26 +62,26 @@ import com.hti.smpp.common.util.IConstants;
 import jakarta.transaction.Transactional;
 
 @Service
-public class ContactEntryServiceImpl implements ContactEntryService{
-	
+public class ContactEntryServiceImpl implements ContactEntryService {
+
 	private static final Logger logger = LoggerFactory.getLogger(ContactEntryServiceImpl.class.getName());
-	
+
 	@Autowired
 	private ContactRepository contactRepo;
-	
+
 	@Autowired
 	private UserEntryRepository userRepository;
-	
+
 	@Autowired
 	private TemplatesRepository tempRepository;
-	
+
 	@Autowired
 	private UserRepository userLoginRepo;
-	
+
 	@Override
 	@Transactional
 	public ResponseEntity<?> saveContactEntry(String reqdata, MultipartFile file, String username) {
-		
+
 		ContactEntryRequest form;
 
 		try {
@@ -93,26 +93,25 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		} catch (Exception ex) {
 			throw new InternalServerException(ex.getLocalizedMessage());
 		}
-		
+
 		String target = IConstants.FAILURE_KEY;
 		String systemId = null;
 		// Finding the user by system ID
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
-		}else {
+		} else {
 			throw new NotFoundException("UserEntry not found");
 		}
-		
+
 		Optional<User> user = userLoginRepo.findBySystemId(systemId);
 		Set<Role> role = new HashSet<>();
-		if(user.isPresent()) {
+		if (user.isPresent()) {
 			role = user.get().getRoles();
-		}else {
+		} else {
 			throw new NotFoundException("User not found");
 		}
-		
-		
+
 		logger.info(systemId + "[" + role + "]" + " Adding Contact To Group: " + form.getGroupId());
 		try {
 			int groupId = form.getGroupId();
@@ -148,7 +147,9 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 										continue;
 									} else {
 										try {
-											tokens[0] = tokens[0].replaceAll("\\s+", ""); // Replace all the spaces in the String with empty character.
+											tokens[0] = tokens[0].replaceAll("\\s+", ""); // Replace all the spaces in
+																							// the String with empty
+																							// character.
 											number = Long.parseLong(tokens[0]);
 										} catch (Exception ex) {
 											logger.info("Invalid Number For Entry[" + x + "]: " + entry);
@@ -176,7 +177,7 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 								}
 							}
 						} catch (Exception ex) {
-							logger.error("Error: "+ex.getLocalizedMessage());
+							logger.error("Error: " + ex.getLocalizedMessage());
 						} finally {
 							if (bufferedReader != null) {
 								try {
@@ -249,13 +250,13 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 								}
 							}
 						} catch (Exception ex) {
-							logger.info("Error: " +ex.getLocalizedMessage());
+							logger.info("Error: " + ex.getLocalizedMessage());
 						} finally {
 							if (workbook != null) {
 								try {
 									workbook.close();
 								} catch (Exception e) {
-									logger.info("Error: "+e.getLocalizedMessage());
+									logger.info("Error: " + e.getLocalizedMessage());
 								}
 							}
 						}
@@ -282,11 +283,11 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 			} else {
 				List<ContactEntry> contacts = this.contactRepo.saveAll(entry_list);
 				target = IConstants.SUCCESS_KEY;
-				logger.info("ContactEntry Saved Successfully. Message: "+target);
+				logger.info("ContactEntry Saved Successfully. Message: " + target);
 				return new ResponseEntity<>(target, HttpStatus.CREATED);
 			}
 		} catch (Exception e) {
-			logger.error("Error: "+e.getLocalizedMessage()+", Message: "+target);
+			logger.error("Error: " + e.getLocalizedMessage() + ", Message: " + target);
 			return new ResponseEntity<>(target, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -301,18 +302,18 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
-		}else {
+		} else {
 			throw new NotFoundException("UserEntry not found.");
 		}
-		
+
 		Optional<User> user = userLoginRepo.findBySystemId(username);
 		Long masterId = null;
 		if (user.isPresent()) {
 			masterId = user.get().getUserId();
-		}else {
+		} else {
 			throw new NotFoundException("User not found.");
 		}
-		
+
 		logger.info("Proceed Contact For Bulk Request by " + systemId);
 		try {
 			if (numbers != null && numbers.size() > 0) {
@@ -328,7 +329,7 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 				try {
 					templates = this.tempRepository.findByMasterId(masterId);
 				} catch (Exception ex) {
-					logger.error("Error: "+ex.getLocalizedMessage());
+					logger.error("Error: " + ex.getLocalizedMessage());
 					throw new NotFoundException("Templates not found.");
 				}
 				if (templates != null) {
@@ -358,7 +359,7 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]");
 			logger.error(systemId, ex.fillInStackTrace());
 		}
-	
+
 		return response;
 	}
 
@@ -369,10 +370,10 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
-		}else {
+		} else {
 			throw new NotFoundException("UserEntry not found.");
 		}
-		
+
 		logger.info("List Contact For Bulk Request by " + systemId);
 		List<ContactEntry> list = new ArrayList<ContactEntry>();
 		try {
@@ -389,7 +390,7 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 					}
 				}
 			}
-			
+
 		} catch (Exception ex) {
 			logger.error(systemId, ex.toString());
 			throw new InternalServerException(ex.toString());
@@ -405,22 +406,22 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
-		}else {
+		} else {
 			throw new NotFoundException("UserEntry not found.");
 		}
 		logger.info("Proceed Contact For Bulk Request by " + systemId);
 		String target = IConstants.FAILURE_KEY;
 		String uploadedNumbers = "";
 		ContactForBulk response = new ContactForBulk();
-		
+
 		Optional<User> user = userLoginRepo.findBySystemId(username);
 		Long masterId = null;
 		if (user.isPresent()) {
 			masterId = user.get().getUserId();
-		}else {
+		} else {
 			throw new NotFoundException("Unable to found user.");
 		}
-		
+
 		try {
 			List<ContactEntry> list = new ArrayList<ContactEntry>();
 			if (ids != null && ids.size() > 0) {
@@ -439,10 +440,10 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 				response.setTotalNumbers(list.size());
 				List<TemplatesDTO> templates = null;
 				try {
-					//todo
+					// todo
 					templates = this.tempRepository.findByMasterId(masterId);
 				} catch (Exception ex) {
-					logger.error("Error: "+ex.getLocalizedMessage());
+					logger.error("Error: " + ex.getLocalizedMessage());
 					throw new NotFoundException("Templates not found.");
 				}
 				if (templates != null) {
@@ -471,7 +472,7 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		} catch (Exception ex) {
 			logger.error(systemId, ex.fillInStackTrace());
 		}
-		
+
 		return response;
 	}
 
@@ -484,18 +485,18 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
-		}else {
+		} else {
 			throw new NotFoundException("UserEntry not found.");
 		}
-		
+
 		Optional<User> user = userLoginRepo.findBySystemId(systemId);
 		Set<Role> role = new HashSet<>();
-		if(user.isPresent()) {
+		if (user.isPresent()) {
 			role = user.get().getRoles();
-		}else {
+		} else {
 			throw new NotFoundException("User not found.");
 		}
-		
+
 		int groupId = form.getGroupId();
 		logger.info(systemId + "[" + role + "]" + " Modify Contact Request For GroupId: " + groupId);
 		ContactEntry entry = null;
@@ -504,7 +505,7 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		String[] names = form.getName();
 		String[] emails = form.getEmail();
 		long[] numbers = form.getNumber();
-		
+
 		if (id != null && id.length > 0) {
 			try {
 				for (int i = 0; i < id.length; i++) {
@@ -517,68 +518,67 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 					list.add(entry);
 					logger.info(entry.toString());
 				}
-				if(!list.isEmpty()) {
+				if (!list.isEmpty()) {
 					this.contactRepo.saveAll(list);
 					target = IConstants.SUCCESS_KEY;
 				}
 			} catch (Exception e) {
 				logger.error(systemId, e.getLocalizedMessage());
-				return new ResponseEntity<>(target,HttpStatus.INTERNAL_SERVER_ERROR);
+				return new ResponseEntity<>(target, HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		} else {
 			logger.info(systemId + " No Records Selected");
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
 		}
 		logger.info(systemId + " modify Contact Target:" + target);
-		
-		return new ResponseEntity<>(target,HttpStatus.CREATED);
-	}
-	
-	private void logDeletedContacts(String username, List<Integer> deletedContactsIds) {
-        if (!deletedContactsIds.isEmpty()) {
-            logger.info("Deleted contacts by {}: {}", username, deletedContactsIds);
-        }
-    }
 
-    private void logFailedDeletions(String username, List<Integer> failedDeletionIds) {
-        if (!failedDeletionIds.isEmpty()) {
-            logger.warn("Failed to delete contacts by {}: {}", username, failedDeletionIds);
-        }
-    }
-	
+		return new ResponseEntity<>(target, HttpStatus.CREATED);
+	}
+
+	private void logDeletedContacts(String username, List<Integer> deletedContactsIds) {
+		if (!deletedContactsIds.isEmpty()) {
+			logger.info("Deleted contacts by {}: {}", username, deletedContactsIds);
+		}
+	}
+
+	private void logFailedDeletions(String username, List<Integer> failedDeletionIds) {
+		if (!failedDeletionIds.isEmpty()) {
+			logger.warn("Failed to delete contacts by {}: {}", username, failedDeletionIds);
+		}
+	}
 
 	@Override
 	@Transactional
 	public ResponseEntity<?> modifyContactDelete(List<Integer> ids, String username) {
 		String target = IConstants.FAILURE_KEY;
-        List<Integer> successfulDeletions = new ArrayList<>();
-        List<Integer> failedDeletionIds = new ArrayList<>();
+		List<Integer> successfulDeletions = new ArrayList<>();
+		List<Integer> failedDeletionIds = new ArrayList<>();
 
-        try {
-            if (!ids.isEmpty()) {
-                List<ContactEntry> contactsToDelete = contactRepo.findAllById(ids);
-                for (ContactEntry contact : contactsToDelete) {
-                    try {
-                        contactRepo.delete(contact);
-                        successfulDeletions.add(contact.getId());
-                    } catch (Exception e) {
-                        logger.error("Error deleting contact with ID {}: {}", contact.getId(), e.getMessage(), e);
-                        failedDeletionIds.add(contact.getId());
-                    }
-                }
+		try {
+			if (!ids.isEmpty()) {
+				List<ContactEntry> contactsToDelete = contactRepo.findAllById(ids);
+				for (ContactEntry contact : contactsToDelete) {
+					try {
+						contactRepo.delete(contact);
+						successfulDeletions.add(contact.getId());
+					} catch (Exception e) {
+						logger.error("Error deleting contact with ID {}: {}", contact.getId(), e.getMessage(), e);
+						failedDeletionIds.add(contact.getId());
+					}
+				}
 
-                target = IConstants.SUCCESS_KEY;
-                logDeletedContacts(username, successfulDeletions);
-                logFailedDeletions(username, failedDeletionIds);
-            }
-            return ResponseEntity.status(HttpStatus.OK).body(target);
-        } catch (Exception e) {
-            logger.error("Error deleting contacts: {}", e.getMessage(), e);
-            target = IConstants.FAILURE_KEY;
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(target);
-        }
+				target = IConstants.SUCCESS_KEY;
+				logDeletedContacts(username, successfulDeletions);
+				logFailedDeletions(username, failedDeletionIds);
+			}
+			return ResponseEntity.status(HttpStatus.OK).body(target);
+		} catch (Exception e) {
+			logger.error("Error deleting contacts: {}", e.getMessage(), e);
+			target = IConstants.FAILURE_KEY;
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(target);
+		}
 	}
-	
+
 	private Workbook getWorkBook(List<ContactEntry> list) {
 		logger.info("Start Creating WorkBook.");
 		SXSSFWorkbook workbook = new SXSSFWorkbook();
@@ -680,18 +680,18 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
-		}else {
+		} else {
 			throw new NotFoundException("UserEntry not found.");
 		}
-		
+
 		Optional<User> user = userLoginRepo.findBySystemId(systemId);
 		Set<Role> role = new HashSet<>();
-		if(user.isPresent()) {
+		if (user.isPresent()) {
 			role = user.get().getRoles();
-		}else {
+		} else {
 			throw new NotFoundException("User not found.");
 		}
-		
+
 		int groupId = form.getGroupId();
 		logger.info(systemId + "[" + role + "]" + " Export Contact Request For GroupId: " + groupId);
 		List<ContactEntry> list = new ArrayList<ContactEntry>();
@@ -700,7 +700,7 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 		String[] emails = form.getEmail();
 		long[] numbers = form.getNumber();
 		Converters cc = new Converters();
-		
+
 		if (id != null && id.length > 0) {
 			try {
 				for (int i = 0; i < id.length; i++) {
@@ -718,8 +718,8 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 				ByteArrayOutputStream bos = new ByteArrayOutputStream();
 				logger.info(systemId + " Creating Contact XLSx ");
 				workbook.write(bos);
-				
-				try(InputStream in = new ByteArrayInputStream(bos.toByteArray())) {
+
+				try (InputStream in = new ByteArrayInputStream(bos.toByteArray())) {
 					HttpHeaders headers = new HttpHeaders();
 					headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
 					headers.setContentDispositionFormData("attachment", filename);
@@ -727,24 +727,21 @@ public class ContactEntryServiceImpl implements ContactEntryService{
 					target = "export";
 					logger.info(systemId + " Export Contact Target:" + target);
 					return new ResponseEntity<>(resource, headers, HttpStatus.OK);
-				}catch(IOException e) {
+				} catch (IOException e) {
 					logger.error("Contact XLSx Download Error: {}", e.toString());
-		            return new ResponseEntity<>(target,HttpStatus.INTERNAL_SERVER_ERROR);
+					return new ResponseEntity<>(target, HttpStatus.INTERNAL_SERVER_ERROR);
 				}
 
 			} catch (Exception e) {
 				logger.error(systemId, e.toString());
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
 			}
-			
+
 		} else {
 			logger.info(systemId + " No Records Selected");
 		}
 		return ResponseEntity.status(HttpStatus.OK).build();
-		
+
 	}
-	
-	
-	
-	
+
 }

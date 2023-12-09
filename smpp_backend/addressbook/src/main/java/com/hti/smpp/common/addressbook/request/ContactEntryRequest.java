@@ -13,10 +13,11 @@ public class ContactEntryRequest {
 	private int groupId;
 	@Schema(hidden = true)
 	private MultipartFile file;
+
 	public ContactEntryRequest() {
-		
+
 	}
-	
+
 	public ContactEntryRequest(int[] id, String[] name, String[] email, long[] number, String type, int groupId,
 			MultipartFile file) {
 		super();
@@ -40,39 +41,49 @@ public class ContactEntryRequest {
 	public String[] getName() {
 		return name;
 	}
+
 	public void setName(String[] name) {
 		this.name = name;
 	}
+
 	public String[] getEmail() {
 		return email;
 	}
+
 	public void setEmail(String[] email) {
 		this.email = email;
 	}
+
 	public long[] getNumber() {
 		return number;
 	}
+
 	public void setNumber(long[] number) {
 		this.number = number;
 	}
+
 	public String getType() {
 		return type;
 	}
+
 	public void setType(String type) {
 		this.type = type;
 	}
+
 	public int getGroupId() {
 		return groupId;
 	}
+
 	public void setGroupId(int groupId) {
 		this.groupId = groupId;
 	}
+
 	public MultipartFile getFile() {
 		return file;
 	}
+
 	public void setFile(MultipartFile file) {
 		this.file = file;
 	}
-
 
 }
