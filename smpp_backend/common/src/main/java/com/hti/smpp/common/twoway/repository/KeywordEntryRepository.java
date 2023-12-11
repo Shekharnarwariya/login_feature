@@ -9,5 +9,5 @@ import com.hti.smpp.common.twoway.dto.KeywordEntry;
 
 @Repository
 public interface KeywordEntryRepository extends JpaRepository<KeywordEntry, Integer> {
-	public  List<KeywordEntry> findByUserIdIn(Integer[] users);
+	public List<KeywordEntry> findByUserIdIn(Integer[] users);
 }

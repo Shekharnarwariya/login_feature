@@ -16,22 +16,31 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.hti.smpp.common.twoway.dto.KeywordEntry;
 import com.hti.smpp.common.twoway.request.KeywordEntryForm;
+import com.hti.smpp.common.twoway.request.TwowayReportForm;
 import com.hti.smpp.common.twoway.service.KeywordService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.util.IConstants;
 
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
+@OpenAPIDefinition(info = @Info(title = "SMPP Twoway API", version = "1.0", description = "API for managing SMPP Twoway"))
 @RestController
 @RequestMapping("/twoway")
+@Tag(name = "TwowayController", description = "API's for Twoway")
 public class TwowayController {
     
     @Autowired 
     private KeywordService keywordService;
     
+    @Operation(summary = "Save Keyword Entry", description = "Save a new keyword entry")
     @PostMapping("/addkeyword")
     public ResponseEntity<String> addKeyword(@Valid @RequestBody KeywordEntryForm form, @RequestHeader(value="username", required = true) String username){
     	String response = this.keywordService.addKeyword(form, username);
@@ -42,6 +51,7 @@ public class TwowayController {
     	}
     }
     
+    @Operation(summary = "List KeywordEntry", description = "List the keyword entry")
     @GetMapping("/listkeyword")
     public ResponseEntity<?> listKeyword(@RequestHeader(value="username", required = true) String username){
     	List<KeywordEntry> response = this.keywordService.listKeyword(username);
@@ -53,6 +63,7 @@ public class TwowayController {
     	}
     }
     
+    @Operation(summary = "Update Keyword Entry", description = "Update an existing keyword entry")
     @PutMapping("/update-keyword")
     public ResponseEntity<String> updateKeyword(@Valid @RequestBody KeywordEntryForm form, @RequestHeader(value="username", required = true) String username){
     	String response = this.keywordService.updateKeyword(form, username);
@@ -63,6 +74,7 @@ public class TwowayController {
     	}
     }
     
+    @Operation(summary = "Delete Keyword Entry", description = "Delete an existing keyword entry")
     @DeleteMapping("/delete-keyword/{id}")
     public ResponseEntity<String> deleteKeyword(@PathVariable(value = "id", required = true) int id, @RequestHeader(value="username", required = true) String username){
     	String response = this.keywordService.deleteKeyword(id, username);
@@ -73,6 +85,7 @@ public class TwowayController {
     	}
     }
     
+    @Operation(summary = "Setup Keyword", description = "Returns the list as a response of UserEntry")
     @GetMapping("/setupkeyword")
     public ResponseEntity<?> setupKeyword(@RequestHeader(value="username", required = true) String username){
     	Collection<UserEntry> response = this.keywordService.setupKeyword(username);
@@ -83,6 +96,7 @@ public class TwowayController {
     	}
     }
     
+    @Operation(summary = "View Keyword", description = "Returns the KeywordEntry as a response by id")
     @GetMapping("/viewkeyword/{id}")
     public ResponseEntity<KeywordEntry> viewKeyword(@PathVariable(value = "id", required = true) int id, @RequestHeader(value="username", required = true) String username){
     	KeywordEntry response = this.keywordService.viewKeyword(id, username);
@@ -93,5 +107,39 @@ public class TwowayController {
     	}
     }
     
+    @Operation(summary = "Generate Xls", description = "Downloads the twoway report in .xlsx")
+    @PostMapping(value = "/generate/xls/{locale}")
+    public ResponseEntity<StreamingResponseBody> generateXls(@Valid @RequestBody TwowayReportForm form, @PathVariable(value = "locale", required=true) String locale, @RequestHeader(value="username", required = true) String username){
+    	return this.keywordService.generateXls(form, locale, username);
+    }
+    
+    @Operation(summary = "Generate Pdf", description = "Downloads the twoway report in .pdf")
+    @PostMapping("/generate/pdf/{locale}")
+    public ResponseEntity<StreamingResponseBody> generatePdf(@Valid @RequestBody TwowayReportForm form, @PathVariable(value = "locale", required=true) String locale, @RequestHeader(value="username", required = true) String username){
+    	return this.keywordService.generatePdf(form, locale, username);
+    }
+    
+    @Operation(summary = "Generate Doc", description = "Downloads the twoway report in .doc")
+    @PostMapping("/generate/doc/{locale}")
+    public ResponseEntity<StreamingResponseBody> generateDoc(@Valid @RequestBody TwowayReportForm form, @PathVariable(value = "locale", required=true) String locale, @RequestHeader(value="username", required = true) String username){
+    	return this.keywordService.generateDoc(form, locale, username);
+    }
+    
+    @Operation(summary = "View Report", description = "Returns the response of View")
+    @PostMapping("/view/{locale}")
+    public ResponseEntity<?> viewReport(@Valid @RequestBody TwowayReportForm form, @PathVariable(value = "locale", required=true) String locale, @RequestHeader(value="username", required = true) String username){
+    	return this.keywordService.view(form, locale, username);
+    }
+    
+    @Operation(summary = "Setup TwowayReport", description = "Returns the list as a response of UserEntry")
+    @GetMapping("/setup-twowayreport")
+    public ResponseEntity<?> setupTwowayReport(@RequestHeader(value="username", required = true) String username){
+    	Collection<UserEntry> response = this.keywordService.setupTwowayReport(username);
+    	if(response!=null && response.isEmpty()) {
+    		return new ResponseEntity<>(response,HttpStatus.OK);
+    	}else {
+    		return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    	}
+    }
 
 }

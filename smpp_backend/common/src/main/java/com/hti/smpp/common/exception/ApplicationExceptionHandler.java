@@ -58,6 +58,23 @@ public class ApplicationExceptionHandler {
 				HttpStatus.BAD_GATEWAY.value(), HttpStatus.BAD_GATEWAY.getReasonPhrase()), HttpStatus.BAD_GATEWAY);
 
 	}
+	
+	@ExceptionHandler(AccessDataException.class)
+	public ResponseEntity<ExceptionResponse> AccessDataException(AccessDataException exception) {
+		LocalDateTime current = LocalDateTime.now();
+		return new ResponseEntity<>(new ExceptionResponse(exception.getMessage(), toUtc(current),
+				HttpStatus.BAD_GATEWAY.value(), HttpStatus.BAD_GATEWAY.getReasonPhrase()), HttpStatus.BAD_GATEWAY);
+
+	}
+	
+	@ExceptionHandler(JasperReportException.class)
+	public ResponseEntity<ExceptionResponse> JasperReportException(JasperReportException exception) {
+		LocalDateTime current = LocalDateTime.now();
+		return new ResponseEntity<>(new ExceptionResponse(exception.getMessage(), toUtc(current),
+				HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase()), HttpStatus.BAD_REQUEST);
+
+	}
+	
 
 	private LocalDateTime toUtc(LocalDateTime current) {
 		return current.atOffset(ZoneOffset.UTC).toLocalDateTime();
