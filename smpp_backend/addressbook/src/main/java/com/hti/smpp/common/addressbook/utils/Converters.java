@@ -3,7 +3,7 @@ package com.hti.smpp.common.addressbook.utils;
 import java.math.BigInteger;
 
 public class Converters {
-	
+
 	public String byteToHex(byte data) {
 		StringBuffer buf = new StringBuffer();
 		buf.append(toHexChar((data >>> 4) & 0x0F));
@@ -86,7 +86,7 @@ public class Converters {
 		}
 		return msg;
 	}
-	
+
 	public String uniHexToCharMsg(String msg) {
 		if (msg == null || msg.length() == 0) {
 			msg = "0020";
@@ -124,19 +124,21 @@ public class Converters {
 		}
 		return msg;
 	}
-	
-	public static String hexCodePointsToCharMsg(String msg)
-	{
+
+	public static String hexCodePointsToCharMsg(String msg) {
 		// this mthd made decreasing codes, only.
-		//// This mthd will take msg who contain hex values of unicode, then it will convert this msg to Unicode from hex.
+		//// This mthd will take msg who contain hex values of unicode, then it will
+		// convert this msg to Unicode from hex.
 		boolean reqNULL = false;
 		byte[] charsByt, var;
 		int x = 0;
-		if (msg.substring(0, 2).compareTo("00") == 0) // if true means first byte is null, then null is required in first byte, after header.
+		if (msg.substring(0, 2).compareTo("00") == 0) // if true means first byte is null, then null is required in
+														// first byte, after header.
 		{
 			reqNULL = true;
 		}
-		charsByt = new BigInteger(msg, 16).toByteArray(); // this won't give null value in first byte if occured, so i have to append it .
+		charsByt = new BigInteger(msg, 16).toByteArray(); // this won't give null value in first byte if occured, so i
+															// have to append it .
 		if (charsByt[0] == '\0') // cut this null.
 		{
 			var = new byte[charsByt.length - 1];

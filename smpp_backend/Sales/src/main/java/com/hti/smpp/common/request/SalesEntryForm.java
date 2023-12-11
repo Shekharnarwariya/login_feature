@@ -1,6 +1,6 @@
 package com.hti.smpp.common.request;
 
-public class SalesEntryForm  {
+public class SalesEntryForm {
 	private int id;
 	private String masterId;
 	private String username;
@@ -110,4 +110,3 @@ public class SalesEntryForm  {
 		this.domainEmail = domainEmail;
 	}
 }
-

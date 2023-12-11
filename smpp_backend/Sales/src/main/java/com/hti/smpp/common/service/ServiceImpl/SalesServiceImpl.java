@@ -203,7 +203,7 @@ public class SalesServiceImpl implements SalesService {
 				logger.info("Executives Under [" + masterId + "] : " + salesList.size());
 			} else {
 				target = IConstants.FAILURE_KEY;
-				logger.info("No Executive Found Under " + masterId + "[" + role + "]"+"|"+target);
+				logger.info("No Executive Found Under " + masterId + "[" + role + "]" + "|" + target);
 			}
 
 		} catch (Exception e) {
@@ -282,18 +282,17 @@ public class SalesServiceImpl implements SalesService {
 		} else {
 			throw new NotFoundException("User not found");
 		}
-		logger.info("Sales User Setup Requested By " + systemId + "["
-				+ role + "]");
+		logger.info("Sales User Setup Requested By " + systemId + "[" + role + "]");
 		SalesEntry salesEntry = this.salesRepository.findByMasterId(masterId);
 		Collection<SalesEntry> list = null;
-		if(Access.isAuthorizedSuperAdminAndSystem(role)) {
+		if (Access.isAuthorizedSuperAdminAndSystem(role)) {
 			list = list("manager").values();
-		}else {
-			if(salesEntry.getRole().equalsIgnoreCase("manager") || Access.isAuthorizedAdmin(role)) {
+		} else {
+			if (salesEntry.getRole().equalsIgnoreCase("manager") || Access.isAuthorizedAdmin(role)) {
 				logger.info("Authorized User :" + systemId);
-			}else {
+			} else {
 				target = "invalidRequest";
-				logger.info("Authorization Failed :" + systemId + ": "+target);
+				logger.info("Authorization Failed :" + systemId + ": " + target);
 			}
 		}
 		return list;

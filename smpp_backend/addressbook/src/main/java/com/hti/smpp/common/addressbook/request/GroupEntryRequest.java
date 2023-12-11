@@ -1,14 +1,13 @@
 package com.hti.smpp.common.addressbook.request;
 
-
 public class GroupEntryRequest {
-	
+
 	private int[] id;
 	private String[] name;
 	private boolean[] groupData;
-	
+
 	public GroupEntryRequest() {
-	
+
 	}
 
 	public GroupEntryRequest(int[] id, String[] name, boolean[] groupData) {
@@ -41,6 +40,5 @@ public class GroupEntryRequest {
 	public void setGroupData(boolean[] groupData) {
 		this.groupData = groupData;
 	}
-	
-	
+
 }

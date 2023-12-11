@@ -16,18 +16,18 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
-import org.apache.poi.xssf.usermodel.XSSFColor;
-import org.apache.poi.xssf.usermodel.XSSFFont;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,15 +104,15 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
-		}else {
+		} else {
 			throw new NotFoundException("UserEntry not found.");
 		}
 
 		Optional<User> user = userLoginRepo.findBySystemId(systemId);
 		Set<Role> role = new HashSet<>();
-		if(user.isPresent()) {
+		if (user.isPresent()) {
 			role = user.get().getRoles();
-		}else {
+		} else {
 			throw new NotFoundException("User not found.");
 		}
 
@@ -336,18 +336,18 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
-		}else {
+		} else {
 			throw new NotFoundException("UserEntry not found.");
 		}
-		
+
 		Optional<User> user = userLoginRepo.findBySystemId(username);
 		Long masterId = null;
 		if (user.isPresent()) {
 			masterId = user.get().getUserId();
-		}else {
+		} else {
 			throw new NotFoundException("User not found.");
 		}
-		
+
 		logger.info("Proceed Contact For Bulk Request by " + systemId);
 		try {
 			if (numbers != null && numbers.size() > 0) {
@@ -414,7 +414,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
-		}else {
+		} else {
 			throw new NotFoundException("UserEntry not found.");
 		}
 		logger.info("List Group Data[" + criteria.getGroupId() + "] For Bulk Request by " + systemId);
@@ -484,15 +484,15 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
-		}else {
+		} else {
 			throw new NotFoundException("UserEntry not found.");
 		}
-		
+
 		Optional<User> user = userLoginRepo.findBySystemId(username);
 		Long masterId = null;
 		if (user.isPresent()) {
 			masterId = user.get().getUserId();
-		}else {
+		} else {
 			throw new NotFoundException("Unable to found user.");
 		}
 		logger.info("Send Group Data[" + request.getGroupId() + "] Request by " + systemId);
@@ -571,7 +571,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
-		}else {
+		} else {
 			throw new NotFoundException("UserEntry not found.");
 		}
 		logger.info("Group Data Update Request by " + systemId);
@@ -803,7 +803,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
-		}else {
+		} else {
 			throw new NotFoundException("UserEntry not found.");
 		}
 		logger.info("Group Data Export Request by " + systemId);
@@ -893,13 +893,11 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 
 	public List<String> distinctGroupData(int groupId, String property) {
 		List<GroupDataEntry> entries = groupDataEntryRepository.findByGroupId(groupId);
-		
-		 List<String> distinctValues = entries.stream()
-	                .map(entry -> getProperty(entry, property))
-	                .distinct()
-	                .collect(Collectors.toList());
 
-	        return distinctValues;
+		List<String> distinctValues = entries.stream().map(entry -> getProperty(entry, property)).distinct()
+				.collect(Collectors.toList());
+
+		return distinctValues;
 
 	}
 
@@ -911,14 +909,14 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			systemId = userOptional.get().getSystemId();
-		}else {
+		} else {
 			throw new NotFoundException("No UserEntry found.");
 		}
 		Optional<User> user = userLoginRepo.findBySystemId(systemId);
 		Set<Role> role = new HashSet<>();
-		if(user.isPresent()) {
+		if (user.isPresent()) {
 			role = user.get().getRoles();
-		}else {
+		} else {
 			throw new NotFoundException("User not found.");
 		}
 		logger.info(systemId + "[" + role + "]" + " Search GroupData Request For Group: " + groupId);
@@ -927,29 +925,30 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		Set<String> professions = new HashSet<String>();
 		Set<String> companies = new HashSet<String>();
 		Set<String> areas = new HashSet<String>();
-		
+
 		List<String> list = distinctGroupData(groupId, "profession");
-		
+
 		professions.addAll(list);
 		response.setProfessions(professions);
-		
+
 		list = distinctGroupData(groupId, "company");
-		
+
 		companies.addAll(list);
 		response.setCompanies(companies);
-		
+
 		list = distinctGroupData(groupId, "area");
-		
+
 		areas.addAll(list);
 		response.setAreas(areas);
-		
+
 		response.setGroupId(groupId);
 		response.setTarget(target);
-		
-		if(response.getAreas().isEmpty() || response.getCompanies().isEmpty() || response.getProfessions().isEmpty() || response == null) {
-			return new ResponseEntity<>("Unable to search Group Data.",HttpStatus.INTERNAL_SERVER_ERROR);
+
+		if (response.getAreas().isEmpty() || response.getCompanies().isEmpty() || response.getProfessions().isEmpty()
+				|| response == null) {
+			return new ResponseEntity<>("Unable to search Group Data.", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-		return new ResponseEntity<>(response,HttpStatus.OK);
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 }
