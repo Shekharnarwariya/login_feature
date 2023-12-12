@@ -263,6 +263,7 @@ public class KeywordServiceImpl implements KeywordService {
 				list = listKeyWord(users);
 				if (list.isEmpty()) {
 					logger.info(systemId + "[" + role + "] Keyword List Empty");
+					logger.error("error.record.unavailable");
 				} else {
 					logger.info(systemId + "[" + role + "] Keyword List:" + list.size());
 					target = IConstants.SUCCESS_KEY;
@@ -328,6 +329,7 @@ public class KeywordServiceImpl implements KeywordService {
 				MultiUtility.changeFlag(Constants.KEYWORD_FLAG_FILE, "707");
 			} else {
 				logger.info(systemId + "[" + role + "] Unauthorized Request");
+				logger.error("error.unauthorized");
 			}
 		} catch (Exception e) {
 			logger.error(systemId, e.toString());
@@ -379,6 +381,7 @@ public class KeywordServiceImpl implements KeywordService {
 				MultiUtility.changeFlag(Constants.KEYWORD_FLAG_FILE, "707");
 			} else {
 				logger.info(systemId + "[" + role + "] Unauthorized Request");
+				logger.error("error.unauthorized");
 			}
 		} catch (Exception e) {
 			logger.error(systemId, e.toString());
@@ -472,14 +475,7 @@ public class KeywordServiceImpl implements KeywordService {
 	@Override
 	public KeywordEntry viewKeyword(int id, String username) {
 		String target = IConstants.FAILURE_KEY;
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
+		
 		Optional<User> optionalUser = loginRepo.findBySystemId(username);
 
 		User user = null;
@@ -494,6 +490,16 @@ public class KeywordServiceImpl implements KeywordService {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
+		
+		String systemId = null;
+		// Finding the user by system ID
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		if (userOptional.isPresent()) {
+			systemId = userOptional.get().getSystemId();
+		} else {
+			throw new NotFoundException("UserEntry not found.");
+		}
+		
 		int userId = user.getUserId().intValue();
 		WebMenuAccessEntry webMenu = null;
 		Optional<WebMenuAccessEntry> webEntryOptional = this.webMenuRepo.findById(userId);
@@ -505,10 +511,11 @@ public class KeywordServiceImpl implements KeywordService {
 		logger.info(systemId + "[" + role + "] View Keyword Request: " + id);
 		KeywordEntry entry = null;
 		try {
-			if (webMenu.isTwoWay()) {
+			if (Access.isAuthorizedSuperAdminAndSystem(role) || webMenu.isTwoWay()) {
 				entry = getEntry(id);
 				target = IConstants.SUCCESS_KEY;
 				if (entry != null) {
+					logger.info("error.record.unavailable");
 					return entry;
 				}
 			} else {
@@ -637,6 +644,8 @@ public class KeywordServiceImpl implements KeywordService {
 						exporter.setParameter(JRXlsExporterParameter.IS_ONE_PAGE_PER_SHEET, Boolean.FALSE);
 						exporter.setParameter(JRXlsExporterParameter.MAXIMUM_ROWS_PER_SHEET, 60000);
 						exporter.exportReport();
+					}else {
+						logger.error("error.record.unavailable");
 					}
 
 				} catch (JRException e) {
@@ -686,6 +695,8 @@ public class KeywordServiceImpl implements KeywordService {
 						exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
 						exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, outputStream);
 						exporter.exportReport();
+					}else {
+						logger.error("error.record.unavailable");
 					}
 
 				} catch (JRException e) {
@@ -734,6 +745,8 @@ public class KeywordServiceImpl implements KeywordService {
 						exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
 						exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, outputStream);
 						exporter.exportReport();
+					}else {
+						logger.error("error.record.unavailable");
 					}
 
 				} catch (JRException e) {
@@ -777,6 +790,7 @@ public class KeywordServiceImpl implements KeywordService {
 			return new ResponseEntity<>(print, HttpStatus.OK);
 		} else {
 			target = IConstants.FAILURE_KEY;
+			logger.error("error.record.unavailable");
 			return new ResponseEntity<>(target, HttpStatus.BAD_REQUEST);
 		}
 
@@ -796,14 +810,6 @@ public class KeywordServiceImpl implements KeywordService {
 
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
-		}
-		int userId = user.getUserId().intValue();
-		WebMenuAccessEntry webMenu = null;
-		Optional<WebMenuAccessEntry> webEntryOptional = this.webMenuRepo.findById(userId);
-		if (webEntryOptional.isPresent()) {
-			webMenu = webEntryOptional.get();
-		} else {
-			throw new NotFoundException("WebMenuAccessEntry not found.");
 		}
 
 		String systemId = null;
