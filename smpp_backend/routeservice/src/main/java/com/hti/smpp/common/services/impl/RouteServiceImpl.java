@@ -5,6 +5,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -53,10 +54,12 @@ import com.hti.smpp.common.contacts.repository.GroupEntryRepository;
 import com.hti.smpp.common.dto.UserEntryExt;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
+import com.hti.smpp.common.login.dto.Role;
 import com.hti.smpp.common.login.dto.User;
 import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.network.repository.NetworkEntryRepository;
+import com.hti.smpp.common.request.HlrEntryArrForm;
 import com.hti.smpp.common.request.OptEntryArrForm;
 import com.hti.smpp.common.request.RouteEntryArrForm;
 import com.hti.smpp.common.request.RouteEntryForm;
@@ -79,8 +82,10 @@ import com.hti.smpp.common.route.repository.RouteEntryLogRepository;
 import com.hti.smpp.common.route.repository.RouteEntryRepository;
 import com.hti.smpp.common.sales.dto.SalesEntry;
 import com.hti.smpp.common.sales.repository.SalesRepository;
+import com.hti.smpp.common.schedule.dto.HlrRouteEntrySch;
 import com.hti.smpp.common.schedule.dto.OptionalRouteEntrySchedule;
 import com.hti.smpp.common.schedule.dto.RoutemasterSch;
+import com.hti.smpp.common.schedule.repository.HlrRouteEntrySchRepository;
 import com.hti.smpp.common.schedule.repository.OptionalRouteEntryScheduleRepository;
 import com.hti.smpp.common.schedule.repository.RoutemasterSchRepository;
 import com.hti.smpp.common.services.RouteServices;
@@ -157,6 +162,9 @@ public class RouteServiceImpl implements RouteServices {
 
 	@Autowired
 	private RoutemasterSchRepository routemasterSchRepository;
+
+	@Autowired
+	private HlrRouteEntrySchRepository hlrRouteEntrySchRepository;
 
 	@Override
 	@Transactional
@@ -1367,7 +1375,7 @@ public class RouteServiceImpl implements RouteServices {
 					}
 				} else {
 					updateOptionalRouteEntries(list);
-					List<RouteEntryExt> routinglist = getRoutingList(optRouteEntry.getCriterionEntries());
+					List<RouteEntryExt> routinglist = getUpdateOptionalRoutingList(optRouteEntry.getCriterionEntries());
 					if (!routinglist.isEmpty()) {
 						Map<Integer, String> groupDetail = new HashMap<Integer, String>(listGroupNames());
 						Map<Integer, String> smsclist = new HashMap<Integer, String>();
@@ -1407,12 +1415,6 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		responce.setStatus(target);
 		return responce;
-
-	}
-
-	private List<RouteEntryExt> getRoutingList(String criterionEntries) {
-		List<String> criteriaList = Arrays.asList(criterionEntries.split(","));
-		return routeEntryRepository.getRoutingList(criteriaList);
 
 	}
 
@@ -1552,7 +1554,7 @@ public class RouteServiceImpl implements RouteServices {
 				if (!list.isEmpty()) {
 					logger.info("Optional Route Update Size: " + list.size());
 					updateOptionalRouteEntries(list);
-					List<RouteEntryExt> routinglist = getRoutingList(optRouteEntry.getCriterionEntries());
+					List<RouteEntryExt> routinglist = getUpdateOptionalRoutingList(optRouteEntry.getCriterionEntries());
 					if (!routinglist.isEmpty()) {
 						Map<Integer, String> smsclist = listNames();
 						smsclist.put(0, "Down");
@@ -3363,7 +3365,7 @@ public class RouteServiceImpl implements RouteServices {
 				} else {
 					updateRouteEntries(list);
 					if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
-						List<RouteEntryExt> routinglist = getRoutingList(routingForm.getCriterionEntries());
+						List<RouteEntryExt> routinglist = getUpdateBasicRoutingList(routingForm.getCriterionEntries());
 						if (routinglist != null && !routinglist.isEmpty()) {
 							Map<Integer, String> smscnames = listNames();
 							Map<Integer, String> smsclist = new HashMap<Integer, String>();
@@ -3585,7 +3587,7 @@ public class RouteServiceImpl implements RouteServices {
 				// logger.info("deleting records");
 				deleteRouteEntries(list);
 				if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
-					List<RouteEntryExt> routinglist = getRoutingList(routingForm.getCriterionEntries());
+					List<RouteEntryExt> routinglist = getUpdateBasicRoutingList(routingForm.getCriterionEntries());
 					if (routinglist != null && !routinglist.isEmpty()) {
 						Map<Integer, String> smscnames = listNames();
 						Map<Integer, String> smsclist = new HashMap<Integer, String>();
@@ -3666,7 +3668,7 @@ public class RouteServiceImpl implements RouteServices {
 					}
 					updateRouteEntries(list);
 					if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
-						List<RouteEntryExt> routinglist = getRoutingList(routingForm.getCriterionEntries());
+						List<RouteEntryExt> routinglist = getUpdateBasicRoutingList(routingForm.getCriterionEntries());
 						if (routinglist != null && !routinglist.isEmpty()) {
 							Map<Integer, String> smscnames = listNames();
 							Map<Integer, String> smsclist = new HashMap<Integer, String>();
@@ -3869,6 +3871,556 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;
+	}
+
+	@Override
+	public OptionRouteResponse hlrRouteUpdate(String username, HlrEntryArrForm hlrRouteEntry) {
+		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		User user = null;
+		if (optionalUser.isPresent()) {
+			user = optionalUser.get();
+			if (!Access.isAuthorizedAll(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		String target = IConstants.FAILURE_KEY;
+		String masterid = user.getSystemId();
+		// Set<Integer> refreshUsers = new HashSet<Integer>();
+		Map<Integer, List<HlrRouteEntry>> userWiseRouting = new HashMap<Integer, List<HlrRouteEntry>>();
+		logger.info("HlrRoute Update Requested By " + masterid + " [" + user.getRoles() + "]");
+		String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+		try {
+			List<HlrRouteEntry> list = new ArrayList<HlrRouteEntry>();
+			int[] id = hlrRouteEntry.getRouteId();
+			int[] userId = hlrRouteEntry.getUserId();
+			boolean[] hlr = hlrRouteEntry.getHlr();
+			boolean[] mnp = hlrRouteEntry.getMnp();
+			int[] smsc = hlrRouteEntry.getSmsc();
+			int[] hlrCache = hlrRouteEntry.getHlrCache();
+			double[] cost = hlrRouteEntry.getCost();
+			HlrRouteEntry routingDTO = null;
+			for (int i = 0; i < id.length; i++) {
+				routingDTO = new HlrRouteEntry(masterid, editOn);
+				routingDTO.setRouteId(id[i]);
+				routingDTO.setHlr(hlr[i]);
+				routingDTO.setCost(cost[i]);
+				routingDTO.setSmsc(smsc[i]);
+				routingDTO.setHlrCache(hlrCache[i]);
+				routingDTO.setMnp(mnp[i]);
+				List<HlrRouteEntry> hlr_list = null;
+				if (userWiseRouting.containsKey(userId[i])) {
+					hlr_list = userWiseRouting.get(userId[i]);
+				} else {
+					hlr_list = new ArrayList<HlrRouteEntry>();
+				}
+				hlr_list.add(routingDTO);
+				userWiseRouting.put(userId[i], hlr_list);
+				// refreshUsers.add(userId[i]);
+			}
+			if (!userWiseRouting.isEmpty()) {
+				// ----- check for auto_copy_routing users ------------
+				// EntryObject e = new PredicateBuilder().getEntryObject();
+				Predicate<Integer, WebMasterEntry> pw = new PredicateBuilderImpl().getEntryObject()
+						.is("autoCopyRouting");
+				Set<Integer> auto_copy_route_users = GlobalVars.WebmasterEntries.keySet(pw);
+				if (!auto_copy_route_users.isEmpty()) {
+					EntryObject e = new PredicateBuilderImpl().getEntryObject();
+					Predicate<Integer, UserEntry> pu = e.get("role").equal("admin")
+							.and(e.get("id").in(userWiseRouting.keySet().stream().toArray(Integer[]::new)));
+					Collection<UserEntry> resellers = GlobalVars.UserEntries.values(pu);
+					for (UserEntry reseller : resellers) {
+						pu = new PredicateBuilderImpl().getEntryObject().get("masterId").equal(reseller.getSystemId());
+						for (int subUserId : GlobalVars.UserEntries.keySet(pu)) {
+							logger.info(reseller.getSystemId() + " Checking Copy Route for SubUser: " + subUserId);
+							if (auto_copy_route_users.contains(subUserId)) {
+								logger.info(
+										reseller.getSystemId() + " Auto Copy Route Enabled For SubUser: " + subUserId);
+								if (userWiseRouting.containsKey(subUserId)) {
+									userWiseRouting.remove(subUserId);
+								}
+								Set<Integer> reseller_route_id = new HashSet<Integer>();
+								for (HlrRouteEntry hlrEntry : userWiseRouting.get(reseller.getId())) {
+									reseller_route_id.add(hlrEntry.getRouteId());
+								}
+								e = new PredicateBuilderImpl().getEntryObject();
+								Predicate<Integer, RouteEntry> p = e.get("userId").equal(reseller.getId())
+										.and(e.get("id").in(reseller_route_id.stream().toArray(Integer[]::new)));
+								Map<Integer, Integer> reseller_network_id = new HashMap<Integer, Integer>();
+								for (RouteEntry basicEntry : GlobalVars.BasicRouteEntries.values(p)) {
+									reseller_network_id.put(basicEntry.getId(), basicEntry.getNetworkId());
+								}
+								e = new PredicateBuilderImpl().getEntryObject();
+								p = e.get("userId").equal(subUserId).and(e.get("networkId")
+										.in(reseller_network_id.values().stream().toArray(Integer[]::new)));
+								Map<Integer, Integer> child_network_id = new HashMap<Integer, Integer>();
+								for (RouteEntry basicEntry : GlobalVars.BasicRouteEntries.values(p)) {
+									child_network_id.put(basicEntry.getNetworkId(), basicEntry.getId());
+								}
+								List<HlrRouteEntry> child_routing = new ArrayList<HlrRouteEntry>();
+								// child_routing.addAll(userWiseRouting.get(reseller.getId()));
+								// Iterator<HlrRouteEntry> itr = child_routing.iterator();
+								HlrRouteEntry childRouteEntry = null;
+								for (HlrRouteEntry masterEntry : userWiseRouting.get(reseller.getId())) {
+									childRouteEntry = new HlrRouteEntry(0, masterEntry.isHlr(), masterEntry.getSmsc(),
+											masterEntry.getHlrCache(), masterEntry.getCost(), masterEntry.getEditBy(),
+											masterEntry.getEditOn(), masterEntry.isMnp());
+									int network_id = reseller_network_id.get(masterEntry.getRouteId());
+									if (child_network_id.containsKey(network_id)) {
+										childRouteEntry.setRouteId(child_network_id.get(network_id));
+									} else {
+										logger.info(reseller.getSystemId() + " SubUser[" + subUserId + "] Network["
+												+ network_id + "] Skipped");
+										continue;
+									}
+									child_routing.add(childRouteEntry);
+								}
+								logger.info(reseller.getSystemId() + " SubUser[" + subUserId + "] Routings: "
+										+ child_routing.size());
+								userWiseRouting.put(subUserId, child_routing);
+							}
+						}
+					}
+				}
+				logger.info(masterid + "[" + user.getRoles() + "] Edit Hlr Routing Users: " + userWiseRouting.keySet());
+				for (List<HlrRouteEntry> user_wise_entries : userWiseRouting.values()) {
+					list.addAll(user_wise_entries);
+				}
+				// ---------------- end ------------------------------
+				logger.info("HlrRoute Update Size: " + list.size());
+				if (hlrRouteEntry.isSchedule()) {
+					String[] scheduledOn = hlrRouteEntry.getScheduledOn().split(" ");
+					DateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd");
+					Date scheduledDate = df.parse(scheduledOn[0]);
+					Date currentDate = df.parse(df.format(new Date()));
+					if (scheduledDate.before(currentDate)) {
+						logger.error(masterid + " Hlr Routing Scheduled Date is Before Current Date");
+					} else {
+						addHlrRouteSchEntry(list, hlrRouteEntry.getScheduledOn());
+						if (scheduledDate.after(currentDate)) {
+							logger.info(masterid + " Hlr Routing Not Scheduled For Today");
+						} else {
+							logger.info(masterid + " Hlr Routing Scheduled For Today");
+							Timer t = new Timer();
+							t.schedule(new TimerTask() {
+								public void run() {
+									System.out.println(masterid + " Hlr Routing Scheduled Update Task Starting");
+									try {
+										updateHlrRouteSch(hlrRouteEntry.getScheduledOn());
+									} catch (Exception e) {
+										System.out.println(masterid + " " + e.fillInStackTrace());
+									}
+									for (int user : userWiseRouting.keySet()) {
+										MultiUtility.refreshRouting(user);
+									}
+									MultiUtility.changeFlag(Constants.CLIENT_FLAG_FILE, "707");
+									System.out.println(masterid + " Hlr Routing Scheduled Update Task End");
+								}
+
+							}, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(hlrRouteEntry.getScheduledOn()));
+						}
+						target = "schedule";
+						logger.info("label.schSuccess");
+					}
+				} else {
+					updateHlrRouteEntries(list);
+					List<RouteEntryExt> routinglist = getUpdateHlrRoutingList(hlrRouteEntry.getCriterionEntries());
+					if (!routinglist.isEmpty()) {
+						optionRouteResponse.setRoutinglist(routinglist);
+						target = "view";
+					} else {
+						target = IConstants.SUCCESS_KEY;
+						logger.info("message.routingSatedSuccessfully");
+					}
+				}
+			} else {
+				logger.error("error.record.unavailable");
+			}
+		} catch (Exception ex) {
+			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+		}
+		if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY) || target.equalsIgnoreCase("view")) {
+			for (int user1 : userWiseRouting.keySet()) {
+				MultiUtility.refreshRouting(user1);
+			}
+			MultiUtility.changeFlag(Constants.CLIENT_FLAG_FILE, "707");
+		}
+		optionRouteResponse.setStatus(target);
+		return optionRouteResponse;
+	}
+
+	private void addHlrRouteSchEntry(List<HlrRouteEntry> list, String scheduledOn) {
+		try {
+			list.forEach(entry -> {
+				HlrRouteEntrySch hlrRouteEntrySch = new HlrRouteEntrySch();
+
+				hlrRouteEntrySch.setCost(entry.getCost());
+				hlrRouteEntrySch.setEditBy(entry.getEditBy());
+				hlrRouteEntrySch.setEditOn(entry.getEditOn());
+				hlrRouteEntrySch.setHlr(entry.isHlr());
+				hlrRouteEntrySch.setHlrCache(entry.getHlrCache());
+				hlrRouteEntrySch.setMnp(entry.isMnp());
+				hlrRouteEntrySch.setRouteId(entry.getRouteId());
+				hlrRouteEntrySch.setScheduleOn(scheduledOn);
+				hlrRouteEntrySch.setSmsc(entry.getSmsc());
+				hlrRouteEntrySchRepository.save(hlrRouteEntrySch);
+			});
+		} catch (Exception e) {
+			throw new InternalServerErrorException("Failed to add Hlr Route Entries" + e);
+
+		}
+	}
+
+	@Transactional
+	public void updateHlrRouteSch(String scheduledOn) {
+		try {
+			// Fetch the HlrRouteEntrySch entity by schedule_on
+			HlrRouteEntrySch hlrRouteEntrySch = hlrRouteEntrySchRepository.findByScheduleOn(scheduledOn);
+			if (hlrRouteEntrySch != null) {
+				// Create a new HlrRouteEntry entity and copy values from HlrRouteEntrySch
+				HlrRouteEntry hlrRouteEntry = new HlrRouteEntry();
+				hlrRouteEntry.setHlr(hlrRouteEntrySch.isHlr());
+				hlrRouteEntry.setMnp(hlrRouteEntrySch.isMnp());
+				hlrRouteEntry.setSmsc(hlrRouteEntrySch.getSmsc());
+				hlrRouteEntry.setHlrCache(hlrRouteEntrySch.getHlrCache());
+				hlrRouteEntry.setCost(hlrRouteEntrySch.getCost());
+				hlrRouteEntry.setEditBy(hlrRouteEntrySch.getEditBy());
+				hlrRouteEntry.setEditOn(hlrRouteEntrySch.getEditOn());
+
+				// Save the new HlrRouteEntry entity
+				hlrRouteEntryRepository.save(hlrRouteEntry);
+
+				// Delete the HlrRouteEntrySch entity
+				hlrRouteEntrySchRepository.delete(hlrRouteEntrySch);
+			}
+		} catch (Exception e) {
+			throw new InternalServerErrorException("Failed to update Hlr Route Entries", e);
+		}
+	}
+
+	@Override
+	public OptionRouteResponse hlrRouteUndo(String username, HlrEntryArrForm hlrRouteEntry) {
+		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		User user = null;
+		if (optionalUser.isPresent()) {
+			user = optionalUser.get();
+			if (!Access.isAuthorizedAll(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		String target = IConstants.FAILURE_KEY;
+		String masterid = user.getSystemId();
+		Set<Integer> refreshUsers = new HashSet<Integer>();
+		logger.info("HlrRoute Undo Requested By " + masterid + " [" + user.getRoles() + "]");
+		try {
+			List<HlrRouteEntry> list = new ArrayList<HlrRouteEntry>();
+			int[] id = hlrRouteEntry.getRouteId();
+			int[] userId = hlrRouteEntry.getUserId();
+			if (id != null && id.length > 0) {
+				String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+				Map<Integer, HlrEntryLog> map = listHlrLog(id);
+				logger.info("HlrRoute Undo Records: " + map.size());
+				HlrRouteEntry routingDTO = null;
+				for (int i = 0; i < id.length; i++) {
+					if (map.containsKey(id[i])) {
+						HlrEntryLog logEntry = map.get(id[i]);
+						routingDTO = new HlrRouteEntry(logEntry.getRouteId(), logEntry.isHlr(), logEntry.getSmsc(),
+								logEntry.getHlrCache(), logEntry.getCost(), masterid, editOn, logEntry.isMnp());
+						list.add(routingDTO);
+						refreshUsers.add(userId[i]);
+					}
+				}
+				if (!list.isEmpty()) {
+					logger.info("HlrRoute Update Size: " + list.size());
+					updateHlrRouteEntries(list);
+					List<RouteEntryExt> routinglist = getUpdateHlrRoutingList(hlrRouteEntry.getCriterionEntries());
+					if (!routinglist.isEmpty()) {
+						optionRouteResponse.setRoutinglist(routinglist);
+						target = "view";
+					} else {
+						target = IConstants.SUCCESS_KEY;
+						logger.info("message.routingSatedSuccessfully");
+					}
+				} else {
+					logger.error("error.record.unavailable");
+				}
+			} else {
+				logger.error("error.record.unavailable");
+			}
+		} catch (Exception ex) {
+			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+		}
+		if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY) || target.equalsIgnoreCase("view")) {
+			for (int user1 : refreshUsers) {
+				MultiUtility.refreshRouting(user1);
+			}
+			MultiUtility.changeFlag(Constants.CLIENT_FLAG_FILE, "707");
+		}
+		optionRouteResponse.setStatus(target);
+		return optionRouteResponse;
+	}
+
+	@Override
+	public OptionRouteResponse hlrRoutePrevious(String username, HlrEntryArrForm routingForm) {
+		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		User user = null;
+		if (optionalUser.isPresent()) {
+			user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		String target = IConstants.FAILURE_KEY;
+		String masterid = user.getSystemId();
+		Set<Role> role = user.getRoles();
+
+		logger.info("Hlr Route Log Requested By " + masterid + " [" + role + "]");
+		// List<RouteEntry> list = new ArrayList<RouteEntry>();
+		int[] id = routingForm.getRouteId();
+		// String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new
+		// Date());
+		try {
+			if (id != null && id.length > 0) {
+				String sql = "select A.user_id,A.network_id,B.route_id,B.isHlr,B.hlr_smsc,B.hlr_cache,B.cost,B.affectedOn,B.is_mnp,C.country,C.operator,D.system_id "
+						+ "from routemaster A,route_hlr_log B,network C,usermaster D where " + "B.route_id in("
+						+ Arrays.stream(id).mapToObj(String::valueOf).collect(Collectors.joining(","))
+						+ ") and A.id = B.route_id and A.user_id = D.id and A.network_id = C.id "
+						+ " order by B.affectedOn DESC";
+				Query nativeQuery = entityManager.createNativeQuery(sql, "RouteEntryExtMapping");
+				List<RouteEntryExt> list = nativeQuery.getResultList();
+				if (!list.isEmpty()) {
+					optionRouteResponse.setRoutinglist(list);
+					target = "previous";
+				} else {
+					logger.error("error.record.unavailable");
+				}
+			} else {
+				logger.error("error.record.unavailable");
+			}
+
+		} catch (Exception ex) {
+			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+		}
+		optionRouteResponse.setStatus(target);
+		return optionRouteResponse;
+	}
+
+	@Override
+	public OptionRouteResponse hlrRouteBasic(String username, HlrEntryArrForm routingForm) {
+		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		User user = null;
+		if (optionalUser.isPresent()) {
+			user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		String target = IConstants.FAILURE_KEY;
+		String masterid = user.getSystemId();
+		Set<Role> role = user.getRoles();
+		logger.info("Route Log Requested By " + masterid + " [" + role + "]");
+		// List<RouteEntry> list = new ArrayList<RouteEntry>();
+		int[] id = routingForm.getRouteId();
+		// String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new
+		// Date());
+		try {
+			if (id != null && id.length > 0) {
+				List<RouteEntryExt> list = getBasicRoutingList(routingForm.getCriterionEntries());
+				if (!list.isEmpty()) {
+					Map<Integer, String> smscnames = listNames();
+					Map<Integer, String> smsclist = new HashMap<Integer, String>();
+					Map<Integer, Set<String>> group_mapping = getSmscGroupMapping();
+					for (int smsc_id : smscnames.keySet()) {
+						String smsc_name = smscnames.get(smsc_id);
+						if (group_mapping.containsKey(smsc_id)) {
+							smsclist.put(smsc_id, smsc_name + " " + group_mapping.get(smsc_id));
+						} else {
+							smsclist.put(smsc_id, smsc_name + " [NONE]");
+						}
+					}
+					smsclist.put(0, "DOWN [NONE]");
+					optionRouteResponse.setGroupDetail(listGroupNames());
+					optionRouteResponse.setRoutinglist(list);
+					optionRouteResponse.setSmsclist(smsclist);
+					target = "basic";
+				} else {
+					logger.error("error.record.unavailable");
+				}
+			} else {
+				logger.error("error.record.unavailable");
+			}
+
+		} catch (Exception ex) {
+			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+		}
+		optionRouteResponse.setStatus(target);
+		return optionRouteResponse;
+	}
+
+	@Override
+	public OptionRouteResponse hlrRouteOptional(String username, HlrEntryArrForm routingForm) {
+		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		User user = null;
+		if (optionalUser.isPresent()) {
+			user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		String target = IConstants.FAILURE_KEY;
+		String masterid = user.getSystemId();
+		Set<Role> role = user.getRoles();
+		logger.info("Route Log Requested By " + masterid + " [" + role + "]");
+		// List<RouteEntry> list = new ArrayList<RouteEntry>();
+		int[] id = routingForm.getRouteId();
+		// String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new
+		// Date());
+		try {
+			if (Access.isAuthorizedSuperAdminAndSystem(role)) {
+				if (id != null && id.length > 0) {
+					List<RouteEntryExt> list = getOptionalList(routingForm.getCriterionEntries());
+					if (!list.isEmpty()) {
+						Map<Integer, String> groupDetail = new HashMap<Integer, String>(listGroupNames());
+						Map<Integer, String> smsclist = new HashMap<Integer, String>();
+						Map<Integer, Set<String>> group_mapping = getSmscGroupMapping();
+						Map<Integer, String> smscnames = listNames();
+						for (int smsc_id : smscnames.keySet()) {
+							String smsc_name = smscnames.get(smsc_id);
+							if (group_mapping.containsKey(smsc_id)) {
+								smsclist.put(smsc_id, smsc_name + " " + group_mapping.get(smsc_id));
+							} else {
+								smsclist.put(smsc_id, smsc_name + " [NONE]");
+							}
+						}
+						smsclist.put(0, "DOWN [NONE]");
+						optionRouteResponse.setGroupDetail(groupDetail);
+						optionRouteResponse.setRoutinglist(list);
+						optionRouteResponse.setSmsclist(smsclist);
+						target = "optional";
+					} else {
+						logger.error("error.record.unavailable");
+					}
+				} else {
+					logger.error("error.record.unavailable");
+				}
+			} else {
+				logger.info(masterid + "[" + role + "] Authorization Failed");
+				target = "invalidRequest";
+			}
+		} catch (Exception ex) {
+			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+		}
+		optionRouteResponse.setStatus(target);
+		return optionRouteResponse;
+	}
+
+	@Override
+	public OptionRouteResponse UpdateOptionalRouteHlr(OptEntryArrForm routingForm, String username) {
+		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		User user = null;
+		if (optionalUser.isPresent()) {
+			user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		String target = IConstants.FAILURE_KEY;
+		String masterid = user.getSystemId();
+		logger.info("Route Log Requested By " + masterid + " [" + user.getRoles() + "]");
+		// List<RouteEntry> list = new ArrayList<RouteEntry>();
+		int[] id = routingForm.getRouteId();
+		// String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new
+		// Date());
+		try {
+			if (id != null && id.length > 0) {
+				List<RouteEntryExt> list = getHlrRoutingList(routingForm.getCriterionEntries());
+				if (!list.isEmpty()) {
+					optionRouteResponse.setRoutinglist(list);
+					target = "hlr";
+				} else {
+					logger.error("error.record.unavailable");
+				}
+			} else {
+				logger.error("error.record.unavailable");
+			}
+
+		} catch (Exception ex) {
+			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+		}
+		optionRouteResponse.setStatus(target);
+		return optionRouteResponse;
+
+	}
+
+	private List<RouteEntryExt> getUpdateOptionalRoutingList(String criterianEntries) throws SQLException {
+		String sql = "select A.user_id,A.network_id,"
+				+ "B.route_id,B.isReplaceContent,B.content_replace,B.backup_smsc_id,B.num_smsc_id,B.reg_smsc_id,B.reg_group_id,B.reg_sender_id,B.forceSIDNum,B.forceSIDAlpha,B.set_expiry,"
+				+ "B.sms_length,B.code_length,B.refund,B.edit_on,B.msgAppender,B.sourceAppender,B.editBy,B.sender_repl_from,B.sender_repl_to,"
+				+ "C.country,C.operator,D.name as backup_smsc,F.name as num_smsc,G.name as reg_smsc,E.system_id,H.name as reg_group_name "
+				+ "from routemaster A,route_opt B,network C,smscmaster D,smscmaster F,smscmaster G,usermaster E,smsc_group H where "
+				+ "B.route_id in(" + criterianEntries
+				+ ") and A.id = B.route_id and B.backup_smsc_id = D.id and B.num_smsc_id=F.id and B.reg_smsc_id=G.id and A.user_id = E.id and A.network_id = C.id and B.reg_group_id=H.id ";
+		System.out.println(sql);
+		Query nativeQuery = entityManager.createNativeQuery(sql, "RouteEntryExtMapping");
+		List<RouteEntryExt> routinglist = nativeQuery.getResultList();
+		return routinglist;
+	}
+
+	private List<RouteEntryExt> getUpdateHlrRoutingList(String criterianEntries) throws SQLException {
+		String sql = "select A.user_id,A.network_id,B.route_id,B.isHlr,B.hlr_smsc,B.hlr_cache,B.cost,B.edit_on,B.editBy,B.is_mnp,C.country,C.operator,C.mcc,C.mnc,D.system_id "
+				+ "from routemaster A,hlr_routing B,network C,usermaster D where " + "B.route_id in(" + criterianEntries
+				+ ") and A.id = B.route_id and A.user_id = D.id and A.network_id = C.id ";
+		System.out.println(sql);
+		Query nativeQuery = entityManager.createNativeQuery(sql, "RouteEntryExtMapping");
+		List<RouteEntryExt> routinglist = nativeQuery.getResultList();
+		return routinglist;
+	}
+
+	private List<RouteEntryExt> getUpdateBasicRoutingList(String criterianEntries) throws SQLException {
+		String sql = "select A.id,A.user_id,A.smsc_id,A.group_id,A.network_id,CAST(A.cost AS CHAR) AS cost,A.smsc_type,A.editBy,A.edit_on,A.remarks,"
+				+ "B.country,B.operator,B.mcc,B.mnc,C.name,D.system_id,D.master_id,D.currency,E.acc_type,F.name"
+				+ " from routemaster A,network B,smscmaster C,usermaster D,web_master E,smsc_group F where A.id in("
+				+ criterianEntries + ") and ";
+		sql += "A.user_id = D.id and A.smsc_id=C.id and A.network_id = B.id and A.group_id = F.id and A.user_id = E.user_id";
+		System.out.println(sql);
+		Query nativeQuery = entityManager.createNativeQuery(sql, "RouteEntryExtMapping");
+		List<RouteEntryExt> routinglist = nativeQuery.getResultList();
+		return routinglist;
+	}
+
+	private List<RouteEntryExt> getBasicRoutingList(String criterianEntries) throws SQLException {
+		String sql = "select A.id,A.user_id,A.smsc_id,A.group_id,A.network_id,CAST(A.cost AS CHAR) AS cost,A.smsc_type,A.editBy,A.edit_on,A.remarks,"
+				+ "B.country,B.operator,B.mcc,B.mnc,C.name,D.system_id,D.master_id,D.currency,E.acc_type,F.name"
+				+ " from routemaster A,network B,smscmaster C,usermaster D,web_master E,smsc_group F where A.id in("
+				+ criterianEntries + ") and ";
+		sql += "A.user_id = D.id and A.smsc_id=C.id and A.network_id = B.id and A.group_id = F.id and A.user_id = E.user_id";
+		System.out.println(sql);
+		Query nativeQuery = entityManager.createNativeQuery(sql, "RouteEntryExtMapping");
+		List<RouteEntryExt> routinglist = nativeQuery.getResultList();
+		return routinglist;
 	}
 
 	private List<RouteEntryExt> getOptionalList(String criterianEntries) {

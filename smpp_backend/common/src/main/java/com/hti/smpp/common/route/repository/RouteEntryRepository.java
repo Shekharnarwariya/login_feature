@@ -42,11 +42,6 @@ public interface RouteEntryRepository extends JpaRepository<RouteEntry, Integer>
 			+ "where A.routeId = B.routeId and B.scheduleOn = :scheduledOn", nativeQuery = true)
 	public int updateOptRouteSchAndDelete(String scheduledOn);
 
-	@Query(value = "SELECT new com.hti.smpp.common.route.dto.RouteEntryExt(A.userId, A.networkId, B.routeId, B.isReplaceContent, B.contentReplace, B.backupSmscId, B.numSmscId, B.regSmscId, B.regGroupId, B.regSenderId, B.forceSIDNum, B.forceSIDAlpha, B.setExpiry, B.smsLength, B.codeLength, B.refund, B.editOn, B.msgAppender, B.sourceAppender, B.editBy, B.senderReplFrom, B.senderReplTo, C.country, C.operator, D.name as backupSmsc, F.name as numSmsc, G.name as regSmsc, E.systemId, H.name as regGroupName) "
-			+ "FROM RouteMaster A, RouteOpt B, Network C, SmscMaster D, SmscMaster F, SmscMaster G, UserMaster E, SmscGroup H "
-			+ "WHERE B.routeId IN :criterionEntries AND A.id = B.routeId AND B.backupSmscId = D.id AND B.numSmscId = F.id AND B.regSmscId = G.id AND A.userId = E.id AND A.networkId = C.id AND B.regGroupId = H.id", nativeQuery = true)
-	public List<RouteEntryExt> getRoutingList(@Param("criterionEntries") List<String> criterionEntries);
-
 	@Query(value = "SELECT new com.example.RouteEntryExt(A.userId, A.networkId, B.routeId, B.isReplaceContent, B.contentReplace, B.backupSmscId, B.numSmscId, B.regSmscId, "
 			+ "B.regSenderId, B.forceSIDNum, B.forceSIDAlpha, B.setExpiry, B.smsLength, B.codeLength, B.refund, B.affectedOn, B.msgAppender, B.sourceAppender, B.editBy, "
 			+ "B.senderReplFrom, B.senderReplTo, C.country, C.operator, D.name as backupSmsc, F.name as numSmsc, G.name as regSmsc, E.systemId, H.name as regGroupName) "
