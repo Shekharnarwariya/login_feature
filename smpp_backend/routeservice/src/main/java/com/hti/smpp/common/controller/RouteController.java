@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hti.smpp.common.request.HlrEntryArrForm;
 import com.hti.smpp.common.request.OptEntryArrForm;
 import com.hti.smpp.common.request.RouteEntryArrForm;
 import com.hti.smpp.common.request.RouteRequest;
@@ -34,7 +35,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @OpenAPIDefinition(info = @Info(title = "SMPP Route API", version = "1.0", description = "API for managing SMPP routes"))
 @RestController
-@RequestMapping("/api/routes")
+@RequestMapping("/routes")
 public class RouteController {
 
 	@Autowired
@@ -154,81 +155,117 @@ public class RouteController {
 		// Implementation for SearchRoutingLookup method
 		return routeService.SearchRoutingLookup(username, routingForm);
 	}
-	  @PostMapping("/basic")
-	    @Operation(summary = "Create Basic Route", description = "Create a basic route.")
-	    @ApiResponses(value = {
-	            @ApiResponse(responseCode = "200", description = "Route created successfully"),
-	            @ApiResponse(responseCode = "400", description = "Bad Request")
-	    })
-	    public OptionRouteResponse basicRoute(
-	            @RequestParam String username,
-	            @RequestBody RouteEntryArrForm routingForm) {
-	        // Implementation goes here
-	        return routeService.BasicRouteBasicRoute(username, routingForm);
-	    }
 
-	    @DeleteMapping("/basic")
-	    @Operation(summary = "Delete Basic Route", description = "Delete a basic route.")
-	    @ApiResponses(value = {
-	            @ApiResponse(responseCode = "200", description = "Route deleted successfully"),
-	            @ApiResponse(responseCode = "400", description = "Bad Request")
-	    })
-	    public OptionRouteResponse deleteRouteBasicRoute(
-	            @RequestParam String username,
-	            @RequestBody RouteEntryArrForm routingForm) {
-	        // Implementation goes here
-	        return routeService.deleteRouteBasicRoute(username, routingForm);
-	    }
+	@PostMapping("/basic")
+	@Operation(summary = "Create Basic Route", description = "Create a basic route.")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Route created successfully"),
+			@ApiResponse(responseCode = "400", description = "Bad Request") })
+	public OptionRouteResponse basicRoute(@RequestParam String username, @RequestBody RouteEntryArrForm routingForm) {
+		// Implementation goes here
+		return routeService.BasicRouteBasicRoute(username, routingForm);
+	}
 
-	    @PostMapping("/undo")
-	    @Operation(summary = "Undo Basic Route", description = "Undo a basic route.")
-	    @ApiResponses(value = {
-	            @ApiResponse(responseCode = "200", description = "Undo successful"),
-	            @ApiResponse(responseCode = "400", description = "Bad Request")
-	    })
-	    public OptionRouteResponse undoRouteBasicRoute(
-	            @RequestParam String username,
-	            @RequestBody RouteEntryArrForm routingForm) {
-	        // Implementation goes here
-	        return routeService.undoRouteBasicRoute(username, routingForm);
-	    }
+	@DeleteMapping("/basic")
+	@Operation(summary = "Delete Basic Route", description = "Delete a basic route.")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Route deleted successfully"),
+			@ApiResponse(responseCode = "400", description = "Bad Request") })
+	public OptionRouteResponse deleteRouteBasicRoute(@RequestParam String username,
+			@RequestBody RouteEntryArrForm routingForm) {
+		// Implementation goes here
+		return routeService.deleteRouteBasicRoute(username, routingForm);
+	}
 
-	    @PostMapping("/previous")
-	    @Operation(summary = "Previous Basic Route", description = "Get the previous basic route.")
-	    @ApiResponses(value = {
-	            @ApiResponse(responseCode = "200", description = "Previous route retrieved successfully"),
-	            @ApiResponse(responseCode = "400", description = "Bad Request")
-	    })
-	    public OptionRouteResponse previousRouteBasicRoute(
-	            @RequestParam String username,
-	            @RequestBody RouteEntryArrForm routingForm) {
-	        // Implementation goes here
-	        return routeService.previousRouteBasicRoute(username, routingForm);
-	    }
+	@PostMapping("/undo")
+	@Operation(summary = "Undo Basic Route", description = "Undo a basic route.")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Undo successful"),
+			@ApiResponse(responseCode = "400", description = "Bad Request") })
+	public OptionRouteResponse undoRouteBasicRoute(@RequestParam String username,
+			@RequestBody RouteEntryArrForm routingForm) {
+		// Implementation goes here
+		return routeService.undoRouteBasicRoute(username, routingForm);
+	}
 
-	    @PostMapping("/hlr")
-	    @Operation(summary = "HLR Basic Route", description = "Perform HLR routing.")
-	    @ApiResponses(value = {
-	            @ApiResponse(responseCode = "200", description = "HLR routing successful"),
-	            @ApiResponse(responseCode = "400", description = "Bad Request")
-	    })
-	    public OptionRouteResponse hlrRouteBasicRoute(
-	            @RequestParam String username,
-	            @RequestBody RouteEntryArrForm routingForm) {
-	        // Implementation goes here
-	        return null;
-	    }
+	@PostMapping("/previous")
+	@Operation(summary = "Previous Basic Route", description = "Get the previous basic route.")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Previous route retrieved successfully"),
+			@ApiResponse(responseCode = "400", description = "Bad Request") })
+	public OptionRouteResponse previousRouteBasicRoute(@RequestParam String username,
+			@RequestBody RouteEntryArrForm routingForm) {
+		// Implementation goes here
+		return routeService.previousRouteBasicRoute(username, routingForm);
+	}
 
-	    @PostMapping("/optional")
-	    @Operation(summary = "Optional Basic Route", description = "Create an optional basic route.")
-	    @ApiResponses(value = {
-	            @ApiResponse(responseCode = "200", description = "Optional route created successfully"),
-	            @ApiResponse(responseCode = "400", description = "Bad Request")
-	    })
-	    public OptionRouteResponse optionalRouteBasicRoute(
-	            @RequestParam String username,
-	            @RequestBody RouteEntryArrForm routingForm) {
-	        // Implementation goes here
-			return routeService.optionalRouteBasicRoute(username, routingForm);
-	    }
+	@PostMapping("/hlr")
+	@Operation(summary = "HLR Basic Route", description = "Perform HLR routing.")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "HLR routing successful"),
+			@ApiResponse(responseCode = "400", description = "Bad Request") })
+	public OptionRouteResponse hlrRouteBasicRoute(@RequestParam String username,
+			@RequestBody RouteEntryArrForm routingForm) {
+		// Implementation goes here
+		return null;
+	}
+
+	@PostMapping("/optional")
+	@Operation(summary = "Optional Basic Route", description = "Create an optional basic route.")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Optional route created successfully"),
+			@ApiResponse(responseCode = "400", description = "Bad Request") })
+	public OptionRouteResponse optionalRouteBasicRoute(@RequestParam String username,
+			@RequestBody RouteEntryArrForm routingForm) {
+		// Implementation goes here
+		return routeService.optionalRouteBasicRoute(username, routingForm);
+	}
+
+	@Operation(summary = "Update Optional Route HLR")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Success"),
+			@ApiResponse(responseCode = "400", description = "Bad Request"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
+	@PostMapping("/updateOptionalRouteHlr")
+	public OptionRouteResponse updateOptionalRouteHlr(@RequestBody OptEntryArrForm optEntryArrForm, String username) {
+		return routeService.UpdateOptionalRouteHlr(optEntryArrForm, username);
+	}
+
+	@Operation(summary = "HLR Route Update")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Success"),
+			@ApiResponse(responseCode = "400", description = "Bad Request"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
+	@PostMapping("/hlrRouteUpdate")
+	public OptionRouteResponse hlrRouteUpdate(String username, @RequestBody HlrEntryArrForm hlrEntryArrForm) {
+		return routeService.hlrRouteUpdate(username, hlrEntryArrForm);
+	}
+
+	@Operation(summary = "HLR Route Undo")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Success"),
+			@ApiResponse(responseCode = "400", description = "Bad Request"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
+	@PostMapping("/hlrRouteUndo")
+	public OptionRouteResponse hlrRouteUndo(String username, @RequestBody HlrEntryArrForm hlrEntryArrForm) {
+		return routeService.hlrRouteUndo(username, hlrEntryArrForm);
+	}
+
+	@Operation(summary = "HLR Route Previous")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Success"),
+			@ApiResponse(responseCode = "400", description = "Bad Request"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
+	@PostMapping("/hlrRoutePrevious")
+	public OptionRouteResponse hlrRoutePrevious(String username, @RequestBody HlrEntryArrForm hlrEntryArrForm) {
+		return routeService.hlrRoutePrevious(username, hlrEntryArrForm);
+	}
+
+	@Operation(summary = "HLR Route Basic")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Success"),
+			@ApiResponse(responseCode = "400", description = "Bad Request"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
+	@PostMapping("/hlrRouteBasic")
+	public OptionRouteResponse hlrRouteBasic(String username, @RequestBody HlrEntryArrForm hlrEntryArrForm) {
+		return routeService.hlrRouteBasic(username, hlrEntryArrForm);
+	}
+
+	@Operation(summary = "HLR Route Optional")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Success"),
+			@ApiResponse(responseCode = "400", description = "Bad Request"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
+	@PostMapping("/hlrRouteOptional")
+	public OptionRouteResponse hlrRouteOptional(String username, @RequestBody HlrEntryArrForm hlrEntryArrForm) {
+		return routeService.hlrRouteOptional(username, hlrEntryArrForm);
+	}
 }

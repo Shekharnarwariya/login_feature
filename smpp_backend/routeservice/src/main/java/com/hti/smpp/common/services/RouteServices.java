@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.springframework.stereotype.Service;
 
+import com.hti.smpp.common.request.HlrEntryArrForm;
 import com.hti.smpp.common.request.OptEntryArrForm;
 import com.hti.smpp.common.request.RouteEntryArrForm;
 import com.hti.smpp.common.request.RouteRequest;
@@ -35,6 +36,8 @@ public interface RouteServices {
 
 	public OptionRouteResponse UpdateOptionalRouteBasic(OptEntryArrForm optEntryArrForm, String username);
 
+	public OptionRouteResponse UpdateOptionalRouteHlr(OptEntryArrForm optEntryArrForm, String username);
+
 	public OptionRouteResponse checkExisting(RouteEntryArrForm routeEntryArrForm, String username);
 
 	public String execute(String username);
@@ -61,11 +64,18 @@ public interface RouteServices {
 
 	public OptionRouteResponse optionalRouteBasicRoute(String username, RouteEntryArrForm routingForm);
 
+	public OptionRouteResponse hlrRouteUpdate(String username, HlrEntryArrForm hlrEntryArrForm);
 
-	
-	
-	
-	
+	public OptionRouteResponse hlrRouteUndo(String username, HlrEntryArrForm hlrEntryArrForm);
+
+	public OptionRouteResponse hlrRoutePrevious(String username, HlrEntryArrForm hlrEntryArrForm);
+
+	public OptionRouteResponse hlrRouteBasic(String username, HlrEntryArrForm hlrEntryArrForm);
+
+	public OptionRouteResponse hlrRouteOptional(String username, HlrEntryArrForm hlrEntryArrForm);
+
+//=========================================================================================================
+
 	public void saveRouteEntry(RouteEntryExt entry);
 
 	public void saveDefaultEntries(RouteEntry entry);
@@ -87,9 +97,6 @@ public interface RouteServices {
 	public Map<Integer, RouteEntryExt> listRouteEntries(int userId, boolean hlr, boolean optional, boolean display);
 
 	public Map<Integer, RouteEntryExt> listRouteEntries(SearchCriteria searchCriteria);
-
-	// public Map<Integer, RouteEntryExt> getNetworkRouting(int userId, boolean
-	// hlr);
 
 	public Map<Integer, RouteEntry> getNetworkRouting(int userId);
 
