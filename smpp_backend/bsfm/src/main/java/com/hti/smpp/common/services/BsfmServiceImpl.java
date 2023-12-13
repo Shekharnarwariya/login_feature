@@ -91,7 +91,7 @@ public class BsfmServiceImpl implements BsfmService {
 		String systemid = user.getSystemId();
 		logger.info(systemid + "[" + user.getRoles() + "] Add Spam Profile: " + bsfmForm.getProfilename());
 		Bsfm bdto = new Bsfm();
-		BeanUtils.copyProperties(bdto, bsfmForm);
+		BeanUtils.copyProperties(bsfmForm, bdto);
 		boolean proceed = true;
 		if (Access.isAuthorizedAdmin(user.getRoles())) {
 			if (bsfmForm.getUsername() != null && bsfmForm.getUsername().length > 0) {
@@ -161,20 +161,22 @@ public class BsfmServiceImpl implements BsfmService {
 				bdto.setPriority(++priority);
 				bdto.setEditBy(systemid);
 				if (addNewBsfmProfile(bdto)) {
-					logger.info("message.operation.success");
+					logger.info("Bsfm Profile added successfully: " + bsfmForm.getProfilename());
 					target = IConstants.SUCCESS_KEY;
 					String bsfm_flag = MultiUtility.readFlag(Constants.BSFM_FLAG_FILE);
 					if (bsfm_flag != null && bsfm_flag.equalsIgnoreCase("100")) {
 						MultiUtility.changeFlag(Constants.BSFM_FLAG_FILE, "707");
 					}
 				} else {
-					logger.error("message.operation.failed");
+					logger.error("Failed to add Bsfm Profile: " + bsfmForm.getProfilename());
 				}
 			} catch (Exception ex) {
-				logger.error("message.operation.failed");
+				logger.error("Failed to add Bsfm Profile: " + bsfmForm.getProfilename(), ex.toString());
+				throw new InternalServerException("Error while adding profile. Msg: "+ex.getLocalizedMessage());
 			}
 		} else {
-			logger.error("error.noUserforSelectedmode");
+			logger.error("Failed to add Bsfm Profile: " + bsfmForm.getProfilename() + ". Rollback.");
+			throw new InternalServerException("Error while processing the request.");
 		}
 		return target;
 	}
@@ -184,6 +186,7 @@ public class BsfmServiceImpl implements BsfmService {
 			bsfmRepo.save(bdto);
 			return true;
 		} catch (Exception e) {
+			  logger.error("Failed to save Bsfm Profile to the database.", e);
 			return false;
 		}
 	}
@@ -241,6 +244,7 @@ public class BsfmServiceImpl implements BsfmService {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
+		logger.info("Checked Request By username: "+username+" userId: "+user.getUserId());
 		BSFMResponse bSFMResponse = new BSFMResponse();
 		String systemId = user.getSystemId();
 		String target = IConstants.FAILURE_KEY;
@@ -251,7 +255,8 @@ public class BsfmServiceImpl implements BsfmService {
 		try {
 			networkmap = getDistinctCountry();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.error("An error occured in line {}: {}", Thread.currentThread().getStackTrace()[1].getLineNumber(), e.getMessage());
+			throw new InternalServerException("Error: "+e.getLocalizedMessage());
 		}
 		Map<Integer, String> operatormap = new HashMap<Integer, String>();
 		bSFMResponse.setNetworkmap(networkmap);
@@ -276,7 +281,8 @@ public class BsfmServiceImpl implements BsfmService {
 			try {
 				networkmap = getDistinctCountry();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.error("An error occured in line {}: {}", Thread.currentThread().getStackTrace()[1].getLineNumber(), e.getMessage());
+				throw new InternalServerException("Error: "+e.getLocalizedMessage());
 			}
 			Map<Integer, String> operatormap1 = new HashMap<Integer, String>();
 			bSFMResponse.setNetworkmap(networkmap);
@@ -379,7 +385,7 @@ public class BsfmServiceImpl implements BsfmService {
 		}
 		String target = IConstants.FAILURE_KEY;
 		String systemid = user.getSystemId();
-		System.out.println(user.getRoles() + " Edit Profile Request: " + id);
+		logger.info(user.getRoles() + " Edit Profile Request: " + id);
 		try {
 			Optional<Bsfm> bsfmOptional = bsfmRepo.findById(id);
 			Bsfm bsfm = null;
@@ -435,6 +441,8 @@ public class BsfmServiceImpl implements BsfmService {
 							}
 						} catch (Exception e) {
 							logger.error(bsfm.getId() + "[" + bsfm.getProfilename() + "] Invalid Network: " + network);
+							logger.error("An error occured in line {}: {}", Thread.currentThread().getStackTrace()[1].getLineNumber(), e.getMessage());
+							throw new InternalServerException("Error: "+e.getLocalizedMessage());
 						}
 					}
 				}
@@ -455,7 +463,7 @@ public class BsfmServiceImpl implements BsfmService {
 				} else {
 					bsfm.setContent(null);
 				}
-				System.out.println(bsfm.getProfilename() + " isSchedule: " + bsfm.isSchedule());
+				logger.info(bsfm.getProfilename() + " isSchedule: " + bsfm.isSchedule());
 				if (bsfm.isSchedule()) {
 					List<String[]> daytimelist = new ArrayList<String[]>();
 					for (String day_time_token : bsfm.getDayTime().split(",")) {
@@ -521,15 +529,16 @@ public class BsfmServiceImpl implements BsfmService {
 				deleteProfileResponse.setNetworkmap(networkmap);
 				deleteProfileResponse.setExistNetworks(existNetworks);
 				target = IConstants.SUCCESS_KEY;
-				System.out.println("finished: " + target);
+				logger.info("finished: " + target);
 			} else {
-				logger.error("error.record.unavailable");
+				logger.error("Requested Bsfm profile is unavailable.");         //
 			}
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
-			logger.error("", ex.fillInStackTrace());
+			logger.error("An error occured in line {}: {}", Thread.currentThread().getStackTrace()[1].getLineNumber(), ex.getMessage());
+			throw new InternalServerException("Error: "+ex.getLocalizedMessage());
 		}
-		System.out.println("final: " + target);
+		logger.info("final target value: " + target);             //
 		deleteProfileResponse.setStatus(target);
 		return deleteProfileResponse;
 	}
@@ -643,9 +652,10 @@ public class BsfmServiceImpl implements BsfmService {
 				}
 
 				if (!list.isEmpty()) {
+					 logger.info("Bsfm profiles listed successfully for user: {}", username);       //
 					return list;
 				} else {
-					logger.error("error.record.unavailable");
+					  logger.warn("No Bsfm profiles available for user: {}", username);       //
 				}
 			} else {
 				throw new InternalServerException("Invalid request for user without Bsfm access.");
@@ -673,7 +683,7 @@ public class BsfmServiceImpl implements BsfmService {
 		String systemid = user.getSystemId();
 		logger.info(systemid + "[" + user.getRoles() + "] Update Spam Profile: " + bsfmForm.getProfilename());
 		Bsfm bdto = new Bsfm();
-		BeanUtils.copyProperties(bdto, bsfmForm);
+		BeanUtils.copyProperties(bsfmForm, bdto);
 		boolean proceed = true;
 		if (Access.isAuthorizedAdmin(user.getRoles())) {
 			if (bsfmForm.getUsername() != null && bsfmForm.getUsername().length > 0) {
@@ -707,6 +717,8 @@ public class BsfmServiceImpl implements BsfmService {
 						encoded_content += UTF16(content_token) + ",";
 					} catch (Exception e) {
 						logger.error(systemid + "[" + user.getRoles() + "]  [" + content_token + "]", e);
+						logger.error("An error occured in line {}: {}", Thread.currentThread().getStackTrace()[1].getLineNumber(), e.getMessage());
+						throw new InternalServerException("Error: "+e.getLocalizedMessage());
 					}
 				}
 				if (encoded_content.length() > 0) {
@@ -730,17 +742,17 @@ public class BsfmServiceImpl implements BsfmService {
 			bdto.setEditBy(systemid);
 			boolean isUpdated = updatedBsfmProfile(bdto);
 			if (isUpdated) {
-				logger.info("message.operation.success");
+				logger.info("Spam Profile updated successfully: {}", bsfmForm.getProfilename());
 				target = IConstants.SUCCESS_KEY;
 				String bsfm_flag = MultiUtility.readFlag(Constants.BSFM_FLAG_FILE);
 				if (bsfm_flag != null && bsfm_flag.equalsIgnoreCase("100")) {
 					MultiUtility.changeFlag(Constants.BSFM_FLAG_FILE, "707");
 				}
 			} else {
-				logger.error("error.processError");
+				logger.error("Failed to update Spam Profile: {}", bsfmForm.getProfilename());      //
 			}
 		} else {
-			logger.error("error.noUserforSelectedmode");
+			logger.error("No user selected for the update.");             //
 		}
 		return target;
 	}
@@ -750,6 +762,7 @@ public class BsfmServiceImpl implements BsfmService {
 			bsfmRepo.save(bdto);
 			return true;
 		} catch (Exception e) {
+			 logger.error("Failed to update Bsfm Profile.", e);            //
 			return false;
 		}
 	}
@@ -767,21 +780,24 @@ public class BsfmServiceImpl implements BsfmService {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
+		logger.info("Delete request by username: "+username);
 		Bsfm bdto = new Bsfm();
-		BeanUtils.copyProperties(bdto, bsfmFilterFrom);
+		BeanUtils.copyProperties(bsfmFilterFrom, bdto);
 		String profileName = bdto.getProfilename();
 		boolean isDeleted = deleteBsfmActiveProfile(profileName);
-		System.err.println("isdeleted valie" + isDeleted);
+		logger.info("isDeleted value: " + isDeleted);
 		if (isDeleted) {
-			logger.info("message.operation.success");
+			logger.info("Spam Profile deleted successfully ");
 			target = IConstants.SUCCESS_KEY;
 			String bsfm_flag = MultiUtility.readFlag(Constants.BSFM_FLAG_FILE);
 			if (bsfm_flag != null && bsfm_flag.equalsIgnoreCase("100")) {
 				MultiUtility.changeFlag(Constants.BSFM_FLAG_FILE, "707");
 			}
 		} else {
-			logger.error("error.processError");
+			logger.error("Failed to delete Spam Profile");
 			target = IConstants.FAILURE_KEY;
+			logger.error("An error occured in line {}: {}", Thread.currentThread().getStackTrace()[1].getLineNumber());
+			throw new InternalServerException("Error while deleting the spam profile");
 		}
 		return target;
 	}
@@ -810,6 +826,7 @@ public class BsfmServiceImpl implements BsfmService {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
+		logger.info("Update Bsfm profile flag requested by: "+username);
 		String target = IConstants.FAILURE_KEY;
 		// System.err.println("inside of the action class ::::" + bdto.getFlagValue());
 		String hostConfig = IConstants.CAAS_FLAG_DIR;
@@ -823,13 +840,14 @@ public class BsfmServiceImpl implements BsfmService {
 			output.close();
 			target = IConstants.SUCCESS_KEY;
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("An error occured in line {}: {}", Thread.currentThread().getStackTrace()[1].getLineNumber(), e.getMessage());
+			throw new InternalServerException("Error: "+e.getLocalizedMessage());
 		}
 		if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY)) {
-			logger.info("message.ChangeFlagVaueSuccessfully");
+			logger.info("Flag value change: Success");
 		}
 		if (target.equalsIgnoreCase(IConstants.FAILURE_KEY)) {
-			logger.error("message.ChangeFlagFailure");
+			logger.error("Flag value change: Failure");
 		}
 
 		return target;
