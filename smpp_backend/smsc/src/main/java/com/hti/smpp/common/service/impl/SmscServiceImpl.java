@@ -1,4 +1,4 @@
-package com.hti.smpp.common.impl;
+package com.hti.smpp.common.service.impl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,17 +11,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.contacts.dto.GroupEntry;
 import com.hti.smpp.common.contacts.dto.GroupMemberEntry;
 import com.hti.smpp.common.contacts.repository.GroupEntryRepository;
 import com.hti.smpp.common.contacts.repository.GroupMemberEntryRepository;
+import com.hti.smpp.common.exception.DataAccessError;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
-import com.hti.smpp.common.exception.SmscDataAccessException;
-import com.hti.smpp.common.exception.SmscInternalServerException;
-import com.hti.smpp.common.exception.SmscNotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.login.dto.User;
 import com.hti.smpp.common.login.repository.UserRepository;
@@ -33,13 +33,12 @@ import com.hti.smpp.common.request.SmscBsfmEntryRequest;
 import com.hti.smpp.common.request.SmscEntryRequest;
 import com.hti.smpp.common.request.SmscLoopingRequest;
 import com.hti.smpp.common.request.TrafficScheduleRequest;
-import com.hti.smpp.common.service.SmscDAO;
+import com.hti.smpp.common.service.SmscService;
 import com.hti.smpp.common.smsc.dto.CustomEntry;
 import com.hti.smpp.common.smsc.dto.LimitEntry;
 import com.hti.smpp.common.smsc.dto.SmscBsfmEntry;
 import com.hti.smpp.common.smsc.dto.SmscEntry;
 import com.hti.smpp.common.smsc.dto.SmscLooping;
-import com.hti.smpp.common.smsc.dto.StatusEntry;
 import com.hti.smpp.common.smsc.dto.TrafficScheduleEntry;
 import com.hti.smpp.common.smsc.repository.CustomEntryRepository;
 import com.hti.smpp.common.smsc.repository.LimitEntryRepository;
@@ -51,6 +50,8 @@ import com.hti.smpp.common.smsc.repository.TrafficScheduleEntryRepository;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.Constants;
+import com.hti.smpp.common.util.MultiUtility;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -58,9 +59,9 @@ import jakarta.transaction.Transactional;
 
 @Transactional
 @Service
-public class SmscDAOImpl implements SmscDAO {
+public class SmscServiceImpl implements SmscService {
 
-	private static final Logger logger = LoggerFactory.getLogger(SmscDAOImpl.class);
+	private static final Logger logger = LoggerFactory.getLogger(SmscServiceImpl.class);
 
 	@Autowired
 	private SmscEntryRepository smscEntryRepository;
@@ -126,21 +127,19 @@ public class SmscDAOImpl implements SmscDAO {
 				UserEntry userEntry = userOptional.get();
 				setConvertedRequestFields(convertedRequest, userEntry);
 			} else {
-				throw new SmscNotFoundException("User not found. Please enter a valid username.");
+				throw new NotFoundException("User not found. Please enter a valid username.");
 			}
 			// Saving the SMS entry
 			SmscEntry savedEntry = smscEntryRepository.save(convertedRequest);
+			MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
 			return "Successfully saved this id: " + savedEntry.getId();
-		} catch (SmscNotFoundException e) {
+		} catch (NotFoundException e) {
 			System.out.println("run not found exception...");
 			logger.error("An error occurred while saving the SmscEntry: {}", e.getMessage());
-			throw new SmscNotFoundException("Failed to save SmscEntry. Error: " + e.getMessage());
-		} catch (DataAccessException e) {
-			logger.error("A DataAccessException occurred while saving the SmscEntry: {}", e.getMessage());
-			throw new SmscDataAccessException("Failed to save SmscEntry. Data access error: " + e.getMessage());
+			throw new NotFoundException("Failed to save SmscEntry. Error: " + e.getMessage());
 		} catch (Exception e) {
 			logger.error("An error occurred while saving the SmscEntry: {}", e.getMessage());
-			throw new SmscInternalServerException("Failed to save SmscEntry. Error: " + e.getMessage());
+			throw new InternalServerException("Failed to save SmscEntry. Error: " + e.getMessage());
 		}
 	}
 
@@ -151,7 +150,7 @@ public class SmscDAOImpl implements SmscDAO {
 	}
 
 	@Override
-	public String update(int smscId, SmscEntryRequest smscEntryRequest, String username) {
+	public String smscupdate(int smscId, SmscEntryRequest smscEntryRequest, String username) {
 
 		Optional<User> optionalUser = loginRepository.findBySystemId(username);
 		if (optionalUser.isPresent()) {
@@ -168,24 +167,23 @@ public class SmscDAOImpl implements SmscDAO {
 				SmscEntry convertRequest = ConvertRequest(smscEntryRequest);
 				convertRequest.setId(smscId);
 				smscEntryRepository.save(convertRequest);
+				MultiUtility.changeFlag(Constants.SMSC_FLAG_DIR + "" + convertRequest.getName() + ".txt", "505");
+				MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
 				return "SmscEntry with ID " + smscId + " has been successfully updated.";
 			} else {
-				throw new SmscNotFoundException("SmscEntry with ID " + smscId + " not found. Update operation failed.");
+				throw new NotFoundException("SmscEntry with ID " + smscId + " not found. Update operation failed.");
 			}
-		} catch (SmscNotFoundException e) {
+		} catch (NotFoundException e) {
 			logger.error("An error occurred during the update operation: " + e.getMessage(), e);
-			throw new SmscNotFoundException("Failed to update SmscEntry: " + e.getMessage());
-		} catch (DataAccessException e) {
-			logger.error("A DataAccessException occurred during the update operation: " + e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to update SmscEntry: Data access error occurred.");
+			throw new NotFoundException("Failed to update SmscEntry: " + e.getMessage());
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred during the update operation: " + e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to update SmscEntry: Unexpected error occurred.");
+			throw new InternalServerException("Failed to update SmscEntry: Unexpected error occurred.");
 		}
 	}
 
 	@Override
-	public String delete(int smscId, String username) {
+	public String smscdelete(int smscId, String username) {
 
 		Optional<User> optionalUser = loginRepository.findBySystemId(username);
 		if (optionalUser.isPresent()) {
@@ -200,79 +198,18 @@ public class SmscDAOImpl implements SmscDAO {
 		try {
 			Optional<SmscEntry> smscEntryOptional = smscEntryRepository.findById(smscId);
 			if (!smscEntryOptional.isPresent()) {
-				throw new SmscNotFoundException("SmscEntry with ID " + smscId + " was not found in the database.");
+				throw new NotFoundException("SmscEntry with ID " + smscId + " was not found in the database.");
 			}
 			smscEntryRepository.deleteById(smscId);
+			MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
 			System.out.println("run delete ...");
 			return "SmscEntry with ID " + smscId + " has been successfully deleted.";
-		} catch (DataAccessException ex) {
-			logger.error("An error occurred during the delete operation: " + ex.getMessage(), ex);
-			throw new SmscDataAccessException("Failed to delete SmscEntry: " + ex.getMessage());
-		} catch (SmscNotFoundException e) {
-			logger.error("An error occurred during the update operation: " + e.getMessage(), e);
-			throw e;
+		} catch (NotFoundException e) {
+			logger.error("An error occurred during the update operation: " + e.getMessage());
+			throw new NotFoundException(e.getMessage());
 		} catch (Exception ex) {
-			logger.error("An error occurred during the delete operation: " + ex.getMessage(), ex);
-			throw new SmscInternalServerException("Failed to delete SmscEntry: " + ex.getMessage());
-		}
-	}
-
-	@Override
-	public List<StatusEntry> listBound(boolean bound, String username) {
-
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
-			}
-		} else {
-			throw new NotFoundException("User not found with the provided username.");
-		}
-
-		try {
-			List<StatusEntry> list;
-			if (bound) {
-				list = statusEntryRepository.findByBound(bound);
-			} else {
-				list = statusEntryRepository.findAll();
-			}
-			return list;
-		} catch (DataAccessException e) {
-			// Log the exception for debugging purposes
-			logger.error("Error occurred while fetching StatusEntry records: " + e.getMessage());
-			throw new SmscDataAccessException("Failed to list Smsc Status Records");
-		} catch (Exception e) {
-			// Log the exception for debugging purposes
-			logger.error("Unknown error occurred while fetching StatusEntry records: " + e.getMessage());
-			throw new SmscInternalServerException("Failed to list Smsc Status Records");
-		}
-	}
-
-	@Override
-	public List<CustomEntry> listCustom(String username) {
-
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
-			}
-		} else {
-			throw new NotFoundException("User not found with the provided username.");
-		}
-
-		try {
-			List<CustomEntry> list = customEntryRepository.findAll();
-			return list;
-		} catch (DataAccessException e) {
-			// Log the exception for debugging purposes
-			logger.error("Error occurred while fetching CustomEntry records: " + e.getMessage());
-			throw new SmscDataAccessException("Failed to list Smsc Custom Entry Records");
-		} catch (Exception e) {
-			// Log the exception for debugging purposes
-			logger.error("Unknown error occurred while fetching CustomEntry records: " + e.getMessage());
-			throw new SmscInternalServerException("Failed to list Smsc Custom Entry Records");
+			logger.error("An error occurred during the delete operation: " + ex.getLocalizedMessage());
+			throw new InternalServerException("Failed to delete SmscEntry: " + ex.getLocalizedMessage());
 		}
 	}
 
@@ -295,20 +232,20 @@ public class SmscDAOImpl implements SmscDAO {
 				CustomEntry entry = optionalEntry.get();
 				return entry;
 			} else {
-				throw new SmscNotFoundException("Smsc CustomEntry with ID " + smscId + " not found");
+				throw new NotFoundException("Smsc CustomEntry with ID " + smscId + " not found");
 			}
-		} catch (SmscNotFoundException e) {
+		} catch (NotFoundException e) {
 			// Log the exception for debugging purposes
 			logger.error("CustomEntryNotFoundException: " + e.getMessage());
 			throw e;
 		} catch (DataAccessException e) {
 			// Log the exception for debugging purposes
-			logger.error("DataAccessException: " + e.getMessage());
-			throw new SmscDataAccessException("Failed to retrieve Smsc CustomEntry with ID: " + smscId);
+			logger.error("DataAccessError: " + e.getMessage());
+			throw new DataAccessError("Failed to retrieve Smsc CustomEntry with ID: " + smscId);
 		} catch (Exception e) {
 			// Log the exception for debugging purposes
 			logger.error("Unknown error occurred while retrieving CustomEntry: " + e.getMessage());
-			throw new SmscInternalServerException("Failed to retrieve Smsc CustomEntry with ID: " + smscId);
+			throw new InternalServerException("Failed to retrieve Smsc CustomEntry with ID: " + smscId);
 		}
 	}
 
@@ -329,59 +266,80 @@ public class SmscDAOImpl implements SmscDAO {
 			CustomEntry convertedRequest = ConvertRequest(customRequest);
 			customEntryRepository.save(convertedRequest);
 			logger.info("CustomEntry saved successfully");
+			MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
 			return "Successfully saved the CustomEntry.";
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while saving the CustomEntry: {}", e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to save CustomEntry. Data access error occurred.");
+			throw new DataAccessError("Failed to save CustomEntry. Data access error occurred.");
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while saving the CustomEntry: {}", e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to save CustomEntry. Unexpected error occurred.");
+			throw new InternalServerException("Failed to save CustomEntry. Unexpected error occurred.");
 		}
 	}
 
 	@Override
-	public String updateCustom(int customId, CustomRequest customRequest) {
+	public String updateCustom(int customId, CustomRequest customRequest, String username) {
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 		try {
 			if (customEntryRepository.existsById(customId)) {
 				CustomEntry convertRequest = ConvertRequest(customRequest);
 				convertRequest.setSmscId(customId); // Ensure the ID is set
 				customEntryRepository.save(convertRequest);
+				MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
 				return "CustomEntry updated successfully";
 			} else {
-				throw new SmscNotFoundException("CustomEntry not found with id: " + customId);
+				throw new NotFoundException("CustomEntry not found with id: " + customId);
 			}
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while updating the CustomEntry: {}", e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to update CustomEntry. Data access error occurred.");
-		} catch (SmscNotFoundException e) {
+			throw new DataAccessError("Failed to update CustomEntry. Data access error occurred.");
+		} catch (NotFoundException e) {
 			logger.error("CustomEntryNotFoundException: {}", e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while updating the CustomEntry: {}", e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to update CustomEntry. Unexpected error occurred.");
+			throw new InternalServerException("Failed to update CustomEntry. Unexpected error occurred.");
 		}
 	}
 
 	@Override
-	public String deleteCustom(int customId) {
+	public String deleteCustom(int customId, String username) {
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 		try {
 			Optional<CustomEntry> optionalCustomEntry = customEntryRepository.findById(customId);
 			if (optionalCustomEntry.isPresent()) {
 				CustomEntry entry = optionalCustomEntry.get();
 				customEntryRepository.delete(entry);
+				MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
 				return "CustomEntry deleted successfully";
 			} else {
-				throw new SmscNotFoundException("CustomEntry not found with id: " + customId);
+				throw new NotFoundException("CustomEntry not found with id: " + customId);
 			}
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while deleting the CustomEntry: {}", e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to delete CustomEntry. Data access error occurred.");
-		} catch (SmscNotFoundException e) {
+			throw new DataAccessError("Failed to delete CustomEntry. Data access error occurred.");
+		} catch (NotFoundException e) {
 			logger.error("CustomEntryNotFoundException: {}", e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while deleting the CustomEntry: {}", e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to delete CustomEntry. Unexpected error occurred.");
+			throw new InternalServerException("Failed to delete CustomEntry. Unexpected error occurred.");
 		}
 	}
 
@@ -401,13 +359,14 @@ public class SmscDAOImpl implements SmscDAO {
 		try {
 			List<LimitEntry> convertRequest = ConvertRequest(limitRequest);
 			limitEntryRepository.saveAll(convertRequest);
+			MultiUtility.changeFlag(Constants.SMSC_LT_FLAG_FILE, "707");
 			return "LimitEntry saved successfully.";
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while saving the LimitEntry: {}", e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to save LimitEntry. Data access error occurred.");
+			throw new DataAccessError("Failed to save LimitEntry. Data access error occurred.");
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while saving the LimitEntry: {}", e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to save LimitEntry. Unexpected error occurred.");
+			throw new InternalServerException("Failed to save LimitEntry. Unexpected error occurred.");
 		}
 	}
 
@@ -428,22 +387,23 @@ public class SmscDAOImpl implements SmscDAO {
 				for (LimitEntry entry : convertRequest) {
 					if (entry.getId() == limitId) {
 						limitEntryRepository.save(entry);
+						MultiUtility.changeFlag(Constants.SMSC_LT_FLAG_FILE, "707");
 						return "Limit updated successfully";
 					}
 				}
-				throw new RuntimeException("Failed to update LimitEntry: No matching ID found in the request");
+				throw new InternalServerException("Failed to update LimitEntry: No matching ID found in the request");
 			} else {
-				throw new SmscNotFoundException("Limit with the provided ID not found");
+				throw new NotFoundException("Limit with the provided ID not found");
 			}
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while updating the LimitEntry: {}", e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to update LimitEntry. Data access error occurred.");
-		} catch (SmscNotFoundException e) {
+			throw new DataAccessError("Failed to update LimitEntry. Data access error occurred.");
+		} catch (NotFoundException e) {
 			logger.error("LimitEntryNotFoundException: {}", e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while updating the LimitEntry: {}", e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to update LimitEntry. Unexpected error occurred.");
+			throw new InternalServerException("Failed to update LimitEntry. Unexpected error occurred.");
 		}
 	}
 
@@ -461,35 +421,45 @@ public class SmscDAOImpl implements SmscDAO {
 		try {
 			if (limitEntryRepository.existsById(limitId)) {
 				limitEntryRepository.deleteById(limitId);
+				MultiUtility.changeFlag(Constants.SMSC_LT_FLAG_FILE, "707");
 				return "LimitEntry with ID " + limitId + " deleted successfully";
 			} else {
-				throw new SmscNotFoundException("LimitEntry with ID " + limitId + " not found");
+				throw new NotFoundException("LimitEntry with ID " + limitId + " not found");
 			}
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while deleting the LimitEntry: {}", e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to delete LimitEntry. Data access error occurred.");
-		} catch (SmscNotFoundException e) {
+			throw new DataAccessError("Failed to delete LimitEntry. Data access error occurred.");
+		} catch (NotFoundException e) {
 			logger.error("LimitEntryNotFoundException: {}", e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while deleting the LimitEntry: {}", e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to delete LimitEntry. Unexpected error occurred.");
+			throw new InternalServerException("Failed to delete LimitEntry. Unexpected error occurred.");
 		}
 	}
 
 	@Override
-	public List<LimitEntry> listLimit() {
+	public List<LimitEntry> listLimit(String username) {
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 		try {
 			List<LimitEntry> list = limitEntryRepository.findAll();
 			return list;
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while fetching the list of Limit Entries: {}", e.getMessage(),
 					e);
-			throw new SmscDataAccessException("Failed to list Smsc limit Entries. Data access error occurred.");
+			throw new DataAccessError("Failed to list Smsc limit Entries. Data access error occurred.");
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while fetching the list of Limit Entries: {}", e.getMessage(),
 					e);
-			throw new SmscInternalServerException("Failed to list Smsc limit Entries. Unexpected error occurred.");
+			throw new InternalServerException("Failed to list Smsc limit Entries. Unexpected error occurred.");
 		}
 	}
 
@@ -509,14 +479,15 @@ public class SmscDAOImpl implements SmscDAO {
 		try {
 			List<GroupEntry> convertedRequest = ConvertRequest(groupRequest);
 			groupEntryRepository.saveAll(convertedRequest);
+			MultiUtility.changeFlag(Constants.DGM_FLAG_FILE, "707");
 			logger.info("GroupEntry saved successfully");
 			return "GroupEntry saved successfully";
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while saving the GroupEntry: {}", e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to save GroupEntry. Data access error occurred.");
+			throw new DataAccessError("Failed to save GroupEntry. Data access error occurred.");
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while saving the GroupEntry: {}", e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to save GroupEntry. Unexpected error occurred.");
+			throw new InternalServerException("Failed to save GroupEntry. Unexpected error occurred.");
 		}
 	}
 
@@ -537,21 +508,22 @@ public class SmscDAOImpl implements SmscDAO {
 			for (GroupEntry group : convertRequest) {
 				if (groupEntryRepository.existsById(group.getId())) {
 					groupEntryRepository.save(group);
+					MultiUtility.changeFlag(Constants.DGM_FLAG_FILE, "707");
 				} else {
 					logger.info("Group not found with id: {}", group.getId());
-					throw new SmscNotFoundException("Group not found with id: " + group.getId());
+					throw new NotFoundException("Group not found with id: " + group.getId());
 				}
 			}
 			return "Group updated successfully.";
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while updating the GroupEntry: {}", e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to update GroupEntry. Data access error occurred.");
-		} catch (SmscNotFoundException e) {
+			throw new DataAccessError("Failed to update GroupEntry. Data access error occurred.");
+		} catch (NotFoundException e) {
 			logger.error("GroupEntryNotFoundException: {}", e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while updating the GroupEntry: {}", e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to update GroupEntry. Unexpected error occurred.");
+			throw new InternalServerException("Failed to update GroupEntry. Unexpected error occurred.");
 		}
 	}
 
@@ -569,19 +541,20 @@ public class SmscDAOImpl implements SmscDAO {
 		try {
 			Optional<GroupEntry> groupEntryOptional = groupEntryRepository.findById(groupId);
 			if (!groupEntryOptional.isPresent()) {
-				throw new SmscNotFoundException("Group with ID " + groupId + " was not found in the database.");
+				throw new NotFoundException("Group with ID " + groupId + " was not found in the database.");
 			}
 			groupEntryRepository.deleteById(groupId);
+			MultiUtility.changeFlag(Constants.DGM_FLAG_FILE, "707");
 			return "Group with ID " + groupId + " has been deleted successfully.";
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while deleting the GroupEntry: {}", e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to delete GroupEntry. Data access error occurred.");
-		} catch (SmscNotFoundException e) {
+			throw new DataAccessError("Failed to delete GroupEntry. Data access error occurred.");
+		} catch (NotFoundException e) {
 			logger.error("Group not found: {}", e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while deleting the GroupEntry: {}", e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to delete GroupEntry. Unexpected error occurred.");
+			throw new InternalServerException("Failed to delete GroupEntry. Unexpected error occurred.");
 		}
 	}
 
@@ -602,11 +575,11 @@ public class SmscDAOImpl implements SmscDAO {
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while fetching the list of Group Entries: {}", e.getMessage(),
 					e);
-			throw new SmscDataAccessException("Failed to list Group Entries. Data access error occurred.");
+			throw new DataAccessError("Failed to list Group Entries. Data access error occurred.");
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while fetching the list of Group Entries: {}", e.getMessage(),
 					e);
-			throw new SmscInternalServerException("Failed to list Group Entries. Unexpected error occurred.");
+			throw new InternalServerException("Failed to list Group Entries. Unexpected error occurred.");
 		}
 	}
 
@@ -629,13 +602,15 @@ public class SmscDAOImpl implements SmscDAO {
 				groupMemberEntryRepository.save(entry);
 
 			}
+			MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
+			MultiUtility.changeFlag(Constants.DGM_FLAG_FILE, "707");
 			return "Group members saved successfully.";
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while saving the GroupMemberEntry: {}", e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to save GroupMemberEntry. Data access error occurred.");
+			throw new DataAccessError("Failed to save GroupMemberEntry. Data access error occurred.");
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while saving the GroupMemberEntry: {}", e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to save GroupMemberEntry. Unexpected error occurred.");
+			throw new InternalServerException("Failed to save GroupMemberEntry. Unexpected error occurred.");
 		}
 	}
 
@@ -656,20 +631,21 @@ public class SmscDAOImpl implements SmscDAO {
 			for (GroupMemberEntry entry : convertRequest) {
 				if (groupMemberEntryRepository.existsById(entry.getId())) {
 					groupMemberEntryRepository.save(entry);
+					MultiUtility.changeFlag(Constants.DGM_FLAG_FILE, "707");
 				} else {
-					throw new SmscNotFoundException("Group member not found with ID: " + entry.getId());
+					throw new NotFoundException("Group member not found with ID: " + entry.getId());
 				}
 			}
 			return "Group members updated successfully.";
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while updating the GroupMemberEntry: {}", e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to update GroupMemberEntry. Data access error occurred.");
-		} catch (SmscNotFoundException e) {
+			throw new DataAccessError("Failed to update GroupMemberEntry. Data access error occurred.");
+		} catch (NotFoundException e) {
 			logger.error("GroupMemberNotFoundException: {}", e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while updating the GroupMemberEntry: {}", e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to update GroupMemberEntry. Unexpected error occurred.");
+			throw new InternalServerException("Failed to update GroupMemberEntry. Unexpected error occurred.");
 		}
 	}
 
@@ -687,40 +663,20 @@ public class SmscDAOImpl implements SmscDAO {
 		try {
 			if (groupMemberEntryRepository.existsById(groupMemberId)) {
 				groupMemberEntryRepository.deleteById(groupMemberId);
+				MultiUtility.changeFlag(Constants.DGM_FLAG_FILE, "707");
 				return "Group member with ID " + groupMemberId + " has been deleted successfully.";
 			} else {
 				String errorMessage = "Group member with ID " + groupMemberId + " not found.";
 				logger.error(errorMessage);
-				throw new SmscNotFoundException(errorMessage);
+				throw new NotFoundException(errorMessage);
 			}
-		} catch (SmscNotFoundException e) {
-			// Handle the case when the group member with the provided ID does not exist
+		} catch (NotFoundException e) {
 			logger.error("Group member not found exception: {}", e.getMessage());
-			throw e; // rethrowing the caught exception
-		} catch (DataAccessException e) {
-			String errorMessage = "A data access error occurred while deleting the GroupMemberEntry: " + e.getMessage();
-			logger.error(errorMessage, e);
-			throw new SmscDataAccessException(errorMessage);
+			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
 			String errorMessage = "An unexpected error occurred while deleting the GroupMemberEntry: " + e.getMessage();
 			logger.error(errorMessage, e);
-			throw new SmscInternalServerException(errorMessage);
-		}
-	}
-
-	@Override
-	public List<GroupMemberEntry> listGroupMember(int groupId) {
-		try {
-			List<GroupMemberEntry> list = groupMemberEntryRepository.findByGroupId(groupId);
-			return list;
-		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while fetching the list of Group Member Entries: {}",
-					e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to list Group Member Entries. Data access error occurred.");
-		} catch (Exception e) {
-			logger.error("An unexpected error occurred while fetching the list of Group Member Entries: {}",
-					e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to list Group Member Entries. Unexpected error occurred.");
+			throw new InternalServerException(errorMessage);
 		}
 	}
 
@@ -730,14 +686,15 @@ public class SmscDAOImpl implements SmscDAO {
 			List<TrafficScheduleEntry> convertedEntries = ConvertRequest(trafficScheduleRequest);
 			for (TrafficScheduleEntry entry : convertedEntries) {
 				trafficScheduleEntryRepository.save(entry);
+				MultiUtility.changeFlag(Constants.SMSC_SH_FLAG_FILE, "707");
 			}
 			return "Traffic schedule saved successfully.";
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while saving the TrafficScheduleEntry: {}", e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to save TrafficScheduleEntry. Data access error occurred.");
+			throw new DataAccessError("Failed to save TrafficScheduleEntry. Data access error occurred.");
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while saving the TrafficScheduleEntry: {}", e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to save TrafficScheduleEntry. Unexpected error occurred.");
+			throw new InternalServerException("Failed to save TrafficScheduleEntry. Unexpected error occurred.");
 		}
 	}
 
@@ -757,20 +714,21 @@ public class SmscDAOImpl implements SmscDAO {
 			for (TrafficScheduleEntry entry : convertRequest) {
 				if (trafficScheduleEntryRepository.existsById(entry.getId())) {
 					trafficScheduleEntryRepository.save(entry);
+					MultiUtility.changeFlag(Constants.SMSC_SH_FLAG_FILE, "707");
 				} else {
-					throw new SmscNotFoundException("Traffic schedule not found with ID: " + entry.getId());
+					throw new NotFoundException("Traffic schedule not found with ID: " + entry.getId());
 				}
 			}
 			return "Traffic schedule updated successfully.";
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while updating the TrafficScheduleEntry: {}", e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to update TrafficScheduleEntry. Data access error occurred.");
-		} catch (SmscNotFoundException e) {
+			throw new DataAccessError("Failed to update TrafficScheduleEntry. Data access error occurred.");
+		} catch (NotFoundException e) {
 			logger.error("TrafficScheduleNotFoundException: {}", e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while updating the TrafficScheduleEntry: {}", e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to update TrafficScheduleEntry. Unexpected error occurred.");
+			throw new InternalServerException("Failed to update TrafficScheduleEntry. Unexpected error occurred.");
 		}
 	}
 
@@ -788,17 +746,18 @@ public class SmscDAOImpl implements SmscDAO {
 		try {
 			if (trafficScheduleEntryRepository.existsById(scheduleId)) {
 				trafficScheduleEntryRepository.deleteById(scheduleId);
+				MultiUtility.changeFlag(Constants.SMSC_SH_FLAG_FILE, "707");
 				return "Traffic schedule with ID " + scheduleId + " deleted successfully.";
 			} else {
 				logger.error("Traffic schedule with ID {} does not exist", scheduleId);
-				throw new SmscNotFoundException("Traffic schedule with ID " + scheduleId + " not found.");
+				throw new NotFoundException("Traffic schedule with ID " + scheduleId + " not found.");
 			}
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while deleting the TrafficScheduleEntry: {}", e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to delete TrafficScheduleEntry. Data access error occurred.");
+			throw new DataAccessError("Failed to delete TrafficScheduleEntry. Data access error occurred.");
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while deleting the TrafficScheduleEntry: {}", e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to delete TrafficScheduleEntry. Unexpected error occurred.");
+			throw new InternalServerException("Failed to delete TrafficScheduleEntry. Unexpected error occurred.");
 		}
 	}
 
@@ -814,11 +773,11 @@ public class SmscDAOImpl implements SmscDAO {
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while fetching the list of TrafficScheduleEntries: {}",
 					e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to list TrafficScheduleEntries. Data access error occurred.");
+			throw new DataAccessError("Failed to list TrafficScheduleEntries. Data access error occurred.");
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while fetching the list of TrafficScheduleEntries: {}",
 					e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to list TrafficScheduleEntries. Unexpected error occurred.");
+			throw new InternalServerException("Failed to list TrafficScheduleEntries. Unexpected error occurred.");
 		}
 	}
 
@@ -841,77 +800,108 @@ public class SmscDAOImpl implements SmscDAO {
 		try {
 			SmscLooping convertRequest = ConvertRequest(smscLoopingRequest);
 			smscLoopingRepository.save(convertRequest);
+			MultiUtility.changeFlag(Constants.SMSC_LOOP_FLAG_FILE, "707");
 			return "SmscLooping entry saved successfully";
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while saving the SmscLooping entry: {}", e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to save SmscLooping entry. Data access error occurred.");
+			throw new DataAccessError("Failed to save SmscLooping entry. Data access error occurred.");
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while saving the SmscLooping entry: {}", e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to save SmscLooping entry. Unexpected error occurred.");
+			throw new InternalServerException("Failed to save SmscLooping entry. Unexpected error occurred.");
 		}
 	}
 
 	@Override
-	public String updateLoopingRule(SmscLoopingRequest smscLoopingRequest) {
+	public String loopingRuleupdate(SmscLoopingRequest smscLoopingRequest, String username) {
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 		try {
 			SmscLooping convertRequest = ConvertRequest(smscLoopingRequest);
 			if (smscLoopingRepository.existsById(convertRequest.getSmscId())) {
 				smscLoopingRepository.save(convertRequest);
+				MultiUtility.changeFlag(Constants.SMSC_LOOP_FLAG_FILE, "707");
 				return "SmscLooping entry updated successfully";
 			} else {
-				throw new SmscNotFoundException("SmscLooping entry with the provided ID not found");
+				throw new NotFoundException("SmscLooping entry with the provided ID not found");
 			}
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while updating the SmscLooping entry", e);
-			throw new SmscDataAccessException("Failed to update SmscLooping entry. Data access error occurred.");
-		} catch (SmscNotFoundException e) {
-			logger.error("SmscNotFoundException: {}", e.getMessage(), e);
+			throw new DataAccessError("Failed to update SmscLooping entry. Data access error occurred.");
+		} catch (NotFoundException e) {
+			logger.error("NotFoundException: {}", e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while updating the SmscLooping entry", e);
-			throw new SmscInternalServerException("Failed to update SmscLooping entry. Unexpected error occurred.");
+			throw new InternalServerException("Failed to update SmscLooping entry. Unexpected error occurred.");
 		}
 	}
 
 	@Override
-	public String deleteLoopingRule(int smscId) {
+	public String loopingRuledelete(int smscId, String username) {
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+
 		try {
 			if (smscLoopingRepository.existsById(smscId)) {
 				smscLoopingRepository.deleteById(smscId);
+				MultiUtility.changeFlag(Constants.SMSC_LOOP_FLAG_FILE, "707");
 				return "SmscLooping entry deleted successfully";
 			} else {
-				throw new SmscNotFoundException("SmscLooping entry with the provided ID not found");
+				throw new NotFoundException("SmscLooping entry with the provided ID not found");
 			}
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while deleting the SmscLooping entry: {}", e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to delete SmscLooping entry. Data access error occurred.");
-		} catch (SmscNotFoundException e) {
+			throw new DataAccessError("Failed to delete SmscLooping entry. Data access error occurred.");
+		} catch (NotFoundException e) {
 			logger.error("SmscLooping entry not found: {}", e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while deleting the SmscLooping entry: {}", e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to delete SmscLooping entry. Unexpected error occurred.");
+			throw new InternalServerException("Failed to delete SmscLooping entry. Unexpected error occurred.");
 		}
 	}
 
 	@Override
-	public SmscLooping getLoopingRule(int smscId) {
+	public SmscLooping getLoopingRule(int smscId, String username) {
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 		try {
 			Optional<SmscLooping> loopingRule = smscLoopingRepository.findBySmscId((long) smscId);
 			if (loopingRule.isPresent()) {
 				return loopingRule.get();
 			} else {
-				throw new SmscNotFoundException("SmscLooping rule not found with ID: " + smscId);
+				throw new NotFoundException("SmscLooping rule not found with ID: " + smscId);
 			}
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while retrieving the SmscLooping rule: {}", e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to retrieve SmscLooping rule. Data access error occurred.");
-		} catch (SmscNotFoundException e) {
-			logger.error("SmscNotFoundException: {}", e.getMessage(), e);
+			throw new DataAccessError("Failed to retrieve SmscLooping rule. Data access error occurred.");
+		} catch (NotFoundException e) {
+			logger.error("NotFoundException: {}", e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while retrieving the SmscLooping rule: {}", e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to retrieve SmscLooping rule. Unexpected error occurred.");
+			throw new InternalServerException("Failed to retrieve SmscLooping rule. Unexpected error occurred.");
 		}
 	}
 
@@ -929,12 +919,9 @@ public class SmscDAOImpl implements SmscDAO {
 		}
 		try {
 			return smscLoopingRepository.findAll();
-		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while listing SmscLooping rules: {}", e.getMessage(), e);
-			throw new SmscDataAccessException("Failed to list SmscLooping rules. Data access error occurred.");
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while listing SmscLooping rules: {}", e.getMessage(), e);
-			throw new SmscInternalServerException("Failed to list SmscLooping rules. Unexpected error occurred.");
+			throw new InternalServerException("Failed to list SmscLooping rules. Unexpected error occurred.");
 		}
 	}
 
@@ -997,7 +984,7 @@ public class SmscDAOImpl implements SmscDAO {
 			return smsc;
 		} catch (Exception e) {
 			logger.error("Error occurred while converting SmscEntryRequest to SmscEntry: {}", e.getMessage());
-			throw new RuntimeException("Error occurred while converting SmscEntryRequest to SmscEntry", e);
+			throw new InternalServerException("Error occurred while converting SmscEntryRequest to SmscEntry" + e);
 
 		}
 	}
@@ -1017,7 +1004,7 @@ public class SmscDAOImpl implements SmscDAO {
 			return custom;
 		} catch (Exception e) {
 			logger.error("Error occurred while converting CustomRequest to CustomEntry: {}", e.getMessage());
-			throw new RuntimeException("Error occurred while converting CustomRequest to CustomEntry", e);
+			throw new InternalServerException("Error occurred while converting CustomRequest to CustomEntry" + e);
 
 		}
 	}
@@ -1055,7 +1042,7 @@ public class SmscDAOImpl implements SmscDAO {
 			return list;
 		} catch (Exception e) {
 			logger.error("Error occurred while converting GroupRequest to GroupEntry: {}", e.getMessage());
-			throw new RuntimeException("Error occurred while converting GroupRequest to GroupEntry", e);
+			throw new InternalServerException("Error occurred while converting GroupRequest to GroupEntry" + e);
 
 		}
 	}
@@ -1090,7 +1077,8 @@ public class SmscDAOImpl implements SmscDAO {
 			return list;
 		} catch (Exception e) {
 			logger.error("Error occurred while converting GroupMemberRequest to GroupMemberEntry: {}", e.getMessage());
-			throw new RuntimeException("Error occurred while converting GroupMemberRequest to GroupMemberEntry", e);
+			throw new InternalServerException(
+					"Error occurred while converting GroupMemberRequest to GroupMemberEntry" + e);
 
 		}
 	}
@@ -1118,7 +1106,7 @@ public class SmscDAOImpl implements SmscDAO {
 			return list;
 		} catch (Exception e) {
 			logger.error("Error occurred while converting LimitRequest to LimitEntry: {}", e.getMessage());
-			throw new RuntimeException("Error occurred while converting LimitRequest to LimitEntry", e);
+			throw new InternalServerException("Error occurred while converting LimitRequest to LimitEntry" + e);
 
 		}
 	}
@@ -1140,7 +1128,7 @@ public class SmscDAOImpl implements SmscDAO {
 			return smscLooping;
 		} catch (Exception e) {
 			logger.error("Error occurred while converting SmscLoopingRequest to SmscLooping: {}", e.getMessage());
-			throw new RuntimeException("Error occurred while converting SmscLoopingRequest to SmscLooping", e);
+			throw new InternalServerException("Error occurred while converting SmscLoopingRequest to SmscLooping" + e);
 
 		}
 	}
@@ -1173,8 +1161,8 @@ public class SmscDAOImpl implements SmscDAO {
 		} catch (Exception e) {
 			logger.error("Error occurred while converting TrafficScheduleRequest to TrafficScheduleEntry: {}",
 					e.getMessage());
-			throw new RuntimeException("Error occurred while converting TrafficScheduleRequest to TrafficScheduleEntry",
-					e);
+			throw new InternalServerException(
+					"Error occurred while converting TrafficScheduleRequest to TrafficScheduleEntry" + e);
 
 		}
 	}
@@ -1194,6 +1182,7 @@ public class SmscDAOImpl implements SmscDAO {
 		SmscBsfmEntry smscBsfmEntry = new SmscBsfmEntry();
 		ConvertRequest(smscBsfmEntryRequest, smscBsfmEntry);
 		smscBsfmEntryRepository.save(smscBsfmEntry);
+		MultiUtility.changeFlag(Constants.SMSC_BSFM_FLAG_FILE, "707");
 		return "saccessfully save....";
 
 	}
@@ -1234,7 +1223,8 @@ public class SmscDAOImpl implements SmscDAO {
 			logger.error("Unexpected error in listTrafficSchedule for user {}: {}", username, ex.getMessage(), ex);
 
 			// Wrap and throw a generic exception for higher-level handling if needed
-			throw new InternalServerException("An unexpected error occurred while processing the request." + ex);
+			throw new InternalServerException(
+					"An unexpected error occurred while processing the request." + ex.getLocalizedMessage());
 		}
 	}
 
@@ -1260,13 +1250,117 @@ public class SmscDAOImpl implements SmscDAO {
 			logger.error("Error in listSmscBsfm for user {}: {}", username, ex.getMessage(), ex);
 
 			// Re-throw the exception for higher-level handling if needed
-			throw ex;
+			throw new NotFoundException(ex.getMessage());
 		} catch (Exception ex) {
 			// Log unexpected exceptions with error level
 			logger.error("Unexpected error in listSmscBsfm for user {}: {}", username, ex.getMessage(), ex);
 
 			// Wrap and throw a generic exception for higher-level handling if needed
-			throw new InternalServerException("An unexpected error occurred while processing the request." + ex);
+			throw new InternalServerException(
+					"An unexpected error occurred while processing the request." + ex.getLocalizedMessage());
+		}
+	}
+
+	@Override
+	public ResponseEntity<String> bsfmupdate(SmscBsfmEntryRequest smscBsfmEntryRequest, String username) {
+		try {
+			if (smscBsfmEntryRepository.existsById(smscBsfmEntryRequest.getId())) {
+				SmscBsfmEntry smscBsfmEntry = new SmscBsfmEntry();
+				smscBsfmEntry.setId(smscBsfmEntryRequest.getId());
+				smscBsfmEntry.setContent(smscBsfmEntryRequest.getContent());
+				smscBsfmEntry.setSmscId(smscBsfmEntryRequest.getSmscId());
+				smscBsfmEntry.setSmscName(smscBsfmEntryRequest.getSmscName());
+				smscBsfmEntry.setSource(smscBsfmEntryRequest.getSource());
+				smscBsfmEntryRepository.save(smscBsfmEntry);
+				MultiUtility.changeFlag(Constants.SMSC_BSFM_FLAG_FILE, "707");
+				return new ResponseEntity<>("Entry updated successfully", HttpStatus.OK);
+			} else {
+				throw new NotFoundException("Entry not found with ID: " + smscBsfmEntryRequest.getId());
+			}
+		} catch (NotFoundException e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+		} catch (Exception e) {
+			return new ResponseEntity<>("Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Override
+	public ResponseEntity<String> bsfmdelete(int id, String username) {
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		try {
+			if (smscBsfmEntryRepository.existsById(id)) {
+				smscBsfmEntryRepository.deleteById(id);
+				MultiUtility.changeFlag(Constants.SMSC_BSFM_FLAG_FILE, "707");
+				return new ResponseEntity<>("Entry deleted successfully", HttpStatus.OK);
+			} else {
+				throw new NotFoundException("Entry not found with ID: " + id);
+			}
+		} catch (NotFoundException e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+		} catch (Exception e) {
+			return new ResponseEntity<>("Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Override
+	public ResponseEntity<SmscEntry> getSmscEntry(int id, String username) {
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		try {
+			Optional<SmscEntry> optionalSmscEntry = smscEntryRepository.findById(id);
+
+			if (optionalSmscEntry.isPresent()) {
+				SmscEntry smscEntry = optionalSmscEntry.get();
+				return new ResponseEntity<>(smscEntry, HttpStatus.OK);
+			} else {
+				throw new NotFoundException("SMS entry not found with ID: " + id);
+			}
+		} catch (NotFoundException e) {
+			throw new NotFoundException(e.getMessage());
+		} catch (Exception e) {
+			throw new InternalServerException(e.getMessage());
+		}
+	}
+
+	@Override
+	public ResponseEntity<?> getGroupMember(int id, String username) {
+		Optional<User> optionalUser = loginRepository.findBySystemId(username);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		try {
+			Optional<GroupMemberEntry> optionalGroupMember = groupMemberEntryRepository.findById(id);
+
+			if (optionalGroupMember.isPresent()) {
+				GroupMemberEntry groupMember = optionalGroupMember.get();
+				return new ResponseEntity<>(groupMember, HttpStatus.OK);
+			} else {
+				throw new NotFoundException("Group member not found with ID: " + id);
+			}
+		} catch (NotFoundException e) {
+			throw new NotFoundException(e.getMessage());
+		} catch (Exception e) {
+			throw new InternalServerException(e.getMessage());
 		}
 	}
 }

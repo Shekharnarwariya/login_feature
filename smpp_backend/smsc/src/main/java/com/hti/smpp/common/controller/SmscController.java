@@ -25,13 +25,17 @@ import com.hti.smpp.common.request.SmscBsfmEntryRequest;
 import com.hti.smpp.common.request.SmscEntryRequest;
 import com.hti.smpp.common.request.SmscLoopingRequest;
 import com.hti.smpp.common.request.TrafficScheduleRequest;
-import com.hti.smpp.common.service.SmscDAO;
+import com.hti.smpp.common.service.SmscService;
+import com.hti.smpp.common.smsc.dto.CustomEntry;
+import com.hti.smpp.common.smsc.dto.LimitEntry;
 import com.hti.smpp.common.smsc.dto.SmscBsfmEntry;
+import com.hti.smpp.common.smsc.dto.SmscEntry;
 import com.hti.smpp.common.smsc.dto.SmscLooping;
 import com.hti.smpp.common.smsc.dto.TrafficScheduleEntry;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -42,7 +46,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class SmscController {
 
 	@Autowired
-	private SmscDAO smscDAOImpl;
+	private SmscService smscDAOImpl;
 
 	@Operation(summary = "Check Service Status", description = "Retrieve the status of the service.")
 	@GetMapping("/status")
@@ -104,62 +108,51 @@ public class SmscController {
 		return new ResponseEntity<>(result, HttpStatus.CREATED);
 	}
 
-//	@Operation(summary = "Update SMS Entry", description = "Update the SMS entry in the system.")
-//	@PutMapping("/smsc/{smscId}")
-//	public ResponseEntity<String> updateSmscEntry(@PathVariable int smscId,
-//			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Request body for SMS Entry", required = true, content = @Content(schema = @Schema(implementation = SmscEntryRequest.class))) @RequestBody SmscEntryRequest smscEntryRequest, @RequestHeader("username") String username) {
-//		String result = smscDAOImpl.update(smscId, smscEntryRequest, username);
-//		if (result == null) {
-//			return new ResponseEntity<>("Smsc entry not found for id: " + smscId, HttpStatus.NOT_FOUND);
-//		}
-//		return new ResponseEntity<>(result, HttpStatus.OK);
-//	}
-//
-//	@Operation(summary = "Delete SMS Entry", description = "Delete the SMS entry from the system.")
-//	@DeleteMapping("smsc/{id}")
-//	public ResponseEntity<String> deleteSmscEntry(@PathVariable int id, @RequestHeader("username") String username) {
-//		String result = smscDAOImpl.delete(id, username);
-//		return new ResponseEntity<>(result, HttpStatus.OK);
-//	}
-//
-//	@Operation(summary = "List Bound Status", description = "List status entries based on the bound parameter.")
-//	@GetMapping("/status/listBound")
-//	public ResponseEntity<List<StatusEntry>> listBound(@RequestParam boolean bound, @RequestHeader("username") String username) {
-//		List<StatusEntry> statusEntries = smscDAOImpl.listBound(bound, username);
-//		return new ResponseEntity<>(statusEntries, HttpStatus.OK);
-//	}
-//
-//	@Operation(summary = "List Custom Entries", description = "List all custom entries.")
-//	@GetMapping("/custom/listCustom")
-//	public ResponseEntity<List<CustomEntry>> listCustom(@RequestHeader("username") String username) {
-//		List<CustomEntry> customEntries = smscDAOImpl.listCustom(username);
-//		return new ResponseEntity<>(customEntries, HttpStatus.OK);
-//	}
-//
-//	@Operation(summary = "Get Custom Entry", description = "Get a custom entry based on the provided ID.")
-//	@GetMapping("/custom/{smscId}")
-//	public ResponseEntity<CustomEntry> getCustomEntry(@PathVariable int smscId, @RequestHeader("username") String username) {
-//		CustomEntry customEntry = smscDAOImpl.getCustomEntry(smscId, username);
-//		if (customEntry != null) {
-//			return new ResponseEntity<>(customEntry, HttpStatus.OK);
-//		} else {
-//			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-//		}
-//	}
-//
-//	@Operation(summary = "Update Custom Entry", description = "Update the custom entry with the provided ID.")
-//	@PutMapping("/custom/{customId}")
-//	public ResponseEntity<String> updateCustom(@PathVariable int customId, @RequestBody CustomRequest customRequest, @RequestHeader("username") String username) {
-//		smscDAOImpl.updateCustom(customId, customRequest);
-//		return new ResponseEntity<>("CustomEntry with ID " + customId + " successfully updated.", HttpStatus.OK);
-//	}
-//
-//	@Operation(summary = "Delete Custom Entry", description = "Delete the custom entry with the provided ID.")
-//	@DeleteMapping("/customs/{customId}")
-//	public ResponseEntity<String> deleteCustom(@PathVariable int customId) {
-//		String result = smscDAOImpl.deleteCustom(customId);
-//		return new ResponseEntity<>("Custom with ID " + customId + " successfully deleted", HttpStatus.OK);
-//	}
+	@Operation(summary = "Update SMS Entry", description = "Update the SMS entry in the system.")
+	@PutMapping("/update/{smscId}")
+	public ResponseEntity<String> updateSmscEntry(@PathVariable int smscId,
+			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Request body for SMS Entry", required = true, content = @Content(schema = @Schema(implementation = SmscEntryRequest.class))) @RequestBody SmscEntryRequest smscEntryRequest,
+			@RequestHeader("username") String username) {
+		String result = smscDAOImpl.smscupdate(smscId, smscEntryRequest, username);
+		if (result == null) {
+			return new ResponseEntity<>("Smsc entry not found for id: " + smscId, HttpStatus.NOT_FOUND);
+		}
+		return new ResponseEntity<>(result, HttpStatus.OK);
+	}
+
+	@Operation(summary = "Delete SMS Entry", description = "Delete the SMS entry from the system.")
+	@DeleteMapping("/delete/{id}")
+	public ResponseEntity<String> deleteSmscEntry(@PathVariable int id, @RequestHeader("username") String username) {
+		String result = smscDAOImpl.smscdelete(id, username);
+		return new ResponseEntity<>(result, HttpStatus.OK);
+	}
+
+	@Operation(summary = "Get Custom Entry", description = "Get a custom entry based on the provided ID.")
+	@GetMapping("/custom/{smscId}")
+	public ResponseEntity<CustomEntry> getCustomEntry(@PathVariable int smscId,
+			@RequestHeader("username") String username) {
+		CustomEntry customEntry = smscDAOImpl.getCustomEntry(smscId, username);
+		if (customEntry != null) {
+			return new ResponseEntity<>(customEntry, HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+	}
+
+	@Operation(summary = "Update Custom Entry", description = "Update the custom entry with the provided ID.")
+	@PutMapping("/custom/{customId}")
+	public ResponseEntity<String> updateCustom(@PathVariable int customId, @RequestBody CustomRequest customRequest,
+			@RequestHeader("username") String username) {
+		smscDAOImpl.updateCustom(customId, customRequest, username);
+		return new ResponseEntity<>("CustomEntry with ID " + customId + " successfully updated.", HttpStatus.OK);
+	}
+
+	@Operation(summary = "Delete Custom Entry", description = "Delete the custom entry with the provided ID.")
+	@DeleteMapping("/custom/{customId}")
+	public ResponseEntity<String> deleteCustom(@PathVariable int customId, @RequestHeader("username") String username) {
+		String result = smscDAOImpl.deleteCustom(customId, username);
+		return new ResponseEntity<>("Custom with ID " + customId + " successfully deleted", HttpStatus.OK);
+	}
 
 	@Operation(summary = "Update Limit", description = "Update the limit with the provided ID.")
 	@PutMapping("/updateLimit/{limitId}")
@@ -180,13 +173,13 @@ public class SmscController {
 		return "LimitEntry with ID " + limitId + " deleted successfully";
 	}
 
-//	@Operation(summary = "List Limit Entries", description = "Get a list of all limit entries.")
-//	@GetMapping("/list")
-//	public List<LimitEntry> listLimit() {
-//		List<LimitEntry> limitEntries = smscDAOImpl.listLimit();
-//		return limitEntries;
-//	}
-//
+	@Operation(summary = "List Limit Entries", description = "Get a list of all limit entries.")
+	@GetMapping("/list")
+	public List<LimitEntry> listLimit(@RequestHeader("username") String username) {
+		List<LimitEntry> limitEntries = smscDAOImpl.listLimit(username);
+		return limitEntries;
+	}
+
 	@Operation(summary = "Update Group", description = "Update the group with the provided request.")
 	@PutMapping("/group/update")
 	public ResponseEntity<String> updateGroup(@RequestBody GroupRequest groupRequest,
@@ -218,13 +211,6 @@ public class SmscController {
 		return ResponseEntity.ok(result);
 	}
 
-//	@Operation(summary = "List Group Members", description = "Get a list of all group members for the provided group ID.")
-//	@GetMapping("groupmember/list/{groupId}")
-//	public ResponseEntity<List<GroupMemberEntry>> listGroupMember(@PathVariable int groupId) {
-//		List<GroupMemberEntry> groupMembers = smscDAOImpl.listGroupMember(groupId);
-//		return ResponseEntity.ok(groupMembers);
-//	}
-//
 	@Operation(summary = "Save Schedule", description = "Save the traffic schedule with the provided request.")
 	@PostMapping("/schedule/save")
 	public ResponseEntity<String> saveSchedule(@RequestBody TrafficScheduleRequest trafficScheduleRequest) {
@@ -248,40 +234,24 @@ public class SmscController {
 		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
 
-//	@Operation(summary = "List Schedules", description = "Get a list of all traffic schedules.")
-//	@GetMapping("traffic/listSchedule")
-//	public ResponseEntity<Map<String, TrafficScheduleEntry>> listSchedule() {
-//		Map<String, TrafficScheduleEntry> scheduleMap = smscDAOImpl.listSchedule();
-//		return new ResponseEntity<>(scheduleMap, HttpStatus.OK);
-//	}
-
 	@Operation(summary = "Save Looping Rule", description = "Save the looping rule with the provided request.")
 	@PostMapping("/looping/save")
 	public String saveLoopingRule(@RequestBody SmscLoopingRequest smscLoopingRequest) {
-		// Implementation
 		return smscDAOImpl.saveLoopingRule(smscLoopingRequest);
 	}
 
-//	@Operation(summary = "Update Looping Rule", description = "Update the looping rule with the provided request.")
-//	@PutMapping("smsclooping/updateLoopingRule")
-//	public String updateLoopingRule(@RequestBody SmscLoopingRequest smscLoopingRequest) {
-//		// Implementation
-//		return smscDAOImpl.updateLoopingRule(smscLoopingRequest);
-//	}
-//
-//	@Operation(summary = "Delete Looping Rule", description = "Delete the looping rule with the provided ID.")
-//	@DeleteMapping("smsclooping/deleteLoopingRule/{smscId}")
-//	public String deleteLoopingRule(@PathVariable int smscId) {
-//		// Implementation
-//		return smscDAOImpl.deleteLoopingRule(smscId);
-//	}
-//
-//	@Operation(summary = "Get Looping Rule", description = "Get the looping rule with the provided ID.")
-//	@GetMapping("smsclooping/getLoopingRule/{smscId}")
-//	public ResponseEntity<?> getLoopingRule(@PathVariable int smscId) {
-//		SmscLooping loopingRule = smscDAOImpl.getLoopingRule(smscId);
-//		return ResponseEntity.ok(loopingRule);
-//	}
+	@Operation(summary = "Update Looping Rule", description = "Update the looping rule with the provided request.")
+	@PutMapping("/looping/update")
+	public String updateLoopingRule(@RequestBody SmscLoopingRequest smscLoopingRequest,
+			@RequestHeader("username") String username) {
+		return smscDAOImpl.loopingRuleupdate(smscLoopingRequest, username);
+	}
+
+	@Operation(summary = "Delete Looping Rule", description = "Delete the looping rule with the provided ID.")
+	@DeleteMapping("smsclooping/deleteLoopingRule/{smscId}")
+	public String deleteLoopingRule(@PathVariable int smscId, @RequestHeader("username") String username) {
+		return smscDAOImpl.loopingRuledelete(smscId, username);
+	}
 
 	@Operation(summary = "List Looping Rules", description = "Get a list of all looping rules.")
 	@GetMapping("/looping/list")
@@ -311,4 +281,34 @@ public class SmscController {
 		return ResponseEntity.ok(resultMessage);
 	}
 
+	@Operation(summary = "Update an SMS entry", description = "Update an existing SMS entry by providing the entry details.")
+	@PutMapping("/update")
+	public ResponseEntity<String> bsfmUpdate(@RequestBody SmscBsfmEntryRequest smscBsfmEntryRequest,
+			@RequestHeader("username") String username) {
+		return smscDAOImpl.bsfmupdate(smscBsfmEntryRequest, username);
+	}
+
+	@Operation(summary = "Delete an SMS entry", description = "Delete an existing SMS entry by providing its ID.")
+	@DeleteMapping("/bsfm/delete/{id}")
+	public ResponseEntity<String> bsfmDelete(
+			@Parameter(description = "ID of the SMS entry to be deleted", required = true) @PathVariable int id,
+			@RequestHeader("username") String username) {
+		return smscDAOImpl.bsfmdelete(id, username);
+	}
+
+	@Operation(summary = "Get an SMS entry by ID", description = "Retrieve an SMS entry by providing its ID.")
+	@GetMapping("/get")
+	public ResponseEntity<SmscEntry> getSmscEntry(
+			@Parameter(description = "ID of the SMS entry to retrieve", required = true) @RequestParam int id,
+			@Parameter(description = "Username making the request", required = true) @RequestHeader("username") String username) {
+		return smscDAOImpl.getSmscEntry(id, username);
+	}
+
+	@Operation(summary = "Get a group member by ID", description = "Retrieve a group member by providing its ID.")
+	@GetMapping("/groupMember/{id}")
+	public ResponseEntity<?> getGroupMember(
+			@Parameter(description = "ID of the group member to retrieve", required = true) @PathVariable int id,
+			@Parameter(description = "Username making the request", required = true) @RequestHeader("username") String username) {
+		return smscDAOImpl.getGroupMember(id, username);
+	}
 }

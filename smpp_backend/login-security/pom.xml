@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.hti.smpp.common</groupId>
 	<artifactId>login-security</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<packaging>jar</packaging>
 	<name>login-security</name>
 	<description>Demo project for Spring Boot Security - JWT</description>

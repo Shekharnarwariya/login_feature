@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.hti.smpp</groupId>
 	<artifactId>apigateway</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<name>apigateway</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>

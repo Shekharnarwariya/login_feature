@@ -15,24 +15,27 @@
 	</parent>
 	<groupId>com.hti.websmpp</groupId>
 	<artifactId>smpp_backend</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<packaging>pom</packaging>
 	<name>smpp_backend</name>
 	<description>Demo project for Spring Boot</description>
 	<modules>
+		<module>addressbook</module>
+		<module>apigateway</module>
+		<module>bsfm</module>
 		<module>common</module>
 		<module>discoveryserver</module>
-		<module>apigateway</module>
-		<module>login</module>
-		<module>sms</module>
-		<module>Template</module>
-		<module>personalservice</module>
-		<module>twoway</module>
-		<module>login-security</module>
-		<module>user</module>
 		<module>hlr-smsc</module>
+		<module>login</module>
+		<module>login-security</module>
+		<module>personalservice</module>
+		<module>routeservice</module>
+		<module>Sales</module>
+		<module>sms</module>
 		<module>smsc</module>
-
+		<module>Template</module>
+		<module>twoway</module>
+		<module>user</module>
 	</modules>
 	<build>
 		<plugins>
