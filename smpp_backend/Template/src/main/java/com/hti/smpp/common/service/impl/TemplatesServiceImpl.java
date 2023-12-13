@@ -4,10 +4,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.login.dto.User;
@@ -24,7 +29,9 @@ import jakarta.transaction.Transactional;
 
 @Service
 public class TemplatesServiceImpl implements TemplatesService {
-
+	
+	private static final Logger logger = LoggerFactory.getLogger(TemplatesServiceImpl.class.getName());
+	
 	private final TemplatesRepository templatesRepository;
 
 	@Autowired
@@ -36,7 +43,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 	private UserRepository userRepository;
 
 	@Override
-	public TemplatesResponse createTemplate(TemplatesRequest request, String username) {
+	public ResponseEntity<?> createTemplate(TemplatesRequest request, String username) {
 
 		Optional<User> userOptional = userRepository.findBySystemId(username);
 		System.out.println(userOptional.get());
@@ -56,18 +63,30 @@ public class TemplatesServiceImpl implements TemplatesService {
 			template.setMasterId(userOptional.get().getUserId());
 		}
 		template.setTitle(Converter.UTF16(request.getTitle()));
-		TemplatesDTO savedTemplate = templatesRepository.save(template);
+		TemplatesDTO savedTemplate = null;
+		try {
+			savedTemplate = templatesRepository.save(template);
+		} catch (Exception e) {
+			logger.error(e.toString());
+			throw new InternalServerException(e.getLocalizedMessage());
+		}
 		if (savedTemplate.getMessage() != null && savedTemplate.getMessage().length() > 0) {
 			savedTemplate.setMessage(Converter.hexCodePointsToCharMsg(savedTemplate.getMessage()));
 		}
 		if (savedTemplate.getTitle() != null && savedTemplate.getTitle().length() > 0) {
 			savedTemplate.setTitle(Converter.hexCodePointsToCharMsg(savedTemplate.getTitle()));
 		}
-		return mapToResponse(savedTemplate);
+		
+		if(mapToResponse(savedTemplate) != null) {
+			return new ResponseEntity<>("Template created successfully",HttpStatus.CREATED);
+		}else {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+		}
+		
 	}
 
 	@Override
-	public TemplatesResponse getTemplateById(int id, String username) {
+	public ResponseEntity<?> getTemplateById(int id, String username) {
 		Optional<User> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			User user = userOptional.get();
@@ -82,7 +101,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (userOptional.isPresent()) {
 			system_id = userOptional.get().getUserId();
 		}
-		TemplatesDTO template = templatesRepository.findByIdAndMasterId(id, system_id).orElse(null);
+		TemplatesDTO template = templatesRepository.findByIdAndMasterId(id, system_id).orElseThrow(()->new NotFoundException("Template with id: "+id+" not found."));
 		if (template != null) {
 			if (template.getMessage() != null && template.getMessage().length() > 0) {
 				template.setMessage(Converter.hexCodePointsToCharMsg(template.getMessage()));
@@ -91,11 +110,11 @@ public class TemplatesServiceImpl implements TemplatesService {
 				template.setTitle(Converter.hexCodePointsToCharMsg(template.getTitle()));
 			}
 		}
-		return (template != null) ? mapToResponse(template) : null;
+		return (template != null) ? new ResponseEntity<>(mapToResponse(template),HttpStatus.OK) : ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
 	}
 
 	@Override
-	public List<TemplatesResponse> getAllTemplates(String username) {
+	public ResponseEntity<?> getAllTemplates(String username) {
 		Optional<User> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			User user = userOptional.get();
@@ -119,11 +138,17 @@ public class TemplatesServiceImpl implements TemplatesService {
 				template.setTitle(Converter.hexCodePointsToCharMsg(template.getTitle()));
 			}
 		});
-		return templates.stream().map(this::mapToResponse).collect(Collectors.toList());
+
+		if(!templates.stream().map(this::mapToResponse).collect(Collectors.toList()).isEmpty() && templates.stream().map(this::mapToResponse).collect(Collectors.toList())!=null) {
+			return ResponseEntity.ok(templates.stream().map(this::mapToResponse).collect(Collectors.toList()));
+		}else {
+			return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+		}
+		
 	}
 
 	@Override
-	public TemplatesResponse updateTemplate(int id, TemplatesRequest request, String username) {
+	public ResponseEntity<?> updateTemplate(int id, TemplatesRequest request, String username) {
 		Optional<User> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			User user = userOptional.get();
@@ -153,12 +178,17 @@ public class TemplatesServiceImpl implements TemplatesService {
 			}
 
 		}
-		return mapToResponse(updatedTemplate);
+		if(mapToResponse(updatedTemplate)!=null) {
+			return new ResponseEntity<>(mapToResponse(updatedTemplate),HttpStatus.CREATED);
+		}else {
+			return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+		}
 	}
 
 	@Transactional
 	@Override
-	public boolean deleteTemplate(int id, String username) {
+	public ResponseEntity<?> deleteTemplate(int id, String username) {
+		boolean isDone = false;
 		Optional<User> userOptional = userRepository.findBySystemId(username);
 
 		if (userOptional.isPresent()) {
@@ -177,10 +207,13 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 		try {
 			templatesRepository.deleteByIdAndMasterId(id, system_id);
-			return true; // Return true if the deletion was successful.
+			isDone = true; // Return true if the deletion was successful.
+			return ResponseEntity.ok("Template deleted successfully");
 		} catch (EmptyResultDataAccessException e) {
 			// The template with the given ID was not found, return false.
-			return false;
+			isDone = false;
+			logger.error(e.toString());
+			return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
 		}
 	}
 
