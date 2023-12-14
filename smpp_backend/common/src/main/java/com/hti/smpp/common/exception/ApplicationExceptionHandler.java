@@ -76,6 +76,21 @@ public class ApplicationExceptionHandler {
 	}
 	
 
+	@ExceptionHandler(DataAccessError.class)
+	public ResponseEntity<ExceptionResponse> handleDataAccessException(DataAccessError exception) {
+		String exceptionName = exception.getClass().getSimpleName(); // Getting the exception name
+		String statusMessage = "Internal Server Error - Data Access Exception"; // Default status message
+
+		if (exceptionName.equals("SomeOtherDataAccessException")) {
+			statusMessage = "Some other data access exception occurred";
+		} else if (exceptionName.equals("AnotherDataAccessException")) {
+			statusMessage = "Another data access exception occurred";
+		}
+		LocalDateTime current = LocalDateTime.now();
+		return new ResponseEntity<>(new ExceptionResponse(exception.getMessage(), toUtc(current),
+				HttpStatus.INTERNAL_SERVER_ERROR.value(), statusMessage), HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
 	private LocalDateTime toUtc(LocalDateTime current) {
 		return current.atOffset(ZoneOffset.UTC).toLocalDateTime();
 	}

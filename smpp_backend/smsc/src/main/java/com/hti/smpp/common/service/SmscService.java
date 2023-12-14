@@ -2,10 +2,10 @@ package com.hti.smpp.common.service;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.contacts.dto.GroupEntry;
-import com.hti.smpp.common.contacts.dto.GroupMemberEntry;
 import com.hti.smpp.common.request.CustomRequest;
 import com.hti.smpp.common.request.GroupMemberRequest;
 import com.hti.smpp.common.request.GroupRequest;
@@ -17,14 +17,13 @@ import com.hti.smpp.common.request.TrafficScheduleRequest;
 import com.hti.smpp.common.smsc.dto.CustomEntry;
 import com.hti.smpp.common.smsc.dto.LimitEntry;
 import com.hti.smpp.common.smsc.dto.SmscBsfmEntry;
+import com.hti.smpp.common.smsc.dto.SmscEntry;
 import com.hti.smpp.common.smsc.dto.SmscLooping;
-import com.hti.smpp.common.smsc.dto.StatusEntry;
 import com.hti.smpp.common.smsc.dto.TrafficScheduleEntry;
 
 @Service
-public interface SmscDAO {
+public interface SmscService {
 
-	// =======================save============================
 	public String smscEntrySave(SmscEntryRequest smscEntryRequest, String username);
 
 	public String saveCustom(CustomRequest customRequest, String username);
@@ -64,31 +63,31 @@ public interface SmscDAO {
 	public String deleteSchedule(int scheduleId, String username);
 
 	public String deleteGroup(int groupId, String username);
-	// =================================================================================
 
-	public String update(int smscId, SmscEntryRequest smscEntryRequest, String username);
+	public String updateCustom(int customId, CustomRequest customRequest, String username);
 
-	public String delete(int smscId, String username);
+	public String deleteCustom(int customId, String username);
 
-	public List<StatusEntry> listBound(boolean bound, String username);
+	public String smscupdate(int smscId, SmscEntryRequest smscEntryRequest, String username);
 
-	public List<CustomEntry> listCustom(String username);
+	public String smscdelete(int smscId, String username);
 
-	public CustomEntry getCustomEntry(int smscId, String username);
+	public String loopingRuleupdate(SmscLoopingRequest smscLoopingRequest, String username);
 
-	public String updateCustom(int customId, CustomRequest customRequest);
+	public String loopingRuledelete(int id, String username);
 
-	public String deleteCustom(int customId);
+	public ResponseEntity<String> bsfmupdate(SmscBsfmEntryRequest smscBsfmEntryRequest, String username);
 
-	public List<LimitEntry> listLimit();
+	public ResponseEntity<String> bsfmdelete(int bsfmId, String username);
 
-	public List<GroupMemberEntry> listGroupMember(int groupId);
-	// -------- Smsc Looping Rules -----------------------
+	public CustomEntry getCustomEntry(int id, String username);
 
-	public String updateLoopingRule(SmscLoopingRequest smscLoopingRequest);
+	public ResponseEntity<SmscEntry> getSmscEntry(int id, String username);
 
-	public String deleteLoopingRule(int smscId);
+	public ResponseEntity<?> getGroupMember(int id, String username);
 
-	public SmscLooping getLoopingRule(int smscId);
+	public List<LimitEntry> listLimit(String username);
+
+	public SmscLooping getLoopingRule(int id, String username);
 
 }

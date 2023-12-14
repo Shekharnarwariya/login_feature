@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.hti.ssmpp.common</groupId>
 	<artifactId>hrl-smsc</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<name>hrl-smsc</name>
 	<description>SMSC project for Spring Boot</description>
 	<properties>

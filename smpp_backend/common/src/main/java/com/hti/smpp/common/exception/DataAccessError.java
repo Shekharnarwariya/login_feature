@@ -1,10 +1,10 @@
 package com.hti.smpp.common.exception;
 
-public class SmscDataAccessException extends RuntimeException {
+public class DataAccessError extends RuntimeException {
 
 	private static final long serialVersionUID = 1106671598754207461L;
 
-	public SmscDataAccessException(String message) {
+	public DataAccessError(String message) {
 		super(message);
 	}
 }

@@ -96,7 +96,7 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 			logger.info("HlrSmscEntry updated successfully with ID: {}", id);
 			return ResponseEntity.ok(updatedEntry);
 		} catch (DataAccessException e) {
-			logger.error("DataAccessException occurred while updating HlrSmscEntry with ID {}: {}", id, e.getMessage());
+			logger.error("DataAccessError occurred while updating HlrSmscEntry with ID {}: {}", id, e.getMessage());
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 		} catch (Exception e) {
 			logger.error("Error occurred while updating HlrSmscEntry with ID {}: {}", id, e.getMessage());
@@ -130,7 +130,7 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 			logger.info("HlrSmscEntry with ID {} deleted successfully", id);
 			return ResponseEntity.noContent().build();
 		} catch (DataAccessException e) {
-			logger.error("DataAccessException occurred while deleting HlrSmscEntry with ID {}: {}", id, e.getMessage());
+			logger.error("DataAccessError occurred while deleting HlrSmscEntry with ID {}: {}", id, e.getMessage());
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 		} catch (Exception e) {
 			logger.error("Error occurred while deleting HlrSmscEntry with ID {}: {}", id, e.getMessage());
@@ -161,7 +161,7 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 
 			return ResponseEntity.ok(existingEntry.get());
 		} catch (DataAccessException e) {
-			logger.error("DataAccessException occurred while fetching HlrSmscEntry with ID {}: {}", id, e.getMessage());
+			logger.error("DataAccessError occurred while fetching HlrSmscEntry with ID {}: {}", id, e.getMessage());
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 		} catch (Exception e) {
 			logger.error("Error occurred while fetching HlrSmscEntry with ID {}: {}", id, e.getMessage());
@@ -189,7 +189,7 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 			List<HlrSmscEntry> existingEntries = hlrSmscRepository.findBySystemId(systemId);
 			return existingEntries;
 		} catch (DataAccessException e) {
-			logger.error("DataAccessException occurred while listing HlrSmscEntries for systemId {}: {}", username,
+			logger.error("DataAccessError occurred while listing HlrSmscEntries for systemId {}: {}", username,
 					e.getMessage());
 			return Collections.emptyList();
 		} catch (Exception e) {
