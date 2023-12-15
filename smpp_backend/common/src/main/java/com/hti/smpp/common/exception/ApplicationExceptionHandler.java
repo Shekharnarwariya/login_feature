@@ -73,6 +73,22 @@ public class ApplicationExceptionHandler {
 		return new ResponseEntity<>(new ExceptionResponse(exception.getMessage(), toUtc(current),
 				HttpStatus.INTERNAL_SERVER_ERROR.value(), statusMessage), HttpStatus.INTERNAL_SERVER_ERROR);
 	}
+	
+	@ExceptionHandler(JsonProcessingError.class)
+	public ResponseEntity<ExceptionResponse> JsonProcessingError(JsonProcessingError exception) {
+		LocalDateTime current = LocalDateTime.now();
+		return new ResponseEntity<>(new ExceptionResponse(exception.getMessage(), toUtc(current),
+				HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase()), HttpStatus.INTERNAL_SERVER_ERROR);
+
+	}
+	
+	@ExceptionHandler(WorkBookException.class)
+	public ResponseEntity<ExceptionResponse> WorkBookException(WorkBookException exception) {
+		LocalDateTime current = LocalDateTime.now();
+		return new ResponseEntity<>(new ExceptionResponse(exception.getMessage(), toUtc(current),
+				HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase()), HttpStatus.INTERNAL_SERVER_ERROR);
+
+	}
 
 	private LocalDateTime toUtc(LocalDateTime current) {
 		return current.atOffset(ZoneOffset.UTC).toLocalDateTime();

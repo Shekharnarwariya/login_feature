@@ -50,7 +50,10 @@ import com.hti.smpp.common.addressbook.utils.Converters;
 import com.hti.smpp.common.contacts.dto.GroupDataEntry;
 import com.hti.smpp.common.contacts.repository.GroupDataEntryRepository;
 import com.hti.smpp.common.exception.InternalServerException;
+import com.hti.smpp.common.exception.JsonProcessingError;
 import com.hti.smpp.common.exception.NotFoundException;
+import com.hti.smpp.common.exception.UnauthorizedException;
+import com.hti.smpp.common.exception.WorkBookException;
 import com.hti.smpp.common.login.dto.Role;
 import com.hti.smpp.common.login.dto.User;
 import com.hti.smpp.common.login.repository.UserRepository;
@@ -59,6 +62,7 @@ import com.hti.smpp.common.templates.repository.TemplatesRepository;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
+import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 
@@ -82,8 +86,19 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	private UserRepository userLoginRepo;
 
 	@Override
-	@Transactional
 	public ResponseEntity<?> saveGroupData(String request, MultipartFile file, String username) {
+
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		Set<Role> role = new HashSet<>();
+
+		if (user.isPresent()) {
+			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+			role = user.get().getRoles();
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 
 		GroupDataEntryRequest form;
 
@@ -92,9 +107,9 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 			form = objectMapper.readValue(request, GroupDataEntryRequest.class);
 			form.setContactNumberFile(file);
 		} catch (JsonProcessingException e) {
-			throw new RuntimeException(e.getMessage());
+			throw new JsonProcessingError("JsonProccessingError: " + e.getLocalizedMessage());
 		} catch (Exception ex) {
-			throw new InternalServerException(ex.getLocalizedMessage());
+			throw new InternalServerException("Error: " + ex.getLocalizedMessage());
 		}
 
 		String target = IConstants.FAILURE_KEY;
@@ -106,14 +121,6 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 			systemId = userOptional.get().getSystemId();
 		} else {
 			throw new NotFoundException("UserEntry not found.");
-		}
-
-		Optional<User> user = userLoginRepo.findBySystemId(systemId);
-		Set<Role> role = new HashSet<>();
-		if (user.isPresent()) {
-			role = user.get().getRoles();
-		} else {
-			throw new NotFoundException("User not found.");
 		}
 
 		logger.info(systemId + "[" + role + "]" + " Adding GroupData To Group: " + form.getGroupId());
@@ -147,19 +154,20 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 									String[] tokens = entry.split(",");
 									long number;
 									if (tokens.length == 0) {
-										logger.info("Invalid Format For Entry[" + x + "]: " + entry);
+										logger.warn("Invalid Format For Entry[" + x + "]: " + entry);
 										continue;
 									} else {
 										try {
 											number = Long.parseLong(tokens[4]);
 										} catch (Exception ex) {
-											logger.info("Invalid Number For Entry[" + x + "]: " + entry);
+											logger.warn("Invalid Number For Entry[" + x + "]: " + entry);
 											continue;
 										}
 										int age = 0;
 										try {
 											age = Integer.parseInt(tokens[6]);
 										} catch (Exception ex) {
+											throw new InternalServerException("Error parsing age");
 										}
 										try {
 											String initials = null, first_name = null, middle_name = null,
@@ -181,18 +189,26 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 													tokens[8], tokens[9], tokens[10]));
 										} catch (Exception ex) {
 											logger.error(entry, ex.fillInStackTrace());
+											throw new InternalServerException(
+													"Error Processing: " + ex.getLocalizedMessage());
 										}
 									}
 								}
 							}
 						} catch (Exception ex) {
 							logger.error("Error: " + ex.getLocalizedMessage());
+							throw new InternalServerException("Error processing: " + ex.getLocalizedMessage());
 						} finally {
 							if (bufferedReader != null) {
 								try {
 									bufferedReader.close();
 								} catch (IOException ioe) {
 									bufferedReader = null;
+									logger.error(ioe.getLocalizedMessage());
+									throw new InternalServerException("IOException: " + ioe.getLocalizedMessage());
+								} catch (Exception ioe) {
+									logger.error(ioe.getLocalizedMessage());
+									throw new InternalServerException("Exception: " + ioe.getLocalizedMessage());
 								}
 							}
 						}
@@ -211,7 +227,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 								if (nextRow.getRowNum() == 0) {
 									column_count = nextRow.getPhysicalNumberOfCells();
 									if (column_count == 0) {
-										logger.info("Invalid Format For Xls File");
+										logger.warn("Invalid Format For Xls File");
 										break;
 									}
 								}
@@ -229,7 +245,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 										try {
 											number = Long.parseLong(cell_value);
 										} catch (Exception ex) {
-											logger.info("Invalid Number For Entry[" + nextRow.getRowNum() + "]: "
+											logger.error("Invalid Number For Entry[" + nextRow.getRowNum() + "]: "
 													+ cell_value);
 											break;
 										}
@@ -251,6 +267,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 											try {
 												age = Integer.parseInt(cell_value);
 											} catch (Exception ex) {
+												logger.error("Error parsing age.");
+												throw new InternalServerException("Error parsing age.");
 											}
 										} else if (cell_number == 7) {
 											profession = cell_value;
@@ -276,14 +294,24 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 											number, email, age, profession, company, area, gender));
 								}
 							}
-						} catch (Exception ex) {
-							logger.info("Error: " + ex.getLocalizedMessage());
+						} catch (WorkBookException ex) {
+							logger.error("Error: " + ex.getLocalizedMessage());
+							throw new WorkBookException("Error Processing Workbook: " + ex.getLocalizedMessage());
+						} catch (Exception e) {
+							logger.error("Error: " + e.getLocalizedMessage());
+							throw new InternalServerException("Unexpected Exception: " + e.getLocalizedMessage());
 						} finally {
 							if (workbook != null) {
 								try {
 									workbook.close();
+								} catch (WorkBookException ex) {
+									logger.error("Error: " + ex.getLocalizedMessage());
+									throw new WorkBookException(
+											"Error Processing Workbook: " + ex.getLocalizedMessage());
 								} catch (Exception e) {
-									logger.info("Error: " + e.getLocalizedMessage());
+									logger.error("Error: " + e.getLocalizedMessage());
+									throw new InternalServerException(
+											"Unexpected Exception: " + e.getLocalizedMessage());
 								}
 							}
 						}
@@ -308,26 +336,43 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 							form.getNumber()[0], form.getEmail()[0], form.getAge()[0], form.getProfession()[0],
 							form.getCompany()[0], form.getArea()[0], form.getGender()[0]));
 				} else {
-					logger.info("Invalid Number Found: " + form.getNumber());
+					logger.warn("Invalid Number Found: " + form.getNumber());
+					throw new NotFoundException("Number Not Found.");
 				}
 			}
 			if (entry_list.isEmpty()) {
-				return new ResponseEntity<>(target, HttpStatus.NO_CONTENT);
+				logger.error("Error: Entry list is empty.No data Found" + ", Message: " + target);
+				throw new NotFoundException("Entry list is empty.No data Found");
 			} else {
 				List<GroupDataEntry> groupData = this.groupDataEntryRepository.saveAll(entry_list);
 				target = IConstants.SUCCESS_KEY;
 				logger.info("GroupDataEntry Saved Successfully. Message: " + target);
 				return new ResponseEntity<>(target, HttpStatus.CREATED);
 			}
+		} catch (NotFoundException e) {
+			logger.error("Error: " + e.getLocalizedMessage() + ", Message: " + target);
+			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error("Error: " + e.getLocalizedMessage() + ", Message: " + target);
-			return new ResponseEntity<>(target, HttpStatus.INTERNAL_SERVER_ERROR);
+			throw new InternalServerException(e.getLocalizedMessage());
 		}
 
 	}
 
 	@Override
-	public ContactForBulk groupDataForBulk(List<Long> numbers, int groupId, String username) {
+	public ResponseEntity<?> groupDataForBulk(List<Long> numbers, int groupId, String username) {
+
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		Long masterId = null;
+		if (user.isPresent()) {
+			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+			masterId = user.get().getUserId();
+		} else {
+			throw new NotFoundException("User not found.");
+		}
+
 		String target = IConstants.FAILURE_KEY;
 		String uploadedNumbers = "";
 		ContactForBulk response = new ContactForBulk();
@@ -338,14 +383,6 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 			systemId = userOptional.get().getSystemId();
 		} else {
 			throw new NotFoundException("UserEntry not found.");
-		}
-
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		Long masterId = null;
-		if (user.isPresent()) {
-			masterId = user.get().getUserId();
-		} else {
-			throw new NotFoundException("User not found.");
 		}
 
 		logger.info("Proceed Contact For Bulk Request by " + systemId);
@@ -369,7 +406,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 				if (templates != null) {
 					response.setTemplates(templates);
 				} else {
-					logger.info("No templates exist.");
+					logger.error("No templates exist.");
+					throw new NotFoundException("No templates found!");
 				}
 				WebMasterEntry webMasterEntry = GlobalVars.WebmasterEntries.get(userOptional.get().getId());
 				if (webMasterEntry != null) {
@@ -379,26 +417,47 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 						logger.info(systemId + " Configured Senders: " + senders);
 						response.setSenders(senders);
 					} else {
-						logger.info(systemId + " No Senders Configured");
+						logger.warn(systemId + " No Senders Configured");
+						throw new InternalServerException("No Senders Configured");
 					}
 				} else {
 					logger.error(systemId + " Webmaster Entry Not Found");
+					throw new NotFoundException("Webmaster Entry Not Found");
 				}
 				target = IConstants.SUCCESS_KEY;
 			} else {
-				logger.info(systemId + " No Record Found For Selected Criteria");
+				logger.error(systemId + " No Record Found For Selected Criteria");
+				throw new NotFoundException("No Record Found");
 			}
 			response.setStatus(target);
+		} catch (InternalServerException ex) {
+			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]");
+			logger.error(systemId, ex.getLocalizedMessage());
+			throw new InternalServerException("Process Error: " + ex.getLocalizedMessage());
+		} catch (NotFoundException ex) {
+			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]");
+			logger.error(systemId, ex.getLocalizedMessage());
+			throw new NotFoundException("Error: " + ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]");
-			logger.error(systemId, ex.fillInStackTrace());
+			logger.error(systemId, ex.getLocalizedMessage());
+			throw new InternalServerException("Process Error: " + ex.getLocalizedMessage());
 		}
 
-		return response;
+		return ResponseEntity.ok(response);
 	}
 
 	@Override
-	public List<GroupDataEntry> viewSearchGroupData(GroupDataEntryRequest request, String username) {
+	public ResponseEntity<List<GroupDataEntry>> viewSearchGroupData(GroupDataEntryRequest request, String username) {
+
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		if (user.isPresent()) {
+			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found.");
+		}
 
 		SearchCriteria criteria = new SearchCriteria();
 		criteria.setArea(request.getArea());
@@ -432,9 +491,18 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		List<GroupDataEntry> list = new ArrayList<GroupDataEntry>();
 		try {
 			// ContactDAService service = new ContactDAServiceImpl();
-			List<GroupDataEntry> templist = this.groupDataEntryRepository
-					.findByGroupIdAndProfessionInAndCompanyInAndAreaInAndGenderInAndNumberInAndAgeBetween(groupId,
-							profession, company, area, gender, number, minAge, maxAge);
+			List<GroupDataEntry> templist = null;
+			try {
+				templist = this.groupDataEntryRepository
+						.findByGroupIdAndProfessionInAndCompanyInAndAreaInAndGenderInAndNumberInAndAgeBetween(groupId,
+								profession, company, area, gender, number, minAge, maxAge);
+			} catch (NotFoundException e) {
+				logger.error("Error: " + e.getLocalizedMessage());
+				throw new NotFoundException(e.getLocalizedMessage());
+			} catch (Exception e) {
+				logger.error("Error: " + e.getLocalizedMessage());
+				throw new InternalServerException(e.getLocalizedMessage());
+			}
 
 			if (templist != null && !templist.isEmpty()) {
 				Converters cc = new Converters();
@@ -457,17 +525,32 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 
 			} else {
 				logger.info(systemId + " No Record Found For Selected Criteria");
+				throw new NotFoundException("No Record Found");
 			}
+		} catch (NotFoundException ex) {
+			logger.error(systemId, ex.toString());
+			throw new NotFoundException("Error: " + ex.getLocalizedMessage());
 		} catch (Exception ex) {
-			logger.error(systemId, ex.fillInStackTrace());
+			logger.error(systemId, ex.toString());
 			throw new InternalServerException("Error: " + ex.getLocalizedMessage());
 		}
 
-		return list;
+		return ResponseEntity.ok(list);
 	}
 
 	@Override
-	public ContactForBulk proceedSearchGroupData(GroupDataEntryRequest request, String username) {
+	public ResponseEntity<ContactForBulk> proceedSearchGroupData(GroupDataEntryRequest request, String username) {
+
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		Long masterId = null;
+		if (user.isPresent()) {
+			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+			masterId = user.get().getUserId();
+		} else {
+			throw new NotFoundException("User not found.");
+		}
 
 		SearchCriteria criteria = new SearchCriteria();
 		criteria.setArea(request.getArea());
@@ -488,13 +571,6 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 			throw new NotFoundException("UserEntry not found.");
 		}
 
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		Long masterId = null;
-		if (user.isPresent()) {
-			masterId = user.get().getUserId();
-		} else {
-			throw new NotFoundException("Unable to found user.");
-		}
 		logger.info("Send Group Data[" + request.getGroupId() + "] Request by " + systemId);
 
 		String target = IConstants.FAILURE_KEY;
@@ -526,14 +602,18 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 				List<TemplatesDTO> templates = null;
 				try {
 					templates = this.tempRepository.findByMasterId(masterId);
+				} catch (NotFoundException ex) {
+					logger.error("Error: " + ex.getLocalizedMessage());
+					throw new NotFoundException("Templates not found: " + ex.getLocalizedMessage());
 				} catch (Exception ex) {
 					logger.error("Error: " + ex.getLocalizedMessage());
-					throw new NotFoundException("Templates not found.");
+					throw new InternalServerException(ex.getLocalizedMessage());
 				}
 				if (templates != null) {
 					response.setTemplates(templates);
 				} else {
-					logger.info("No templates exist.");
+					logger.error("No templates exist.");
+					throw new InternalServerException("Unable to process templates");
 				}
 
 				WebMasterEntry webMasterEntry = GlobalVars.WebmasterEntries.get(userOptional.get().getId());
@@ -544,27 +624,46 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 						logger.info(systemId + " Configured Senders: " + senders);
 						response.setSenders(senders);
 					} else {
-						logger.info(systemId + " No Senders Configured");
+						logger.error(systemId + " No Senders Configured");
+						throw new InternalServerException("No Senders Configured");
 					}
 				} else {
 					logger.error(systemId + " Webmaster Entry Not Found");
+					throw new NotFoundException("Webmaster Entry Not Found");
 				}
 				target = "proceed";
 			} else {
-				logger.info(systemId + " No Record Found For Selected Criteria");
+				logger.error(systemId + " No Record Found For Selected Criteria");
 				response.setStatus(target);
+				throw new NotFoundException("No Record Found");
 			}
+		} catch (InternalServerException ex) {
+			logger.error(systemId, ex.fillInStackTrace());
+			throw new InternalServerException("Error: " + ex.getLocalizedMessage());
+		} catch (NotFoundException ex) {
+			logger.error(systemId, ex.fillInStackTrace());
+			throw new NotFoundException("Error: " + ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error(systemId, ex.fillInStackTrace());
 			throw new InternalServerException("Error: " + ex.getLocalizedMessage());
 		}
 
-		return response;
+		return ResponseEntity.ok(response);
 	}
 
 	@Override
 	@Transactional
 	public ResponseEntity<?> modifyGroupDataUpdate(GroupDataEntryRequest form, String username) {
+
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		if (user.isPresent()) {
+			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found.");
+		}
+
 		String target = IConstants.FAILURE_KEY;
 		String systemId = null;
 		// Finding the user by system ID
@@ -619,19 +718,22 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 				if (!list.isEmpty()) {
 					this.groupDataEntryRepository.saveAll(list);
 					target = IConstants.SUCCESS_KEY;
+				} else {
+					throw new InternalServerException("Error saving GroupDataEntry.");
 				}
 
+			} catch (InternalServerException ex) {
+				logger.error(systemId, ex.getLocalizedMessage());
+				throw new InternalServerException(ex.getLocalizedMessage());
 			} catch (Exception ex) {
 				logger.error(systemId, ex.getLocalizedMessage());
-				return new ResponseEntity<>(target, HttpStatus.INTERNAL_SERVER_ERROR);
+				throw new InternalServerException(ex.getLocalizedMessage());
 			}
 		} else {
-			logger.info(systemId + " No GroupData Records Found To Update");
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+			logger.error(systemId + " No GroupData Records Found To Update");
+			throw new NotFoundException(systemId + " No GroupData Records Found To Update");
 		}
-
 		logger.info(systemId + " Modify GroupDataEntryUpdate Target:" + target);
-
 		return new ResponseEntity<>(target, HttpStatus.CREATED);
 	}
 
@@ -650,6 +752,16 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	@Override
 	@Transactional
 	public ResponseEntity<?> modifyGroupDataDelete(List<Integer> ids, String username) {
+
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		if (user.isPresent()) {
+			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found.");
+		}
+
 		String target = IConstants.FAILURE_KEY;
 		List<Integer> successfulDeletions = new ArrayList<>();
 		List<Integer> failedDeletionIds = new ArrayList<>();
@@ -657,6 +769,11 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		try {
 			if (!ids.isEmpty()) {
 				List<GroupDataEntry> groupdataToDelete = this.groupDataEntryRepository.findAllById(ids);
+
+				if (groupdataToDelete.isEmpty()) {
+					throw new NotFoundException("No GroupDataEntry Found!");
+				}
+
 				for (GroupDataEntry groupdata : groupdataToDelete) {
 					try {
 						this.groupDataEntryRepository.delete(groupdata);
@@ -664,6 +781,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 					} catch (Exception e) {
 						logger.error("Error deleting group data with ID {}: {}", groupdata.getId(), e.getMessage(), e);
 						failedDeletionIds.add(groupdata.getId());
+						throw new InternalServerException("Error deleting group data id: " + groupdata.getId());
 					}
 				}
 
@@ -672,11 +790,16 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 				logFailedDeletions(username, failedDeletionIds);
 			}
 			return ResponseEntity.status(HttpStatus.OK).body(target);
+		} catch (NotFoundException e) {
+			logger.error("Error deleting group data: {}", e.getMessage(), e);
+			target = IConstants.FAILURE_KEY;
+			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error("Error deleting group data: {}", e.getMessage(), e);
 			target = IConstants.FAILURE_KEY;
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(target);
+			throw new InternalServerException(e.getLocalizedMessage());
 		}
+
 	}
 
 	private Workbook getWorkBook(List<GroupDataEntry> list) {
@@ -798,6 +921,15 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	@Override
 	public ResponseEntity<?> modifyGroupDataExport(GroupDataEntryRequest form, String username) {
 
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		if (user.isPresent()) {
+			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found.");
+		}
+
 		String systemId = null;
 		// Finding the user by system ID
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -850,7 +982,16 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 					entry.setId(id[i]);
 					list.add(entry);
 				}
-				Workbook workbook = getWorkBook(list);
+				Workbook workbook = null;
+				try {
+					workbook = getWorkBook(list);
+				} catch (WorkBookException e1) {
+					logger.error("WorkBook Error: " + e1.getLocalizedMessage());
+					throw new WorkBookException("WorkBook Exception: " + e1.getLocalizedMessage());
+				} catch (Exception e1) {
+					logger.error("Unexpected Exception: " + e1.getLocalizedMessage());
+					throw new InternalServerException("Unexpected Exception: " + e1.getLocalizedMessage());
+				}
 				String filename = systemId + "_GroupData[" + groupId + "]" + ".xlsx";
 				ByteArrayOutputStream bos = new ByteArrayOutputStream();
 				logger.info(systemId + " Creating GroupData XLSx ");
@@ -866,17 +1007,20 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 					return new ResponseEntity<>(resource, headers, HttpStatus.OK);
 				} catch (IOException e) {
 					logger.error("Contact XLSx Download Error: {}", e.toString());
-					return new ResponseEntity<>(target, HttpStatus.INTERNAL_SERVER_ERROR);
+					throw new InternalServerException(e.getLocalizedMessage());
+				} catch (Exception e) {
+					logger.error("Unexpected exception: " + e.getLocalizedMessage());
+					throw new InternalServerException(e.getLocalizedMessage());
 				}
 
 			} catch (Exception ex) {
 				logger.error(systemId, ex.toString());
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+				throw new InternalServerException(ex.getLocalizedMessage());
 			}
 		} else {
-			logger.info(systemId + " No GroupData Records Found To Export");
+			logger.error(systemId + " No GroupData Records Found To Export");
+			throw new NotFoundException(systemId + " No GroupData Records Found To Export");
 		}
-		return new ResponseEntity<>(target, HttpStatus.OK);
 	}
 
 	private String capitalize(String str) {
@@ -903,6 +1047,17 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 
 	@Override
 	public ResponseEntity<?> editGroupDataSearch(int groupId, String username) {
+
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		Set<Role> role = new HashSet<>();
+		if (user.isPresent()) {
+			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+			role = user.get().getRoles();
+		} else {
+			throw new NotFoundException("User not found.");
+		}
 		String target = "search";
 		String systemId = null;
 		// Finding the user by system ID
@@ -912,13 +1067,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		} else {
 			throw new NotFoundException("No UserEntry found.");
 		}
-		Optional<User> user = userLoginRepo.findBySystemId(systemId);
-		Set<Role> role = new HashSet<>();
-		if (user.isPresent()) {
-			role = user.get().getRoles();
-		} else {
-			throw new NotFoundException("User not found.");
-		}
+
 		logger.info(systemId + "[" + role + "]" + " Search GroupData Request For Group: " + groupId);
 
 		EditGroupDataSearch response = new EditGroupDataSearch();
@@ -926,17 +1075,33 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		Set<String> companies = new HashSet<String>();
 		Set<String> areas = new HashSet<String>();
 
-		List<String> list = distinctGroupData(groupId, "profession");
+		List<String> list = null;
+		try {
+			list = distinctGroupData(groupId, "profession");
+		} catch (Exception e) {
+			logger.error("Error in adding profession to list: " + e.getLocalizedMessage());
+			throw new InternalServerException("Exception in adding profession to list: " + e.getLocalizedMessage());
+		}
 
 		professions.addAll(list);
 		response.setProfessions(professions);
 
-		list = distinctGroupData(groupId, "company");
+		try {
+			list = distinctGroupData(groupId, "company");
+		} catch (Exception e) {
+			logger.error("Error in adding company to list: " + e.getLocalizedMessage());
+			throw new InternalServerException("Exception in adding company to list: " + e.getLocalizedMessage());
+		}
 
 		companies.addAll(list);
 		response.setCompanies(companies);
 
-		list = distinctGroupData(groupId, "area");
+		try {
+			list = distinctGroupData(groupId, "area");
+		} catch (Exception e) {
+			logger.error("Error in adding area to list: " + e.getLocalizedMessage());
+			throw new InternalServerException("Exception in adding area to list: " + e.getLocalizedMessage());
+		}
 
 		areas.addAll(list);
 		response.setAreas(areas);
@@ -946,7 +1111,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 
 		if (response.getAreas().isEmpty() || response.getCompanies().isEmpty() || response.getProfessions().isEmpty()
 				|| response == null) {
-			return new ResponseEntity<>("Unable to search Group Data.", HttpStatus.INTERNAL_SERVER_ERROR);
+			throw new InternalServerException("Unable to search Group Data.");
 		}
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
