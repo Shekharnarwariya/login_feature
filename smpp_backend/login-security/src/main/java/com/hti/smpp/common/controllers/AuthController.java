@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -159,7 +160,7 @@ public class AuthController {
 	@Operation(summary = "Register a new user")
 	@ApiResponse(responseCode = "200", description = "Successfully registered user")
 	@ApiResponse(responseCode = "500", description = "Internal server error")
-	@PostMapping("/signup")
+	@PostMapping(value = "/signup", consumes = MediaType.APPLICATION_JSON_VALUE)
 	@Transactional
 	public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
 		try {
@@ -255,8 +256,9 @@ public class AuthController {
 		entry.setCreatedOn(signUpRequest.getCreatedOn());
 		entry.setCurrency(signUpRequest.getCurrency());
 		entry.setDltDefaultSender(signUpRequest.getDltDefaultSender());
-		entry.setEditBy(signUpRequest.getSystemType());
+		entry.setEditBy(signUpRequest.getUsername());
 		entry.setEditOn(signUpRequest.getCreatedOn());
+		System.out.println(entry.getEditOn());
 		entry.setExpiry("" + signUpRequest.getExpiry());
 		entry.setFixLongSms(signUpRequest.isFixLongSms());
 		entry.setFlagStatus(signUpRequest.getFlagValue());
