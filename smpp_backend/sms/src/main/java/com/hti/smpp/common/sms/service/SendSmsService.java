@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.messages.dto.BulkSmsDTO;
-import com.hti.smpp.common.sms.util.IConstants;
+import com.hti.smpp.common.util.IConstants;
 
 @Service
 public class SendSmsService {

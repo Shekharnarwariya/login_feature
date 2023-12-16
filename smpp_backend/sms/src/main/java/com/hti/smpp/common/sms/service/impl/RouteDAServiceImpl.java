@@ -16,6 +16,7 @@ import com.hti.smpp.common.route.dto.RouteEntry;
 import com.hti.smpp.common.route.dto.RouteEntryExt;
 import com.hti.smpp.common.route.repository.RouteEntryRepository;
 import com.hti.smpp.common.sms.service.RouteDAService;
+import com.hti.smpp.common.sms.service.SmscDAService;
 import com.hti.smpp.common.sms.util.GlobalVars;
 
 @Service
@@ -25,6 +26,9 @@ public class RouteDAServiceImpl implements RouteDAService {
 
 	@Autowired
 	private RouteEntryRepository routeEntryRepository;
+
+	@Autowired
+	private SmscDAService smscService;
 
 	@Override
 	public Map<Integer, RouteEntryExt> listRouteEntries(int userId, boolean hlr, boolean optional, boolean display) {
@@ -37,8 +41,8 @@ public class RouteDAServiceImpl implements RouteDAService {
 		Map<Integer, String> smsc_name_mapping = null;
 		Map<Integer, String> group_name_mapping = null;
 		if (display) {
-			smsc_name_mapping = GlobalVars.smscService.listNames();
-			group_name_mapping = GlobalVars.smscService.listGroupNames();
+			smsc_name_mapping = smscService.listNames();
+			group_name_mapping = smscService.listGroupNames();
 		}
 		for (RouteEntry basic : routeEntries) {
 			RouteEntryExt entry = new RouteEntryExt(basic);

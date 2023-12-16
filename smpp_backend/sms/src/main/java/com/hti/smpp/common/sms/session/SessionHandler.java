@@ -13,8 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.sms.util.GlobalVars;
-import com.hti.smpp.common.sms.util.IConstants;
 import com.hti.smpp.common.user.dto.UserEntry;
+import com.hti.smpp.common.util.IConstants;
 import com.logica.smpp.Connection;
 import com.logica.smpp.Data;
 import com.logica.smpp.Session;
@@ -120,7 +120,7 @@ public class SessionHandler implements Runnable {
 
 		try {
 
-			inetAddress = InetAddress.getByName(IConstants.SMPP_PORT);
+			inetAddress = InetAddress.getByName(IConstants.SMPP_PORT + "");
 			int ipAsInt = byteArrayToInt(inetAddress.getAddress());
 
 			Connection connection = new TCPIPConnection(IConstants.ip, ipAsInt);
