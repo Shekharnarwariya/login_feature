@@ -54,7 +54,7 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 	@Column(name = "editby")
 	private String editBy;
 	@Column(name = "editOn")
-	private String editOn;
+	private String editOn="2023-01-12";
 	@Column(name = "sender_length")
 	private int senderLength;
 	@Column(name = "sender_trim")

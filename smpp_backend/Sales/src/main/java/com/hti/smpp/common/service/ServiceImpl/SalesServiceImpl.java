@@ -65,12 +65,12 @@ public class SalesServiceImpl implements SalesService {
 		} else {
 			throw new NotFoundException("User not found");
 		}
-		logger.info("Sales User[" + salesEntryForm.getUsername() + "-" + salesEntryForm.getRole()
-				+ "] Add Requested By " + systemId + "[" + role + "]");
+		logger.info("Sales User [{}-{}] Add Requested By {} [{}]", salesEntryForm.getUsername(),
+				salesEntryForm.getRole(), systemId, role);
 		try {
 			BeanUtils.copyProperties(salesEntryForm, entry);
 			if (GlobalVars.UserMapping.containsKey(entry.getUsername())) {
-				logger.error("error.record.duplicate");
+				//logger.error("error.record.duplicate");
 				logger.error("Usermaster Entry Exists With same Username " + entry.getUsername());
 			} else {
 				SalesEntry sales = salesRepository.save(entry);
@@ -80,7 +80,7 @@ public class SalesServiceImpl implements SalesService {
 					logger.info("Sales User Created: " + entry);
 					target = IConstants.SUCCESS_KEY;
 				} else {
-					logger.error("Unable to create " + entry);
+					logger.error("Unable to create Sales User: {}", entry);
 				}
 			}
 		} catch (Exception ex) {
@@ -110,18 +110,18 @@ public class SalesServiceImpl implements SalesService {
 		} else {
 			throw new NotFoundException("User not found");
 		}
-		logger.info("Executive[" + form.getId() + "] Update Requested By " + systemId + "[" + role + "]");
+		logger.info("Executive [{}] Update Requested By {} [{}]", form.getId(), systemId, role);
 		SalesEntry seller = new SalesEntry();
 		try {
 			BeanUtils.copyProperties(form, seller);
-			logger.info("UpdateRequested: " + seller);
+			logger.info("Update Requested: {}", seller);
 			SalesEntry entry = this.salesRepository.findById(seller.getId())
 					.orElseThrow(() -> new NotFoundException("Entry not found."));
 			this.salesRepository.save(entry);
 			GlobalVars.ExecutiveEntryMap.put(seller.getId(), seller);
 			target = IConstants.SUCCESS_KEY;
 		} catch (Exception ex) {
-			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]");
+			logger.error("Process Error: {} [{}]", ex.getMessage(), ex.getCause());
 		}
 		return target;
 	}
@@ -133,9 +133,9 @@ public class SalesServiceImpl implements SalesService {
 		try {
 			this.salesRepository.deleteById(id);
 			target = IConstants.SUCCESS_KEY;
-			logger.info("message.operation.success");
+			logger.info("Operation successful: Sale ID {}", id);
 		} catch (Exception ex) {
-			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]");
+			logger.error("Process Error: {} [{}]", ex.getMessage(), ex.getCause());
 		}
 		return target;
 	}
@@ -188,7 +188,7 @@ public class SalesServiceImpl implements SalesService {
 		} else {
 			throw new NotFoundException("User not found");
 		}
-		logger.info("Executive List Requested By " + masterId + "[" + role + "]");
+		logger.info("Executive List Requested By {} [{}]", masterId, role);
 		SalesEntry salesEntry = this.salesRepository.findByMasterId(masterId);
 		Collection<SalesEntry> salesList = null;
 		try {
@@ -251,7 +251,7 @@ public class SalesServiceImpl implements SalesService {
 				response.setSeller(seller);
 				target = IConstants.SUCCESS_KEY;
 			} else {
-				logger.error("error.processError");
+				logger.error("Operation failed");
 			}
 			return new ResponseEntity<>(response, HttpStatus.OK);
 
@@ -286,13 +286,18 @@ public class SalesServiceImpl implements SalesService {
 		SalesEntry salesEntry = this.salesRepository.findByMasterId(masterId);
 		Collection<SalesEntry> list = null;
 		if (Access.isAuthorizedSuperAdminAndSystem(role)) {
-			list = list("manager").values();
+			try {
+				list = list("manager").values();
+			} catch (Exception e) {
+				logger.error("ERROR " + e.getLocalizedMessage());
+				throw new NotFoundException(e.getLocalizedMessage());
+			}
 		} else {
 			if (salesEntry.getRole().equalsIgnoreCase("manager") || Access.isAuthorizedAdmin(role)) {
 				logger.info("Authorized User :" + systemId);
 			} else {
 				target = "invalidRequest";
-				logger.info("Authorization Failed :" + systemId + ": " + target);
+				logger.info("Authorization Failed: {}: {}", systemId, target);
 			}
 		}
 		return list;

@@ -1,6 +1,7 @@
 package com.hti.smpp.common.controllers;
 
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -10,6 +11,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -47,10 +49,12 @@ import com.hti.smpp.common.payload.response.ProfileResponse;
 import com.hti.smpp.common.security.jwt.JwtUtils;
 import com.hti.smpp.common.security.services.UserDetailsImpl;
 import com.hti.smpp.common.user.dto.BalanceEntry;
+import com.hti.smpp.common.user.dto.OTPEntry;
 import com.hti.smpp.common.user.dto.ProfessionEntry;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.BalanceEntryRepository;
 import com.hti.smpp.common.user.repository.DlrSettingEntryRepository;
+import com.hti.smpp.common.user.repository.OtpEntryRepository;
 import com.hti.smpp.common.user.repository.ProfessionEntryRepository;
 import com.hti.smpp.common.user.repository.RechargeEntryRepository;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
@@ -113,6 +117,9 @@ public class AuthController {
 	@Autowired
 	private WebMenuAccessEntryRepository webMenuAccessEntryRepository;
 
+	@Autowired
+	private OtpEntryRepository otpEntryRepository;
+
 	private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
 	public AuthController(AuthenticationManager authenticationManager, JwtUtils jwtUtils) {
@@ -159,7 +166,7 @@ public class AuthController {
 	@Operation(summary = "Register a new user")
 	@ApiResponse(responseCode = "200", description = "Successfully registered user")
 	@ApiResponse(responseCode = "500", description = "Internal server error")
-	@PostMapping("/signup")
+	@PostMapping(value = "/signup", consumes = MediaType.APPLICATION_JSON_VALUE)
 	@Transactional
 	public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
 		try {
@@ -255,8 +262,9 @@ public class AuthController {
 		entry.setCreatedOn(signUpRequest.getCreatedOn());
 		entry.setCurrency(signUpRequest.getCurrency());
 		entry.setDltDefaultSender(signUpRequest.getDltDefaultSender());
-		entry.setEditBy(signUpRequest.getSystemType());
+		entry.setEditBy(signUpRequest.getUsername());
 		entry.setEditOn(signUpRequest.getCreatedOn());
+		System.out.println(entry.getEditOn());
 		entry.setExpiry("" + signUpRequest.getExpiry());
 		entry.setFixLongSms(signUpRequest.isFixLongSms());
 		entry.setFlagStatus(signUpRequest.getFlagValue());
@@ -293,12 +301,14 @@ public class AuthController {
 		System.out.println("OTP ................" + otp);
 
 		Optional<User> optionalUser = userRepository.findBySystemId(username);
-
-		if (optionalUser.isPresent()) {
+		Optional<OTPEntry> optionalOtp = otpEntryRepository.findBySystemId(username);
+		if (optionalUser.isPresent() && optionalOtp.isPresent()) {
 			User user = optionalUser.get();
-
-			if (user.getOtpSecretKey().equals(otp)) {
-				if (user.getOtpSendTime().isAfter(LocalTime.now().minusMinutes(2))) {
+			OTPEntry otpEntry = optionalOtp.get();
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+			LocalTime localTime = LocalTime.parse(otpEntry.getExpiresOn(), formatter);
+			if (String.valueOf(otpEntry.getOneTimePass()).equals(otp)) {
+				if (localTime.isAfter(LocalTime.now().minusMinutes(2))) {
 					// OTP validation successful
 					return ResponseEntity.ok("OTP validation successful. Please proceed...........");
 				} else {
@@ -400,8 +410,11 @@ public class AuthController {
 
 				// Set OTP Secret Key for User
 				User user = userOptional.get();
-				user.setOtpSecretKey(generateOTP);
-				user.setOtpSendTime(LocalTime.now());
+				OTPEntry OTP = new OTPEntry();
+				OTP.setOneTimePass(Integer.parseInt(generateOTP));
+				OTP.setExpiresOn(LocalTime.now() + "");
+				OTP.setSystemId(username);
+				otpEntryRepository.save(OTP);
 				ProfessionEntry professionEntry = professionEntryRepository.findById(user.getUserId().intValue())
 						.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
 				// Send Email with OTP
