@@ -10,7 +10,7 @@ import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = "addgroup")
-public class GroupEntry {
+public class GroupEntrySub {
 	@Id
 	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,13 +26,13 @@ public class GroupEntry {
 	@Transient
 	private long members;
 
-	public GroupEntry(String name, String masterId, boolean groupData) {
+	public GroupEntrySub(String name, String masterId, boolean groupData) {
 		this.name = name;
 		this.masterId = masterId;
 		this.groupData = groupData;
 	}
 
-	public GroupEntry() {
+	public GroupEntrySub() {
 	}
 
 	public int getId() {

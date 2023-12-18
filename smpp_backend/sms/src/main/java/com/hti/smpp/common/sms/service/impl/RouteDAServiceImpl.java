@@ -27,8 +27,8 @@ public class RouteDAServiceImpl implements RouteDAService {
 	@Autowired
 	private RouteEntryRepository routeEntryRepository;
 
-	@Autowired
-	private SmscDAService smscService;
+//	@Autowired
+//	private SmscDAService smscService;
 
 	@Override
 	public Map<Integer, RouteEntryExt> listRouteEntries(int userId, boolean hlr, boolean optional, boolean display) {
@@ -41,8 +41,8 @@ public class RouteDAServiceImpl implements RouteDAService {
 		Map<Integer, String> smsc_name_mapping = null;
 		Map<Integer, String> group_name_mapping = null;
 		if (display) {
-			smsc_name_mapping = smscService.listNames();
-			group_name_mapping = smscService.listGroupNames();
+//			smsc_name_mapping = smscService.listNames();
+//			group_name_mapping = smscService.listGroupNames();
 		}
 		for (RouteEntry basic : routeEntries) {
 			RouteEntryExt entry = new RouteEntryExt(basic);

@@ -27,7 +27,7 @@ import com.hti.smpp.common.util.Converter;
 import com.hti.smpp.common.util.Converters;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.SevenBitChar;
-import com.hti.smpp.common.util.dto.GroupEntry;
+import com.hti.smpp.common.util.dto.GroupEntrySub;
 import com.hti.smpp.common.util.dto.SubscribeEntry;
 import com.hti.smpp.common.util.repository.GroupRepository;
 import com.hti.smpp.common.util.repository.SubscribeEntryRepository;
@@ -146,7 +146,7 @@ public class SubscribeServiceImpl implements SubscribeService {
 					logger.error(masterId + " Invalid Country Code: " + form.getCountryCode());
 				}
 			}
-			GroupEntry groupEntry = new GroupEntry();
+			GroupEntrySub groupEntry = new GroupEntrySub();
 			groupEntry.setName(new Converters().UTF16(form.getPageName()));
 			groupEntry.setMasterId(masterId);
 			int groupId = groupRepository.save(groupEntry).getId();
