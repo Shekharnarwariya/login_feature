@@ -16,15 +16,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hti.smpp.common.response.BulkResponse;
 import com.hti.smpp.common.response.SmsResponse;
+import com.hti.smpp.common.service.SmsService;
 import com.hti.smpp.common.sms.request.BulkRequest;
 import com.hti.smpp.common.sms.request.SmsRequest;
-import com.hti.smpp.common.sms.service.SmsService;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/sms")
@@ -53,7 +54,7 @@ public class SmsController {
 	public ResponseEntity<BulkResponse> sendBulk(
 			@RequestParam("destinationNumberFile") MultipartFile destinationNumberFile,
 			@RequestHeader("username") String username,
-			@RequestParam(name = "bulkRequest", required = false) String bulkRequest) {
+			@RequestParam(name = "bulkRequest", required = false) String bulkRequest, HttpSession session) {
 		BulkRequest readValue;
 		BulkResponse bulkResponse;
 
@@ -62,9 +63,9 @@ public class SmsController {
 			readValue = objectMapper.readValue(bulkRequest, BulkRequest.class);
 			if (readValue.isCustomContent()) {
 				System.out.println("custom conten is true.......");
-				bulkResponse = smsService.sendBulkCustome(readValue, username, destinationNumberFile);
+				bulkResponse = smsService.sendBulkCustome(readValue, username, destinationNumberFile, session);
 			} else {
-				bulkResponse = smsService.sendBulkSms(readValue, username, destinationNumberFile);
+				bulkResponse = smsService.sendBulkSms(readValue, username, destinationNumberFile, session);
 			}
 			return ResponseEntity.ok(bulkResponse);
 		} catch (JsonProcessingException e) {

@@ -1,4 +1,4 @@
-package com.hti.smpp.common.sms.service.impl;
+package com.hti.smpp.common.service.impl;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.hti.smpp.common.contacts.dto.GroupEntry;
 import com.hti.smpp.common.contacts.repository.GroupEntryRepository;
-import com.hti.smpp.common.sms.service.SmscDAService;
+import com.hti.smpp.common.service.SmscDAService;
 import com.hti.smpp.common.smsc.dto.SmscEntry;
 import com.hti.smpp.common.smsc.repository.SmscEntryRepository;
 

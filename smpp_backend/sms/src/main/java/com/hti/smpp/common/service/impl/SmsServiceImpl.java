@@ -1,4 +1,4 @@
-package com.hti.smpp.common.sms.service.impl;
+package com.hti.smpp.common.service.impl;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -51,6 +51,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.hti.smpp.common.dto.BatchObject;
+import com.hti.smpp.common.dto.BulkListInfo;
 import com.hti.smpp.common.dto.BulkMgmtContent;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
@@ -69,17 +70,16 @@ import com.hti.smpp.common.response.BulkResponse;
 import com.hti.smpp.common.response.SmsResponse;
 import com.hti.smpp.common.schedule.dto.ScheduleEntry;
 import com.hti.smpp.common.schedule.repository.ScheduleEntryRepository;
+import com.hti.smpp.common.service.RouteDAService;
+import com.hti.smpp.common.service.SendSmsService;
+import com.hti.smpp.common.service.SmsService;
 import com.hti.smpp.common.sms.request.BulkRequest;
 import com.hti.smpp.common.sms.request.SmsRequest;
-import com.hti.smpp.common.sms.service.RouteDAService;
-import com.hti.smpp.common.sms.service.SendSmsService;
-import com.hti.smpp.common.sms.service.SmsService;
 import com.hti.smpp.common.sms.session.SessionHandler;
 import com.hti.smpp.common.sms.session.UserSession;
 import com.hti.smpp.common.sms.util.Body;
 import com.hti.smpp.common.sms.util.Converter;
 import com.hti.smpp.common.sms.util.GlobalVars;
-import com.hti.smpp.common.sms.util.IConstants;
 import com.hti.smpp.common.sms.util.ProgressEvent;
 import com.hti.smpp.common.user.dto.BalanceEntry;
 import com.hti.smpp.common.user.dto.UserEntry;
@@ -88,6 +88,7 @@ import com.hti.smpp.common.user.repository.BalanceEntryRepository;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.IConstants;
 import com.logica.smpp.Data;
 import com.logica.smpp.Session;
 import com.logica.smpp.pdu.SubmitSM;
@@ -103,6 +104,7 @@ public class SmsServiceImpl implements SmsService {
 
 	private static final Logger logger = LoggerFactory.getLogger(SmsServiceImpl.class);
 	private int commandid = 0;
+
 	private Session session = null;
 
 	@Autowired
@@ -126,9 +128,6 @@ public class SmsServiceImpl implements SmsService {
 	@Autowired
 	private BulkMgmtEntryRepository bulkMgmtEntryRepository;
 
-	@Autowired
-	private HttpSession session1;
-
 	private ProgressEvent event;
 
 	@Autowired
@@ -140,103 +139,7 @@ public class SmsServiceImpl implements SmsService {
 	@Autowired
 	private SummaryReportRepository summaryReportRepository;
 
-	private static Map<String, String> hashTabOne = new HashMap<String, String>();
 	private Random rand = new Random();
-	static {
-		hashTabOne.put("A", "41");
-		hashTabOne.put("B", "42");
-		hashTabOne.put("C", "43");
-		hashTabOne.put("D", "44");
-		hashTabOne.put("E", "45");
-		hashTabOne.put("F", "46");
-		hashTabOne.put("G", "47");
-		hashTabOne.put("H", "48");
-		hashTabOne.put("I", "49");
-		hashTabOne.put("J", "4A");
-		hashTabOne.put("K", "4B");
-		hashTabOne.put("L", "4C");
-		hashTabOne.put("M", "4D");
-		hashTabOne.put("N", "4E");
-		hashTabOne.put("O", "4F");
-		hashTabOne.put("P", "50");
-		hashTabOne.put("Q", "51");
-		hashTabOne.put("R", "52");
-		hashTabOne.put("S", "53");
-		hashTabOne.put("T", "54");
-		hashTabOne.put("U", "55");
-		hashTabOne.put("V", "56");
-		hashTabOne.put("W", "57");
-		hashTabOne.put("X", "58");
-		hashTabOne.put("Y", "59");
-		hashTabOne.put("Z", "5A");
-		hashTabOne.put("a", "61");
-		hashTabOne.put("b", "62");
-		hashTabOne.put("c", "63");
-		hashTabOne.put("d", "64");
-		hashTabOne.put("e", "65");
-		hashTabOne.put("f", "66");
-		hashTabOne.put("g", "67");
-		hashTabOne.put("h", "68");
-		hashTabOne.put("i", "69");
-		hashTabOne.put("j", "6A");
-		hashTabOne.put("k", "6B");
-		hashTabOne.put("l", "6C");
-		hashTabOne.put("m", "6D");
-		hashTabOne.put("n", "6E");
-		hashTabOne.put("o", "6F");
-		hashTabOne.put("p", "70");
-		hashTabOne.put("q", "71");
-		hashTabOne.put("r", "72");
-		hashTabOne.put("s", "73");
-		hashTabOne.put("t", "74");
-		hashTabOne.put("u", "75");
-		hashTabOne.put("v", "76");
-		hashTabOne.put("w", "77");
-		hashTabOne.put("x", "78");
-		hashTabOne.put("y", "79");
-		hashTabOne.put("z", "7A");
-		hashTabOne.put("0", "30");
-		hashTabOne.put("1", "31");
-		hashTabOne.put("2", "32");
-		hashTabOne.put("3", "33");
-		hashTabOne.put("4", "34");
-		hashTabOne.put("5", "35");
-		hashTabOne.put("6", "36");
-		hashTabOne.put("7", "37");
-		hashTabOne.put("8", "38");
-		hashTabOne.put("9", "39");
-		hashTabOne.put("~", "1B3D"); // hashTabOne.put("\\", "1B2E");
-		hashTabOne.put("|", "1B40");
-		hashTabOne.put("]", "1B3E");
-		hashTabOne.put("[", "1B3C");
-		hashTabOne.put("}", "1B29");
-		hashTabOne.put("{", "1B28");
-		hashTabOne.put("^", "1B14");
-		hashTabOne.put("@", "00");
-		hashTabOne.put("$", "02");
-		hashTabOne.put("_", "11");
-		hashTabOne.put("!", "21");
-		hashTabOne.put("\"", "22");
-		hashTabOne.put("#", "23");
-		hashTabOne.put("%", "25");
-		hashTabOne.put("&", "26");
-		hashTabOne.put("'", "27");
-		hashTabOne.put("(", "28");
-		hashTabOne.put(")", "29");
-		hashTabOne.put("\n", "0A");
-		hashTabOne.put("*", "2A");
-		hashTabOne.put("+", "2B");
-		hashTabOne.put(",", "2C");
-		hashTabOne.put("-", "2D");
-		hashTabOne.put(".", "2E");
-		hashTabOne.put("/", "2F");
-		hashTabOne.put(":", "3A");
-		hashTabOne.put(";", "3B");
-		hashTabOne.put("<", "3C");
-		hashTabOne.put("=", "3D");
-		hashTabOne.put(">", "3E");
-		hashTabOne.put("?", "3F");
-	}
 
 	public SmsResponse sendSms(SmsRequest smsRequest, String username) {
 		Optional<User> userOptional = userRepository.findBySystemId(username);
@@ -1126,7 +1029,8 @@ public class SmsServiceImpl implements SmsService {
 	}
 
 	@Override
-	public BulkResponse sendBulkSms(BulkRequest bulkRequest, String username, MultipartFile destinationNumberFile) {
+	public BulkResponse sendBulkSms(BulkRequest bulkRequest, String username, MultipartFile destinationNumberFile,
+			HttpSession session) {
 		Optional<User> userOptional = userRepository.findBySystemId(username);
 
 		if (userOptional.isPresent()) {
@@ -1143,7 +1047,7 @@ public class SmsServiceImpl implements SmsService {
 		String target = IConstants.FAILURE_KEY;
 		List<String> destinationList = null;
 		List<String> temp_number_list = new ArrayList<String>();
-		ProgressEvent progressEvent = new ProgressEvent(session1);
+		ProgressEvent progressEvent = new ProgressEvent(session);
 		userOptional = userRepository.findBySystemId(username);
 		User user = null;
 		if (userOptional.isPresent()) {
@@ -2148,7 +2052,8 @@ public class SmsServiceImpl implements SmsService {
 	}
 
 	@Override
-	public BulkResponse sendBulkCustome(BulkRequest bulkRequest, String username, MultipartFile destinationNumberFile) {
+	public BulkResponse sendBulkCustome(BulkRequest bulkRequest, String username, MultipartFile destinationNumberFile,
+			HttpSession session) {
 		Optional<User> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
 			User user = userOptional.get();
@@ -2165,7 +2070,7 @@ public class SmsServiceImpl implements SmsService {
 		String target = IConstants.FAILURE_KEY;
 		ArrayList destinationList = null;
 		List<String> temp_number_list = new ArrayList<String>();
-		ProgressEvent progressEvent = new ProgressEvent(session1);
+		ProgressEvent progressEvent = new ProgressEvent(session);
 		userOptional = userRepository.findBySystemId(username);
 		User user = null;
 		if (userOptional.isPresent()) {
@@ -2975,7 +2880,7 @@ public class SmsServiceImpl implements SmsService {
 				ascii += "" + arr[i];
 			} else if (arr[i] == ',' || arr[i] == ' ') {
 				// System.out.println("ascii : "+ascii);
-				String hexv = (String) hashTabOne.get((ascii.trim()));
+				String hexv = (String) GlobalVars.hashTabOne.get((ascii.trim()));
 				// System.out.println("hex : "+hexv);
 				if (hexv != null) {
 					HexMessage += hexv;

@@ -1,4 +1,4 @@
-package com.hti.smpp.common.sms.service.impl;
+package com.hti.smpp.common.service.impl;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,7 +15,8 @@ import com.hti.smpp.common.route.dto.OptionalRouteEntry;
 import com.hti.smpp.common.route.dto.RouteEntry;
 import com.hti.smpp.common.route.dto.RouteEntryExt;
 import com.hti.smpp.common.route.repository.RouteEntryRepository;
-import com.hti.smpp.common.sms.service.RouteDAService;
+import com.hti.smpp.common.service.RouteDAService;
+import com.hti.smpp.common.service.SmscDAService;
 import com.hti.smpp.common.sms.util.GlobalVars;
 
 @Service
@@ -29,7 +30,7 @@ public class RouteDAServiceImpl implements RouteDAService {
 	@Override
 	public Map<Integer, RouteEntryExt> listRouteEntries(int userId, boolean hlr, boolean optional, boolean display) {
 		logger.info("Listing RouteEntries For " + userId + " hlr: " + hlr + " optional: " + optional);
-
+		SmscDAService smscService = new SmscDAServiceImpl();
 		Map<Integer, RouteEntryExt> list = new HashMap<>();
 		Specification<RouteEntry> spec = (root, query, cb) -> cb.equal(root.get("userId"), userId);
 		List<RouteEntry> routeEntries = routeEntryRepository.findAll(spec);
@@ -37,8 +38,8 @@ public class RouteDAServiceImpl implements RouteDAService {
 		Map<Integer, String> smsc_name_mapping = null;
 		Map<Integer, String> group_name_mapping = null;
 		if (display) {
-			smsc_name_mapping = GlobalVars.smscService.listNames();
-			group_name_mapping = GlobalVars.smscService.listGroupNames();
+			smsc_name_mapping = smscService.listNames();
+			group_name_mapping = smscService.listGroupNames();
 		}
 		for (RouteEntry basic : routeEntries) {
 			RouteEntryExt entry = new RouteEntryExt(basic);

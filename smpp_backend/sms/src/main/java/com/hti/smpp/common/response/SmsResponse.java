@@ -2,7 +2,7 @@ package com.hti.smpp.common.response;
 
 import org.springframework.stereotype.Component;
 
-import com.hti.smpp.common.sms.service.impl.BulkListInfo;
+import com.hti.smpp.common.dto.BulkListInfo;
 
 @Component
 public class SmsResponse {
