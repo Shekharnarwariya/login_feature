@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -410,7 +411,7 @@ public class KeywordServiceImpl implements KeywordService {
 		} catch (UnauthorizedException e) {
 			logger.error(systemId, e.toString());
 			logger.error("Unauthorize Error: " + e.getMessage() + "[" + e.getCause() + "]");
-			throw new InternalServerException(e.getLocalizedMessage());
+			throw new UnauthorizedException(e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error(systemId, e.toString());
 			logger.error("Process Error: " + e.getMessage() + "[" + e.getCause() + "]");
@@ -570,7 +571,7 @@ public class KeywordServiceImpl implements KeywordService {
 	}
 
 	private JasperPrint getReportList(TwowayReportForm reportForm, boolean paging)
-			throws JRException, AccessDataException {
+			throws JRException, DataAccessException{
 
 		String sql = "select A.user_id,A.source,A.short_code,A.received_text,A.receivedOn,A.reply,A.reply_msg,A.msg_id,A.remarks,B.system_id,C.prefix,C.suffix"
 				+ " from 2way_report A,usermaster B,2way_keyword C where A.user_id=B.id and A.keyword_id = C.id";
@@ -613,11 +614,14 @@ public class KeywordServiceImpl implements KeywordService {
 
 			});
 
+		} catch (DataAccessException e) {
+			logger.error(e.toString());
+			throw new AccessDataException("Error fetching data."+e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error(e.toString());
-			throw new AccessDataException("Error fetching data.");
+			throw new InternalServerException("Error fetching data."+e.getLocalizedMessage());
 		}
-
+		
 		List<ReportEntry> final_list = list;
 		logger.info(" 2WayReport: " + sql);
 		logger.info(" Prepared List: " + final_list.size());
@@ -704,8 +708,8 @@ public class KeywordServiceImpl implements KeywordService {
 					throw new JasperReportException(e.getLocalizedMessage());
 				} catch (NotFoundException e) {
 					logger.error(e.toString());
-					throw new AccessDataException(e.getLocalizedMessage());
-				} catch (AccessDataException e) {
+					throw new NotFoundException(e.getLocalizedMessage());
+				} catch (DataAccessException e) {
 					logger.error(e.toString());
 					throw new AccessDataException(e.getLocalizedMessage());
 				} catch (Exception e) {
@@ -771,8 +775,8 @@ public class KeywordServiceImpl implements KeywordService {
 					throw new JasperReportException(e.getLocalizedMessage());
 				} catch (NotFoundException e) {
 					logger.error(e.toString());
-					throw new AccessDataException(e.getLocalizedMessage());
-				} catch (AccessDataException e) {
+					throw new NotFoundException(e.getLocalizedMessage());
+				} catch (DataAccessException e) {
 					logger.error(e.toString());
 					throw new AccessDataException(e.getLocalizedMessage());
 				} catch (Exception e) {
@@ -828,8 +832,8 @@ public class KeywordServiceImpl implements KeywordService {
 					throw new JasperReportException(e.getLocalizedMessage());
 				} catch (NotFoundException e) {
 					logger.error(e.toString());
-					throw new AccessDataException(e.getLocalizedMessage());
-				} catch (AccessDataException e) {
+					throw new NotFoundException(e.getLocalizedMessage());
+				} catch (DataAccessException e) {
 					logger.error(e.toString());
 					throw new AccessDataException(e.getLocalizedMessage());
 				} catch (Exception e) {
