@@ -16,9 +16,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hti.smpp.common.response.BulkResponse;
 import com.hti.smpp.common.response.SmsResponse;
+import com.hti.smpp.common.service.SmsService;
 import com.hti.smpp.common.sms.request.BulkRequest;
 import com.hti.smpp.common.sms.request.SmsRequest;
-import com.hti.smpp.common.sms.service.SmsService;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;

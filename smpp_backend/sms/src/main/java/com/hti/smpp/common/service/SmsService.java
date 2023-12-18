@@ -1,4 +1,4 @@
-package com.hti.smpp.common.sms.service;
+package com.hti.smpp.common.service;
 
 import org.springframework.web.multipart.MultipartFile;
 
