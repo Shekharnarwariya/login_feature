@@ -8,17 +8,17 @@ import com.hti.smpp.common.sales.dto.SalesEntry;
 
 public interface SalesService {
 
-	public String save(SalesEntryForm entry, String username);
+	public ResponseEntity<String> save(SalesEntryForm entry, String username);
 
-	public String update(SalesEntryForm form, String username);
+	public ResponseEntity<String> update(SalesEntryForm form, String username);
 
-	public String delete(int id, String username);
+	public ResponseEntity<String> delete(int id, String username);
 	
-	public Collection<SalesEntry> listSalesUsers(String username);
+	public ResponseEntity<Collection<SalesEntry>> listSalesUsers(String username);
 	
 	public ResponseEntity<?> viewSalesEntry(int id, String username);
 	
-	public Collection<SalesEntry> setupSalesEntry(String username);
+	public ResponseEntity<Collection<SalesEntry>> setupSalesEntry(String username);
 	
 	
 
