@@ -157,20 +157,17 @@ public class SmsServiceImpl implements SmsService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 		}
-		System.out.println(user);
-		Optional<UserEntry> userEntryOptional = userEntryRepository.findBySystemId(String.valueOf(user.getSystemId()));
+		Optional<UserEntry> userEntryOptional = userEntryRepository.findBySystemId(user.getSystemId());
 		UserEntry userEntry = null;
 		if (userEntryOptional.isPresent()) {
 			userEntry = userEntryOptional.get();
 		}
-		System.out.println(userEntry);
 		SmsResponse smsResponse = new SmsResponse();
 		String target = IConstants.FAILURE_KEY;
 		BulkSmsDTO bulkSmsDTO = new BulkSmsDTO();
-		bulkSmsDTO.setClientId("testUser1");
-		bulkSmsDTO.setSystemId("testUser1");
-		bulkSmsDTO.setPassword("1");
-		// if sms schedule the requre parameter
+		bulkSmsDTO.setClientId(userEntry.getSystemId());
+		bulkSmsDTO.setSystemId(userEntry.getSystemId());
+		bulkSmsDTO.setPassword(userEntry.getPassword());
 		bulkSmsDTO.setSchedule(false);
 		bulkSmsDTO.setTimestart("");
 		bulkSmsDTO.setGmt("");
@@ -200,12 +197,8 @@ public class SmsServiceImpl implements SmsService {
 		} else {
 			logger.info(bulkSessionId + " Single Sms Request <" + bulkSmsDTO.getDestinationNumber() + ">");
 		}
-		// ISendSmsService sendSmsService = new SendSmsService();
 		int total_msg = 0;
 		try {
-			// String userExparyDate = (userSessionObject.getExpiry()).toString();
-			// String adminId = userSessionObject.getMasterId();
-
 			// check wallet balance
 			Optional<BalanceEntry> masterBalanceOptional = balanceEntryRepository
 					.findBySystemId((userEntry.getMasterId()));
@@ -249,6 +242,7 @@ public class SmsServiceImpl implements SmsService {
 						valid_sch_time = true;
 					} else {
 						logger.error(bulkSessionId + " Scheduled Time is before Current Time");
+						//ScheduledTimeException
 					}
 					String server_date = schedule_time.split(" ")[0];
 					String server_time = schedule_time.split(" ")[1];

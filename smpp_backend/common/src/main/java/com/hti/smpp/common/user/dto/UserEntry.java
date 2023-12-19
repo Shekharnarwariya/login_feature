@@ -15,7 +15,6 @@ import jakarta.persistence.Transient;
 public class UserEntry implements Serializable, Comparable<UserEntry> {
 	@Id
 	@Column(name = "id")
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
 	@Column(name = "system_id")
 	private String systemId;

@@ -55,7 +55,16 @@ public class ApplicationExceptionHandler {
 	public ResponseEntity<ExceptionResponse> InternalServerException(InternalServerException exception) {
 		LocalDateTime current = LocalDateTime.now();
 		return new ResponseEntity<>(new ExceptionResponse(exception.getMessage(), toUtc(current),
-				HttpStatus.BAD_GATEWAY.value(), HttpStatus.BAD_GATEWAY.getReasonPhrase()), HttpStatus.BAD_GATEWAY);
+				HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase()),
+				HttpStatus.INTERNAL_SERVER_ERROR);
+
+	}
+
+	@ExceptionHandler(ScheduledTimeException.class)
+	public ResponseEntity<ExceptionResponse> ScheduledTimeException(ScheduledTimeException exception) {
+		LocalDateTime current = LocalDateTime.now();
+		return new ResponseEntity<>(new ExceptionResponse(exception.getMessage(), toUtc(current),
+				HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase()), HttpStatus.BAD_REQUEST);
 
 	}
 
