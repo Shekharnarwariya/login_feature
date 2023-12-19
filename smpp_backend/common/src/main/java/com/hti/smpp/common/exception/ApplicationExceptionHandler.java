@@ -84,6 +84,23 @@ public class ApplicationExceptionHandler {
 		return errormap;
 
 	}
+	
+	@ExceptionHandler(AccessDataException.class)
+	public ResponseEntity<ExceptionResponse> AccessDataException(AccessDataException exception) {
+		LocalDateTime current = LocalDateTime.now();
+		return new ResponseEntity<>(new ExceptionResponse(exception.getMessage(), toUtc(current),
+				HttpStatus.BAD_GATEWAY.value(), HttpStatus.BAD_GATEWAY.getReasonPhrase()), HttpStatus.BAD_GATEWAY);
+
+	}
+	
+	@ExceptionHandler(JasperReportException.class)
+	public ResponseEntity<ExceptionResponse> JasperReportException(JasperReportException exception) {
+		LocalDateTime current = LocalDateTime.now();
+		return new ResponseEntity<>(new ExceptionResponse(exception.getMessage(), toUtc(current),
+				HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase()), HttpStatus.BAD_REQUEST);
+
+	}
+	
 
 	@ExceptionHandler(DataAccessError.class)
 	public ResponseEntity<ExceptionResponse> handleDataAccessException(DataAccessError exception) {

@@ -31,6 +31,8 @@ public class WebMenuAccessEntry implements Serializable {
 	private boolean user;
 	@Column(name = "sales")
 	private boolean sales;
+	@Column(name = "2way")
+	private boolean twoWay;
 
 	public WebMenuAccessEntry() {
 	}
@@ -40,7 +42,7 @@ public class WebMenuAccessEntry implements Serializable {
 	}
 
 	public WebMenuAccessEntry(int userId, boolean messaging, boolean utility, boolean report, boolean addbook,
-			boolean template, boolean bsfm, boolean routing, boolean user, boolean sales) {
+			boolean template, boolean bsfm, boolean routing, boolean user, boolean sales, boolean twoWay) {
 		this.userId = userId;
 		this.messaging = messaging;
 		this.utility = utility;
@@ -51,6 +53,7 @@ public class WebMenuAccessEntry implements Serializable {
 		this.routing = routing;
 		this.user = user;
 		this.sales = sales;
+		this.twoWay = twoWay;
 	}
 
 	public int getUserId() {
@@ -132,10 +135,21 @@ public class WebMenuAccessEntry implements Serializable {
 	public void setSales(boolean sales) {
 		this.sales = sales;
 	}
+	
+	public boolean isTwoWay() {
+		return twoWay;
+	}
+
+	public void setTwoWay(boolean twoWay) {
+		this.twoWay = twoWay;
+	}
 
 	public String toString() {
 		return "WebMenuAccessEntry: userId=" + userId + ",messaging=" + messaging + ",report=" + report + ",addbook="
 				+ addbook + ",template=" + template + ",utility=" + utility + ",bsfm=" + bsfm + ",routing=" + routing
-				+ ",user=" + user + ",sales=" + sales;
+				+ ",user=" + user + ",sales=" + sales + ",2way=" + twoWay;
 	}
+	
+
+	
 }
