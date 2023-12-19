@@ -2,6 +2,7 @@ package com.hti.smpp.common.service.impl;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.login.dto.User;
 import com.hti.smpp.common.login.repository.UserRepository;
+import com.hti.smpp.common.messages.repository.SummaryReportRepository;
 import com.hti.smpp.common.request.TemplatesRequest;
 import com.hti.smpp.common.responce.TemplatesResponse;
 import com.hti.smpp.common.service.TemplatesService;
@@ -29,10 +31,13 @@ import jakarta.transaction.Transactional;
 
 @Service
 public class TemplatesServiceImpl implements TemplatesService {
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(TemplatesServiceImpl.class.getName());
-	
+
 	private final TemplatesRepository templatesRepository;
+
+	@Autowired
+	private SummaryReportRepository summaryReportRepository;
 
 	@Autowired
 	public TemplatesServiceImpl(TemplatesRepository templatesRepository) {
@@ -55,9 +60,10 @@ public class TemplatesServiceImpl implements TemplatesService {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
-		logger.info("Add Template Request By userId: " + userOptional.get().getUserId()+ " Title: " + request.getTitle() + " Message: " + request.getMessage());
-		
+
+		logger.info("Add Template Request By userId: " + userOptional.get().getUserId() + " Title: "
+				+ request.getTitle() + " Message: " + request.getMessage());
+
 		TemplatesDTO template = new TemplatesDTO();
 		template.setMessage(Converter.UTF16(request.getMessage()));
 		userOptional = userRepository.findBySystemId(username);
@@ -79,15 +85,16 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (savedTemplate.getTitle() != null && savedTemplate.getTitle().length() > 0) {
 			savedTemplate.setTitle(Converter.hexCodePointsToCharMsg(savedTemplate.getTitle()));
 		}
-		
-		if(mapToResponse(savedTemplate) != null) {
-			logger.info("Add Template Request Successful by userId: " + userOptional.get().getUserId()+ " Title: " + request.getTitle() + " Message: " + request.getMessage());
-			return new ResponseEntity<>("Template created successfully",HttpStatus.CREATED);
-		}else {
+
+		if (mapToResponse(savedTemplate) != null) {
+			logger.info("Add Template Request Successful by userId: " + userOptional.get().getUserId() + " Title: "
+					+ request.getTitle() + " Message: " + request.getMessage());
+			return new ResponseEntity<>("Template created successfully", HttpStatus.CREATED);
+		} else {
 			logger.error("Processing Error");
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 		}
-		
+
 	}
 
 	@Override
@@ -106,8 +113,9 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (userOptional.isPresent()) {
 			system_id = userOptional.get().getUserId();
 		}
-		logger.info("Get Template Request By userId: " + userOptional.get().getUserId()+ " Template Id: " + id);
-		TemplatesDTO template = templatesRepository.findByIdAndMasterId(id, system_id).orElseThrow(()-> new NotFoundException("Template with id: "+id+" not found."));
+		logger.info("Get Template Request By userId: " + userOptional.get().getUserId() + " Template Id: " + id);
+		TemplatesDTO template = templatesRepository.findByIdAndMasterId(id, system_id)
+				.orElseThrow(() -> new NotFoundException("Template with id: " + id + " not found."));
 		if (template != null) {
 			if (template.getMessage() != null && template.getMessage().length() > 0) {
 				template.setMessage(Converter.hexCodePointsToCharMsg(template.getMessage()));
@@ -116,15 +124,16 @@ public class TemplatesServiceImpl implements TemplatesService {
 				template.setTitle(Converter.hexCodePointsToCharMsg(template.getTitle()));
 			}
 		}
-		
-		if(template != null) {
-			logger.info("Get Template Request Successful By userId: " + userOptional.get().getUserId()+ " Template Id: " + id);
-			return new ResponseEntity<>(mapToResponse(template),HttpStatus.OK);
-		}else {
-			logger.error("Error Processing Template by id: "+id);
+
+		if (template != null) {
+			logger.info("Get Template Request Successful By userId: " + userOptional.get().getUserId()
+					+ " Template Id: " + id);
+			return new ResponseEntity<>(mapToResponse(template), HttpStatus.OK);
+		} else {
+			logger.error("Error Processing Template by id: " + id);
 			return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
 		}
-		
+
 	}
 
 	@Override
@@ -143,15 +152,15 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (userOptional.isPresent()) {
 			system_id = userOptional.get().getUserId();
 		}
-		
-		logger.info("Get All Templates Requested by userId: "+system_id);
-		
+
+		logger.info("Get All Templates Requested by userId: " + system_id);
+
 		List<TemplatesDTO> templates = null;
 		try {
 			templates = (List<TemplatesDTO>) templatesRepository.findByMasterId(system_id);
 		} catch (Exception e) {
-			logger.error("Error processing templates: "+e.toString());
-			throw new NotFoundException("Template not found for system id: "+system_id);
+			logger.error("Error processing templates: " + e.toString());
+			throw new NotFoundException("Template not found for system id: " + system_id);
 		}
 		templates.forEach(template -> {
 			if (template.getMessage() != null && !template.getMessage().isEmpty()) {
@@ -162,14 +171,15 @@ public class TemplatesServiceImpl implements TemplatesService {
 			}
 		});
 
-		if(!templates.stream().map(this::mapToResponse).collect(Collectors.toList()).isEmpty() && templates.stream().map(this::mapToResponse).collect(Collectors.toList())!=null) {
-			logger.info("Get all templates request successful for userId: "+system_id);
+		if (!templates.stream().map(this::mapToResponse).collect(Collectors.toList()).isEmpty()
+				&& templates.stream().map(this::mapToResponse).collect(Collectors.toList()) != null) {
+			logger.info("Get all templates request successful for userId: " + system_id);
 			return ResponseEntity.ok(templates.stream().map(this::mapToResponse).collect(Collectors.toList()));
-		}else {
+		} else {
 			logger.error("Error Processing Request for Get All Templates.");
 			return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
 		}
-		
+
 	}
 
 	@Override
@@ -188,9 +198,11 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (userOptional.isPresent()) {
 			system_id = userOptional.get().getUserId();
 		}
-		logger.info(" Update template request by userId: "+system_id+" title: "+ request.getTitle() + " message: " + request.getMessage());
-		
-		TemplatesDTO template = templatesRepository.findByIdAndMasterId(id, system_id).orElseThrow(() -> new NotFoundException("Template with id: "+id+" not found."));
+		logger.info(" Update template request by userId: " + system_id + " title: " + request.getTitle() + " message: "
+				+ request.getMessage());
+
+		TemplatesDTO template = templatesRepository.findByIdAndMasterId(id, system_id)
+				.orElseThrow(() -> new NotFoundException("Template with id: " + id + " not found."));
 		TemplatesDTO updatedTemplate = null;
 		if (template != null) {
 			template.setMessage(Converter.UTF16(request.getMessage()));
@@ -204,13 +216,14 @@ public class TemplatesServiceImpl implements TemplatesService {
 				updatedTemplate.setTitle(Converter.hexCodePointsToCharMsg(updatedTemplate.getTitle()));
 			}
 
-		}else {
+		} else {
 			logger.info(system_id + " <-- No template to update -->");
 		}
-		if(mapToResponse(updatedTemplate)!=null) {
-			logger.info("Update Template Request Successful: " + userOptional.get().getUserId()+ " Title: " + request.getTitle() + " Message: " + request.getMessage());
-			return new ResponseEntity<>(mapToResponse(updatedTemplate),HttpStatus.CREATED);
-		}else {
+		if (mapToResponse(updatedTemplate) != null) {
+			logger.info("Update Template Request Successful: " + userOptional.get().getUserId() + " Title: "
+					+ request.getTitle() + " Message: " + request.getMessage());
+			return new ResponseEntity<>(mapToResponse(updatedTemplate), HttpStatus.CREATED);
+		} else {
 			logger.error("Processing error.");
 			return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
 		}
@@ -235,17 +248,17 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (userOptional.isPresent()) {
 			system_id = userOptional.get().getUserId();
 		}
-		logger.info("userId: "+ system_id + " delete templateId: " + id);
+		logger.info("userId: " + system_id + " delete templateId: " + id);
 		try {
 			templatesRepository.deleteByIdAndMasterId(id, system_id);
 			isDone = true; // Return true if the deletion was successful.
-			logger.info("Template deleted successful with id: "+id);
+			logger.info("Template deleted successful with id: " + id);
 			return ResponseEntity.ok("Template deleted successfully");
 		} catch (EmptyResultDataAccessException e) {
 			// The template with the given ID was not found, return false.
 			isDone = false;
 			logger.error("delete templateId: " + id + " <-- No template to delete -->");
-			logger.error("Error: "+e.getMessage());
+			logger.error("Error: " + e.getMessage());
 			return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
 		}
 	}
@@ -259,4 +272,55 @@ public class TemplatesServiceImpl implements TemplatesService {
 		return response;
 	}
 
+	@Override
+	public ResponseEntity<?> RecentUseTemplate(String username) {
+
+		Optional<User> userOptional = userRepository.findBySystemId(username);
+
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+			if (!Access.isAuthorizedAll(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		try {
+			Set<String> recentContent = summaryReportRepository.getRecentContent(username);
+			// Logging success
+			logger.info("RecentUseTemplate operation succeeded for user: {}", username);
+			// Return the result
+			return ResponseEntity.ok(recentContent);
+		} catch (Exception e) {
+			// Logging other exceptions
+			logger.error("An unexpected error occurred: {}", e.getMessage(), e);
+			throw new InternalServerException("An unexpected error occurred. Please try again." + e.getMessage());
+		}
+	}
+
+	@Override
+	public ResponseEntity<?> searchRecentTemplates(String username, String search) {
+
+		Optional<User> userOptional = userRepository.findBySystemId(username);
+
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+			if (!Access.isAuthorizedAll(user.getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		try {
+			Set<String> recentContent = summaryReportRepository.getRecentContentWithSearch(username, search);
+			// Logging success
+			logger.info("Search RecentUseTemplate operation succeeded for user: {}", username);
+			// Return the result
+			return ResponseEntity.ok(recentContent);
+		} catch (Exception e) {
+			// Logging other exceptions
+			logger.error("An unexpected error occurred: {}", e.getMessage(), e);
+			throw new InternalServerException("An unexpected error occurred. Please try again." + e.getMessage());
+		}
+	}
 }

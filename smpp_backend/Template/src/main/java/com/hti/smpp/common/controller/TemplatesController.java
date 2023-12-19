@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hti.smpp.common.request.TemplatesRequest;
@@ -99,4 +100,34 @@ public class TemplatesController {
 	public ResponseEntity<?> deleteTemplate(@Parameter(description = "Id") @PathVariable int id, @Parameter(description = "Username in header") @RequestHeader("username") String username) {
 		return templatesService.deleteTemplate(id, username);
 	}
+	
+	@Operation(summary = " Recently Used Template ", description = "Template that was recently used ")
+	@ApiResponses(value = { 
+	        @ApiResponse(responseCode = "200", description = "Recently used template  successfully"),
+	        @ApiResponse(responseCode = "404", description = "Template not found"),
+	        @ApiResponse(responseCode = "502", description = "Error while processing the request"),
+	        @ApiResponse(responseCode = "401", description = "Unauthorized request") 
+	})
+	@GetMapping("/recent-use-template")
+	public ResponseEntity<?> RecentUseTemplate(
+	    @Parameter(description = "Username provided in the request header") @RequestHeader("username") String username) {
+	    return templatesService.RecentUseTemplate(username);
+	}
+
+	
+	
+	@Operation(summary = "Search Recently Used Templates", description = "Search for templates that were recently used")
+	@ApiResponses(value = {
+	        @ApiResponse(responseCode = "200", description = "Recently used templates successfully retrieved"),
+	        @ApiResponse(responseCode = "404", description = "Templates not found"),
+	        @ApiResponse(responseCode = "502", description = "Error while processing the request"),
+	        @ApiResponse(responseCode = "401", description = "Unauthorized request")
+	})
+	@GetMapping("/search-recent-use-template")
+	public ResponseEntity<?> searchRecentTemplates(
+	        @Parameter(description = "Username provided in the request header") @RequestHeader("username") String username,
+	        @Parameter(description = "Number of recent templates to retrieve") @RequestParam(defaultValue = "a") String search) {
+	    return templatesService.searchRecentTemplates(username, search);
+	}
+
 }

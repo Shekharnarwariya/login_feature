@@ -15,4 +15,8 @@ public interface TemplatesService {
 	public ResponseEntity<?> updateTemplate(int id, TemplatesRequest request,String userName);
 
 	public ResponseEntity<?> deleteTemplate(int id, String userName);
+
+	public ResponseEntity<?> RecentUseTemplate(String username);
+
+	public ResponseEntity<?> searchRecentTemplates(String username, String search);
 }
