@@ -13,11 +13,11 @@ public interface ContactEntryService {
 
 	public ResponseEntity<?> saveContactEntry(String request, MultipartFile file, String username);
 
-	public ContactForBulk contactForBulk(List<Long> numbers, int groupId, String username);
+	public ResponseEntity<?> contactForBulk(List<Long> numbers, int groupId, String username);
 
-	public List<ContactEntry> viewSearchContact(List<Integer> ids, String username);
+	public ResponseEntity<List<ContactEntry>> viewSearchContact(List<Integer> ids, String username);
 
-	public ContactForBulk proceedSearchContact(List<Integer> ids, String username);
+	public ResponseEntity<ContactForBulk> proceedSearchContact(List<Integer> ids, String username);
 
 	public ResponseEntity<?> modifyContactUpdate(ContactEntryRequest request, String username);
 
