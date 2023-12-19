@@ -1,19 +1,18 @@
 package com.hti.smpp.common.service;
 
-import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import com.hti.smpp.common.request.TemplatesRequest;
-import com.hti.smpp.common.responce.TemplatesResponse;
 
 public interface TemplatesService {
 
-	public TemplatesResponse createTemplate(TemplatesRequest request, String username);
+	public ResponseEntity<?> createTemplate(TemplatesRequest request, String userName);
 
-	public TemplatesResponse getTemplateById(int id, String username);
+	public ResponseEntity<?> getTemplateById(int id, String userName);
 
-	public List<TemplatesResponse> getAllTemplates( String username);
+	public ResponseEntity<?> getAllTemplates(String userName);
 
-	public TemplatesResponse updateTemplate(int id, TemplatesRequest request,String username);
+	public ResponseEntity<?> updateTemplate(int id, TemplatesRequest request,String userName);
 
-	public boolean deleteTemplate(int id, String username);
+	public ResponseEntity<?> deleteTemplate(int id, String userName);
 }

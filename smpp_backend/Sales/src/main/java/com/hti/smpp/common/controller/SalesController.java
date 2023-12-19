@@ -3,7 +3,6 @@ package com.hti.smpp.common.controller;
 import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,7 +18,6 @@ import com.hti.smpp.common.request.SalesEntryForm;
 import com.hti.smpp.common.response.ViewSalesEntry;
 import com.hti.smpp.common.sales.dto.SalesEntry;
 import com.hti.smpp.common.service.SalesService;
-import com.hti.smpp.common.util.IConstants;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,48 +43,40 @@ public class SalesController {
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "201", description = "SalesEntry Saved Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) })
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
+	})
 	@PostMapping("/save")
 	public ResponseEntity<String> saveSalesEntry(@Valid @RequestBody SalesEntryForm salesEntry,
 			@Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username) {
-		String response = this.salesService.save(salesEntry, username);
-		if (response.equalsIgnoreCase(IConstants.SUCCESS_KEY)) {
-			return new ResponseEntity<String>(response, HttpStatus.CREATED);
-		} else {
-			return new ResponseEntity<String>(response, HttpStatus.BAD_GATEWAY);
-		}
+		return this.salesService.save(salesEntry, username);
 	}
 
 	@Operation(summary = "Update Sales Entry", description = "Update's an existing sales entry")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "201", description = "SalesEntry Updated Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) })
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
+			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
+	})
 	@PutMapping("/update")
 	public ResponseEntity<String> update(@Valid @RequestBody SalesEntryForm form,
 			@Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username) {
-		String response = this.salesService.update(form, username);
-		if (response.equalsIgnoreCase(IConstants.SUCCESS_KEY)) {
-			return new ResponseEntity<String>(response, HttpStatus.CREATED);
-		} else {
-			return new ResponseEntity<String>(response, HttpStatus.BAD_GATEWAY);
-		}
+		return this.salesService.update(form, username);
 	}
 
 	@Operation(summary = "Delete Sales Entry", description = "Delete's an existing sales entry")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "SalesEntry Deleted Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) })
+			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
+			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
+	})
 	@DeleteMapping("/delete/{id}")
 	public ResponseEntity<String> deleteSalesEntry(
 			@Parameter(description = "Id") @PathVariable(value = "id", required = true) int id,
 			@Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username) {
-		String response = this.salesService.delete(id, username);
-		if (response.equalsIgnoreCase(IConstants.SUCCESS_KEY)) {
-			return new ResponseEntity<String>(response, HttpStatus.OK);
-		} else {
-			return new ResponseEntity<String>(response, HttpStatus.BAD_GATEWAY);
-		}
+		return this.salesService.delete(id, username);
 
 	}
 
@@ -94,23 +84,22 @@ public class SalesController {
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "List Sales Users Successful.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) })
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
+			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
+	})
 	@GetMapping("/list-sales-users")
-	public ResponseEntity<?> listSalesUsers(
+	public ResponseEntity<Collection<SalesEntry>> listSalesUsers(
 			@Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username) {
-		Collection<SalesEntry> response = this.salesService.listSalesUsers(username);
-		if (!response.isEmpty() && response != null) {
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		} else {
-			return new ResponseEntity<>("No Executive Found Under " + username, HttpStatus.BAD_GATEWAY);
-		}
+		return this.salesService.listSalesUsers(username);
 	}
 
 	@Operation(summary = "View Sales Entry", description = "Returns the ViewSalesEntry as response")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "ViewSalesEntry response Successful.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ViewSalesEntry.class))),
 			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) })
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
+			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
+	})
 	@GetMapping("/view-sales-entry/{id}")
 	public ResponseEntity<?> viewSalesEntry(
 			@Parameter(description = "Id") @PathVariable(value = "id", required = true) int id,
@@ -126,12 +115,7 @@ public class SalesController {
 	@GetMapping("/setup-sales-entry")
 	public ResponseEntity<?> setupSalesEntry(
 			@Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username) {
-		Collection<SalesEntry> response = this.salesService.setupSalesEntry(username);
-		if (!response.isEmpty() && response != null) {
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		} else {
-			return new ResponseEntity<>("No data found", HttpStatus.BAD_GATEWAY);
-		}
+		return this.salesService.setupSalesEntry(username);
 	}
 
 }

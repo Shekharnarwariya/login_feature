@@ -25,6 +25,7 @@ import com.hti.smpp.common.contacts.repository.GroupDataEntryRepository;
 import com.hti.smpp.common.contacts.repository.GroupEntryDTORepository;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
+import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.login.dto.Role;
 import com.hti.smpp.common.login.dto.User;
 import com.hti.smpp.common.login.repository.UserRepository;
@@ -70,10 +71,19 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 	@Autowired
 	private MultiUserEntryRepository multiUserEntryRepository;
 
-	// WIP TODO
 	@Override
-	@Transactional
 	public ResponseEntity<?> saveGroupEntry(GroupEntryRequest form, String username) {
+
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		User getUser = null;
+		if (user.isPresent()) {
+			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+			getUser = user.get();
+		} else {
+			throw new NotFoundException("User not found.");
+		}
 
 		String systemId = null;
 		// Finding the user by system ID
@@ -84,13 +94,6 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 			throw new NotFoundException("UserEntry not found.");
 		}
 
-		Optional<User> user = userLoginRepo.findBySystemId(systemId);
-		User getUser = null;
-		if (user.isPresent()) {
-			getUser = user.get();
-		} else {
-			throw new NotFoundException("User not found.");
-		}
 		Set<Role> role = user.get().getRoles();
 
 		logger.info(systemId + "[" + role + "]" + " Add Contact Group Request");
@@ -108,9 +111,26 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 					entry.setName(new Converters().UTF16(names[i]));
 					entry.setGroupData(groupData[i]);
 					entry.setMasterId(systemId);
-					MultiUserEntry multiUserEntry = multiUserEntryRepository
-							.findByUserId(getUser.getUserId().intValue());
-					WebMasterEntry webEntry = this.webMasterRepo.findByUserId(getUser.getUserId().intValue());
+					MultiUserEntry multiUserEntry = null;
+					try {
+						multiUserEntry = multiUserEntryRepository.findByUserId(getUser.getUserId().intValue());
+					} catch (NotFoundException e) {
+						logger.error(e.getLocalizedMessage());
+						throw new NotFoundException(e.getLocalizedMessage());
+					} catch (Exception e) {
+						logger.error(e.getLocalizedMessage());
+						throw new InternalServerException(e.getLocalizedMessage());
+					}
+					WebMasterEntry webEntry = null;
+					try {
+						webEntry = this.webMasterRepo.findByUserId(getUser.getUserId().intValue());
+					} catch (NotFoundException e) {
+						logger.error(e.getLocalizedMessage());
+						throw new NotFoundException(e.getLocalizedMessage());
+					} catch (Exception e) {
+						logger.error(e.getLocalizedMessage());
+						throw new InternalServerException(e.getLocalizedMessage());
+					}
 
 					// Check if multi-user access is enabled and the access name is not null
 					if (webEntry.isMultiUserAccess() && multiUserEntry.getAccessName() != null) {
@@ -125,22 +145,25 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 					list.add(entry);
 					logger.info(entry.toString());
 				} else {
-					logger.info("[" + systemId + "]" + " Invalid Group Name: " + names[i]);
+					logger.warn("[" + systemId + "]" + " Invalid Group Name: " + names[i]);
 					continue;
 				}
 			}
 			if (list.isEmpty()) {
-				logger.info("[" + systemId + "]" + " No Valid Entry Found! ");
-				return new ResponseEntity<>(target, HttpStatus.NO_CONTENT);
+				logger.error("[" + systemId + "]" + " No Valid Entry Found! ");
+				throw new NotFoundException("[" + systemId + "]" + " No Valid Entry Found! ");
 			} else {
 				this.groupEntryDTORepository.saveAll(list);
 				target = IConstants.SUCCESS_KEY;
 				logger.info(systemId + " Add Contact Group Target:" + target);
 				return new ResponseEntity<>(target, HttpStatus.CREATED);
 			}
+		} catch (NotFoundException e) {
+			logger.error(systemId, e.getLocalizedMessage());
+			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error(systemId, e.getLocalizedMessage());
-			return new ResponseEntity<>(target, HttpStatus.INTERNAL_SERVER_ERROR);
+			throw new InternalServerException(e.getLocalizedMessage());
 		}
 
 	}
@@ -148,6 +171,16 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 	@Override
 	@Transactional
 	public ResponseEntity<?> modifyGroupEntryUpdate(GroupEntryRequest form, String username) {
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		Set<Role> role = new HashSet<>();
+		if (user.isPresent()) {
+			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+			role = user.get().getRoles();
+		} else {
+			throw new NotFoundException("User not found.");
+		}
 		String target = IConstants.FAILURE_KEY;
 
 		String systemId = null;
@@ -157,14 +190,6 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 			systemId = userOptional.get().getSystemId();
 		} else {
 			throw new NotFoundException("UserEntry not found.");
-		}
-
-		Optional<User> user = userLoginRepo.findBySystemId(systemId);
-		Set<Role> role = new HashSet<>();
-		if (user.isPresent()) {
-			role = user.get().getRoles();
-		} else {
-			throw new NotFoundException("User not found.");
 		}
 
 		GroupEntryDTO entry = null;
@@ -191,15 +216,20 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 				if (!list.isEmpty()) {
 					this.groupEntryDTORepository.saveAll(list);
 					target = IConstants.SUCCESS_KEY;
+				} else {
+					throw new InternalServerException("GroupEntry Save Unsuccessful Exception");
 				}
 
+			} catch (InternalServerException e) {
+				logger.error(systemId, e.toString());
+				throw new InternalServerException(e.getLocalizedMessage());
 			} catch (Exception e) {
 				logger.error(systemId, e.toString());
-				return new ResponseEntity<>(target, HttpStatus.INTERNAL_SERVER_ERROR);
+				throw new InternalServerException(e.getLocalizedMessage());
 			}
 		} else {
-			logger.info(systemId + " No Records Selected");
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+			logger.error(systemId + " No Records Selected");
+			throw new NotFoundException(systemId + " No Records Selected");
 		}
 		logger.info(systemId + " modify Contact Group Target:" + target);
 		return new ResponseEntity<>(target, HttpStatus.CREATED);
@@ -229,6 +259,8 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 					} catch (Exception e) {
 						throw new InternalServerException("Unable to delete ContactEntry.");
 					}
+				} else {
+					throw new NotFoundException("Unable to find ContactEntry.");
 				}
 			}
 		}
@@ -237,6 +269,18 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 	@Override
 	@Transactional
 	public ResponseEntity<?> modifyGroupEntryDelete(GroupEntryRequest form, String username) {
+
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		Set<Role> role = new HashSet<>();
+		if (user.isPresent()) {
+			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+			role = user.get().getRoles();
+		} else {
+			throw new NotFoundException("User not found.");
+		}
+
 		String target = IConstants.FAILURE_KEY;
 
 		String systemId = null;
@@ -246,14 +290,6 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 			systemId = userOptional.get().getSystemId();
 		} else {
 			throw new NotFoundException("UserEntry not found.");
-		}
-
-		Optional<User> user = userLoginRepo.findBySystemId(systemId);
-		Set<Role> role = new HashSet<>();
-		if (user.isPresent()) {
-			role = user.get().getRoles();
-		} else {
-			throw new NotFoundException("User not found.");
 		}
 
 		GroupEntryDTO entry = null;
@@ -275,15 +311,20 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 				if (!list.isEmpty()) {
 					deleteGroup(list);
 					target = IConstants.SUCCESS_KEY;
+				} else {
+					throw new InternalServerException("Unable to find Entries. List is empty!");
 				}
 
+			} catch (InternalServerException e) {
+				logger.error(systemId, e.toString());
+				throw new InternalServerException(e.getLocalizedMessage());
 			} catch (Exception e) {
 				logger.error(systemId, e.toString());
-				return new ResponseEntity<>(target, HttpStatus.INTERNAL_SERVER_ERROR);
+				throw new InternalServerException(e.getLocalizedMessage());
 			}
 		} else {
 			logger.info(systemId + " No Records Selected");
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+			throw new NotFoundException(systemId + " No Records Selected");
 		}
 		logger.info(systemId + " Remove Contact Group Target:" + target);
 
@@ -291,7 +332,13 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 	}
 
 	private List<GroupEntryDTO> listGroupByCriteria(String masterid, boolean groupData) {
-		List<GroupEntryDTO> list = this.groupEntryDTORepository.findByMasterIdAndGroupData(masterid, groupData);
+		List<GroupEntryDTO> list = null;
+		try {
+			list = this.groupEntryDTORepository.findByMasterIdAndGroupData(masterid, groupData);
+		} catch (Exception e) {
+			logger.error("Error: " + e.getLocalizedMessage());
+			throw new InternalServerException(e.getLocalizedMessage());
+		}
 		if (list != null && !list.isEmpty()) {
 			for (GroupEntryDTO entry : list) {
 				if (entry.getName() != null && entry.getName().length() > 0) {
@@ -311,7 +358,13 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 	}
 
 	private List<GroupEntryDTO> listGroupByCriteria(String masterid) {
-		List<GroupEntryDTO> list = this.groupEntryDTORepository.findByMasterId(masterid);
+		List<GroupEntryDTO> list = null;
+		try {
+			list = this.groupEntryDTORepository.findByMasterId(masterid);
+		} catch (Exception e) {
+			logger.error("Error: " + e.getLocalizedMessage());
+			throw new InternalServerException(e.getLocalizedMessage());
+		}
 		if (list != null && !list.isEmpty()) {
 			for (GroupEntryDTO entry : list) {
 				if (entry.getName() != null && entry.getName().length() > 0) {
@@ -337,6 +390,9 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 		User user = null;
 		Optional<User> optionalUser = userLoginRepo.findBySystemId(username);
 		if (optionalUser.isPresent()) {
+			if (!Access.isAuthorizedAll(optionalUser.get().getRoles())) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
 			user = optionalUser.get();
 
 		} else {
@@ -351,8 +407,8 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 			webEntry = webMenu.get();
 
 		} else {
-			logger.error("Error: Unable to found WebMEnuAccessEntry with userId: " + id);
-			throw new NotFoundException("Unable to found WebMEnuAccessEntry.");
+			logger.error("Error: Unable to found WebMenuAccessEntry with userId: " + id);
+			throw new NotFoundException("Unable to found WebMenuAccessEntry.");
 		}
 
 		String systemId = null;
@@ -376,6 +432,7 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 						logger.error(systemId + "[" + user.getRoles() + "]" + " <- Invalid Request ->");
 						target = "invalidRequest";
 						proceed = false;
+						throw new UnauthorizedException("User does not have the required roles for this operation.");
 					}
 				} else {
 					if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles()) || webEntry.isAddbook()) {
@@ -383,6 +440,7 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 						logger.error(systemId + "[" + user.getRoles() + "]" + " <- Invalid Request ->");
 						target = "invalidRequest";
 						proceed = false;
+						throw new UnauthorizedException("User does not have the required roles for this operation.");
 					}
 				}
 			} else {
@@ -391,6 +449,7 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 					logger.error(systemId + "[" + user.getRoles() + "]" + " <- Invalid Request ->");
 					target = "invalidRequest";
 					proceed = false;
+					throw new UnauthorizedException("User does not have the required roles for this operation.");
 				}
 			}
 			List<GroupEntryDTO> list = null;
@@ -424,17 +483,22 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 					response.setList(list);
 				} else {
 					logger.info(systemId + " No Contact Groups Found.");
+					throw new NotFoundException("No Contact Groups Found");
 				}
 			}
 			response.setTarget(target);
+		} catch (UnauthorizedException e) {
+			logger.error(systemId, e.toString());
+			throw new UnauthorizedException(e.getLocalizedMessage());
+		} catch (NotFoundException e) {
+			logger.error(systemId, e.toString());
+			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error(systemId, e.toString());
-			return new ResponseEntity<>(e.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+			throw new InternalServerException(e.getLocalizedMessage());
 		}
-
 		logger.info("Setup Contacts Group Target: " + target);
 
 		return ResponseEntity.ok(response);
 	}
-
 }

@@ -225,7 +225,9 @@ public class AuthController {
 
 			user.setRoles(roles);
 			User save = userRepository.save(user);
-			userEntryRepository.save(ConvertRequert(signUpRequest));
+			UserEntry convertRequert = ConvertRequert(signUpRequest);
+			convertRequert.setId(save.getUserId().intValue());
+			userEntryRepository.save(convertRequert);
 			signUpRequest.getWebMasterEntry().setUserId(save.getUserId().intValue());
 			signUpRequest.getDlrSettingEntry().setUserId(save.getUserId().intValue());
 			signUpRequest.getProfessionEntry().setUserId(save.getUserId().intValue());
@@ -264,7 +266,6 @@ public class AuthController {
 		entry.setDltDefaultSender(signUpRequest.getDltDefaultSender());
 		entry.setEditBy(signUpRequest.getUsername());
 		entry.setEditOn(signUpRequest.getCreatedOn());
-		System.out.println(entry.getEditOn());
 		entry.setExpiry("" + signUpRequest.getExpiry());
 		entry.setFixLongSms(signUpRequest.isFixLongSms());
 		entry.setFlagStatus(signUpRequest.getFlagValue());

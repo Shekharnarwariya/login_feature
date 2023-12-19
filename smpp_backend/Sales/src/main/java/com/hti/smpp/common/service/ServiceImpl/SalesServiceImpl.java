@@ -16,7 +16,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
+import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.login.dto.Role;
 import com.hti.smpp.common.login.dto.User;
 import com.hti.smpp.common.login.repository.UserRepository;
@@ -46,7 +48,19 @@ public class SalesServiceImpl implements SalesService {
 	private UserEntryRepository userRepository;
 
 	@Override
-	public String save(SalesEntryForm salesEntryForm, String username) {
+	public ResponseEntity<String> save(SalesEntryForm salesEntryForm, String username) {
+		
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		Set<Role> role = new HashSet<>();
+		if (user.isPresent()) {
+			if(!Access.isAuthorizedAll(user.get().getRoles())) {
+				throw new UnauthorizedException("User Does'nt have Required Access.");
+			}
+			role = user.get().getRoles();
+		} else {
+			throw new NotFoundException("User not found");
+		}
+		
 		String target = IConstants.FAILURE_KEY;
 		SalesEntry entry = new SalesEntry();
 		// Finding the user by system ID
@@ -58,20 +72,12 @@ public class SalesServiceImpl implements SalesService {
 			throw new NotFoundException("UserEntry not found");
 		}
 
-		Optional<User> user = userLoginRepo.findBySystemId(systemId);
-		Set<Role> role = new HashSet<>();
-		if (user.isPresent()) {
-			role = user.get().getRoles();
-		} else {
-			throw new NotFoundException("User not found");
-		}
 		logger.info("Sales User [{}-{}] Add Requested By {} [{}]", salesEntryForm.getUsername(),
 				salesEntryForm.getRole(), systemId, role);
 		try {
 			BeanUtils.copyProperties(salesEntryForm, entry);
 			if (GlobalVars.UserMapping.containsKey(entry.getUsername())) {
-				//logger.error("error.record.duplicate");
-				logger.error("Usermaster Entry Exists With same Username " + entry.getUsername());
+				logger.warn("Usermaster Entry Exists With same Username " + entry.getUsername());
 			} else {
 				SalesEntry sales = salesRepository.save(entry);
 				int id = sales.getId();
@@ -81,18 +87,34 @@ public class SalesServiceImpl implements SalesService {
 					target = IConstants.SUCCESS_KEY;
 				} else {
 					logger.error("Unable to create Sales User: {}", entry);
+					throw new InternalServerException("Unable to create Sales User");
 				}
 			}
-		} catch (Exception ex) {
+		} catch (InternalServerException ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
-			logger.error("", ex.fillInStackTrace());
+			logger.error(ex.getLocalizedMessage());
+			throw new InternalServerException(ex.getLocalizedMessage());
+		} catch (Exception ex) {
+			logger.error("Unexpected Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(ex.getLocalizedMessage());
+			throw new InternalServerException(ex.getLocalizedMessage());
 		}
 
-		return target;
+		return new ResponseEntity<String>(target, HttpStatus.CREATED);
 	}
 
 	@Override
-	public String update(SalesEntryForm form, String username) {
+	public ResponseEntity<String> update(SalesEntryForm form, String username) {
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		Set<Role> role = new HashSet<>();
+		if (user.isPresent()) {
+			if(!Access.isAuthorizedAll(user.get().getRoles())) {
+				throw new UnauthorizedException("User Does'nt have Required Access.");
+			}
+			role = user.get().getRoles();
+		} else {
+			throw new NotFoundException("User not found");
+		}
 		String target = IConstants.FAILURE_KEY;
 		// Finding the user by system ID
 		String systemId = null;
@@ -102,32 +124,46 @@ public class SalesServiceImpl implements SalesService {
 		} else {
 			throw new NotFoundException("UserEntry not found");
 		}
-
-		Optional<User> user = userLoginRepo.findBySystemId(systemId);
-		Set<Role> role = new HashSet<>();
-		if (user.isPresent()) {
-			role = user.get().getRoles();
-		} else {
-			throw new NotFoundException("User not found");
-		}
 		logger.info("Executive [{}] Update Requested By {} [{}]", form.getId(), systemId, role);
 		SalesEntry seller = new SalesEntry();
 		try {
 			BeanUtils.copyProperties(form, seller);
 			logger.info("Update Requested: {}", seller);
 			SalesEntry entry = this.salesRepository.findById(seller.getId())
-					.orElseThrow(() -> new NotFoundException("Entry not found."));
-			this.salesRepository.save(entry);
-			GlobalVars.ExecutiveEntryMap.put(seller.getId(), seller);
-			target = IConstants.SUCCESS_KEY;
+					.orElseThrow(() -> new NotFoundException("Entry not found with id: "+seller.getId()));
+			SalesEntry savedEntry = this.salesRepository.save(entry);
+			if(savedEntry != null) {
+				GlobalVars.ExecutiveEntryMap.put(seller.getId(), seller);
+				target = IConstants.SUCCESS_KEY;
+			}else {
+				logger.error("Error: Unable to save SalesEntry");
+				throw new InternalServerException("Unable to save SalesEntry.");
+			}
+			
+		} catch (InternalServerException ex) {
+			logger.error("InternalServer Exception: {} [{}]", ex.getMessage(), ex.getCause());
+			throw new InternalServerException(ex.getLocalizedMessage());
+		} catch (NotFoundException ex) {
+			logger.error("NotFound Exception: {} [{}]", ex.getMessage(), ex.getCause());
+			throw new NotFoundException(ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: {} [{}]", ex.getMessage(), ex.getCause());
+			throw new InternalServerException("Unexpected Exception: "+ex.getLocalizedMessage());
 		}
-		return target;
+		return new ResponseEntity<String>(target, HttpStatus.CREATED);
 	}
 
 	@Override
-	public String delete(int id, String username) {
+	public ResponseEntity<String> delete(int id, String username) {
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		if (user.isPresent()) {
+			if(!Access.isAuthorizedAll(user.get().getRoles())) {
+				throw new UnauthorizedException("User Does'nt have Required Access.");
+			}
+		} else {
+			throw new NotFoundException("User not found");
+		}
+		
 		logger.info("Delete Requested for Sale ID: " + id);
 		String target = IConstants.FAILURE_KEY;
 		try {
@@ -136,13 +172,20 @@ public class SalesServiceImpl implements SalesService {
 			logger.info("Operation successful: Sale ID {}", id);
 		} catch (Exception ex) {
 			logger.error("Process Error: {} [{}]", ex.getMessage(), ex.getCause());
+			throw new InternalServerException(ex.getLocalizedMessage());
 		}
-		return target;
+		return new ResponseEntity<String>(target, HttpStatus.OK);
 	}
 
 	private Map<Integer, SalesEntry> list() {
 		Map<Integer, SalesEntry> map = new HashMap<Integer, SalesEntry>();
-		List<SalesEntry> list = this.salesRepository.findAll();
+		List<SalesEntry> list = null;
+		try {
+			list = this.salesRepository.findAll();
+		} catch (Exception e) {
+			logger.error("Error: "+e.getLocalizedMessage());
+			throw new InternalServerException(e.getLocalizedMessage());
+		}
 		for (SalesEntry entry : list) {
 			map.put(entry.getId(), entry);
 		}
@@ -151,7 +194,13 @@ public class SalesServiceImpl implements SalesService {
 
 	public Map<Integer, SalesEntry> list(String role) {
 		Map<Integer, SalesEntry> map = new HashMap<Integer, SalesEntry>();
-		List<SalesEntry> list = this.salesRepository.findAll();
+		List<SalesEntry> list = null;
+		try {
+			list = this.salesRepository.findAll();
+		} catch (Exception e) {
+			logger.error("Error: "+e.getLocalizedMessage());
+			throw new InternalServerException(e.getLocalizedMessage());
+		}
 		for (SalesEntry entry : list) {
 			if (entry.getRole().equalsIgnoreCase(role)) {
 				map.put(entry.getId(), entry);
@@ -162,7 +211,13 @@ public class SalesServiceImpl implements SalesService {
 
 	private Map<Integer, SalesEntry> listSellersUnderManager(String mgrId, String role) {
 		Map<Integer, SalesEntry> map = new HashMap<Integer, SalesEntry>();
-		List<SalesEntry> list = this.salesRepository.findByMasterIdAndRole(mgrId, role);
+		List<SalesEntry> list = null;
+		try {
+			list = this.salesRepository.findByMasterIdAndRole(mgrId, role);
+		} catch (Exception e) {
+			logger.error(e.getLocalizedMessage());
+			throw new InternalServerException(e.getLocalizedMessage());
+		}
 		for (SalesEntry entry : list) {
 			map.put(entry.getId(), entry);
 		}
@@ -170,32 +225,45 @@ public class SalesServiceImpl implements SalesService {
 	}
 
 	@Override
-	public Collection<SalesEntry> listSalesUsers(String username) {
-		String target = IConstants.FAILURE_KEY;
-		String masterId = null;
-		String systemId = null;
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			masterId = userOptional.get().getMasterId();
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found");
-		}
-		Optional<User> user = userLoginRepo.findBySystemId(systemId);
+	public ResponseEntity<Collection<SalesEntry>> listSalesUsers(String username) {
+		
+		Optional<User> user = userLoginRepo.findBySystemId(username);
 		Set<Role> role = new HashSet<>();
 		if (user.isPresent()) {
+			if(!Access.isAuthorizedAll(user.get().getRoles())) {
+				throw new UnauthorizedException("User Does'nt have Required Access.");
+			}
 			role = user.get().getRoles();
 		} else {
 			throw new NotFoundException("User not found");
+		}
+		
+		String target = IConstants.FAILURE_KEY;
+		String masterId = null;
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		if (userOptional.isPresent()) {
+			masterId = userOptional.get().getMasterId();
+		} else {
+			throw new NotFoundException("UserEntry not found");
 		}
 		logger.info("Executive List Requested By {} [{}]", masterId, role);
 		SalesEntry salesEntry = this.salesRepository.findByMasterId(masterId);
 		Collection<SalesEntry> salesList = null;
 		try {
 			if (Access.isAuthorizedSuperAdminAndSystem(role)) {
-				salesList = list().values();
+				try {
+					salesList = list().values();
+				} catch (Exception e) {
+					logger.error(e.getLocalizedMessage());
+					throw new InternalServerException(e.getLocalizedMessage());
+				}
 			} else if (salesEntry.getRole().equalsIgnoreCase("manager") || Access.isAuthorizedAdmin(role)) {
-				salesList = listSellersUnderManager(masterId, "seller").values();
+				try {
+					salesList = listSellersUnderManager(masterId, "seller").values();
+				} catch (Exception e) {
+					logger.error(e.getLocalizedMessage());
+					throw new InternalServerException(e.getLocalizedMessage());
+				}
 			}
 
 			if (salesList != null && !salesList.isEmpty()) {
@@ -203,18 +271,38 @@ public class SalesServiceImpl implements SalesService {
 				logger.info("Executives Under [" + masterId + "] : " + salesList.size());
 			} else {
 				target = IConstants.FAILURE_KEY;
-				logger.info("No Executive Found Under " + masterId + "[" + role + "]" + "|" + target);
+				logger.error("No Executive Found Under " + masterId + "[" + role + "]" + "|" + target);
+				throw new NotFoundException("No Executive Found Under " + masterId + "[" + role + "]" + "|" + target);
 			}
 
+		} catch (NotFoundException e) {
+			logger.error("Not Found Exception: " + e.getMessage() + "[" + e.getCause() + "]");
+			logger.error(masterId, e.toString());
+			throw new NotFoundException(e.getLocalizedMessage());
+		} catch (InternalServerException e) {
+			logger.error("Process Error: " + e.getMessage() + "[" + e.getCause() + "]");
+			logger.error(masterId, e.toString());
+			throw new InternalServerException(e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error("Process Error: " + e.getMessage() + "[" + e.getCause() + "]");
 			logger.error(masterId, e.toString());
+			throw new InternalServerException(e.getLocalizedMessage());
 		}
-		return salesList;
+		return ResponseEntity.ok(salesList);
 	}
 
 	@Override
 	public ResponseEntity<?> viewSalesEntry(int id, String username) {
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		Set<Role> role = new HashSet<>();
+		if (user.isPresent()) {
+			if(!Access.isAuthorizedSuperAdminAndSystem(user.get().getRoles())) {
+				throw new UnauthorizedException("User Does'nt have Required Access.");
+			}
+			role = user.get().getRoles();
+		} else {
+			throw new NotFoundException("User not found");
+		}
 		String target = IConstants.FAILURE_KEY;
 		// Finding the user by system ID
 		String systemId = null;
@@ -224,14 +312,6 @@ public class SalesServiceImpl implements SalesService {
 		} else {
 			throw new NotFoundException("UserEntry not found");
 		}
-
-		Optional<User> user = userLoginRepo.findBySystemId(systemId);
-		Set<Role> role = new HashSet<>();
-		if (user.isPresent()) {
-			role = user.get().getRoles();
-		} else {
-			throw new NotFoundException("User not found");
-		}
 		logger.info("Executive[" + id + "] Details Requested By " + systemId + "[" + role + "]");
 		ViewSalesEntry response = new ViewSalesEntry();
 		try {
@@ -240,29 +320,53 @@ public class SalesServiceImpl implements SalesService {
 			if (salesOptional.isPresent()) {
 				seller = salesOptional.get();
 			} else {
+				logger.error("SalesEntry not found");
 				throw new NotFoundException("SalesEntry not found");
 			}
 			logger.info("Requested: " + seller);
 			if (seller != null) {
 				if (Access.isAuthorizedSuperAdminAndSystem(role)) {
-					Collection<SalesEntry> list = list("manager").values();
+					Collection<SalesEntry> list = null;
+					try {
+						list = list("manager").values();
+					} catch (Exception e) {
+						logger.error(e.getLocalizedMessage());
+						throw new InternalServerException(e.getLocalizedMessage());
+					}
 					response.setManagers(list);
 				}
 				response.setSeller(seller);
 				target = IConstants.SUCCESS_KEY;
 			} else {
 				logger.error("Operation failed");
+				throw new InternalServerException("View Sales Entry Failed!");
 			}
 			return new ResponseEntity<>(response, HttpStatus.OK);
 
+		} catch (InternalServerException e) {
+			logger.error("Process Error: " + e.getMessage() + "[" + e.getCause() + "]");
+			throw new InternalServerException(e.getLocalizedMessage());
+		} catch (NotFoundException e) {
+			logger.error("NotFound Error: " + e.getMessage() + "[" + e.getCause() + "]");
+			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error("Process Error: " + e.getMessage() + "[" + e.getCause() + "]");
-			return new ResponseEntity<>(target, HttpStatus.BAD_GATEWAY);
+			throw new InternalServerException(e.getLocalizedMessage());
 		}
 	}
 
 	@Override
-	public Collection<SalesEntry> setupSalesEntry(String username) {
+	public ResponseEntity<Collection<SalesEntry>> setupSalesEntry(String username) {
+		Optional<User> user = userLoginRepo.findBySystemId(username);
+		Set<Role> role = new HashSet<>();
+		if (user.isPresent()) {
+			if(!Access.isAuthorizedAll(user.get().getRoles())) {
+				throw new UnauthorizedException("User Does'nt have Required Access.");
+			}
+			role = user.get().getRoles();
+		} else {
+			throw new NotFoundException("User not found");
+		}
 		String target = IConstants.SUCCESS_KEY;
 		// Finding the user by system ID
 		String systemId = null;
@@ -273,14 +377,6 @@ public class SalesServiceImpl implements SalesService {
 			masterId = userOptional.get().getMasterId();
 		} else {
 			throw new NotFoundException("UserEntry not found");
-		}
-
-		Optional<User> user = userLoginRepo.findBySystemId(systemId);
-		Set<Role> role = new HashSet<>();
-		if (user.isPresent()) {
-			role = user.get().getRoles();
-		} else {
-			throw new NotFoundException("User not found");
 		}
 		logger.info("Sales User Setup Requested By " + systemId + "[" + role + "]");
 		SalesEntry salesEntry = this.salesRepository.findByMasterId(masterId);
@@ -297,10 +393,11 @@ public class SalesServiceImpl implements SalesService {
 				logger.info("Authorized User :" + systemId);
 			} else {
 				target = "invalidRequest";
-				logger.info("Authorization Failed: {}: {}", systemId, target);
+				logger.error("Authorization Failed: {}: {}", systemId, target);
+				throw new UnauthorizedException("Authorization Failed");
 			}
 		}
-		return list;
+		return ResponseEntity.ok(list);
 	}
 
 }
