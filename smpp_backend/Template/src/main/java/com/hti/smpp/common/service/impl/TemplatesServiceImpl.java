@@ -18,9 +18,9 @@ import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.login.dto.User;
 import com.hti.smpp.common.login.repository.UserRepository;
+import com.hti.smpp.common.messages.repository.RecentResponse;
 import com.hti.smpp.common.messages.repository.SummaryReportRepository;
 import com.hti.smpp.common.request.TemplatesRequest;
-import com.hti.smpp.common.responce.RecentResponse;
 import com.hti.smpp.common.responce.TemplatesResponse;
 import com.hti.smpp.common.service.TemplatesService;
 import com.hti.smpp.common.templates.dto.TemplatesDTO;
@@ -289,9 +289,9 @@ public class TemplatesServiceImpl implements TemplatesService {
 		}
 		try {
 			PasswordConverter passwordConverter = new PasswordConverter();
-//			List<RecentResponse> recentContent = summaryReportRepository
-//					.getRecentContent(passwordConverter.convertToDatabaseColumn(username));
-			// System.out.println(recentContent);
+			List<RecentResponse> recentContent = summaryReportRepository
+					.getRecentContent(passwordConverter.convertToDatabaseColumn(username));
+			System.out.println(recentContent);
 			// Logging success
 			logger.info("RecentUseTemplate operation succeeded for user: {}", username);
 

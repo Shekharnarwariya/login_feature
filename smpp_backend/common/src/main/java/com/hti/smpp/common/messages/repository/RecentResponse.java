@@ -1,4 +1,4 @@
-package com.hti.smpp.common.responce;
+package com.hti.smpp.common.messages.repository;
 
 import java.sql.Date;
 
