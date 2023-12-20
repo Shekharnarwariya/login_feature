@@ -53,7 +53,9 @@ import org.springframework.web.multipart.MultipartFile;
 import com.hti.smpp.common.dto.BatchObject;
 import com.hti.smpp.common.dto.BulkListInfo;
 import com.hti.smpp.common.dto.BulkMgmtContent;
+import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
+import com.hti.smpp.common.exception.ScheduledTimeException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.login.dto.User;
 import com.hti.smpp.common.login.repository.UserRepository;
@@ -218,12 +220,16 @@ public class SmsServiceImpl implements SmsService {
 			}
 			int no_of_msg = bulkSmsDTO.getSmsParts();
 			if (smsRequest.getMessageType().equalsIgnoreCase("Unicode")) {
+				bulkSmsDTO.setMessage(UTF16(smsRequest.getMessage()));
+				bulkSmsDTO.setOrigMessage(UTF16(smsRequest.getMessage()));
 				bulkSmsDTO.setDistinct("yes");
 			} else {
 				String sp_msg = smsRequest.getMessage();
-				unicodeMsg = Converter.getContent(sp_msg.toCharArray());
+				String hexValue = getHexValue(sp_msg);
+				unicodeMsg = Converter.getContent(hexValue.toCharArray());
 				bulkSmsDTO.setMessage(unicodeMsg);
 				bulkSmsDTO.setMessageType("SpecialChar");
+				bulkSmsDTO.setOrigMessage(UTF16(smsRequest.getMessage()));
 			}
 			logger.info(bulkSessionId + " Message Type: " + bulkSmsDTO.getMessageType() + " Parts: " + no_of_msg);
 			if (bulkSmsDTO.isSchedule()) {
@@ -242,15 +248,20 @@ public class SmsServiceImpl implements SmsService {
 						valid_sch_time = true;
 					} else {
 						logger.error(bulkSessionId + " Scheduled Time is before Current Time");
-						//ScheduledTimeException
+						throw new ScheduledTimeException(bulkSessionId + " Scheduled Time is before Current Time");
 					}
 					String server_date = schedule_time.split(" ")[0];
 					String server_time = schedule_time.split(" ")[1];
 					bulkSmsDTO.setDate(server_date.split("-")[2] + "-" + server_date.split("-")[1] + "-"
 							+ server_date.split("-")[0]);
 					bulkSmsDTO.setTime(server_time.split(":")[0] + "" + server_time.split(":")[1]);
+
+				} catch (ScheduledTimeException e) {
+					logger.error(bulkSessionId, e.getMessage());
+					throw new ScheduledTimeException(e.getMessage());
 				} catch (Exception e) {
 					logger.error(bulkSessionId, e);
+					throw new InternalServerException(e.getMessage());
 				}
 			}
 			bulkSmsDTO.setReqType("bulk");
@@ -293,8 +304,9 @@ public class SmsServiceImpl implements SmsService {
 							destinationList.add(numToken);
 						}
 					} catch (Exception ex) {
-						ex.printStackTrace();
 						logger.error(bulkSessionId + " Invalid Destination Found => " + numToken);
+						throw new InternalServerException(
+								bulkSessionId + " Invalid Destination Found => " + numToken + ex.getMessage());
 					}
 				}
 			}
@@ -302,8 +314,6 @@ public class SmsServiceImpl implements SmsService {
 			listInfo.setValidCount(destinationList.size());
 			bulkSmsDTO.setDestinationList(destinationList);
 			// ************** End Number List *******************
-//			System.out.println(wallet_flag);
-//			wallet_flag="yes";
 			total_msg = destinationList.size() * no_of_msg;
 			if (wallet_flag.equalsIgnoreCase("yes")) {
 				bulkSmsDTO.setUserMode("wallet");
@@ -528,11 +538,17 @@ public class SmsServiceImpl implements SmsService {
 				// insufficient balance
 				logger.error("error.insufficientWallet");
 			}
+		} catch (NotFoundException e) {
+			logger.error(bulkSessionId, e.getMessage());
+			throw new NotFoundException(e.getMessage());
+		} catch (ScheduledTimeException e) {
+			logger.error(bulkSessionId, e.getMessage());
+			throw new ScheduledTimeException(e.getMessage());
 		} catch (Exception e) {
-			logger.error(bulkSessionId, e.fillInStackTrace());
-			logger.error("error.processError");
-
+			logger.error(bulkSessionId, e);
+			throw new InternalServerException(e.getMessage());
 		}
+
 		smsResponse.setStatus(target);
 		return smsResponse;
 
@@ -2866,23 +2882,119 @@ public class SmsServiceImpl implements SmsService {
 	}
 
 	public static String getHexValue(String msg) {
+		char[] charArray;
 		String HexMessage = "";
-		char[] arr = msg.toCharArray();
-		String ascii = "";
-		for (int i = 0; i < arr.length; i++) {
-			// System.out.println("char : "+i);
-			if (arr[i] != ',') {
-				ascii += "" + arr[i];
-			} else if (arr[i] == ',' || arr[i] == ' ') {
-				// System.out.println("ascii : "+ascii);
-				String hexv = (String) GlobalVars.hashTabOne.get((ascii.trim()));
-				// System.out.println("hex : "+hexv);
+		charArray = msg.toCharArray();
+		for (int i = 0; i < charArray.length; i++) {
+			String character = ("" + charArray[i]).trim();
+			// System.out.println(character.getBytes());
+			int ascii = (int) charArray[i];
+			// System.out.println("For "+i+" char Ascii = "+ ascii);
+			if (ascii == 226) {
+				int nextOne = (int) charArray[i + 1];
+				// System.out.println("After 226 nextOne : "+nextOne);
+				if (nextOne == 128) {
+					nextOne = (int) charArray[i + 2];
+					// System.out.println("After 1 nextOne : "+nextOne);
+					if (nextOne == 153) {
+						HexMessage += "27";
+						i += 2;
+						// System.out.println("After 226 i : "+i);
+					}
+				}
+			}
+			if (ascii == 32) {
+				HexMessage += "20";
+			} else if (ascii == 34) {
+				HexMessage += "22";
+			} else if (ascii == 10) {
+				HexMessage += "0A";
+			} else if (ascii == 13) {
+				HexMessage += "0D";
+			} else if (ascii == 2747 || ascii == 92) {
+				HexMessage += "1B2F";
+			} else if (ascii == 128 || ascii == 164) {
+				HexMessage += "1B65";
+			} else if (ascii == 96) {
+				HexMessage += "";
+			} else if (ascii == 172) {
+				HexMessage += "07";
+			} else if (ascii == 199) {
+				HexMessage += "09";
+			} else if (ascii == 228) {
+				HexMessage += "7B";
+			} else if (ascii == 246) {
+				HexMessage += "7C";
+			} else if (ascii == 241) {
+				HexMessage += "7D";
+			} else if (ascii == 252) {
+				HexMessage += "7E";
+			} else if (ascii == 178) {
+				HexMessage += "08";
+			} else if (ascii == 185) {
+				HexMessage += "06";
+			} else if (ascii == 168) {
+				HexMessage += "04";
+			} else if (ascii == 169) {
+				HexMessage += "05";
+			} else if (ascii == 198) {
+				HexMessage += "1C";
+			} else if (ascii == 230) {
+				HexMessage += "1D";
+			} else if (ascii == 216) {
+				HexMessage += "0B";
+			} else if (ascii == 248) {
+				HexMessage += "0C";
+			} else if (ascii == 197) {
+				HexMessage += "0E";
+			} else if (ascii == 196) {
+				HexMessage += "5B";
+			} else if (ascii == 229) {
+				HexMessage += "0F";
+			} else if (ascii == 163) {
+				HexMessage += "01";
+			} else if (ascii == 214) {
+				HexMessage += "5C";
+			} else if (ascii == 163) {
+				HexMessage += "01";
+			} else if (ascii == 165) {
+				HexMessage += "03";
+			} else if (ascii == 232) {
+				HexMessage += "04";
+			} else if (ascii == 233) {
+				HexMessage += "05";
+			} else if (ascii == 242) {
+				HexMessage += "08";
+			} else if (ascii == 95) {
+				HexMessage += "11";
+			} else if (ascii == 223) {
+				HexMessage += "1E";
+			} else if (ascii == 201) {
+				HexMessage += "1F";
+			} else if (ascii == 161) {
+				HexMessage += "40";
+			} else if (ascii == 209) {
+				HexMessage += "5D";
+			} else if (ascii == 220) {
+				HexMessage += "5E";
+			} else if (ascii == 167) {
+				HexMessage += "5F";
+			} else if (ascii == 191) {
+				HexMessage += "60";
+			} else if (ascii == 201) {
+				HexMessage += "1F";
+			} else if (ascii == 224 || ascii == 160) {
+				HexMessage += "7F";
+			} else if (ascii == 8217)// for the appostrophe from word pad
+			{
+				HexMessage += "27";
+			} else {
+				String hexv = (String) GlobalVars.hashTabOne.get(character);
 				if (hexv != null) {
 					HexMessage += hexv;
 				} else {
 					HexMessage += "";
 				}
-				ascii = "";
 			}
 		}
 		return HexMessage;

@@ -20,12 +20,14 @@ import com.hti.smpp.common.login.dto.User;
 import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.messages.repository.SummaryReportRepository;
 import com.hti.smpp.common.request.TemplatesRequest;
+import com.hti.smpp.common.responce.RecentResponse;
 import com.hti.smpp.common.responce.TemplatesResponse;
 import com.hti.smpp.common.service.TemplatesService;
 import com.hti.smpp.common.templates.dto.TemplatesDTO;
 import com.hti.smpp.common.templates.repository.TemplatesRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.Converter;
+import com.hti.smpp.common.util.PasswordConverter;
 
 import jakarta.transaction.Transactional;
 
@@ -286,11 +288,21 @@ public class TemplatesServiceImpl implements TemplatesService {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 		try {
-			Set<String> recentContent = summaryReportRepository.getRecentContent(username);
+			PasswordConverter passwordConverter = new PasswordConverter();
+//			List<RecentResponse> recentContent = summaryReportRepository
+//					.getRecentContent(passwordConverter.convertToDatabaseColumn(username));
+			// System.out.println(recentContent);
 			// Logging success
 			logger.info("RecentUseTemplate operation succeeded for user: {}", username);
-			// Return the result
-			return ResponseEntity.ok(recentContent);
+
+			// Convert each element in the stream and collect the results into a list
+//			List<String> convertedRecentContent = recentContent.stream()
+//			        .map(entry -> entry.split(",")[0]) // Extract the first value after splitting
+//			       // .map(Converter::hexCodePointsToCharMsg) // Convert using hexCodePointsToCharMsg
+//					.map(passwordConverter::convertToEntityAttribute) // Convert using passwordConverter
+//			        .collect(Collectors.toList());
+
+			return ResponseEntity.ok("");
 		} catch (Exception e) {
 			// Logging other exceptions
 			logger.error("An unexpected error occurred: {}", e.getMessage(), e);

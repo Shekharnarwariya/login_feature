@@ -10,10 +10,11 @@ import com.hti.smpp.common.messages.dto.SummaryReport;
 
 public interface SummaryReportRepository extends JpaRepository<SummaryReport, Integer> {
 
-	@Query(value = "SELECT DISTINCT s.content FROM summary_report s WHERE s.username = :username ORDER BY s.date DESC", nativeQuery = true)
-	public Set<String> getRecentContent(@Param("username") String username);
-	
-	@Query(value = "SELECT DISTINCT s.content FROM summary_report s WHERE s.username = :username AND s.content LIKE %:searchKeyword% ORDER BY s.date DESC", nativeQuery = true)
-	public Set<String> getRecentContentWithSearch(@Param("username") String username, @Param("searchKeyword") String searchKeyword);
+//	@Query(value = "SELECT DISTINCT new com.hti.smpp.common.response.RecentResponse(s.content, s.date) FROM summary_report s WHERE s.username = :username ORDER BY s.date DESC")
+//	public List<RecentResponse> getRecentContent(@Param("username") String username);
+
+	@Query(value = "SELECT DISTINCT s.content, s.date FROM summary_report s WHERE s.username = :username AND s.content LIKE %:searchKeyword% ORDER BY s.date DESC", nativeQuery = true)
+	public Set<String> getRecentContentWithSearch(@Param("username") String username,
+			@Param("searchKeyword") String searchKeyword);
 
 }
