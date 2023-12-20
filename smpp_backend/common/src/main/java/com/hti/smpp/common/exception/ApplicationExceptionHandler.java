@@ -64,6 +64,13 @@ public class ApplicationExceptionHandler {
 
 	}
 
+	@ExceptionHandler(InsufficientBalanceException.class)
+	public ResponseEntity<ExceptionResponse> InsufficientBalanceException(InsufficientBalanceException exception) {
+		LocalDateTime current = LocalDateTime.now();
+		return new ResponseEntity<>(new ExceptionResponse(exception.getMessage(), toUtc(current),
+				HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase()), HttpStatus.BAD_REQUEST);
+
+	}
 	@ExceptionHandler(ScheduledTimeException.class)
 	public ResponseEntity<ExceptionResponse> ScheduledTimeException(ScheduledTimeException exception) {
 		LocalDateTime current = LocalDateTime.now();

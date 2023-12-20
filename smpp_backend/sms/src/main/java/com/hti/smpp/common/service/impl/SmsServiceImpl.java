@@ -53,6 +53,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.hti.smpp.common.dto.BatchObject;
 import com.hti.smpp.common.dto.BulkListInfo;
 import com.hti.smpp.common.dto.BulkMgmtContent;
+import com.hti.smpp.common.exception.InsufficientBalanceException;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.ScheduledTimeException;
@@ -80,9 +81,9 @@ import com.hti.smpp.common.sms.request.SmsRequest;
 import com.hti.smpp.common.sms.session.SessionHandler;
 import com.hti.smpp.common.sms.session.UserSession;
 import com.hti.smpp.common.sms.util.Body;
-import com.hti.smpp.common.sms.util.Converter;
 import com.hti.smpp.common.sms.util.GlobalVars;
 import com.hti.smpp.common.sms.util.ProgressEvent;
+import com.hti.smpp.common.sms.util.SmsConverter;
 import com.hti.smpp.common.user.dto.BalanceEntry;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
@@ -145,19 +146,14 @@ public class SmsServiceImpl implements SmsService {
 
 	public SmsResponse sendSms(SmsRequest smsRequest, String username) {
 		Optional<User> userOptional = userRepository.findBySystemId(username);
-
+		User user = null;
 		if (userOptional.isPresent()) {
-			User user = userOptional.get();
+			user = userOptional.get();
 			if (!Access.isAuthorizedAll(user.getRoles())) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
-		}
-		userOptional = userRepository.findBySystemId(username);
-		User user = null;
-		if (userOptional.isPresent()) {
-			user = userOptional.get();
 		}
 		Optional<UserEntry> userEntryOptional = userEntryRepository.findBySystemId(user.getSystemId());
 		UserEntry userEntry = null;
@@ -226,7 +222,7 @@ public class SmsServiceImpl implements SmsService {
 			} else {
 				String sp_msg = smsRequest.getMessage();
 				String hexValue = getHexValue(sp_msg);
-				unicodeMsg = Converter.getContent(hexValue.toCharArray());
+				unicodeMsg = SmsConverter.getContent(hexValue.toCharArray());
 				bulkSmsDTO.setMessage(unicodeMsg);
 				bulkSmsDTO.setMessageType("SpecialChar");
 				bulkSmsDTO.setOrigMessage(UTF16(smsRequest.getMessage()));
@@ -338,12 +334,15 @@ public class SmsServiceImpl implements SmsService {
 								amount = true;
 								balanceEntryRepository.save(balanceEntry);
 							} else {
-								logger.info(bulkSessionId + " <-- Insufficient Balance -->");
+								logger.error(bulkSessionId + " <-- Insufficient Balance -->");
+								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Balance -->");
 							}
 						} else {
 							// Insufficient Admin balance
-							logger.info(bulkSessionId + " <-- Insufficient Admin(" + userEntry.getMasterId()
+							logger.error(bulkSessionId + " <-- Insufficient Admin(" + userEntry.getMasterId()
 									+ ") Balance -->");
+							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Admin("
+									+ userEntry.getMasterId() + ") Balance -->");
 						}
 					} else {
 						if (wallet >= totalcost) {
@@ -353,7 +352,8 @@ public class SmsServiceImpl implements SmsService {
 							balanceEntryRepository.save(balanceEntry);
 						} else {
 							// Insufficient balance
-							logger.info(bulkSessionId + " <-- Insufficient Balance -->");
+							logger.error(bulkSessionId + " <-- Insufficient Balance -->");
+							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Balance -->");
 						}
 					}
 					if (amount) {
@@ -387,14 +387,16 @@ public class SmsServiceImpl implements SmsService {
 										GlobalVars.RepeatedSchedules.add(generated_id);
 									}
 									target = IConstants.SUCCESS_KEY;
-									logger.info("message.scheduleSuccess");
+									logger.info("message scheduleSuccess.....");
 								} else {
 									// Scheduling Error
 									logger.error("error.singlescheduleError");
+									throw new ScheduledTimeException("Error in single schedule: " + bulkSessionId);
 								}
 							} else {
 								// already Scheduled
 								logger.error("error.duplicateSchedule");
+								throw new ScheduledTimeException("Duplicate schedule error: " + bulkSessionId);
 							}
 						} else {
 							respMsgId = sendSingleMsg(bulkSmsDTO);
@@ -403,8 +405,12 @@ public class SmsServiceImpl implements SmsService {
 								// Submission Error
 								if (respMsgId.contains("SERVER NOT RESPONDING")) {
 									logger.error("error.hostconnection");
+									throw new InternalServerException("Error in host connection: " + bulkSessionId);
+
 								} else {
 									logger.error("error.smsError");
+									throw new InternalServerException("SMS error: " + bulkSessionId);
+
 								}
 							} else {
 								target = IConstants.SUCCESS_KEY;
@@ -425,10 +431,13 @@ public class SmsServiceImpl implements SmsService {
 					} else {
 						// insufficient balance
 						logger.error("error.insufficientWallet");
+						throw new InsufficientBalanceException("Insufficient wallet balance: " + bulkSessionId);
 					}
 				} else {
 					// Number File Error
 					logger.error("error.novalidNumber");
+					throw new InternalServerException("No valid numbers found: " + bulkSessionId);
+
 				}
 			} else if (wallet_flag.equalsIgnoreCase("no")) {
 				bulkSmsDTO.setUserMode("credit");
@@ -447,11 +456,14 @@ public class SmsServiceImpl implements SmsService {
 								amount = true;
 								balanceEntryRepository.save(balanceEntry);
 							} else {
-								logger.info(bulkSessionId + " <-- Insufficient Credits -->");
+								logger.error(bulkSessionId + " <-- Insufficient Credits -->");
+								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Credits -->");
 							}
 						} else {
-							logger.info(bulkSessionId + " <-- Insufficient Admin(" + userEntry.getMasterId()
+							logger.error(bulkSessionId + " <-- Insufficient Admin(" + userEntry.getMasterId()
 									+ ") Credits -->");
+							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Admin("
+									+ userEntry.getMasterId() + ") Credits -->");
 						}
 					} else {
 						if (credits >= total_msg) {
@@ -460,7 +472,8 @@ public class SmsServiceImpl implements SmsService {
 							amount = true;
 							balanceEntryRepository.save(balanceEntry);
 						} else {
-							logger.info(bulkSessionId + " <-- Insufficient Credits -->");
+							logger.error(bulkSessionId + " <-- Insufficient Credits -->");
+							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Credits -->");
 						}
 					}
 					if (amount) {
@@ -496,9 +509,13 @@ public class SmsServiceImpl implements SmsService {
 									logger.info("message.scheduleSuccess");
 								} else {
 									logger.error("error.singlescheduleError");
+									throw new ScheduledTimeException("Error in single schedule: " + bulkSessionId);
+
 								}
 							} else {
 								logger.error("error.duplicateSchedule");
+								throw new ScheduledTimeException("Duplicate schedule error: " + bulkSessionId);
+
 							}
 						} else {
 							respMsgId = sendSingleMsg(bulkSmsDTO);
@@ -506,8 +523,12 @@ public class SmsServiceImpl implements SmsService {
 								// Submission Error
 								if (respMsgId.contains("SERVER NOT RESPONDING")) {
 									logger.error("error.hostconnection");
+									throw new InternalServerException("Error in host connection: " + bulkSessionId);
+
 								} else {
 									logger.error("error.smsError");
+									throw new InternalServerException("SMS error: " + bulkSessionId);
+
 								}
 							} else {
 								target = IConstants.SUCCESS_KEY;
@@ -524,23 +545,37 @@ public class SmsServiceImpl implements SmsService {
 							logger.info(
 									bulkSessionId + " Processed :-> Credits: " + credits + " Deduct: " + deductCredits);
 						} else {
-							logger.info(bulkSessionId + "<-- Process Failed --> ");
+							logger.error(bulkSessionId + "<-- Process Failed --> ");
+							throw new InternalServerException(bulkSessionId + "<-- Process Failed --> ");
 						}
 					} else {
-						// insufficient Credits
+						// Insufficient Credits
 						logger.error("error.insufficientCredit");
+						throw new InsufficientBalanceException(
+								"Insufficient credits to perform the operation" + bulkSessionId);
+
 					}
 				} else {
 					// Number File Error
 					logger.error("error.novalidNumber");
+					throw new InternalServerException("No valid numbers found: " + bulkSessionId);
 				}
 			} else if (wallet_flag.equalsIgnoreCase("MIN")) {
 				// insufficient balance
 				logger.error("error.insufficientWallet");
+				throw new InsufficientBalanceException(
+						"Insufficient wallet balance for minimum transaction" + bulkSessionId);
+
 			}
 		} catch (NotFoundException e) {
 			logger.error(bulkSessionId, e.getMessage());
 			throw new NotFoundException(e.getMessage());
+		} catch (InsufficientBalanceException e) {
+			logger.error(bulkSessionId, e.getMessage());
+			throw new InsufficientBalanceException(e.getMessage());
+		} catch (InternalServerException e) {
+			logger.error(bulkSessionId, e.getMessage());
+			throw new InternalServerException(e.getMessage());
 		} catch (ScheduledTimeException e) {
 			logger.error(bulkSessionId, e.getMessage());
 			throw new ScheduledTimeException(e.getMessage());
@@ -587,9 +622,6 @@ public class SmsServiceImpl implements SmsService {
 	public String sendSingleMsg(BulkSmsDTO bulkSmsDTO) {
 		logger.info(bulkSmsDTO.getSystemId() + " sendSingleMsg()" + bulkSmsDTO.getSenderId());
 		UserSession userSession = null;
-		// IDatabaseService dbService = HtiSmsDB.getInstance();
-		// System.out.println("Source Address="+bulkSmsDTO.getSenderId()+ ",
-		// String Address=bulkSmsDTO.getDestinationNumber();
 		String ret = "";
 		String user = bulkSmsDTO.getSystemId();
 		String pwd = bulkSmsDTO.getPassword();
@@ -611,7 +643,8 @@ public class SmsServiceImpl implements SmsService {
 		try {
 			addSummaryReport(backupExt);
 		} catch (Exception ex) {
-			logger.error(user + " Error Adding To Summary Report: " + ex);
+			logger.error(user + " Error Adding To Summary Report: " + ex.getMessage());
+			throw new InternalServerException(user + " Error Adding To Summary Report: " + ex.getMessage());
 		}
 		// ---------------- For Summary Report --------------------
 		String messageType;
@@ -654,7 +687,7 @@ public class SmsServiceImpl implements SmsService {
 								msg.setEsmClass((byte) 0);
 							}
 							if (messageType.equalsIgnoreCase("Unicode")) {
-								message = Converter.getUnicode(message.toCharArray());
+								message = SmsConverter.getUnicode(message.toCharArray());
 								System.out.println("**************Single Unicode Message*******************");
 								msg.setShortMessage(message, Data.ENC_UTF16_BE);
 								msg.setDataCoding((byte) 8);
@@ -716,7 +749,9 @@ public class SmsServiceImpl implements SmsService {
 							try {
 								submitResponse = session.submit(msg);
 							} catch (Exception e) {
-								logger.error(user + " Exception on Submit[" + destination_no + "] : " + e);
+								logger.error(user + " Exception on Submit[" + destination_no + "] : " + e.getMessage());
+								throw new InternalServerException(
+										user + " Exception on Submit[" + destination_no + "] : " + e.getMessage());
 							}
 							if (submitResponse != null) {
 								// ret += submitResponse.getMessageId() + "\n";
@@ -767,7 +802,8 @@ public class SmsServiceImpl implements SmsService {
 						}
 					} catch (Exception e) {
 						ret += "Processing Error\n";
-						logger.error(user, e.fillInStackTrace());
+						logger.error(user, e.getMessage());
+						throw new InternalServerException("username :{}" + user + e.getMessage());
 					}
 				}
 				totalCounter++;
@@ -782,7 +818,8 @@ public class SmsServiceImpl implements SmsService {
 			} // for loop end here
 		} catch (Exception e) {
 			ret += "Processing Error\n";
-			logger.error(user, e.fillInStackTrace());
+			logger.error(user + e.getMessage());
+			throw new InternalServerException("user name : {}" + user + e.getMessage());
 		}
 		putUserSession(userSession);
 		return ret;
@@ -813,7 +850,7 @@ public class SmsServiceImpl implements SmsService {
 				int reference_number = rand.nextInt((255 - 10) + 1) + 10;
 				while (!parts.isEmpty()) {
 					String msg = (String) parts.remove(0);
-					msg = Converter.getUnicode(msg.toCharArray());
+					msg = SmsConverter.getUnicode(msg.toCharArray());
 					ByteBuffer byteMessage = new ByteBuffer();
 					byteMessage.appendByte((byte) 0x05);
 					byteMessage.appendByte((byte) 0x00);
@@ -1375,7 +1412,7 @@ public class SmsServiceImpl implements SmsService {
 				bulkSmsDTO.setDistinct("yes");
 			} else {
 				String sp_msg = bulkRequest.getMessage();
-				unicodeMsg = Converter.getContent(sp_msg.toCharArray());
+				unicodeMsg = SmsConverter.getContent(sp_msg.toCharArray());
 				bulkSmsDTO.setMessage(unicodeMsg);
 				bulkSmsDTO.setMessageType("SpecialChar");
 			}
@@ -2212,7 +2249,7 @@ public class SmsServiceImpl implements SmsService {
 		logger.info(bulkSessionId + " Exclude Count: " + excludeSet.size());
 		if (bulkSmsDTO.getMessageType().equalsIgnoreCase("7bit")) {
 			String sp_msg = bulkRequest.getMessage();
-			unicodeMsg = Converter.getContent(sp_msg.toCharArray());
+			unicodeMsg = SmsConverter.getContent(sp_msg.toCharArray());
 			bulkSmsDTO.setMessage(unicodeMsg);
 			bulkSmsDTO.setMessageType("SpecialChar");
 		}
@@ -2468,7 +2505,7 @@ public class SmsServiceImpl implements SmsService {
 									asciilist += asciiNum + ",";
 								}
 								String hex_param = getHexValue(asciilist);
-								entry = Converter.getContent(hex_param.toCharArray());
+								entry = SmsConverter.getContent(hex_param.toCharArray());
 								msg = msg.replaceAll("\\b" + param + e + "\\b", quoteReplacement(entry));
 							}
 						}
@@ -2519,7 +2556,7 @@ public class SmsServiceImpl implements SmsService {
 					} else {
 						web_link_hex_param = getHexValue(
 								"91,119,101,98,95,108,105,110,107,95,116,114,97,99,107,105,110,103,95,117,114,108,93,");
-						web_link_hex_param = Converter.getContent(web_link_hex_param.toCharArray());
+						web_link_hex_param = SmsConverter.getContent(web_link_hex_param.toCharArray());
 					}
 					int number_serial = 1;
 					for (Map.Entry<String, List<String>> map_entry : entry_map.entrySet()) {

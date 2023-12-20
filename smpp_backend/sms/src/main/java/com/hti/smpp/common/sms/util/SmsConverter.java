@@ -11,7 +11,7 @@ import java.math.BigInteger;
 
 import org.springframework.stereotype.Component;
 @Component
-public class Converter {
+public class SmsConverter {
 
 	public static String getUTF8toHex(String str) {
 		String dump = "";

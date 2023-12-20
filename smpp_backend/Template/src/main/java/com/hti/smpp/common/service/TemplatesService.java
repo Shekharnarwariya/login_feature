@@ -18,5 +18,4 @@ public interface TemplatesService {
 
 	public ResponseEntity<?> RecentUseTemplate(String username);
 
-	public ResponseEntity<?> searchRecentTemplates(String username, String search);
 }

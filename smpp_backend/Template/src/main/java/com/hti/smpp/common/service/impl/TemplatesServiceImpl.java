@@ -18,7 +18,6 @@ import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.login.dto.User;
 import com.hti.smpp.common.login.repository.UserRepository;
-import com.hti.smpp.common.messages.repository.RecentResponse;
 import com.hti.smpp.common.messages.repository.SummaryReportRepository;
 import com.hti.smpp.common.request.TemplatesRequest;
 import com.hti.smpp.common.responce.TemplatesResponse;
@@ -27,6 +26,7 @@ import com.hti.smpp.common.templates.dto.TemplatesDTO;
 import com.hti.smpp.common.templates.repository.TemplatesRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.Converter;
+import com.hti.smpp.common.util.Converters;
 import com.hti.smpp.common.util.PasswordConverter;
 
 import jakarta.transaction.Transactional;
@@ -289,20 +289,16 @@ public class TemplatesServiceImpl implements TemplatesService {
 		}
 		try {
 			PasswordConverter passwordConverter = new PasswordConverter();
-			List<RecentResponse> recentContent = summaryReportRepository
+			List<Object[]> recentContent = summaryReportRepository
 					.getRecentContent(passwordConverter.convertToDatabaseColumn(username));
-			System.out.println(recentContent);
 			// Logging success
 			logger.info("RecentUseTemplate operation succeeded for user: {}", username);
 
-			// Convert each element in the stream and collect the results into a list
-//			List<String> convertedRecentContent = recentContent.stream()
-//			        .map(entry -> entry.split(",")[0]) // Extract the first value after splitting
-//			       // .map(Converter::hexCodePointsToCharMsg) // Convert using hexCodePointsToCharMsg
-//					.map(passwordConverter::convertToEntityAttribute) // Convert using passwordConverter
-//			        .collect(Collectors.toList());
+			Set<String> convertedRecentContent = recentContent.stream().map(e -> e[0].toString())
+					.map(passwordConverter::convertToEntityAttribute).map(Converter::hexCodePointsToCharMsg)
+					.collect(Collectors.toSet());
 
-			return ResponseEntity.ok("");
+			return ResponseEntity.ok(convertedRecentContent);
 		} catch (Exception e) {
 			// Logging other exceptions
 			logger.error("An unexpected error occurred: {}", e.getMessage(), e);
@@ -310,29 +306,4 @@ public class TemplatesServiceImpl implements TemplatesService {
 		}
 	}
 
-	@Override
-	public ResponseEntity<?> searchRecentTemplates(String username, String search) {
-
-		Optional<User> userOptional = userRepository.findBySystemId(username);
-
-		if (userOptional.isPresent()) {
-			User user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
-			}
-		} else {
-			throw new NotFoundException("User not found with the provided username.");
-		}
-		try {
-			Set<String> recentContent = summaryReportRepository.getRecentContentWithSearch(username, search);
-			// Logging success
-			logger.info("Search RecentUseTemplate operation succeeded for user: {}", username);
-			// Return the result
-			return ResponseEntity.ok(recentContent);
-		} catch (Exception e) {
-			// Logging other exceptions
-			logger.error("An unexpected error occurred: {}", e.getMessage(), e);
-			throw new InternalServerException("An unexpected error occurred. Please try again." + e.getMessage());
-		}
-	}
 }
