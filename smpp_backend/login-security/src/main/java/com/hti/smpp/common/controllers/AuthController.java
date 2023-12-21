@@ -63,6 +63,7 @@ import com.hti.smpp.common.user.repository.WebMenuAccessEntryRepository;
 import com.hti.smpp.common.util.Constant;
 import com.hti.smpp.common.util.EmailValidator;
 import com.hti.smpp.common.util.OTPGenerator;
+import com.hti.smpp.common.util.PasswordConverter;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
@@ -180,12 +181,13 @@ public class AuthController {
 			if (!EmailValidator.isEmailValid(signUpRequest.getEmail())) {
 				return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is not valid."));
 			}
+			PasswordConverter passwordConverter = new PasswordConverter();
 			// Create new user's account
 			User user = new User();
 			user.setEmail(signUpRequest.getEmail());
 			user.setPassword(encoder.encode(signUpRequest.getPassword()));
 			user.setSystemId(signUpRequest.getUsername());
-			user.setBase64Password(signUpRequest.getPassword());
+			user.setBase64Password(passwordConverter.convertToDatabaseColumn(signUpRequest.getPassword()));
 			user.setLanguage(signUpRequest.getLanguage());
 			Set<String> strRoles = signUpRequest.getRole();
 			Set<Role> roles = new HashSet<>();
@@ -251,6 +253,7 @@ public class AuthController {
 	}
 
 	public UserEntry ConvertRequert(SignupRequest signUpRequest) {
+		PasswordConverter passwordConverter = new PasswordConverter();
 		UserEntry entry = new UserEntry();
 		entry.setAccessCountry(String.join(",", signUpRequest.getAccessCountries()));
 		entry.setAccessIp(signUpRequest.getAccessIp());
@@ -286,7 +289,7 @@ public class AuthController {
 		entry.setSystemId(signUpRequest.getUsername());
 		entry.setSystemType(signUpRequest.getSystemType());
 		entry.setTimeout(signUpRequest.getTimeout());
-		entry.setPassword(signUpRequest.getPassword());
+		entry.setPassword(passwordConverter.convertToDatabaseColumn(signUpRequest.getPassword()));
 
 		return entry;
 	}
