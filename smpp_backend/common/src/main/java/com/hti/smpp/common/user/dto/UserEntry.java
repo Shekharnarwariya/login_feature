@@ -15,6 +15,7 @@ import jakarta.persistence.Transient;
 public class UserEntry implements Serializable, Comparable<UserEntry> {
 	@Id
 	@Column(name = "id")
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
 	@Column(name = "system_id")
 	private String systemId;
@@ -88,6 +89,16 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 	private boolean recordMnp;
 	@Column(name = "password", nullable = false, updatable = false)
 	private String password;
+	@Column(name = "role")
+	private String role;
+	
+	public String getRole() {
+		return role;
+	}
+
+	public void setRole(String role) {
+		this.role = role;
+	}
 
 	public String getPassword() {
 		return password;

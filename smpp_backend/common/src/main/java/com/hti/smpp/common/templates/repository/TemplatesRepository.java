@@ -14,13 +14,12 @@ import com.hti.smpp.common.templates.dto.TemplatesDTO;
 @Repository
 public interface TemplatesRepository extends JpaRepository<TemplatesDTO, Integer> {
 
-	public Optional<TemplatesDTO> findByIdAndMasterId(int id, Long system_id);
+	public Optional<TemplatesDTO> findByIdAndMasterId(int id, String system_id);
 
-	public List<TemplatesDTO> findByMasterId(Long system_id);
+	public List<TemplatesDTO> findByMasterId(String system_id);
 
 	@Modifying
 	@Query("DELETE FROM TemplatesDTO t WHERE t.id = :id AND t.masterId = :masterId")
-	public void deleteByIdAndMasterId(@Param("id") int id, @Param("masterId") Long masterId);
-
+	public void deleteByIdAndMasterId(@Param("id") int id, @Param("masterId") String masterId);
 
 }

@@ -16,7 +16,6 @@ public class ProfileUpdateRequest {
 
 	private String LastName;
 
-	private String language;
 	private String Contact;
 
 	public String getEmail() {
@@ -41,14 +40,6 @@ public class ProfileUpdateRequest {
 
 	public void setLastName(String lastName) {
 		LastName = lastName;
-	}
-
-	public String getLanguage() {
-		return language;
-	}
-
-	public void setLanguage(String language) {
-		this.language = language;
 	}
 
 }

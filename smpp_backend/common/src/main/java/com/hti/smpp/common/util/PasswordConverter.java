@@ -9,11 +9,11 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Converter;
 
-@Converter(autoApply = true)
+@Component
 public class PasswordConverter implements AttributeConverter<String, String> {
 	private Logger logger = LoggerFactory.getLogger(PasswordConverter.class);
 	private final String ALGO = "Blowfish";

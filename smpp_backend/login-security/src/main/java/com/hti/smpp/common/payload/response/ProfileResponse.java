@@ -1,17 +1,12 @@
 package com.hti.smpp.common.payload.response;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import com.hti.smpp.common.login.dto.Role;
-
 public class ProfileResponse {
 
 	private String userName;
 
 	private String email;
 
-	private Set<Role> roles = new HashSet<>();
+	private String roles;
 
 	private String Base64Password;
 
@@ -20,8 +15,6 @@ public class ProfileResponse {
 	private String LastName;
 
 	private String country;
-
-	private String language;
 
 	private String balance;
 
@@ -61,11 +54,11 @@ public class ProfileResponse {
 		this.email = email;
 	}
 
-	public Set<Role> getRoles() {
+	public String getRoles() {
 		return roles;
 	}
 
-	public void setRoles(Set<Role> roles) {
+	public void setRoles(String roles) {
 		this.roles = roles;
 	}
 
@@ -101,14 +94,6 @@ public class ProfileResponse {
 		this.country = country;
 	}
 
-	public String getLanguage() {
-		return language;
-	}
-
-	public void setLanguage(String language) {
-		this.language = language;
-	}
-
 	public String getBalance() {
 		return balance;
 	}
@@ -117,8 +102,8 @@ public class ProfileResponse {
 		this.balance = balance;
 	}
 
-	public ProfileResponse(String userName, String email, Set<Role> roles, String base64Password, String firstName,
-			String lastName, String country, String language, String balance) {
+	public ProfileResponse(String userName, String email, String roles, String base64Password, String firstName,
+			String lastName, String country, String balance) {
 		super();
 		this.userName = userName;
 		this.email = email;
@@ -127,7 +112,6 @@ public class ProfileResponse {
 		this.firstName = firstName;
 		LastName = lastName;
 		this.country = country;
-		this.language = language;
 		this.balance = balance;
 	}
 

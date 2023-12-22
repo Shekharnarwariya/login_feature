@@ -1,8 +1,5 @@
 package com.hti.smpp.common.payload.request;
 
-import java.util.Arrays;
-import java.util.Set;
-
 import com.hti.smpp.common.user.dto.BalanceEntry;
 import com.hti.smpp.common.user.dto.DlrSettingEntry;
 import com.hti.smpp.common.user.dto.ProfessionEntry;
@@ -12,10 +9,8 @@ import com.hti.smpp.common.user.dto.WebMenuAccessEntry;
 
 public class SignupRequest {
 
-	private String language;
 	private String username;
-	private String email;
-	private Set<String> role;
+	private String role;
 	private String masterId;
 	private String password;
 	private boolean adminDepend;
@@ -67,19 +62,11 @@ public class SignupRequest {
 		this.username = username;
 	}
 
-	public String getEmail() {
-		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
-	public Set<String> getRole() {
+	public String getRole() {
 		return role;
 	}
 
-	public void setRole(Set<String> role) {
+	public void setRole(String role) {
 		this.role = role;
 	}
 
@@ -417,34 +404,6 @@ public class SignupRequest {
 
 	public void setWebMenuAccessEntry(WebMenuAccessEntry webMenuAccessEntry) {
 		this.webMenuAccessEntry = webMenuAccessEntry;
-	}
-
-	public String getLanguage() {
-		return language;
-	}
-
-	public void setLanguage(String language) {
-		this.language = language;
-	}
-
-	@Override
-	public String toString() {
-		return "SignupRequest [language=" + language + ", username=" + username + ", email=" + email + ", role=" + role
-				+ ", masterId=" + masterId + ", password=" + password + ", adminDepend=" + adminDepend + ", expiry="
-				+ expiry + ", hlr=" + hlr + ", currency=" + currency + ", systemType=" + systemType + ", sleep=" + sleep
-				+ ", remark=" + remark + ", priority=" + priority + ", forceDelay=" + forceDelay + ", timeout="
-				+ timeout + ", createdOn=" + createdOn + ", accessIp=" + accessIp + ", accessCountries="
-				+ Arrays.toString(accessCountries) + ", logging=" + logging + ", logDays=" + logDays + ", senderLength="
-				+ senderLength + ", senderTrim=" + senderTrim + ", dltDefaultSender=" + dltDefaultSender
-				+ ", bindAlert=" + bindAlert + ", alertWaitDuration=" + alertWaitDuration + ", alertNumber="
-				+ alertNumber + ", alertEmail=" + alertEmail + ", alertUrl=" + alertUrl + ", fixLongSms=" + fixLongSms
-				+ ", flagValue=" + flagValue + ", userids=" + Arrays.toString(userids) + ", skipLoopingRule="
-				+ skipLoopingRule + ", skipContent=" + skipContent + ", loopSmscId=" + loopSmscId
-				+ ", passwordExpiresOn=" + passwordExpiresOn + ", forcePasswordChange=" + forcePasswordChange
-				+ ", recordMnp=" + recordMnp + ", optOut=" + optOut + ", shortCode=" + shortCode + ", balance="
-				+ balance + ", webMasterEntry=" + webMasterEntry + ", dlrSettingEntry=" + dlrSettingEntry
-				+ ", professionEntry=" + professionEntry + ", rechargeEntry=" + rechargeEntry + ", webMenuAccessEntry="
-				+ webMenuAccessEntry + "]";
 	}
 
 }

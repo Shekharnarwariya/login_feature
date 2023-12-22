@@ -16,18 +16,16 @@ import org.springframework.stereotype.Service;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
-import com.hti.smpp.common.login.dto.User;
-import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.messages.repository.SummaryReportRepository;
 import com.hti.smpp.common.request.TemplatesRequest;
 import com.hti.smpp.common.responce.TemplatesResponse;
 import com.hti.smpp.common.service.TemplatesService;
 import com.hti.smpp.common.templates.dto.TemplatesDTO;
 import com.hti.smpp.common.templates.repository.TemplatesRepository;
+import com.hti.smpp.common.user.dto.UserEntry;
+import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.Converter;
-import com.hti.smpp.common.util.Converters;
-import com.hti.smpp.common.util.PasswordConverter;
 
 import jakarta.transaction.Transactional;
 
@@ -47,37 +45,35 @@ public class TemplatesServiceImpl implements TemplatesService {
 	}
 
 	@Autowired
-	private UserRepository userRepository;
+	private UserEntryRepository userRepository;
 
 	@Override
 	public ResponseEntity<?> createTemplate(TemplatesRequest request, String username) {
-
-		Optional<User> userOptional = userRepository.findBySystemId(username);
-		System.out.println(userOptional.get());
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
 		if (userOptional.isPresent()) {
-			User user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 
-		logger.info("Add Template Request By userId: " + userOptional.get().getUserId() + " Title: "
-				+ request.getTitle() + " Message: " + request.getMessage());
+		logger.info("Add Template Request By userId: " + user.getId() + " Title: " + request.getTitle() + " Message: "
+				+ request.getMessage());
 
 		TemplatesDTO template = new TemplatesDTO();
 		template.setMessage(Converter.UTF16(request.getMessage()));
-		userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isPresent()) {
-			template.setMasterId(userOptional.get().getUserId());
+			template.setMasterId(user.getSystemId());
 		}
 		template.setTitle(Converter.UTF16(request.getTitle()));
 		TemplatesDTO savedTemplate = null;
 		try {
 			savedTemplate = templatesRepository.save(template);
 		} catch (Exception e) {
-			logger.error(userOptional.get().getUserId().toString(), e.fillInStackTrace());
+			logger.error(userOptional.get().getId() + " " + e.fillInStackTrace());
 			logger.error("Process Error: " + e.getMessage() + "[" + e.getCause() + "]");
 			throw new InternalServerException(e.getLocalizedMessage());
 		}
@@ -89,7 +85,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 		}
 
 		if (mapToResponse(savedTemplate) != null) {
-			logger.info("Add Template Request Successful by userId: " + userOptional.get().getUserId() + " Title: "
+			logger.info("Add Template Request Successful by userId: " + userOptional.get().getId() + " Title: "
 					+ request.getTitle() + " Message: " + request.getMessage());
 			return new ResponseEntity<>("Template created successfully", HttpStatus.CREATED);
 		} else {
@@ -101,21 +97,20 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 	@Override
 	public ResponseEntity<?> getTemplateById(int id, String username) {
-		Optional<User> userOptional = userRepository.findBySystemId(username);
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
 		if (userOptional.isPresent()) {
-			User user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		userOptional = userRepository.findBySystemId(username);
-		Long system_id = null;
-		if (userOptional.isPresent()) {
-			system_id = userOptional.get().getUserId();
-		}
-		logger.info("Get Template Request By userId: " + userOptional.get().getUserId() + " Template Id: " + id);
+
+		String system_id = user.getSystemId();
+
+		logger.info("Get Template Request By userId: " + userOptional.get().getId() + " Template Id: " + id);
 		TemplatesDTO template = templatesRepository.findByIdAndMasterId(id, system_id)
 				.orElseThrow(() -> new NotFoundException("Template with id: " + id + " not found."));
 		if (template != null) {
@@ -128,8 +123,8 @@ public class TemplatesServiceImpl implements TemplatesService {
 		}
 
 		if (template != null) {
-			logger.info("Get Template Request Successful By userId: " + userOptional.get().getUserId()
-					+ " Template Id: " + id);
+			logger.info(
+					"Get Template Request Successful By userId: " + userOptional.get().getId() + " Template Id: " + id);
 			return new ResponseEntity<>(mapToResponse(template), HttpStatus.OK);
 		} else {
 			logger.error("Error Processing Template by id: " + id);
@@ -140,20 +135,18 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 	@Override
 	public ResponseEntity<?> getAllTemplates(String username) {
-		Optional<User> userOptional = userRepository.findBySystemId(username);
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
 		if (userOptional.isPresent()) {
-			User user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		userOptional = userRepository.findBySystemId(username);
-		Long system_id = null;
-		if (userOptional.isPresent()) {
-			system_id = userOptional.get().getUserId();
-		}
+
+		String system_id = user.getSystemId();
 
 		logger.info("Get All Templates Requested by userId: " + system_id);
 
@@ -186,20 +179,18 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 	@Override
 	public ResponseEntity<?> updateTemplate(int id, TemplatesRequest request, String username) {
-		Optional<User> userOptional = userRepository.findBySystemId(username);
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
 		if (userOptional.isPresent()) {
-			User user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		userOptional = userRepository.findBySystemId(username);
-		Long system_id = null;
-		if (userOptional.isPresent()) {
-			system_id = userOptional.get().getUserId();
-		}
+
+		String system_id = user.getSystemId();
 		logger.info(" Update template request by userId: " + system_id + " title: " + request.getTitle() + " message: "
 				+ request.getMessage());
 
@@ -222,7 +213,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 			logger.info(system_id + " <-- No template to update -->");
 		}
 		if (mapToResponse(updatedTemplate) != null) {
-			logger.info("Update Template Request Successful: " + userOptional.get().getUserId() + " Title: "
+			logger.info("Update Template Request Successful: " + userOptional.get().getId() + " Title: "
 					+ request.getTitle() + " Message: " + request.getMessage());
 			return new ResponseEntity<>(mapToResponse(updatedTemplate), HttpStatus.CREATED);
 		} else {
@@ -235,21 +226,18 @@ public class TemplatesServiceImpl implements TemplatesService {
 	@Override
 	public ResponseEntity<?> deleteTemplate(int id, String username) {
 		boolean isDone = false;
-		Optional<User> userOptional = userRepository.findBySystemId(username);
-
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
 		if (userOptional.isPresent()) {
-			User user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		userOptional = userRepository.findBySystemId(username);
-		Long system_id = null;
-		if (userOptional.isPresent()) {
-			system_id = userOptional.get().getUserId();
-		}
+
+		String system_id = user.getSystemId();
 		logger.info("userId: " + system_id + " delete templateId: " + id);
 		try {
 			templatesRepository.deleteByIdAndMasterId(id, system_id);
@@ -277,26 +265,24 @@ public class TemplatesServiceImpl implements TemplatesService {
 	@Override
 	public ResponseEntity<?> RecentUseTemplate(String username) {
 
-		Optional<User> userOptional = userRepository.findBySystemId(username);
-
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
 		if (userOptional.isPresent()) {
-			User user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
+
 		try {
-			PasswordConverter passwordConverter = new PasswordConverter();
-			List<Object[]> recentContent = summaryReportRepository
-					.getRecentContent(passwordConverter.convertToDatabaseColumn(username));
+			List<Object[]> recentContent = summaryReportRepository.getRecentContent(username);
 			// Logging success
 			logger.info("RecentUseTemplate operation succeeded for user: {}", username);
 
 			Set<String> convertedRecentContent = recentContent.stream().map(e -> e[0].toString())
-					.map(passwordConverter::convertToEntityAttribute).map(Converter::hexCodePointsToCharMsg)
-					.collect(Collectors.toSet());
+					.map(Converter::hexCodePointsToCharMsg).collect(Collectors.toSet());
 
 			return ResponseEntity.ok(convertedRecentContent);
 		} catch (Exception e) {

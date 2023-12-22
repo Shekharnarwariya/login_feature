@@ -3,7 +3,7 @@ package com.hti.smpp.common.responce;
 public class TemplatesResponse {
 	private int id;
 	private String message;
-	private Long masterId;
+	private String masterId;
 	private String title;
 
 	public int getId() {
@@ -22,11 +22,11 @@ public class TemplatesResponse {
 		this.message = message;
 	}
 
-	public Long getMasterId() {
+	public String getMasterId() {
 		return masterId;
 	}
 
-	public void setMasterId(Long masterId) {
+	public void setMasterId(String masterId) {
 		this.masterId = masterId;
 	}
 

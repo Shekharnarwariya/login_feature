@@ -317,12 +317,13 @@ public class SmsServiceImpl implements SmsService {
 				if (destinationList.size() > 0) {
 					boolean amount = false;
 					if (userEntry.isAdminDepend()) {
-						Optional<User> masterOptional = userRepository.findBySystemId(userEntry.getMasterId());
+						Optional<UserEntry> masterOptional = userEntryRepository
+								.findBySystemId(userEntry.getMasterId());
 						if (!masterOptional.isPresent()) {
 							throw new NotFoundException("User not found with the provided username.");
 						}
-						adminCost = routeService.calculateRoutingCost(masterOptional.get().getUserId().intValue(),
-								destinationList, no_of_msg);
+						adminCost = routeService.calculateRoutingCost(masterOptional.get().getId(), destinationList,
+								no_of_msg);
 
 						if ((adminWallet >= adminCost)) {
 							if (wallet >= totalcost) {

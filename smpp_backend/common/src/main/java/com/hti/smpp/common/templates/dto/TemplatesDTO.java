@@ -15,7 +15,7 @@ public class TemplatesDTO {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
 	private String message;
-	private Long masterId;
+	private String masterId;
 	private String title;
 	public int getId() {
 		return id;
@@ -29,10 +29,11 @@ public class TemplatesDTO {
 	public void setMessage(String message) {
 		this.message = message;
 	}
-	public Long getMasterId() {
+	
+	public String getMasterId() {
 		return masterId;
 	}
-	public void setMasterId(Long masterId) {
+	public void setMasterId(String masterId) {
 		this.masterId = masterId;
 	}
 	public String getTitle() {
