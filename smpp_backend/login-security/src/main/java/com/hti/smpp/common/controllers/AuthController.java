@@ -1,5 +1,6 @@
 package com.hti.smpp.common.controllers;
 
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -12,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -113,6 +115,9 @@ public class AuthController {
 
 	@Autowired
 	private DriverInfoRepository driverInfoRepository;
+
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
 
 	private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
@@ -328,12 +333,13 @@ public class AuthController {
 		UserEntry user = userOptional.get();
 		ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
 				.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
-		user.setPassword(encoder.encode(newPassword));
-		user.setEditOn(LocalDateTime.now() + "");
-		user.setEditBy(username);
+
+		String updateQuery = "UPDATE usermaster SET password = ?, editOn = CURRENT_TIMESTAMP, editby = ? WHERE system_id = ?";
+		jdbcTemplate.update(updateQuery, new Object[] { encoder.encode(newPassword), username, username },
+				new int[] { Types.VARCHAR, Types.VARCHAR, Types.VARCHAR });
+
 		driverInfoRepository.save(new DriverInfo(user.getId(),
 				new PasswordConverter().convertToDatabaseColumn(newPassword), LocalDateTime.now()));
-		userEntryRepository.save(user);
 		if (EmailValidator.isEmailValid(professionEntry.getDomainEmail())) {
 			emailSender.sendEmail(professionEntry.getDomainEmail(), Constant.PASSWORD_FORGOT_SUBJECT,
 					Constant.TEMPLATE_PATH,
@@ -410,13 +416,14 @@ public class AuthController {
 
 			if (encoder.matches(passwordUpdateRequest.getOldPassword(), currentPassword)) {
 				// Valid old password, update the password
-				String newPassword = encoder.encode(passwordUpdateRequest.getNewPassword());
-				userEntry.setPassword(newPassword);
-				userEntry.setEditOn(LocalDateTime.now() + "");
-				userEntry.setEditBy(username);
-				userEntryRepository.save(userEntry);
+				String updateQuery = "UPDATE usermaster SET password = ?, editOn = CURRENT_TIMESTAMP, editby = ? WHERE system_id = ?";
+				jdbcTemplate.update(updateQuery,
+						new Object[] { encoder.encode(passwordUpdateRequest.getNewPassword()), username, username },
+						new int[] { Types.VARCHAR, Types.VARCHAR, Types.VARCHAR });
+
 				driverInfoRepository.save(new DriverInfo(userEntry.getId(),
-						new PasswordConverter().convertToDatabaseColumn(newPassword), LocalDateTime.now()));
+						new PasswordConverter().convertToDatabaseColumn(passwordUpdateRequest.getNewPassword()),
+						LocalDateTime.now()));
 				ProfessionEntry professionEntry = professionEntryRepository.findById(userEntry.getId())
 						.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
 				if (EmailValidator.isEmailValid(professionEntry.getDomainEmail())) {
