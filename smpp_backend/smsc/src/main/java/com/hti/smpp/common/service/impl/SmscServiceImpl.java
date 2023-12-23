@@ -23,8 +23,6 @@ import com.hti.smpp.common.exception.DataAccessError;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
-import com.hti.smpp.common.login.dto.User;
-import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.request.CustomRequest;
 import com.hti.smpp.common.request.GroupMemberRequest;
 import com.hti.smpp.common.request.GroupRequest;
@@ -96,16 +94,14 @@ public class SmscServiceImpl implements SmscService {
 	@Autowired
 	private UserEntryRepository userRepository;
 
-	@Autowired
-	private UserRepository loginRepository;
-
 	@Override
 	public String smscEntrySave(SmscEntryRequest smscEntryRequest, String username) {
 
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry userEntry = null;
+		if (userOptional.isPresent()) {
+			userEntry = userOptional.get();
+			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -116,22 +112,12 @@ public class SmscServiceImpl implements SmscService {
 			// Logging the username
 			System.out.println("Username: " + username);
 
-			// Finding the user by system ID
-			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-
 			// Converting the request
 			SmscEntry convertedRequest = ConvertRequest(smscEntryRequest);
-
-			// Handling the optional user entry
-			if (userOptional.isPresent()) {
-				UserEntry userEntry = userOptional.get();
-				setConvertedRequestFields(convertedRequest, userEntry);
-			} else {
-				throw new NotFoundException("User not found. Please enter a valid username.");
-			}
+			setConvertedRequestFields(convertedRequest, userEntry);
 			// Saving the SMS entry
 			SmscEntry savedEntry = smscEntryRepository.save(convertedRequest);
-			logger.info("SmscEntry saved successfully with id: "+savedEntry.getId());
+			logger.info("SmscEntry saved successfully with id: " + savedEntry.getId());
 			MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
 			return "Successfully saved this id: " + savedEntry.getId();
 		} catch (NotFoundException e) {
@@ -153,10 +139,11 @@ public class SmscServiceImpl implements SmscService {
 	@Override
 	public String smscupdate(int smscId, SmscEntryRequest smscEntryRequest, String username) {
 
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry userEntry = null;
+		if (userOptional.isPresent()) {
+			userEntry = userOptional.get();
+			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -187,10 +174,11 @@ public class SmscServiceImpl implements SmscService {
 	@Override
 	public String smscdelete(int smscId, String username) {
 
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry userEntry = null;
+		if (userOptional.isPresent()) {
+			userEntry = userOptional.get();
+			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -218,10 +206,11 @@ public class SmscServiceImpl implements SmscService {
 	@Override
 	public CustomEntry getCustomEntry(int smscId, String username) {
 
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry userEntry = null;
+		if (userOptional.isPresent()) {
+			userEntry = userOptional.get();
+			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -254,10 +243,11 @@ public class SmscServiceImpl implements SmscService {
 	@Override
 	public String saveCustom(CustomRequest customRequest, String username) {
 
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry userEntry = null;
+		if (userOptional.isPresent()) {
+			userEntry = userOptional.get();
+			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -281,10 +271,11 @@ public class SmscServiceImpl implements SmscService {
 
 	@Override
 	public String updateCustom(int customId, CustomRequest customRequest, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry userEntry = null;
+		if (userOptional.isPresent()) {
+			userEntry = userOptional.get();
+			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -315,10 +306,11 @@ public class SmscServiceImpl implements SmscService {
 
 	@Override
 	public String deleteCustom(int customId, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry userEntry = null;
+		if (userOptional.isPresent()) {
+			userEntry = userOptional.get();
+			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -350,10 +342,11 @@ public class SmscServiceImpl implements SmscService {
 	@Override
 	public String saveLimit(LimitRequest limitRequest, String username) {
 
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -377,10 +370,11 @@ public class SmscServiceImpl implements SmscService {
 
 	@Override
 	public String updateLimit(int limitId, LimitRequest limitRequest, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -393,7 +387,7 @@ public class SmscServiceImpl implements SmscService {
 					if (entry.getId() == limitId) {
 						limitEntryRepository.save(entry);
 						MultiUtility.changeFlag(Constants.SMSC_LT_FLAG_FILE, "707");
-						logger.info("LimitId: "+limitId+" Updated Successfully!");
+						logger.info("LimitId: " + limitId + " Updated Successfully!");
 						return "Limit updated successfully";
 					}
 				}
@@ -406,7 +400,7 @@ public class SmscServiceImpl implements SmscService {
 			throw new DataAccessError("Failed to update LimitEntry. Data access error occurred.");
 		} catch (NotFoundException e) {
 			logger.error("LimitEntryNotFoundException: {}", e.getMessage(), e);
-			throw new NotFoundException("LimitEntryNotFoundException: "+e.getLocalizedMessage());
+			throw new NotFoundException("LimitEntryNotFoundException: " + e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while updating the LimitEntry: {}", e.getMessage(), e);
 			throw new InternalServerException("Failed to update LimitEntry. Unexpected error occurred.");
@@ -415,10 +409,11 @@ public class SmscServiceImpl implements SmscService {
 
 	@Override
 	public String deleteLimit(int limitId, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -447,10 +442,11 @@ public class SmscServiceImpl implements SmscService {
 
 	@Override
 	public List<LimitEntry> listLimit(String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -473,10 +469,11 @@ public class SmscServiceImpl implements SmscService {
 	@Override
 	public String saveGroup(GroupRequest groupRequest, String username) {
 
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -500,11 +497,11 @@ public class SmscServiceImpl implements SmscService {
 
 	@Override
 	public String updateGroup(GroupRequest groupRequest, String username) {
-
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -516,7 +513,7 @@ public class SmscServiceImpl implements SmscService {
 				if (groupEntryRepository.existsById(group.getId())) {
 					groupEntryRepository.save(group);
 					MultiUtility.changeFlag(Constants.DGM_FLAG_FILE, "707");
-					logger.info("GroupEntry updated successfully with Id: "+group.getId());
+					logger.info("GroupEntry updated successfully with Id: " + group.getId());
 				} else {
 					logger.info("Group not found with id: {}", group.getId());
 					throw new NotFoundException("Group not found with id: " + group.getId());
@@ -537,10 +534,11 @@ public class SmscServiceImpl implements SmscService {
 
 	@Override
 	public String deleteGroup(int groupId, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -560,7 +558,7 @@ public class SmscServiceImpl implements SmscService {
 			throw new DataAccessError("Failed to delete GroupEntry. Data access error occurred.");
 		} catch (NotFoundException e) {
 			logger.error("Group not found: {}", e.getMessage(), e);
-			throw new NotFoundException("Group not found: "+e.getLocalizedMessage());
+			throw new NotFoundException("Group not found: " + e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while deleting the GroupEntry: {}", e.getMessage(), e);
 			throw new InternalServerException("Failed to delete GroupEntry. Unexpected error occurred.");
@@ -569,15 +567,17 @@ public class SmscServiceImpl implements SmscService {
 
 	@Override
 	public List<GroupEntry> listGroup(String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
+
 		try {
 			List<GroupEntry> list = groupEntryRepository.findAll();
 			return list;
@@ -595,10 +595,11 @@ public class SmscServiceImpl implements SmscService {
 	@Override
 	public String saveGroupMember(GroupMemberRequest groupMemberRequest, String username) {
 
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -626,10 +627,11 @@ public class SmscServiceImpl implements SmscService {
 
 	@Override
 	public String updateGroupMember(GroupMemberRequest groupMemberRequest, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -662,10 +664,11 @@ public class SmscServiceImpl implements SmscService {
 
 	@Override
 	public String deleteGroupMember(int groupMemberId, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -698,7 +701,7 @@ public class SmscServiceImpl implements SmscService {
 			List<TrafficScheduleEntry> convertedEntries = ConvertRequest(trafficScheduleRequest);
 			for (TrafficScheduleEntry entry : convertedEntries) {
 				trafficScheduleEntryRepository.save(entry);
-				logger.info("Traffic schedule saved with id: "+entry.getId());
+				logger.info("Traffic schedule saved with id: " + entry.getId());
 				MultiUtility.changeFlag(Constants.SMSC_SH_FLAG_FILE, "707");
 			}
 			return "Traffic schedule saved successfully.";
@@ -713,10 +716,11 @@ public class SmscServiceImpl implements SmscService {
 
 	@Override
 	public String updateSchedule(TrafficScheduleRequest trafficScheduleRequest, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -727,7 +731,7 @@ public class SmscServiceImpl implements SmscService {
 			for (TrafficScheduleEntry entry : convertRequest) {
 				if (trafficScheduleEntryRepository.existsById(entry.getId())) {
 					trafficScheduleEntryRepository.save(entry);
-					logger.info("Traffic schedule saved with id: "+entry.getId());
+					logger.info("Traffic schedule saved with id: " + entry.getId());
 					MultiUtility.changeFlag(Constants.SMSC_SH_FLAG_FILE, "707");
 				} else {
 					throw new NotFoundException("Traffic schedule not found with ID: " + entry.getId());
@@ -748,10 +752,11 @@ public class SmscServiceImpl implements SmscService {
 
 	@Override
 	public String deleteSchedule(int scheduleId, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -827,10 +832,11 @@ public class SmscServiceImpl implements SmscService {
 
 	@Override
 	public String loopingRuleupdate(SmscLoopingRequest smscLoopingRequest, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -840,7 +846,7 @@ public class SmscServiceImpl implements SmscService {
 			SmscLooping convertRequest = ConvertRequest(smscLoopingRequest);
 			if (smscLoopingRepository.existsById(convertRequest.getSmscId())) {
 				smscLoopingRepository.save(convertRequest);
-				logger.info("SmscLooping entry updated with id: "+convertRequest.getSmscId());
+				logger.info("SmscLooping entry updated with id: " + convertRequest.getSmscId());
 				MultiUtility.changeFlag(Constants.SMSC_LOOP_FLAG_FILE, "707");
 				return "SmscLooping entry updated successfully";
 			} else {
@@ -860,10 +866,11 @@ public class SmscServiceImpl implements SmscService {
 
 	@Override
 	public String loopingRuledelete(int smscId, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -873,7 +880,7 @@ public class SmscServiceImpl implements SmscService {
 		try {
 			if (smscLoopingRepository.existsById(smscId)) {
 				smscLoopingRepository.deleteById(smscId);
-				logger.info("SmscLooping entry deleted with id: "+smscId);
+				logger.info("SmscLooping entry deleted with id: " + smscId);
 				MultiUtility.changeFlag(Constants.SMSC_LOOP_FLAG_FILE, "707");
 				return "SmscLooping entry deleted successfully";
 			} else {
@@ -893,10 +900,11 @@ public class SmscServiceImpl implements SmscService {
 
 	@Override
 	public SmscLooping getLoopingRule(int smscId, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -924,10 +932,11 @@ public class SmscServiceImpl implements SmscService {
 	@Override
 	public List<SmscLooping> listLoopingRule(String username) {
 
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -1185,10 +1194,11 @@ public class SmscServiceImpl implements SmscService {
 
 	@Override
 	public String saveSmscBsfm(SmscBsfmEntryRequest smscBsfmEntryRequest, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -1203,7 +1213,7 @@ public class SmscServiceImpl implements SmscService {
 			MultiUtility.changeFlag(Constants.SMSC_BSFM_FLAG_FILE, "707");
 		} catch (Exception e) {
 			logger.error(e.getLocalizedMessage());
-			throw new InternalServerException("Unable to save SmscBsfmEntry: "+e.getLocalizedMessage());
+			throw new InternalServerException("Unable to save SmscBsfmEntry: " + e.getLocalizedMessage());
 		}
 		return "saccessfully save....";
 
@@ -1220,11 +1230,15 @@ public class SmscServiceImpl implements SmscService {
 	@Override
 	public List<TrafficScheduleEntry> listTrafficSchedule(String username) {
 		try {
-			User user = loginRepository.findBySystemId(username)
-					.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
-
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+			UserEntry user = null;
+			if (userOptional.isPresent()) {
+				user = userOptional.get();
+				if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
+					throw new UnauthorizedException("User does not have the required roles for this operation.");
+				}
+			} else {
+				throw new NotFoundException("User not found with the provided username.");
 			}
 
 			List<TrafficScheduleEntry> trafficScheduleEntries = trafficScheduleEntryRepository.findAll();
@@ -1253,11 +1267,15 @@ public class SmscServiceImpl implements SmscService {
 	@Override
 	public List<SmscBsfmEntry> listSmscBsfm(String username) {
 		try {
-			User user = loginRepository.findBySystemId(username)
-					.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
-
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+			UserEntry user = null;
+			if (userOptional.isPresent()) {
+				user = userOptional.get();
+				if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
+					throw new UnauthorizedException("User does not have the required roles for this operation.");
+				}
+			} else {
+				throw new NotFoundException("User not found with the provided username.");
 			}
 
 			List<SmscBsfmEntry> smscBsfmEntries = smscBsfmEntryRepository.findAll();
@@ -1267,12 +1285,18 @@ public class SmscServiceImpl implements SmscService {
 
 			// Process the list or return it directly based on your requirements
 			return smscBsfmEntries;
-		} catch (NotFoundException | UnauthorizedException ex) {
+		} catch (NotFoundException ex) {
 			// Log the exception with appropriate level (info, warn, error, etc.)
 			logger.error("Error in listSmscBsfm for user {}: {}", username, ex.getMessage(), ex);
 
 			// Re-throw the exception for higher-level handling if needed
 			throw new NotFoundException(ex.getMessage());
+		} catch (UnauthorizedException ex) {
+			// Log the exception with appropriate level (info, warn, error, etc.)
+			logger.error("Error in listSmscBsfm for user {}: {}", username, ex.getMessage(), ex);
+
+			// Re-throw the exception for higher-level handling if needed
+			throw new UnauthorizedException(ex.getMessage());
 		} catch (Exception ex) {
 			// Log unexpected exceptions with error level
 			logger.error("Unexpected error in listSmscBsfm for user {}: {}", username, ex.getMessage(), ex);
@@ -1281,10 +1305,21 @@ public class SmscServiceImpl implements SmscService {
 			throw new InternalServerException(
 					"An unexpected error occurred while processing the request." + ex.getLocalizedMessage());
 		}
+
 	}
 
 	@Override
 	public ResponseEntity<String> bsfmupdate(SmscBsfmEntryRequest smscBsfmEntryRequest, String username) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 		try {
 			if (smscBsfmEntryRepository.existsById(smscBsfmEntryRequest.getId())) {
 				SmscBsfmEntry smscBsfmEntry = new SmscBsfmEntry();
@@ -1294,7 +1329,7 @@ public class SmscServiceImpl implements SmscService {
 				smscBsfmEntry.setSmscName(smscBsfmEntryRequest.getSmscName());
 				smscBsfmEntry.setSource(smscBsfmEntryRequest.getSource());
 				smscBsfmEntryRepository.save(smscBsfmEntry);
-				logger.info("Entry updated with id: "+smscBsfmEntryRequest.getId());
+				logger.info("Entry updated with id: " + smscBsfmEntryRequest.getId());
 				MultiUtility.changeFlag(Constants.SMSC_BSFM_FLAG_FILE, "707");
 				return new ResponseEntity<>("Entry updated successfully", HttpStatus.OK);
 			} else {
@@ -1309,10 +1344,11 @@ public class SmscServiceImpl implements SmscService {
 
 	@Override
 	public ResponseEntity<String> bsfmdelete(int id, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -1321,27 +1357,28 @@ public class SmscServiceImpl implements SmscService {
 		try {
 			if (smscBsfmEntryRepository.existsById(id)) {
 				smscBsfmEntryRepository.deleteById(id);
-				logger.info("Entry deleted with id: "+id);
+				logger.info("Entry deleted with id: " + id);
 				MultiUtility.changeFlag(Constants.SMSC_BSFM_FLAG_FILE, "707");
 				return new ResponseEntity<>("Entry deleted successfully", HttpStatus.OK);
 			} else {
 				throw new NotFoundException("Entry not found with ID: " + id);
 			}
 		} catch (NotFoundException e) {
-			logger.error("Entry not found: "+e.getLocalizedMessage());
+			logger.error("Entry not found: " + e.getLocalizedMessage());
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
 		} catch (Exception e) {
-			logger.error("Unexpected Exception: "+e.getLocalizedMessage());
+			logger.error("Unexpected Exception: " + e.getLocalizedMessage());
 			return new ResponseEntity<>("Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
 	@Override
 	public ResponseEntity<SmscEntry> getSmscEntry(int id, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -1352,27 +1389,28 @@ public class SmscServiceImpl implements SmscService {
 
 			if (optionalSmscEntry.isPresent()) {
 				SmscEntry smscEntry = optionalSmscEntry.get();
-				logger.info("Entry retrieved successfully with id: "+id);
+				logger.info("Entry retrieved successfully with id: " + id);
 				return new ResponseEntity<>(smscEntry, HttpStatus.OK);
 			} else {
 				logger.error("SMS entry not found with ID: " + id);
 				throw new NotFoundException("SMS entry not found with ID: " + id);
 			}
 		} catch (NotFoundException e) {
-			logger.error("NotFoundException: "+e.getLocalizedMessage());
+			logger.error("NotFoundException: " + e.getLocalizedMessage());
 			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
-			logger.error("Unexpected Exception: "+e.getLocalizedMessage());
+			logger.error("Unexpected Exception: " + e.getLocalizedMessage());
 			throw new InternalServerException(e.getMessage());
 		}
 	}
 
 	@Override
 	public ResponseEntity<?> getGroupMember(int id, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
