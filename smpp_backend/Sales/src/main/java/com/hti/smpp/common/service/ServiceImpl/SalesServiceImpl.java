@@ -47,6 +47,18 @@ public class SalesServiceImpl implements SalesService {
 	@Autowired
 	private UserEntryRepository userRepository;
 
+	
+	/**
+	 * Saves a sales entry based on the provided form data and username.
+	 * Validates user authorization, copies form properties to the SalesEntry model,
+	 * and logs relevant information. Handles exceptions and returns a ResponseEntity
+	 * with a success or failure message.
+	 *
+	 * @param salesEntryForm The form data for creating a new sales entry.
+	 * @param username The username associated with the request.
+	 * @return ResponseEntity with a success or failure message.
+	 */
+	
 	@Override
 	public ResponseEntity<String> save(SalesEntryForm salesEntryForm, String username) {
 		
@@ -103,6 +115,16 @@ public class SalesServiceImpl implements SalesService {
 		return new ResponseEntity<String>(target, HttpStatus.CREATED);
 	}
 
+	/**
+	 * Updates a sales entry based on the provided form data and username.
+	 * Validates user authorization, copies form properties to the SalesEntry model,
+	 * logs relevant information, and handles exceptions. Returns a ResponseEntity
+	 * with a success or failure message.
+	 *
+	 * @param form The form data for updating an existing sales entry.
+	
+	 */
+	
 	@Override
 	public ResponseEntity<String> update(SalesEntryForm form, String username) {
 		Optional<User> user = userLoginRepo.findBySystemId(username);
@@ -153,6 +175,15 @@ public class SalesServiceImpl implements SalesService {
 		return new ResponseEntity<String>(target, HttpStatus.CREATED);
 	}
 
+	/**
+	 * Deletes a sales entry with the specified ID, validating user authorization.
+	 * Logs relevant information and handles exceptions. Returns a ResponseEntity
+	 * with a success or failure message.
+	 *
+	 * @param id The ID of the sales entry to be deleted.
+	
+	 */
+	
 	@Override
 	public ResponseEntity<String> delete(int id, String username) {
 		Optional<User> user = userLoginRepo.findBySystemId(username);
@@ -177,6 +208,14 @@ public class SalesServiceImpl implements SalesService {
 		return new ResponseEntity<String>(target, HttpStatus.OK);
 	}
 
+	
+	/**
+	 * Retrieves a list of sales entries and maps them to their respective IDs.
+	 * Returns a Map<Integer, SalesEntry> containing the sales entries.
+	 *
+	 * @return Map<Integer, SalesEntry> containing sales entries mapped by their IDs.
+	 */
+	
 	private Map<Integer, SalesEntry> list() {
 		Map<Integer, SalesEntry> map = new HashMap<Integer, SalesEntry>();
 		List<SalesEntry> list = null;
@@ -192,6 +231,14 @@ public class SalesServiceImpl implements SalesService {
 		return map;
 	}
 
+	/**
+	 * Retrieves a list of sales entries filtered by the specified role and maps them to their respective IDs.
+	 * Returns a Map<Integer, SalesEntry> containing the filtered sales entries.
+	 *
+	 * @param role The role by which sales entries are filtered.
+	 * @return Map<Integer, SalesEntry> containing filtered sales entries mapped by their IDs.
+	 */
+	
 	public Map<Integer, SalesEntry> list(String role) {
 		Map<Integer, SalesEntry> map = new HashMap<Integer, SalesEntry>();
 		List<SalesEntry> list = null;
@@ -209,6 +256,15 @@ public class SalesServiceImpl implements SalesService {
 		return map;
 	}
 
+	/**
+	 * Retrieves a list of sales entries for sellers under a specific manager and role.
+	 * Returns a Map<Integer, SalesEntry> containing the sales entries mapped by their IDs.
+	 *
+	 * @param mgrId The ID of the manager.
+	 * @param role The role of the sales entries to be retrieved.
+	 * @return Map<Integer, SalesEntry> containing sales entries mapped by their IDs.
+	 */
+	
 	private Map<Integer, SalesEntry> listSellersUnderManager(String mgrId, String role) {
 		Map<Integer, SalesEntry> map = new HashMap<Integer, SalesEntry>();
 		List<SalesEntry> list = null;
@@ -224,6 +280,15 @@ public class SalesServiceImpl implements SalesService {
 		return map;
 	}
 
+	/**
+	 * Retrieves a collection of sales entries for executives based on the provided username.
+	 * Validates user authorization, logs relevant information, and handles exceptions.
+	 * Returns a ResponseEntity with the collection of sales entries or an appropriate response.
+	 *
+	 * @param username The username associated with the request.
+	 * @return ResponseEntity with a collection of sales entries or an appropriate response.
+	 */
+	
 	@Override
 	public ResponseEntity<Collection<SalesEntry>> listSalesUsers(String username) {
 		
@@ -291,6 +356,16 @@ public class SalesServiceImpl implements SalesService {
 		return ResponseEntity.ok(salesList);
 	}
 
+	/**
+	 * Retrieves details of a sales entry with the specified ID based on the provided username.
+	 * Validates user authorization, logs relevant information, and handles exceptions.
+	 * Returns a ResponseEntity with the details of the sales entry or an appropriate response.
+	 *
+	 * @param id The ID of the sales entry to be viewed.
+	 * @param username The username associated with the request.
+	 * @return ResponseEntity with details of the sales entry or an appropriate response.
+	 */
+	
 	@Override
 	public ResponseEntity<?> viewSalesEntry(int id, String username) {
 		Optional<User> user = userLoginRepo.findBySystemId(username);
@@ -355,6 +430,15 @@ public class SalesServiceImpl implements SalesService {
 		}
 	}
 
+	/**
+	 * Sets up sales entries based on the provided username.
+	 * Validates user authorization, logs relevant information, and handles exceptions.
+	 * Returns a ResponseEntity with a collection of sales entries or an appropriate response.
+	 *
+	 * @param username The username associated with the request.
+	 * @return ResponseEntity with a collection of sales entries or an appropriate response.
+	 */
+	
 	@Override
 	public ResponseEntity<Collection<SalesEntry>> setupSalesEntry(String username) {
 		Optional<User> user = userLoginRepo.findBySystemId(username);

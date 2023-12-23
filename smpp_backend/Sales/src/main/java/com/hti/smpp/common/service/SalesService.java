@@ -5,6 +5,10 @@ import org.springframework.http.ResponseEntity;
 import com.hti.smpp.common.request.SalesEntryForm;
 import com.hti.smpp.common.sales.dto.SalesEntry;
 
+/**
+ * Interface defining methods for Sales Service operations.
+ */
+
 
 public interface SalesService {
 

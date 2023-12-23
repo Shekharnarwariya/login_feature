@@ -39,6 +39,11 @@ public class SalesController {
 	@Autowired
 	private SalesService salesService;
 
+	/**
+	 * Saves a sales entry by processing the provided form data and associating it with the specified username.
+	 * Returns a ResponseEntity with a String result from the sales service operation.
+	 */
+	
 	@Operation(summary = "Save Sales Entry", description = "Save a new sales entry")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "201", description = "SalesEntry Saved Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
@@ -51,7 +56,13 @@ public class SalesController {
 			@Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username) {
 		return this.salesService.save(salesEntry, username);
 	}
+	
 
+	/**
+	 * Update a sales entry with the provided form data, associated with the specified Username.
+	 * Returns a ResponseEntity with a String result from the sales service update operation.
+	 */
+	
 	@Operation(summary = "Update Sales Entry", description = "Update's an existing sales entry")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "201", description = "SalesEntry Updated Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
@@ -65,6 +76,11 @@ public class SalesController {
 		return this.salesService.update(form, username);
 	}
 
+	/**
+	 * Deletes a sales entry with the specified ID, associated with the provided username.
+	 * Returns a ResponseEntity with a String result from the sales service delete operation.
+	 */
+	
 	@Operation(summary = "Delete Sales Entry", description = "Delete's an existing sales entry")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "SalesEntry Deleted Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
@@ -80,6 +96,12 @@ public class SalesController {
 
 	}
 
+	/**
+	 * Retrieves a collection of sales entries associated with the specified username.
+	 * Returns a ResponseEntity with the collection of SalesEntry objects.
+	 * With a function name listSalesUser.
+	 */
+	
 	@Operation(summary = "List Sales Users", description = "Returns Collection view of the values contained in SalesEntry map")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "List Sales Users Successful.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
@@ -93,6 +115,11 @@ public class SalesController {
 		return this.salesService.listSalesUsers(username);
 	}
 
+	/**
+	 * Retrieves details of a sales entry with the specified ID, associated with the provided username.
+	 * Returns a ResponseEntity with the sales entry details or an appropriate response.
+	 */
+	
 	@Operation(summary = "View Sales Entry", description = "Returns the ViewSalesEntry as response")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "ViewSalesEntry response Successful.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ViewSalesEntry.class))),
@@ -107,6 +134,12 @@ public class SalesController {
 		return this.salesService.viewSalesEntry(id, username);
 	}
 
+	
+	/**
+	 * Initializes and retrieves data for setting up a new sales entry, associated with the provided username.
+	 * Returns a ResponseEntity with the setup information or an appropriate response.
+	 */
+	
 	@Operation(summary = "Setup SalesEntry", description = "Returns a Collection view of the values contained in the SalesEntry map.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Collection view of values Successful.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),

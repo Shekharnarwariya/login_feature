@@ -1,5 +1,11 @@
 package com.hti.smpp.common.request;
 
+/**
+ * Represents a form containing information for creating or updating a SalesEntry.
+ * Includes fields such as ID, master ID, username, email, number, reporting, createdOn,
+ * remarks, password, expiredOn, role, and domainEmail.
+ */
+
 public class SalesEntryForm {
 	private int id;
 	private String masterId;

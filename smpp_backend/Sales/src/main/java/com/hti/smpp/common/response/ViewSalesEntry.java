@@ -6,6 +6,11 @@ import org.springframework.stereotype.Component;
 
 import com.hti.smpp.common.sales.dto.SalesEntry;
 
+/**
+ * Represents a view containing details of a sales entry and a collection of managers.
+ * Used for displaying sales entry information along with associated manager details.
+ */
+
 @Component
 public class ViewSalesEntry {
 	
