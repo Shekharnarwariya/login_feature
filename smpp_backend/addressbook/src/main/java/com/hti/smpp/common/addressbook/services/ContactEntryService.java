@@ -2,13 +2,16 @@ package com.hti.smpp.common.addressbook.services;
 
 import java.util.List;
 
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.hti.smpp.common.addressbook.request.ContactEntryRequest;
 import com.hti.smpp.common.addressbook.response.ContactForBulk;
 import com.hti.smpp.common.contacts.dto.ContactEntry;
-
+/**
+ * Interface for ContactEntryService defining contact-related operations.
+ */
 public interface ContactEntryService {
 
 	public ResponseEntity<?> saveContactEntry(String request, MultipartFile file, String username);

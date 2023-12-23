@@ -3,7 +3,9 @@ package com.hti.smpp.common.addressbook.request;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-
+/**
+ * Represents a request for managing contact entries.
+ */
 public class ContactEntryRequest {
 	private int[] id;
 	private String[] name;
@@ -13,11 +15,12 @@ public class ContactEntryRequest {
 	private int groupId;
 	@Schema(hidden = true)
 	private MultipartFile file;
-
+	
+//Default constructor for the ContactEntryRequest class.
 	public ContactEntryRequest() {
 
 	}
-
+//Parameterized constructor for the ContactEntryRequest class.
 	public ContactEntryRequest(int[] id, String[] name, String[] email, long[] number, String type, int groupId,
 			MultipartFile file) {
 		super();
@@ -29,7 +32,7 @@ public class ContactEntryRequest {
 		this.groupId = groupId;
 		this.file = file;
 	}
-
+//getter and setter
 	public int[] getId() {
 		return id;
 	}

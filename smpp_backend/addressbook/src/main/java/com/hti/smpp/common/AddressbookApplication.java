@@ -6,6 +6,9 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 @SpringBootApplication
 @EnableDiscoveryClient
+/**
+ * Entry point for the Addressbook.
+ */
 public class AddressbookApplication {
 
 	public static void main(String[] args) {

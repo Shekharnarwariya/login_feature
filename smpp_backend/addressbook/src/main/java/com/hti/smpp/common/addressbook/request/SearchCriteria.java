@@ -1,5 +1,7 @@
 package com.hti.smpp.common.addressbook.request;
-
+/**
+ * lass representing search criteria for filtering group data.
+ */
 public class SearchCriteria {
 
 	private String[] company;
@@ -10,11 +12,12 @@ public class SearchCriteria {
 	private int minAge;
 	private int maxAge;
 	private int groupId;
-
+	
+//Default constructor for the SearchCriteria class.
 	public SearchCriteria() {
 
 	}
-
+//Constructor for the SearchCriteria class with parameters.
 	public SearchCriteria		(String[] company, String[] profession, String[] area, String[] gender, long[] number,
 			int minAge, int maxAge, int groupId) {
 		super();
@@ -27,7 +30,7 @@ public class SearchCriteria {
 		this.maxAge = maxAge;
 		this.groupId = groupId;
 	}
-
+//getter and setter
 	public String[] getCompany() {
 		return company;
 	}

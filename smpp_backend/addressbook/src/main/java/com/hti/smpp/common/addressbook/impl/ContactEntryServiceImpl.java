@@ -81,7 +81,9 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 
 	@Autowired
 	private UserRepository userLoginRepo;
-
+/**
+ *  Saves contact entries based on user authorization and input data
+ */
 	@Override
 	public ResponseEntity<?> saveContactEntry(String reqdata, MultipartFile file, String username) {
 		Optional<User> user = userLoginRepo.findBySystemId(username);
@@ -317,7 +319,9 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		}
 
 	}
-
+/**
+ *  Retrieves contact information for bulk processing based on user authorization and input data.
+ */
 	@Override
 	public ResponseEntity<?> contactForBulk(List<Long> numbers, int groupId, String username) {
 
@@ -408,7 +412,9 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 
 		return ResponseEntity.ok(response);
 	}
-
+/**
+ * Retrieves contact entries based on group IDs for viewing in bulk, with user authorization.
+ */
 	@Override
 	public ResponseEntity<List<ContactEntry>> viewSearchContact(List<Integer> ids, String username) {
 
@@ -464,7 +470,9 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 
 		return ResponseEntity.ok(list);
 	}
-
+/**
+ * Proceeds with the search for contact entries based on group IDs, providing bulk processing details.
+ */
 	@Override
 	public ResponseEntity<ContactForBulk> proceedSearchContact(List<Integer> ids, String username) {
 
@@ -563,7 +571,9 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		}
 		return ResponseEntity.ok(response);
 	}
-
+/**
+ * Modifies and updates contact entries based on the provided ContactEntryRequest form.
+ */
 	@Override
 	@Transactional
 	public ResponseEntity<?> modifyContactUpdate(ContactEntryRequest form, String username) {
@@ -644,7 +654,10 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 			logger.warn("Failed to delete contacts by {}: {}", username, failedDeletionIds);
 		}
 	}
-
+/**
+ * Modifies and updates contact entries based on the provided ContactEntryRequest form.
+ *
+ */
 	@Override
 	@Transactional
 	public ResponseEntity<?> modifyContactDelete(List<Integer> ids, String username) {
@@ -705,7 +718,11 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 			throw new InternalServerException(e.getLocalizedMessage());
 		}
 	}
-
+/**
+ * Generates a workbook containing contact entries with specified headers and styles.
+ * @param list
+ * @return
+ */
 	private Workbook getWorkBook(List<ContactEntry> list) {
 		logger.info("Start Creating WorkBook.");
 		SXSSFWorkbook workbook = new SXSSFWorkbook();
@@ -796,7 +813,9 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		logger.info("Contact Workbook Created");
 		return workbook;
 	}
-
+/**
+ * Exports contact entries to an Excel workbook and provides it as a downloadable file.
+ */
 	@Override
 	public ResponseEntity<?> modifyContactExport(ContactEntryRequest form, String username) {
 

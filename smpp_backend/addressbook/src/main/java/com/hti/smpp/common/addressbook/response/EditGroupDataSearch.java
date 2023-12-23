@@ -5,6 +5,9 @@ import java.util.Set;
 import org.springframework.stereotype.Component;
 
 @Component
+/**
+ * Represents the search criteria for editing group data.
+ */
 public class EditGroupDataSearch {
 
 	private String target;
@@ -12,11 +15,12 @@ public class EditGroupDataSearch {
 	private Set<String> professions;
 	private Set<String> companies;
 	private Set<String> areas;
-
+	
+//Default constructor for the EditGroupDataSearch class.
 	public EditGroupDataSearch() {
 		super();
 	}
-
+//Constructor for the EditGroupDataSearch class.
 	public EditGroupDataSearch(String target, int groupId, Set<String> professions, Set<String> companies,
 			Set<String> areas) {
 		super();
@@ -26,7 +30,7 @@ public class EditGroupDataSearch {
 		this.companies = companies;
 		this.areas = areas;
 	}
-
+//getter and setter
 	public String getTarget() {
 		return target;
 	}

@@ -1,16 +1,27 @@
 package com.hti.smpp.common.addressbook.utils;
 
 import java.math.BigInteger;
-
+/**
+ * Utility class for converting data:
+ * byteToHex: Convert byte to hex.
+ */
 public class Converters {
-
+/**
+ * Converts a byte to its hexadecimal representation.
+ * @param data
+ * @return
+ */
 	public String byteToHex(byte data) {
 		StringBuffer buf = new StringBuffer();
 		buf.append(toHexChar((data >>> 4) & 0x0F));
 		buf.append(toHexChar(data & 0x0F));
 		return (buf.toString()).toUpperCase();
 	}
-
+/**
+ * Converts a number to its corresponding hexadecimal character.
+ * @param i
+ * @return
+ */
 	public char toHexChar(int i) {
 		if ((i >= 0) && (i <= 9)) {
 			return (char) ('0' + i);
@@ -18,7 +29,11 @@ public class Converters {
 			return (char) ('a' + (i - 10));
 		}
 	}
-
+/**
+ * Converts a UTF-16 formatted string to a modified hexadecimal representation.
+ * @param utf16TA
+ * @return
+ */
 	public String UTF16(String utf16TA) {
 		byte[] byteBuff;
 		StringBuffer strBuff = new StringBuffer();
@@ -44,7 +59,11 @@ public class Converters {
 		}
 		return utf16TA;
 	}
-
+/**
+ * Converts a string containing hexadecimal values of Unicode characters
+ * @param msg
+ * @return
+ */
 	public String HexCodePointsToCharMsg(String msg) {
 		// this mthd made decreasing codes, only.
 		// This mthd will take msg who contain hex values of unicode, then it will
@@ -86,7 +105,11 @@ public class Converters {
 		}
 		return msg;
 	}
-
+/**
+ * Converts a string with hexadecimal Unicode values to a Unicode string.
+ * @param msg
+ * @return
+ */
 	public String uniHexToCharMsg(String msg) {
 		if (msg == null || msg.length() == 0) {
 			msg = "0020";

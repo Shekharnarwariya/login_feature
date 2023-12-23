@@ -69,6 +69,9 @@ import com.hti.smpp.common.util.IConstants;
 import jakarta.transaction.Transactional;
 
 @Service
+/**
+ * Implementation of the GroupDataEntryService interface.
+ */
 public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 
 	private static final Logger logger = LoggerFactory.getLogger(GroupDataEntryServiceImpl.class.getName());
@@ -84,7 +87,9 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 
 	@Autowired
 	private UserRepository userLoginRepo;
-
+/**
+ * Saves group data entries based on the provided request, file, and username.
+ */
 	@Override
 	public ResponseEntity<?> saveGroupData(String request, MultipartFile file, String username) {
 
@@ -358,7 +363,9 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		}
 
 	}
-
+/**
+ * Retrieves contact data for bulk processing based on provided numbers, group ID, and username.
+ */
 	@Override
 	public ResponseEntity<?> groupDataForBulk(List<Long> numbers, int groupId, String username) {
 
@@ -446,7 +453,9 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 
 		return ResponseEntity.ok(response);
 	}
-
+/**
+ * Retrieves and returns a list of GroupDataEntry based on search criteria.
+ */
 	@Override
 	public ResponseEntity<List<GroupDataEntry>> viewSearchGroupData(GroupDataEntryRequest request, String username) {
 
@@ -537,7 +546,9 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 
 		return ResponseEntity.ok(list);
 	}
-
+/**
+ * Processes a search request for group data based on specified criteria.
+ */
 	@Override
 	public ResponseEntity<ContactForBulk> proceedSearchGroupData(GroupDataEntryRequest request, String username) {
 
@@ -650,7 +661,10 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 
 		return ResponseEntity.ok(response);
 	}
+/**
+ * Modifies and updates GroupDataEntry records based on the provided form data.
 
+ */
 	@Override
 	@Transactional
 	public ResponseEntity<?> modifyGroupDataUpdate(GroupDataEntryRequest form, String username) {
@@ -736,19 +750,29 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		logger.info(systemId + " Modify GroupDataEntryUpdate Target:" + target);
 		return new ResponseEntity<>(target, HttpStatus.CREATED);
 	}
-
+/**
+ *  Logs deleted group data entries along with the associated username.
+ * @param username
+ * @param deletedContactsIds
+ */
 	private void logDeletedGroupData(String username, List<Integer> deletedContactsIds) {
 		if (!deletedContactsIds.isEmpty()) {
 			logger.info("Deleted contacts by {}: {}", username, deletedContactsIds);
 		}
 	}
-
+/**
+ * Logs failed deletions of group data entries along with the associated username.
+ * @param username
+ * @param failedDeletionIds
+ */
 	private void logFailedDeletions(String username, List<Integer> failedDeletionIds) {
 		if (!failedDeletionIds.isEmpty()) {
 			logger.warn("Failed to delete contacts by {}: {}", username, failedDeletionIds);
 		}
 	}
-
+/**
+ * Deletes group data entries identified by the given list of IDs.
+ */
 	@Override
 	@Transactional
 	public ResponseEntity<?> modifyGroupDataDelete(List<Integer> ids, String username) {
@@ -801,7 +825,11 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		}
 
 	}
-
+/**
+ * Creates and returns a workbook containing group data entries.
+ * @param list
+ * @return
+ */
 	private Workbook getWorkBook(List<GroupDataEntry> list) {
 		logger.info("Start Creating WorkBook.");
 		SXSSFWorkbook workbook = new SXSSFWorkbook();
@@ -917,7 +945,9 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		logger.info("GroupData Workbook Created");
 		return workbook;
 	}
-
+/**
+ * Handles the request to export group data entries based on the provided criteria.
+ */
 	@Override
 	public ResponseEntity<?> modifyGroupDataExport(GroupDataEntryRequest form, String username) {
 
@@ -1022,11 +1052,20 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 			throw new NotFoundException(systemId + " No GroupData Records Found To Export");
 		}
 	}
-
+/**
+ * Capitalizes the first letter of the input string.
+ * @param str
+ * @return
+ */
 	private String capitalize(String str) {
 		return str.substring(0, 1).toUpperCase() + str.substring(1);
 	}
-
+/**
+ * Retrieves the value of the specified property from a GroupDataEntry object using reflection.
+ * @param entry
+ * @param property
+ * @return
+ */
 	private String getProperty(GroupDataEntry entry, String property) {
 		try {
 			return (String) entry.getClass().getMethod("get" + capitalize(property)).invoke(entry);
@@ -1034,7 +1073,12 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 			throw new RuntimeException("Error retrieving property value", e);
 		}
 	}
-
+/**
+ * Retrieves distinct values of a specified property for GroupDataEntry objects with the given group ID.
+ * @param groupId
+ * @param property
+ * @return
+ */
 	public List<String> distinctGroupData(int groupId, String property) {
 		List<GroupDataEntry> entries = groupDataEntryRepository.findByGroupId(groupId);
 
@@ -1044,7 +1088,9 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		return distinctValues;
 
 	}
-
+/**
+ * Searches for GroupData with specified options for editing.
+ */
 	@Override
 	public ResponseEntity<?> editGroupDataSearch(int groupId, String username) {
 

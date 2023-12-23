@@ -8,6 +8,9 @@ import org.springframework.stereotype.Component;
 import com.hti.smpp.common.templates.dto.TemplatesDTO;
 
 @Component
+/**
+ * Represents a contact for bulk operations.
+ */
 public class ContactForBulk {
 
 	private String uploadedNumbers;
@@ -17,10 +20,11 @@ public class ContactForBulk {
 	private String status;
 	private int groupId;
 
+	//Default constructor for the ContactForBulk class.
 	public ContactForBulk() {
 
 	}
-
+    //getter and setter
 	public int getGroupId() {
 		return groupId;
 	}
@@ -28,6 +32,7 @@ public class ContactForBulk {
 	public void setGroupId(int groupId) {
 		this.groupId = groupId;
 	}
+//Constructor for the ContactForBulk class.
 
 	public ContactForBulk(String uploadedNumbers, int totalNumbers, List<TemplatesDTO> templates, Set<String> senders,
 			String status, int groupId) {
@@ -39,7 +44,7 @@ public class ContactForBulk {
 		this.status = status;
 		this.groupId = groupId;
 	}
-
+//getter and setter
 	public String getStatus() {
 		return status;
 	}

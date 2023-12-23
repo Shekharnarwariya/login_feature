@@ -43,6 +43,9 @@ import com.hti.smpp.common.util.IConstants;
 import jakarta.transaction.Transactional;
 
 @Service
+/**
+ * Implementation of the GroupEntryService interface providing methods for managing contact groups.
+ */
 public class GroupEntryServiceImpl implements GroupEntryService {
 
 	private static final Logger logger = LoggerFactory.getLogger(GroupEntryServiceImpl.class.getName());
@@ -70,7 +73,9 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 
 	@Autowired
 	private MultiUserEntryRepository multiUserEntryRepository;
-
+/**
+ * Saves contact group entries based on the provided GroupEntryRequest and username.
+ */
 	@Override
 	public ResponseEntity<?> saveGroupEntry(GroupEntryRequest form, String username) {
 
@@ -167,7 +172,9 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 		}
 
 	}
-
+/**
+ * Modifies contact group entries based on the provided form data and username.
+ */
 	@Override
 	@Transactional
 	public ResponseEntity<?> modifyGroupEntryUpdate(GroupEntryRequest form, String username) {
@@ -234,7 +241,10 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 		logger.info(systemId + " modify Contact Group Target:" + target);
 		return new ResponseEntity<>(target, HttpStatus.CREATED);
 	}
-
+/**
+ * Deletes group entries and associated data from repositories.
+ * @param list
+ */
 	private void deleteGroup(List<GroupEntryDTO> list) {
 		for (GroupEntryDTO entry : list) {
 			try {
@@ -265,7 +275,9 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 			}
 		}
 	}
-
+/**
+ * Removes contact group entries based on the provided form data and username.
+ */
 	@Override
 	@Transactional
 	public ResponseEntity<?> modifyGroupEntryDelete(GroupEntryRequest form, String username) {
@@ -330,7 +342,12 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 
 		return new ResponseEntity<>(target, HttpStatus.OK);
 	}
-
+/**
+ * Retrieves a list of GroupEntryDTO objects based on the provided criteria.
+ * @param masterid
+ * @param groupData
+ * @return
+ */
 	private List<GroupEntryDTO> listGroupByCriteria(String masterid, boolean groupData) {
 		List<GroupEntryDTO> list = null;
 		try {
@@ -356,7 +373,11 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 
 		return list;
 	}
-
+/**
+ * Retrieves a list of GroupEntryDTO objects based on the provided master ID.
+ * @param masterid
+ * @return
+ */
 	private List<GroupEntryDTO> listGroupByCriteria(String masterid) {
 		List<GroupEntryDTO> list = null;
 		try {
@@ -382,7 +403,9 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 
 		return list;
 	}
-
+/**
+ * Retrieves a list of contact groups based on the specified criteria and user roles.
+ */
 	@Override
 	public ResponseEntity<?> listGroup(String purpose, String groupData, String username) {
 

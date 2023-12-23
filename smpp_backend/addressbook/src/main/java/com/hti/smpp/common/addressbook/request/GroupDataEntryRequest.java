@@ -3,7 +3,9 @@ package com.hti.smpp.common.addressbook.request;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-
+/**
+ * Represents a request for managing group data entries.
+ */
 public class GroupDataEntryRequest {
 
 	private int[] id;
@@ -24,7 +26,9 @@ public class GroupDataEntryRequest {
 	private MultipartFile contactNumberFile;
 	private int minAge;
 	private int maxAge;
-
+	
+//Represents a request for managing group data entries.
+	
 	public GroupDataEntryRequest(int[] id, String[] initials, String[] email, long[] number, String[] firstName,
 			String[] middleName, String[] lastName, int[] age, String[] company, String[] profession, String[] area,
 			String[] gender, int groupId, String type, MultipartFile contactNumberFile, int minAge, int maxAge) {
@@ -47,11 +51,11 @@ public class GroupDataEntryRequest {
 		this.minAge = minAge;
 		this.maxAge = maxAge;
 	}
-
+// Default constructor for GroupDataEntryRequest.
 	public GroupDataEntryRequest() {
 
 	}
-
+//getter and setter
 	public int[] getId() {
 		return id;
 	}

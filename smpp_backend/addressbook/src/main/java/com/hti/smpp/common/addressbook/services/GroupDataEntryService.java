@@ -8,7 +8,9 @@ import org.springframework.web.multipart.MultipartFile;
 import com.hti.smpp.common.addressbook.request.GroupDataEntryRequest;
 import com.hti.smpp.common.addressbook.response.ContactForBulk;
 import com.hti.smpp.common.contacts.dto.GroupDataEntry;
-
+/**
+ * Interface for GroupDataEntryService defining group data-related operations.
+ */
 public interface GroupDataEntryService {
 
 	public ResponseEntity<?> saveGroupData(String request, MultipartFile file, String username);
