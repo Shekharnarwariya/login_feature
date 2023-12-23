@@ -12,12 +12,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.hlr.dto.HlrSmscEntry;
 import com.hti.smpp.common.hlr.repository.HlrSmscRepository;
-import com.hti.smpp.common.login.dto.User;
-import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.request.HlrSmscEntryRequest;
 import com.hti.smpp.common.service.HlrSmscService;
 import com.hti.smpp.common.user.dto.UserEntry;
@@ -35,15 +34,13 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 	@Autowired
 	private UserEntryRepository userRepository;
 
-	@Autowired
-	private UserRepository loginRepository;
-
 	@Override
 	public ResponseEntity<HlrSmscEntry> save(HlrSmscEntryRequest hlrSmscEntryRequest, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -51,14 +48,8 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 		}
 		try {
 			HlrSmscEntry entry = convertToHlrSmscEntry(hlrSmscEntryRequest);
-
-			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-
-			if (userOptional.isPresent()) {
-				UserEntry userEntry = userOptional.get();
-				entry.setSystemId(String.valueOf(userEntry.getSystemId()));
-				entry.setSystemType(userEntry.getSystemType());
-			}
+			entry.setSystemId(String.valueOf(user.getSystemId()));
+			entry.setSystemType(user.getSystemType());
 
 			HlrSmscEntry savedEntry = hlrSmscRepository.save(entry);
 			logger.info("HlrSmscEntry saved successfully with ID: {}", savedEntry.getId());
@@ -66,16 +57,17 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 		} catch (Exception e) {
 			String errorMessage = "Error occurred while saving HlrSmscEntry: " + e.getMessage();
 			logger.error(errorMessage, e);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+			throw new InternalServerException("Error occurred while saving HlrSmscEntry: " + e.getMessage());
 		}
 	}
 
 	@Override
 	public ResponseEntity<HlrSmscEntry> update(int id, HlrSmscEntryRequest hlrSmscEntryRequest, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -107,19 +99,19 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 	@Override
 	public ResponseEntity<Void> delete(int id, String username) {
 
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 		try {
-			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-			String systemId = userOptional.map(user -> String.valueOf(user.getSystemId())).orElse(null);
-
+			
+			String systemId = user.getSystemId();
 			Optional<HlrSmscEntry> existingEntry = hlrSmscRepository.findByIdAndSystemId(id, systemId);
 			if (existingEntry.isEmpty()) {
 				logger.warn("HlrSmscEntry with ID {} and systemId {} not found", id, systemId);
@@ -140,18 +132,18 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 
 	@Override
 	public ResponseEntity<HlrSmscEntry> getEntry(int id, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 		try {
-			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-			String systemId = userOptional.map(user -> String.valueOf(user.getSystemId())).orElse(null);
+			String systemId = user.getSystemId();
 
 			Optional<HlrSmscEntry> existingEntry = hlrSmscRepository.findByIdAndSystemId(id, systemId);
 			if (existingEntry.isEmpty()) {
@@ -172,10 +164,11 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 	@Override
 	public List<HlrSmscEntry> list(String username) {
 
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -183,8 +176,7 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 		}
 
 		try {
-			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-			String systemId = userOptional.map(user -> String.valueOf(user.getSystemId())).orElse(null);
+			String systemId = user.getSystemId();
 
 			List<HlrSmscEntry> existingEntries = hlrSmscRepository.findBySystemId(systemId);
 			return existingEntries;

@@ -60,9 +60,6 @@ import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.ScheduledTimeException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.exception.WorkBookException;
-import com.hti.smpp.common.login.dto.Role;
-import com.hti.smpp.common.login.dto.User;
-import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.network.repository.NetworkEntryRepository;
 import com.hti.smpp.common.request.HlrEntryArrForm;
@@ -121,6 +118,7 @@ public class RouteServiceImpl implements RouteServices {
 
 	@Autowired
 	private RouteEntryRepository routeEntryRepository;
+	
 	@Autowired
 	private HlrEntryLogRepository hlrEntryLogRepository;
 
@@ -149,13 +147,7 @@ public class RouteServiceImpl implements RouteServices {
 	private JdbcTemplate jdbcTemplate;
 
 	@Autowired
-	private UserRepository loginRepository;
-
-	@Autowired
 	private OptionalRouteEntryScheduleRepository optionalRouteEntryScheduleRepository;
-
-	@Autowired
-	private UserRepository userRepo;
 
 	@Autowired
 	private NetworkEntryRepository networkEntryRepository;
@@ -176,10 +168,11 @@ public class RouteServiceImpl implements RouteServices {
 	@Transactional
 	public String saveRoute(RouteRequest RouteRequest, String username) {
 
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry userEntry = null;
+		if (userOptional.isPresent()) {
+			userEntry = userOptional.get();
+			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -189,12 +182,7 @@ public class RouteServiceImpl implements RouteServices {
 		String target = IConstants.FAILURE_KEY;
 		// Logging the username
 		System.out.println("Username: " + username);
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		}
+		String systemId = userEntry.getSystemId();
 		List<RouteEntry> removeList = new ArrayList<RouteEntry>();
 		List<RouteEntryExt> routingList = new ArrayList<>();
 		Map<Integer, List<RouteEntryExt>> userWiseRouting = new HashMap<>();
@@ -233,6 +221,7 @@ public class RouteServiceImpl implements RouteServices {
 			}
 			if (userWiseRouting.isEmpty()) {
 				logger.error("error: record unavailable");
+				throw new NotFoundException("Userwise Routing is empty!");
 			} else {
 				try {
 					// ----- check for auto_copy_routing users ------------
@@ -1233,25 +1222,20 @@ public class RouteServiceImpl implements RouteServices {
 	@Override
 	public OptionRouteResponse updateOptionalRoute(OptEntryArrForm optRouteEntry, String username) {
 
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry userEntry = null;
+		if (userOptional.isPresent()) {
+			userEntry = userOptional.get();
+			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-
 		OptionRouteResponse responce = new OptionRouteResponse();
 		System.out.println("Username: " + username);
 		String target = IConstants.FAILURE_KEY;
-		String masterid = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			masterid = userOptional.get().getMasterId();
-		}
+		String masterid = userEntry.getMasterId();
 		Map<Integer, List<OptionalRouteEntry>> userWiseRouting = new HashMap<Integer, List<OptionalRouteEntry>>();
 		String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 		try {
@@ -1594,10 +1578,11 @@ public class RouteServiceImpl implements RouteServices {
 	@Override
 	public OptionRouteResponse UpdateOptionalRouteUndo(OptEntryArrForm optRouteEntry, String username) {
 
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry userEntry = null;
+		if (userOptional.isPresent()) {
+			userEntry = userOptional.get();
+			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -1606,12 +1591,7 @@ public class RouteServiceImpl implements RouteServices {
 
 		String target = IConstants.FAILURE_KEY;
 		OptionRouteResponse responce = new OptionRouteResponse();
-		String masterid = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			masterid = userOptional.get().getMasterId();
-		}
+		String masterid = userEntry.getMasterId();
 		Set<Integer> refreshUsers = new HashSet<Integer>();
 		logger.info("OptionalRoute Undo Requested By " + masterid);
 		try {
@@ -1697,11 +1677,11 @@ public class RouteServiceImpl implements RouteServices {
 
 	@Override
 	public OptionRouteResponse UpdateOptionalRoutePrevious(OptEntryArrForm routingForm, String username) {
-
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry userEntry = null;
+		if (userOptional.isPresent()) {
+			userEntry = userOptional.get();
+			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -1711,12 +1691,7 @@ public class RouteServiceImpl implements RouteServices {
 		OptionRouteResponse response = new OptionRouteResponse();
 		String target = IConstants.FAILURE_KEY;
 
-		String masterid = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			masterid = userOptional.get().getMasterId();
-		}
+		String masterid = userEntry.getMasterId();
 
 		logger.info("Optional Route Log Requested By " + masterid);
 		// List<RouteEntry> list = new ArrayList<RouteEntry>();
@@ -1763,10 +1738,11 @@ public class RouteServiceImpl implements RouteServices {
 
 	@Override
 	public OptionRouteResponse UpdateOptionalRouteBasic(OptEntryArrForm routingForm, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry userEntry = null;
+		if (userOptional.isPresent()) {
+			userEntry = userOptional.get();
+			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -1818,10 +1794,11 @@ public class RouteServiceImpl implements RouteServices {
 
 	@Override
 	public OptionRouteResponse checkExisting(RouteEntryArrForm routeEntryArrForm, String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry userEntry = null;
+		if (userOptional.isPresent()) {
+			userEntry = userOptional.get();
+			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -1991,20 +1968,19 @@ public class RouteServiceImpl implements RouteServices {
 /////////////CopyRouting
 	@Override
 	public String execute(String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		User user = null;
-
-		UserSessionObject userSessionObject = new UserSessionObject();
-
-		NetworkEntry listExistNetwork = null;
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
+		UserSessionObject userSessionObject = new UserSessionObject();
+
+		NetworkEntry listExistNetwork = null;
 
 		String target = IConstants.FAILURE_KEY;
 		boolean proceed = true;
@@ -2017,7 +1993,7 @@ public class RouteServiceImpl implements RouteServices {
 		String systemId = user.getSystemId();
 
 		try {
-			if (!Access.isAuthorizedAdminAndUser(user.getRoles())) {
+			if (!Access.isAuthorized(user.getRole(),"isAuthorizedAdminAndUser")) {
 				Map<Integer, String> users = listUsersUnderMaster(systemId);
 				Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject().get("secondaryMaster")
 						.equal(systemId);
@@ -2025,7 +2001,7 @@ public class RouteServiceImpl implements RouteServices {
 					UserEntry userEntry = GlobalVars.UserEntries.get(webEntry.getUserId());
 					users.put(userEntry.getId(), userEntry.getSystemId());
 				}
-				if (from != user.getUserId()) {
+				if (from != user.getId()) {
 					if (!users.containsKey(from)) {
 
 						proceed = false;
@@ -2055,7 +2031,7 @@ public class RouteServiceImpl implements RouteServices {
 					logger.error(from + "Invalid margin: " + margin_str);
 					throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
 				}
-				if (Access.isAuthorizedAdminAndUser(user.getRoles())) {
+				if (Access.isAuthorized(user.getRole(),"isAuthorizedAdminAndUser")) {
 					includeHlr = true;
 					includeOpt = true;
 					if (userSessionObject.getBalance().getWalletFlag().equalsIgnoreCase("yes")) {
@@ -2237,16 +2213,17 @@ public class RouteServiceImpl implements RouteServices {
 	@Override
 	public String downloadRoute(String username, RouteEntryArrForm routingForm, HttpServletResponse response) {
 
-		Optional<User> userOptional = userRepo.findBySystemId(username);
-		User user = null;
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
+
 		Optional<UserEntry> userEntityOptional = userRepository.findBySystemId(username);
 		UserEntry userEntry = null;
 		if (userEntityOptional.isPresent()) {
@@ -2255,16 +2232,17 @@ public class RouteServiceImpl implements RouteServices {
 			throw new NotFoundException("UserEntry not found");
 		}
 		String target = IConstants.FAILURE_KEY;
-		String masterid = userEntry.getMasterId();
-		logger.info("Download Routing Requested By " + masterid + " [" + user.getRoles() + "]");
+		String masterid = user.getMasterId();
+		logger.info("Download Routing Requested By " + masterid + " [" + user.getRole() + "]");
 		try {
-			if (!Access.isAuthorizedUser(user.getRoles())) {
+			
+			if (!Access.isAuthorized(user.getRole(),"isAuthorizedUser")) {
 				boolean proceed = true;
 				// RouteDAService routeService = new RouteDAServiceImpl();
 				List<RouteEntryExt> routinglist = new ArrayList<RouteEntryExt>();
 				int[] useridarr = routingForm.getUserId();
 				if (useridarr != null && useridarr.length > 0) {
-					if (Access.isAuthorizedAdmin(user.getRoles())) {
+					if (Access.isAuthorized(user.getRole(),"isAuthorizedAdmin")) {
 						Map<Integer, String> users = listUsersUnderMaster(masterid);
 						Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject()
 								.get("secondaryMaster").equal(masterid);
@@ -2274,7 +2252,7 @@ public class RouteServiceImpl implements RouteServices {
 						}
 						for (int user_id : useridarr) {
 							if (!users.containsKey(user_id)) {
-								logger.info(masterid + "[" + user.getRoles() + "] Invalid User[" + user_id
+								logger.info(masterid + "[" + user.getRole() + "] Invalid User[" + user_id
 										+ "] Download Routing Request");
 								proceed = false;
 								break;
@@ -2350,7 +2328,7 @@ public class RouteServiceImpl implements RouteServices {
 					throw new NotFoundException("Id not found!");
 				}
 			} else {
-				logger.error("Authorization Failed[" + user.getRoles() + "] :" + masterid);
+				logger.error("Authorization Failed[" + user.getRole() + "] :" + masterid);
 				target = "invalidRequest";
 				throw new UnauthorizedException("Unauthorized User!");
 			}
@@ -2475,11 +2453,11 @@ public class RouteServiceImpl implements RouteServices {
 	@Override
 	public RouteUserResponse RouteUserList(String username, String purpose) {
 		RouteUserResponse routeUserResponse = new RouteUserResponse();
-		Optional<User> userOptional = userRepo.findBySystemId(username);
-		User user = null;
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -2497,9 +2475,10 @@ public class RouteServiceImpl implements RouteServices {
 			// String usernames="";
 			String masterId = user.getSystemId();
 			logger.info("Routing User list Request For " + purpose + " By " + masterId);
-			if (Access.isAuthorizedUser(user.getRoles())) {
+			
+			if (Access.isAuthorized(user.getRole(),"isAuthorizedUser")) {
 				logger.info("Authorized User :" + masterId);
-				if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 					// List<UserEntry> usernames = new ArrayList<UserEntry>();
 					if (purpose.equalsIgnoreCase("add") || purpose.equalsIgnoreCase("search")) {
 						Map<String, String> networkmap = getDistinctCountry();
@@ -2533,9 +2512,9 @@ public class RouteServiceImpl implements RouteServices {
 						}
 					}
 					Collection<UserEntry> users = null;
-					if (Access.isAuthorizedSystem(user.getRoles())) {
+					if (Access.isAuthorized(user.getRole(),"isAuthorizedSystem")) {
 						EntryObject e = new PredicateBuilderImpl().getEntryObject();
-						Predicate p = e.get("role").in("admin", "user").or(e.get("id").equal(user.getUserId()));
+						Predicate p = e.get("role").in("admin", "user").or(e.get("id").equal(user.getId()));
 						users = GlobalVars.UserEntries.values(p);
 					} else {
 						users = GlobalVars.UserEntries.values();
@@ -2560,11 +2539,11 @@ public class RouteServiceImpl implements RouteServices {
 					} else {
 						routeUserResponse.setFilter(filter(users));
 					}
-				} else if (Access.isAuthorizedAdmin(user.getRoles())) {
+				} else if (Access.isAuthorized(user.getRole(),"isAuthorizedAdmin")) {
 					EntryObject e = new PredicateBuilderImpl().getEntryObject();
 					if (purpose.equalsIgnoreCase("download")) {
 						Predicate<Integer, UserEntry> p = e.get("masterId").equal(user.getSystemId())
-								.or(e.get("id").equal(user.getUserId()));
+								.or(e.get("id").equal(user.getId()));
 						List<UserEntryExt> usernames = new ArrayList<UserEntryExt>();
 						Map<Integer, String> sales = listNames();
 						for (UserEntry userEntry : GlobalVars.UserEntries.values(p)) {
@@ -2598,7 +2577,7 @@ public class RouteServiceImpl implements RouteServices {
 						routeUserResponse.setUsernames(usernames);
 					} else if (purpose.equalsIgnoreCase("copy")) {
 						Predicate p = e.get("masterId").equal(user.getSystemId())
-								.or(e.get("id").equal(user.getUserId()));
+								.or(e.get("id").equal(user.getId()));
 						List<UserEntry> list = filter(GlobalVars.UserEntries.values(p));
 						Predicate<Integer, WebMasterEntry> pw = new PredicateBuilderImpl().getEntryObject()
 								.get("secondaryMaster").equal(user.getSystemId());
@@ -2631,7 +2610,7 @@ public class RouteServiceImpl implements RouteServices {
 
 				} else if (salesEntry.getRole().equalsIgnoreCase("seller")) {
 					List<UserEntryExt> usernames = new ArrayList<UserEntryExt>();
-					Map<Integer, UserEntryExt> userEntries = listUserEntryUnderSeller(user.getUserId().intValue(),
+					Map<Integer, UserEntryExt> userEntries = listUserEntryUnderSeller(user.getId(),
 							user);
 					for (UserEntryExt userEntry : userEntries.values()) {
 						if (expired(userEntry.getUserEntry())) {
@@ -2716,14 +2695,15 @@ public class RouteServiceImpl implements RouteServices {
 		return salesRepository.findByMasterIdAndRole(mgrId, "seller");
 	}
 
-	public Map<Integer, UserEntryExt> listUserEntryUnderSeller(int seller, User user) {
+	public Map<Integer, UserEntryExt> listUserEntryUnderSeller(int seller, UserEntry user) {
 		logger.info("listing UserEntries Under Seller(" + seller + ")");
 		Map<Integer, UserEntryExt> map = new HashMap<Integer, UserEntryExt>();
+		
 		try {
 			for (WebMasterEntry webEntry : GlobalVars.WebmasterEntries.values()) {
 				if (webEntry.getExecutiveId() == seller) {
 					UserEntryExt entry = getUserEntryExt(webEntry.getUserId());
-					if (Access.isAuthorizedAdmin(user.getRoles())) {
+					if (Access.isAuthorized(user.getRole(),"isAuthorizedAdmin")) {
 						Map<Integer, UserEntryExt> under_users = listUserEntryUnderMaster(
 								entry.getUserEntry().getSystemId());
 						map.putAll(under_users);
@@ -2822,11 +2802,11 @@ public class RouteServiceImpl implements RouteServices {
 	@Override
 	public OptionRouteResponse SearchRoutingBasic(String username, RouteEntryArrForm routingForm) {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
-		Optional<User> userOptional = userRepo.findBySystemId(username);
-		User user = null;
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -2834,9 +2814,9 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		String target = "basic";
 		String masterid = user.getSystemId();
-		logger.info(masterid + "[" + user.getRoles() + "] RouteEntries Search Request Using Advanced Criteria");
+		logger.info(masterid + "[" + user.getRole() + "] RouteEntries Search Request Using Advanced Criteria");
 		try {
-			if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 				List<RouteEntryExt> routinglist = getRoutingList(routingForm);
 				if (routinglist != null && !routinglist.isEmpty()) {
 					Map<Integer, String> smscnames = listNames();
@@ -2958,7 +2938,7 @@ public class RouteServiceImpl implements RouteServices {
 					logger.error("error.record.unavailable");
 					// messages.add(ActionMessages.GLOBAL_MESSAGE, message);
 				}
-			} else if (Access.isAuthorizedAdmin(user.getRoles())) {
+			} else if (Access.isAuthorized(user.getRole(),"isAuthorizedAdmin")) {
 				if (routingForm.getUserId() != null) {
 					List<Integer> user_under_master = new ArrayList<Integer>(listUsersUnderMaster(masterid).keySet());
 					Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject()
@@ -2977,12 +2957,12 @@ public class RouteServiceImpl implements RouteServices {
 						}
 					}
 					if (selected_user_list.isEmpty()) {
-						logger.info(masterid + "[" + user.getRoles() + "] Authorization Failed");
+						logger.info(masterid + "[" + user.getRole() + "] Authorization Failed");
 						target = "invalidRequest";
 					} else {
 						List<RouteEntryExt> routinglist = getRoutingList(routingForm, false, false);
 						if (!routinglist.isEmpty()) {
-							Map<Integer, RouteEntry> master_routes = getNetworkRouting(user.getUserId().intValue());
+							Map<Integer, RouteEntry> master_routes = getNetworkRouting(user.getId());
 							Iterator<RouteEntryExt> itr = routinglist.iterator();
 							while (itr.hasNext()) {
 								RouteEntryExt ext = itr.next();
@@ -3002,11 +2982,11 @@ public class RouteServiceImpl implements RouteServices {
 						}
 					}
 				} else {
-					logger.info(masterid + "[" + user.getRoles() + "] Authorization Failed");
+					logger.info(masterid + "[" + user.getRole() + "] Authorization Failed");
 					target = "invalidRequest";
 				}
 			} else {
-				logger.info(masterid + "[" + user.getRoles() + "] Authorization Failed");
+				logger.info(masterid + "[" + user.getRole() + "] Authorization Failed");
 				target = "invalidRequest";
 			}
 		} catch (Exception ex) {
@@ -3314,11 +3294,11 @@ public class RouteServiceImpl implements RouteServices {
 	@Override
 	public OptionRouteResponse SearchRoutingLookup(String username, RouteEntryArrForm routingForm) {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
-		Optional<User> userOptional = userRepo.findBySystemId(username);
-		User user = null;
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -3326,9 +3306,10 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		String target = "lookup";
 		String masterid = user.getSystemId();
-		logger.info(masterid + "[" + user.getRoles() + "] Lookup RouteEntries Search Request Using Advanced Criteria");
+		
+		logger.info(masterid + "[" + user.getRole() + "] Lookup RouteEntries Search Request Using Advanced Criteria");
 		try {
-			if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 				List<RouteEntryExt> routinglist = getRoutingList(routingForm, true, false);
 				if (!routinglist.isEmpty()) {
 					optionRouteResponse.setRoutinglist(routinglist);
@@ -3338,7 +3319,7 @@ public class RouteServiceImpl implements RouteServices {
 					throw new NotFoundException("Routing list not found!");
 				}
 			} else {
-				logger.info(masterid + "[" + user.getRoles() + "] Authorization Failed");
+				logger.info(masterid + "[" + user.getRole() + "] Authorization Failed");
 				target = "invalidRequest";
 				throw new UnauthorizedException("Unauthorized User!");
 			}
@@ -3359,11 +3340,11 @@ public class RouteServiceImpl implements RouteServices {
 
 	public OptionRouteResponse SearchRoutingOptional(String username, RouteEntryArrForm routingForm) {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
-		Optional<User> userOptional = userRepo.findBySystemId(username);
-		User user = null;
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -3371,9 +3352,10 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		String target = IConstants.FAILURE_KEY;
 		String masterid = user.getSystemId();
-		logger.info(masterid + "[" + user.getRoles() + "] Lookup RouteEntries Search Request Using Advanced Criteria");
+
+		logger.info(masterid + "[" + user.getRole() + "] Lookup RouteEntries Search Request Using Advanced Criteria");
 		try {
-			if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 				List<RouteEntryExt> routinglist = getRoutingList(routingForm, false, true);
 				if (!routinglist.isEmpty()) {
 					Map<Integer, String> groupDetail = new HashMap<Integer, String>(listGroupNames());
@@ -3398,7 +3380,7 @@ public class RouteServiceImpl implements RouteServices {
 					throw new NotFoundException("NotFound Exception: Routing List Not Found");
 				}
 			} else {
-				logger.error(masterid + "[" + user.getRoles() + "] Authorization Failed");
+				logger.error(masterid + "[" + user.getRole() + "] Authorization Failed");
 				target = "invalidRequest";
 				throw new UnauthorizedException("Unauthorized User Exception!");
 			}
@@ -3418,11 +3400,11 @@ public class RouteServiceImpl implements RouteServices {
 
 	@Override
 	public OptionRouteResponse BasicRouteBasicRoute(String username, RouteEntryArrForm routingForm) {
-		Optional<User> userOptional = userRepo.findBySystemId(username);
-		User user = null;
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -3431,14 +3413,14 @@ public class RouteServiceImpl implements RouteServices {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
 		String target = IConstants.FAILURE_KEY;
 		String masterid = user.getSystemId();
-		logger.info("Route Update Requested By " + masterid + " [" + user.getRoles() + "]");
+		logger.info("Route Update Requested By " + masterid + " [" + user.getRole() + "]");
 		Set<Integer> refreshUsers = new HashSet<Integer>();
 		List<RouteEntry> list = new ArrayList<RouteEntry>();
 		String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 		try {
 			int[] id = routingForm.getId();
 			double[] cost = routingForm.getCost();
-			if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 				Map<Integer, List<RouteEntry>> userWiseRouting = new HashMap<Integer, List<RouteEntry>>();
 				int[] userid = routingForm.getUserId();
 				int[] networkId = routingForm.getNetworkId();
@@ -3546,14 +3528,14 @@ public class RouteServiceImpl implements RouteServices {
 							}
 						}
 					}
-					logger.info(masterid + "[" + user.getRoles() + "] Edit Routing Users: " + userWiseRouting.keySet());
+					logger.info(masterid + "[" + user.getRole() + "] Edit Routing Users: " + userWiseRouting.keySet());
 					for (List<RouteEntry> user_wise_entries : userWiseRouting.values()) {
 						list.addAll(user_wise_entries);
 					}
 					refreshUsers.addAll(userWiseRouting.keySet());
 				}
 			} else {
-				Map<Integer, RouteEntry> master_routes = getNetworkRouting(user.getUserId().intValue());
+				Map<Integer, RouteEntry> master_routes = getNetworkRouting(user.getId());
 				for (int i = 0; i < id.length; i++) {
 					if (GlobalVars.BasicRouteEntries.containsKey(id[i])) {
 						RouteEntry basic = GlobalVars.BasicRouteEntries.get(id[i]);
@@ -3624,7 +3606,8 @@ public class RouteServiceImpl implements RouteServices {
 					}
 				} else {
 					updateRouteEntries(list);
-					if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+
+					if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 						List<RouteEntryExt> routinglist = null;
 						try {
 							routinglist = getUpdateBasicRoutingList(routingForm.getCriterionEntries());
@@ -3632,6 +3615,7 @@ public class RouteServiceImpl implements RouteServices {
 							logger.error("Exception: "+e.toString());
 							throw new InternalServerException("Exception: "+e.getLocalizedMessage());
 						}
+
 						if (routinglist != null && !routinglist.isEmpty()) {
 							Map<Integer, String> smscnames = listNames();
 							Map<Integer, String> smsclist = new HashMap<Integer, String>();
@@ -3741,26 +3725,26 @@ public class RouteServiceImpl implements RouteServices {
 
 	@Override
 	public OptionRouteResponse deleteRouteBasicRoute(String username, RouteEntryArrForm routingForm) {
-		Set<Integer> refreshUsers = new HashSet<Integer>();
-		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
-		String target = IConstants.FAILURE_KEY;
-		Optional<User> userOptional = userRepo.findBySystemId(username);
-		User user = null;
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
+		Set<Integer> refreshUsers = new HashSet<Integer>();
+		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
+		String target = IConstants.FAILURE_KEY;
 		String masterid = user.getSystemId();
-		logger.info("Route Delete Requested By " + masterid + " [" + user.getRoles() + "]");
+		logger.info("Route Delete Requested By " + masterid + " [" + user.getRole() + "]");
 		List<RouteEntry> list = new ArrayList<RouteEntry>();
 		int[] id = routingForm.getId();
 		String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 		try {
-			if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 				Map<Integer, List<RouteEntry>> userWiseRouting = new HashMap<Integer, List<RouteEntry>>();
 				int[] userid = routingForm.getUserId();
 				int[] networkId = routingForm.getNetworkId();
@@ -3832,14 +3816,14 @@ public class RouteServiceImpl implements RouteServices {
 						}
 					}
 					logger.info(
-							masterid + "[" + user.getRoles() + "] Remove Routing Users: " + userWiseRouting.keySet());
+							masterid + "[" + user.getRole() + "] Remove Routing Users: " + userWiseRouting.keySet());
 					for (List<RouteEntry> user_wise_entries : userWiseRouting.values()) {
 						list.addAll(user_wise_entries);
 					}
 					refreshUsers.addAll(userWiseRouting.keySet());
 				}
 			} else {
-				Set<Integer> master_routes = getNetworkRouting(user.getUserId().intValue()).keySet();
+				Set<Integer> master_routes = getNetworkRouting(user.getId()).keySet();
 				for (int i = 0; i < id.length; i++) {
 					if (GlobalVars.BasicRouteEntries.containsKey(id[i])) {
 						RouteEntry basic = GlobalVars.BasicRouteEntries.get(id[i]);
@@ -3865,7 +3849,8 @@ public class RouteServiceImpl implements RouteServices {
 			if (!list.isEmpty()) {
 				// logger.info("deleting records");
 				deleteRouteEntries(list);
-				if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+
+				if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 					List<RouteEntryExt> routinglist = null;
 					try {
 						routinglist = getUpdateBasicRoutingList(routingForm.getCriterionEntries());
@@ -3927,22 +3912,22 @@ public class RouteServiceImpl implements RouteServices {
 
 	@Override
 	public OptionRouteResponse undoRouteBasicRoute(String username, RouteEntryArrForm routingForm) {
-		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
-		String target = IConstants.FAILURE_KEY;
-		Optional<User> userOptional = userRepo.findBySystemId(username);
-		User user = null;
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
+		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
+		String target = IConstants.FAILURE_KEY;
 		String masterid = user.getSystemId();
 		// RouteDAService routeService = new RouteDAServiceImpl();
 		Set<Integer> refreshUsers = new HashSet<Integer>();
-		logger.info("Route Undo Requested By " + masterid + " [" + user.getRoles() + "]");
+		logger.info("Route Undo Requested By " + masterid + " [" + user.getRole() + "]");
 		List<RouteEntry> list = new ArrayList<RouteEntry>();
 		int[] id = routingForm.getId();
 		try {
@@ -3961,7 +3946,7 @@ public class RouteServiceImpl implements RouteServices {
 						refreshUsers.add(logEntry.getUserId());
 					}
 					updateRouteEntries(list);
-					if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+					if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 						List<RouteEntryExt> routinglist = getUpdateBasicRoutingList(routingForm.getCriterionEntries());
 						if (routinglist != null && !routinglist.isEmpty()) {
 							Map<Integer, String> smscnames = listNames();
@@ -4018,11 +4003,11 @@ public class RouteServiceImpl implements RouteServices {
 	@Override
 	public OptionRouteResponse previousRouteBasicRoute(String username, RouteEntryArrForm routingForm) {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
-		Optional<User> userOptional = userRepo.findBySystemId(username);
-		User user = null;
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -4031,13 +4016,13 @@ public class RouteServiceImpl implements RouteServices {
 		String target = IConstants.FAILURE_KEY;
 
 		String masterid = user.getSystemId();
-		logger.info("Route Log Requested By " + masterid + " [" + user.getRoles() + "]");
+		logger.info("Route Log Requested By " + masterid + " [" + user.getRole() + "]");
 		// List<RouteEntry> list = new ArrayList<RouteEntry>();
 		int[] id = routingForm.getId();
 		// String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new
 		// Date());
 		try {
-			if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 				if (id != null && id.length > 0) {
 					String sql = "select A.id,A.user_id,A.smsc_id,A.group_id,A.network_id,A.cost,A.smsc_type,A.editBy,A.affectedOn,"
 							+ "B.country,B.operator,C.name,D.system_id,D.master_id,D.currency,E.acc_type,F.name"
@@ -4059,7 +4044,7 @@ public class RouteServiceImpl implements RouteServices {
 					throw new NotFoundException("Id not found or is null!");
 				}
 			} else {
-				logger.info(masterid + "[" + user.getRoles() + "] Authorization Failed");
+				logger.info(masterid + "[" + user.getRole() + "] Authorization Failed");
 				target = "invalidRequest";
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
@@ -4083,25 +4068,25 @@ public class RouteServiceImpl implements RouteServices {
 	@Override
 	public OptionRouteResponse hlrRouteBasicRoute(String username, RouteEntryArrForm routingForm) {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
-		String target = IConstants.FAILURE_KEY;
-		Optional<User> userOptional = userRepo.findBySystemId(username);
-		User user = null;
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 		String masterid = user.getSystemId();
-		logger.info("Route Log Requested By " + masterid + " [" + user.getRoles() + "]");
+		String target = IConstants.FAILURE_KEY;
+		logger.info("Route Log Requested By " + masterid + " [" + user.getRole() + "]");
 		// List<RouteEntry> list = new ArrayList<RouteEntry>();
 		int[] id = routingForm.getId();
 		// String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new
 		// Date());
 		try {
-			if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 				if (id != null && id.length > 0) {
 					List<RouteEntryExt> list = getHlrRoutingList(routingForm.getCriterionEntries());
 					if (!list.isEmpty()) {
@@ -4116,7 +4101,7 @@ public class RouteServiceImpl implements RouteServices {
 					throw new NotFoundException("Id not found or is null!");
 				}
 			} else {
-				logger.info(masterid + "[" + user.getRoles() + "] Authorization Failed");
+				logger.info(masterid + "[" + user.getRole() + "] Authorization Failed");
 				target = "invalidRequest";
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
@@ -4139,26 +4124,26 @@ public class RouteServiceImpl implements RouteServices {
 
 	@Override
 	public OptionRouteResponse optionalRouteBasicRoute(String username, RouteEntryArrForm routingForm) {
-		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
-		String target = IConstants.FAILURE_KEY;
-		Optional<User> userOptional = userRepo.findBySystemId(username);
-		User user = null;
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
+		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
+		String target = IConstants.FAILURE_KEY;
 		String masterid = user.getSystemId();
-		logger.info("Route Log Requested By " + masterid + " [" + user.getRoles() + "]");
+		logger.info("Route Log Requested By " + masterid + " [" + user.getRole() + "]");
 		// List<RouteEntry> list = new ArrayList<RouteEntry>();
 		int[] id = routingForm.getId();
 		// String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new
 		// Date());
 		try {
-			if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 				if (id != null && id.length > 0) {
 					List<RouteEntryExt> list = getOptionalList(routingForm.getCriterionEntries());
 					if (!list.isEmpty()) {
@@ -4189,7 +4174,7 @@ public class RouteServiceImpl implements RouteServices {
 					throw new NotFoundException("Id not found or is null!");
 				}
 			} else {
-				logger.info(masterid + "[" + user.getRoles() + "] Authorization Failed");
+				logger.info(masterid + "[" + user.getRole() + "] Authorization Failed");
 				target = "invalidRequest";
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
@@ -4212,22 +4197,22 @@ public class RouteServiceImpl implements RouteServices {
 
 	@Override
 	public OptionRouteResponse hlrRouteUpdate(String username, HlrEntryArrForm hlrRouteEntry) {
-		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		User user = null;
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
+		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
 		String target = IConstants.FAILURE_KEY;
 		String masterid = user.getSystemId();
 		// Set<Integer> refreshUsers = new HashSet<Integer>();
 		Map<Integer, List<HlrRouteEntry>> userWiseRouting = new HashMap<Integer, List<HlrRouteEntry>>();
-		logger.info("HlrRoute Update Requested By " + masterid + " [" + user.getRoles() + "]");
+		logger.info("HlrRoute Update Requested By " + masterid + " [" + user.getRole() + "]");
 		String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 		try {
 			List<HlrRouteEntry> list = new ArrayList<HlrRouteEntry>();
@@ -4321,7 +4306,7 @@ public class RouteServiceImpl implements RouteServices {
 						}
 					}
 				}
-				logger.info(masterid + "[" + user.getRoles() + "] Edit Hlr Routing Users: " + userWiseRouting.keySet());
+				logger.info(masterid + "[" + user.getRole() + "] Edit Hlr Routing Users: " + userWiseRouting.keySet());
 				for (List<HlrRouteEntry> user_wise_entries : userWiseRouting.values()) {
 					list.addAll(user_wise_entries);
 				}
@@ -4453,11 +4438,11 @@ public class RouteServiceImpl implements RouteServices {
 	@Override
 	public OptionRouteResponse hlrRouteUndo(String username, HlrEntryArrForm hlrRouteEntry) {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		User user = null;
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -4466,7 +4451,7 @@ public class RouteServiceImpl implements RouteServices {
 		String target = IConstants.FAILURE_KEY;
 		String masterid = user.getSystemId();
 		Set<Integer> refreshUsers = new HashSet<Integer>();
-		logger.info("HlrRoute Undo Requested By " + masterid + " [" + user.getRoles() + "]");
+		logger.info("HlrRoute Undo Requested By " + masterid + " [" + user.getRole() + "]");
 		try {
 			List<HlrRouteEntry> list = new ArrayList<HlrRouteEntry>();
 			int[] id = hlrRouteEntry.getRouteId();
@@ -4532,11 +4517,11 @@ public class RouteServiceImpl implements RouteServices {
 	@Override
 	public OptionRouteResponse hlrRoutePrevious(String username, HlrEntryArrForm routingForm) {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		User user = null;
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -4544,9 +4529,8 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		String target = IConstants.FAILURE_KEY;
 		String masterid = user.getSystemId();
-		Set<Role> role = user.getRoles();
 
-		logger.info("Hlr Route Log Requested By " + masterid + " [" + role + "]");
+		logger.info("Hlr Route Log Requested By " + masterid + " [" + user.getRole() + "]");
 		// List<RouteEntry> list = new ArrayList<RouteEntry>();
 		int[] id = routingForm.getRouteId();
 		// String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new
@@ -4587,11 +4571,11 @@ public class RouteServiceImpl implements RouteServices {
 	@Override
 	public OptionRouteResponse hlrRouteBasic(String username, HlrEntryArrForm routingForm) {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		User user = null;
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -4599,8 +4583,7 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		String target = IConstants.FAILURE_KEY;
 		String masterid = user.getSystemId();
-		Set<Role> role = user.getRoles();
-		logger.info("Route Log Requested By " + masterid + " [" + role + "]");
+		logger.info("Route Log Requested By " + masterid + " [" + user.getRole() + "]");
 		// List<RouteEntry> list = new ArrayList<RouteEntry>();
 		int[] id = routingForm.getRouteId();
 		// String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new
@@ -4649,11 +4632,11 @@ public class RouteServiceImpl implements RouteServices {
 	@Override
 	public OptionRouteResponse hlrRouteOptional(String username, HlrEntryArrForm routingForm) {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		User user = null;
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -4661,14 +4644,13 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		String target = IConstants.FAILURE_KEY;
 		String masterid = user.getSystemId();
-		Set<Role> role = user.getRoles();
-		logger.info("Route Log Requested By " + masterid + " [" + role + "]");
+		logger.info("Route Log Requested By " + masterid + " [" + user.getRole() + "]");
 		// List<RouteEntry> list = new ArrayList<RouteEntry>();
 		int[] id = routingForm.getRouteId();
 		// String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new
 		// Date());
 		try {
-			if (Access.isAuthorizedSuperAdminAndSystem(role)) {
+			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 				if (id != null && id.length > 0) {
 					List<RouteEntryExt> list = getOptionalList(routingForm.getCriterionEntries());
 					if (!list.isEmpty()) {
@@ -4698,7 +4680,7 @@ public class RouteServiceImpl implements RouteServices {
 					throw new NotFoundException("Id not found or is null!");
 				}
 			} else {
-				logger.info(masterid + "[" + user.getRoles() + "] Authorization Failed");
+				logger.info(masterid + "[" + user.getRole() + "] Authorization Failed");
 				target = "invalidRequest";
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
@@ -4722,11 +4704,11 @@ public class RouteServiceImpl implements RouteServices {
 	@Override
 	public OptionRouteResponse UpdateOptionalRouteHlr(OptEntryArrForm routingForm, String username) {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		User user = null;
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -4734,7 +4716,7 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		String target = IConstants.FAILURE_KEY;
 		String masterid = user.getSystemId();
-		logger.info("Route Log Requested By " + masterid + " [" + user.getRoles() + "]");
+		logger.info("Route Log Requested By " + masterid + " [" + user.getRole() + "]");
 		// List<RouteEntry> list = new ArrayList<RouteEntry>();
 		int[] id = routingForm.getRouteId();
 		// String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new

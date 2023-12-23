@@ -20,10 +20,10 @@ import com.hti.smpp.common.contacts.repository.GroupEntryDTORepository;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
-import com.hti.smpp.common.login.dto.User;
-import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.request.SubscribeEntryForm;
 import com.hti.smpp.common.service.SubscribeService;
+import com.hti.smpp.common.user.dto.UserEntry;
+import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.Converter;
 import com.hti.smpp.common.util.Converters;
@@ -35,24 +35,24 @@ import com.hti.smpp.common.util.repository.SubscribeEntryRepository;
 public class SubscribeServiceImpl implements SubscribeService {
 
 	@Autowired
-	private UserRepository loginRepository;
-
-	@Autowired
 	private GroupEntryDTORepository groupRepository;
 
 	@Autowired
 	private SubscribeEntryRepository subscribeEntryRepository;
+	
+	@Autowired
+	private UserEntryRepository userRepository;
 
 	private static final Logger logger = LoggerFactory.getLogger(SubscribeServiceImpl.class);
 
 	@Override
 	public ResponseEntity<?> saveSubscribe(SubscribeEntryForm form, String username) {
 
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		User user = null;
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {

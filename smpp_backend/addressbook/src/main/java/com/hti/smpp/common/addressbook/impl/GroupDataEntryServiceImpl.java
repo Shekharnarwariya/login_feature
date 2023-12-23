@@ -54,9 +54,6 @@ import com.hti.smpp.common.exception.JsonProcessingError;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.exception.WorkBookException;
-import com.hti.smpp.common.login.dto.Role;
-import com.hti.smpp.common.login.dto.User;
-import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.templates.dto.TemplatesDTO;
 import com.hti.smpp.common.templates.repository.TemplatesRepository;
 import com.hti.smpp.common.user.dto.UserEntry;
@@ -85,22 +82,20 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	@Autowired
 	private TemplatesRepository tempRepository;
 
-	@Autowired
-	private UserRepository userLoginRepo;
 /**
  * Saves group data entries based on the provided request, file, and username.
  */
 	@Override
 	public ResponseEntity<?> saveGroupData(String request, MultipartFile file, String username) {
 
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		Set<Role> role = new HashSet<>();
-
-		if (user.isPresent()) {
-			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-			role = user.get().getRoles();
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
@@ -119,16 +114,9 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 
 		String target = IConstants.FAILURE_KEY;
 
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
+		String systemId = user.getSystemId();
 
-		logger.info(systemId + "[" + role + "]" + " Adding GroupData To Group: " + form.getGroupId());
+		logger.info(systemId + "[" + user.getRole() + "]" + " Adding GroupData To Group: " + form.getGroupId());
 
 		try {
 			int groupId = form.getGroupId();
@@ -299,12 +287,9 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 											number, email, age, profession, company, area, gender));
 								}
 							}
-						} catch (WorkBookException ex) {
+						} catch (Exception ex) {
 							logger.error("Error: " + ex.getLocalizedMessage());
 							throw new WorkBookException("Error Processing Workbook: " + ex.getLocalizedMessage());
-						} catch (Exception e) {
-							logger.error("Error: " + e.getLocalizedMessage());
-							throw new InternalServerException("Unexpected Exception: " + e.getLocalizedMessage());
 						} finally {
 							if (workbook != null) {
 								try {
@@ -368,30 +353,21 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
  */
 	@Override
 	public ResponseEntity<?> groupDataForBulk(List<Long> numbers, int groupId, String username) {
-
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		Long masterId = null;
-		if (user.isPresent()) {
-			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-			masterId = user.get().getUserId();
 		} else {
-			throw new NotFoundException("User not found.");
+			throw new NotFoundException("User not found with the provided username.");
 		}
-
 		String target = IConstants.FAILURE_KEY;
 		String uploadedNumbers = "";
 		ContactForBulk response = new ContactForBulk();
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
-
+		String systemId = user.getSystemId();
 		logger.info("Proceed Contact For Bulk Request by " + systemId);
 		try {
 			if (numbers != null && numbers.size() > 0) {
@@ -405,7 +381,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 				response.setGroupId(groupId);
 				List<TemplatesDTO> templates = null;
 				try {
-					templates = this.tempRepository.findByMasterId(masterId);
+					templates = this.tempRepository.findByMasterId(systemId);
 				} catch (Exception ex) {
 					logger.error("Error: " + ex.getLocalizedMessage());
 					throw new NotFoundException("Templates not found.");
@@ -459,13 +435,16 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	@Override
 	public ResponseEntity<List<GroupDataEntry>> viewSearchGroupData(GroupDataEntryRequest request, String username) {
 
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		if (user.isPresent()) {
-			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
-			throw new NotFoundException("User not found.");
+			throw new NotFoundException("User not found with the provided username.");
 		}
 
 		SearchCriteria criteria = new SearchCriteria();
@@ -477,14 +456,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		criteria.setMinAge(request.getMinAge());
 		criteria.setNumber(request.getNumber());
 		criteria.setProfession(request.getProfession());
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
+		String systemId = user.getSystemId();
+		
 		logger.info("List Group Data[" + criteria.getGroupId() + "] For Bulk Request by " + systemId);
 
 		int groupId = criteria.getGroupId();
@@ -505,12 +478,9 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 				templist = this.groupDataEntryRepository
 						.findByGroupIdAndProfessionInAndCompanyInAndAreaInAndGenderInAndNumberInAndAgeBetween(groupId,
 								profession, company, area, gender, number, minAge, maxAge);
-			} catch (NotFoundException e) {
-				logger.error("Error: " + e.getLocalizedMessage());
-				throw new NotFoundException(e.getLocalizedMessage());
 			} catch (Exception e) {
 				logger.error("Error: " + e.getLocalizedMessage());
-				throw new InternalServerException(e.getLocalizedMessage());
+				throw new NotFoundException(e.getLocalizedMessage());
 			}
 
 			if (templist != null && !templist.isEmpty()) {
@@ -551,16 +521,16 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
  */
 	@Override
 	public ResponseEntity<ContactForBulk> proceedSearchGroupData(GroupDataEntryRequest request, String username) {
-
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		Long masterId = null;
-		if (user.isPresent()) {
-			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-			masterId = user.get().getUserId();
 		} else {
-			throw new NotFoundException("User not found.");
+			throw new NotFoundException("User not found with the provided username.");
 		}
 
 		SearchCriteria criteria = new SearchCriteria();
@@ -573,14 +543,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		criteria.setNumber(request.getNumber());
 		criteria.setProfession(request.getProfession());
 
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
+		String systemId = user.getSystemId();
 
 		logger.info("Send Group Data[" + request.getGroupId() + "] Request by " + systemId);
 
@@ -612,13 +575,10 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 				response.setGroupId(criteria.getGroupId());
 				List<TemplatesDTO> templates = null;
 				try {
-					templates = this.tempRepository.findByMasterId(masterId);
-				} catch (NotFoundException ex) {
-					logger.error("Error: " + ex.getLocalizedMessage());
-					throw new NotFoundException("Templates not found: " + ex.getLocalizedMessage());
+					templates = this.tempRepository.findByMasterId(systemId);
 				} catch (Exception ex) {
 					logger.error("Error: " + ex.getLocalizedMessage());
-					throw new InternalServerException(ex.getLocalizedMessage());
+					throw new NotFoundException("Templates not found: " + ex.getLocalizedMessage());
 				}
 				if (templates != null) {
 					response.setTemplates(templates);
@@ -669,24 +629,21 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	@Transactional
 	public ResponseEntity<?> modifyGroupDataUpdate(GroupDataEntryRequest form, String username) {
 
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		if (user.isPresent()) {
-			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
-			throw new NotFoundException("User not found.");
+			throw new NotFoundException("User not found with the provided username.");
 		}
 
 		String target = IConstants.FAILURE_KEY;
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
+		String systemId = user.getSystemId();
+		
 		logger.info("Group Data Update Request by " + systemId);
 
 		if (form.getId() != null && form.getId().length > 0) {
@@ -777,13 +734,16 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	@Transactional
 	public ResponseEntity<?> modifyGroupDataDelete(List<Integer> ids, String username) {
 
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		if (user.isPresent()) {
-			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
-			throw new NotFoundException("User not found.");
+			throw new NotFoundException("User not found with the provided username.");
 		}
 
 		String target = IConstants.FAILURE_KEY;
@@ -951,23 +911,19 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	@Override
 	public ResponseEntity<?> modifyGroupDataExport(GroupDataEntryRequest form, String username) {
 
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		if (user.isPresent()) {
-			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
-			throw new NotFoundException("User not found.");
+			throw new NotFoundException("User not found with the provided username.");
 		}
 
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
+		String systemId = user.getSystemId();
 		logger.info("Group Data Export Request by " + systemId);
 		String target = IConstants.FAILURE_KEY;
 		if (form.getId() != null && form.getId().length > 0) {
@@ -1015,12 +971,9 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 				Workbook workbook = null;
 				try {
 					workbook = getWorkBook(list);
-				} catch (WorkBookException e1) {
+				} catch (Exception e1) {
 					logger.error("WorkBook Error: " + e1.getLocalizedMessage());
 					throw new WorkBookException("WorkBook Exception: " + e1.getLocalizedMessage());
-				} catch (Exception e1) {
-					logger.error("Unexpected Exception: " + e1.getLocalizedMessage());
-					throw new InternalServerException("Unexpected Exception: " + e1.getLocalizedMessage());
 				}
 				String filename = systemId + "_GroupData[" + groupId + "]" + ".xlsx";
 				ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -1094,27 +1047,21 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	@Override
 	public ResponseEntity<?> editGroupDataSearch(int groupId, String username) {
 
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		Set<Role> role = new HashSet<>();
-		if (user.isPresent()) {
-			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-			role = user.get().getRoles();
 		} else {
-			throw new NotFoundException("User not found.");
+			throw new NotFoundException("User not found with the provided username.");
 		}
 		String target = "search";
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("No UserEntry found.");
-		}
-
-		logger.info(systemId + "[" + role + "]" + " Search GroupData Request For Group: " + groupId);
+		String systemId = user.getSystemId();
+		
+		logger.info(systemId + "[" + user.getRole() + "]" + " Search GroupData Request For Group: " + groupId);
 
 		EditGroupDataSearch response = new EditGroupDataSearch();
 		Set<String> professions = new HashSet<String>();

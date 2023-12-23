@@ -1,5 +1,6 @@
 package com.hti.smpp.common.twoway.service.impl;
 
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +27,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
@@ -37,9 +39,6 @@ import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.JasperReportException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
-import com.hti.smpp.common.login.dto.Role;
-import com.hti.smpp.common.login.dto.User;
-import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.twoway.dto.KeywordEntry;
 import com.hti.smpp.common.twoway.dto.ReportEntry;
 import com.hti.smpp.common.twoway.dto.ReportEntryRs;
@@ -57,8 +56,6 @@ import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MultiUtility;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRExporter;
@@ -82,10 +79,7 @@ import net.sf.jasperreports.engine.xml.JRXmlLoader;
 public class KeywordServiceImpl implements KeywordService {
 
 	private static final Logger logger = LoggerFactory.getLogger(KeywordServiceImpl.class.getName());
-
-	@Autowired
-	private UserRepository loginRepo;
-
+	
 	@Autowired
 	private WebMenuAccessEntryRepository webMenuRepo;
 
@@ -94,9 +88,9 @@ public class KeywordServiceImpl implements KeywordService {
 
 	@Autowired
 	private KeywordEntryRepository keywordRepo;
-
-	@PersistenceContext
-	private EntityManager entityManager;
+	
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
 
 	private String template_file = null;
 	private Locale locale = null;
@@ -104,20 +98,17 @@ public class KeywordServiceImpl implements KeywordService {
 	@Override
 	public ResponseEntity<String> addKeyword(KeywordEntryForm entryForm, String username) {
 
-		Optional<User> optionalUser = loginRepo.findBySystemId(username);
-		User user = null;
-		Set<Role> role = new HashSet<>();
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			role = user.getRoles();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		int userId = user.getUserId().intValue();
+		int userId = user.getId();
 		WebMenuAccessEntry webMenu = null;
 		Optional<WebMenuAccessEntry> webEntryOptional = this.webMenuRepo.findById(userId);
 		if (webEntryOptional.isPresent()) {
@@ -126,31 +117,24 @@ public class KeywordServiceImpl implements KeywordService {
 			throw new NotFoundException("WebMenuAccessEntry not found.");
 		}
 
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
+		String systemId = user.getSystemId();
 
 		String target = IConstants.FAILURE_KEY;
-		logger.info(systemId + "[" + role + "] Setup Keyword Request: " + entryForm.getPrefix());
+		logger.info(systemId + "[" + user.getRole() + "] Setup Keyword Request: " + entryForm.getPrefix());
 
 		try {
-			if (Access.isAuthorizedSuperAdminAndSystem(role) || webMenu.isTwoWay()) {
+			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem") || webMenu.isTwoWay()) {
 				KeywordEntry entry = new KeywordEntry();
 				BeanUtils.copyProperties(entryForm, entry);
 				try {
 					entry.setCreatedBy(systemId);
 					this.keywordRepo.save(entry);
 					target = IConstants.SUCCESS_KEY;
-					logger.info("message.operation.success");
+					logger.info("message: operation success");
 					MultiUtility.changeFlag(Constants.KEYWORD_FLAG_FILE, "707");
 				} catch (Exception e) {
 					logger.error(entryForm.getPrefix() + " Keyword Already Exist");
-					logger.error("error.record.duplicate");
+					logger.error("error: record duplicate");
 					throw new InternalServerException(e.toString());
 				}
 			} else {
@@ -168,7 +152,7 @@ public class KeywordServiceImpl implements KeywordService {
 			logger.error("Process Error: " + e.getMessage() + "[" + e.getCause() + "]");
 			throw new InternalServerException(e.getLocalizedMessage());
 		}
-		logger.info(systemId + "[" + role + "] Add Keyword Target: " + target);
+		logger.info(systemId + "[" + user.getRole() + "] Add Keyword Target: " + target);
 
 		return new ResponseEntity<>(target,HttpStatus.CREATED);
 	}
@@ -207,22 +191,19 @@ public class KeywordServiceImpl implements KeywordService {
 
 	@Override
 	public ResponseEntity<List<KeywordEntry>> listKeyword(String username) {
-		String target = IConstants.FAILURE_KEY;
-		Optional<User> optionalUser = loginRepo.findBySystemId(username);
-		User user = null;
-		Set<Role> role = new HashSet<>();
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			role = user.getRoles();
-			if (!Access.isAuthorizedSuperAdminAndSystemAndAdmin(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystemAndAdmin")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 
-		int userId = user.getUserId().intValue();
+		String target = IConstants.FAILURE_KEY;
+		int userId = user.getId();
 		WebMenuAccessEntry webMenu = null;
 		Optional<WebMenuAccessEntry> webEntryOptional = this.webMenuRepo.findById(userId);
 		if (webEntryOptional.isPresent()) {
@@ -231,33 +212,26 @@ public class KeywordServiceImpl implements KeywordService {
 			throw new NotFoundException("WebMenuAccessEntry not found.");
 		}
 
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
+		String systemId = user.getSystemId();
 
-		logger.info(systemId + "[" + role + "] List Keyword Request");
+		logger.info(systemId + "[" + user.getRole() + "] List Keyword Request");
 
 		List<KeywordEntry> list = null;
 		try {
-			if (Access.isAuthorizedSuperAdminAndSystem(role)) {
+			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 				list = listKeyWord();
 				if (list.isEmpty()) {
-					logger.error(systemId + "[" + role + "] Keyword List Empty");
+					logger.error(systemId + "[" + user.getRole() + "] Keyword List Empty");
 					throw new NotFoundException("Keyword List Empty");
 				} else {
-					logger.info(systemId + "[" + role + "] Keyword List:" + list.size());
+					logger.info(systemId + "[" + user.getRole() + "] Keyword List:" + list.size());
 					target = IConstants.SUCCESS_KEY;
 					return ResponseEntity.ok(list);
 				}
 
 			} else if (webMenu.isTwoWay()) {
 				Integer[] users = null;
-				if (Access.isAuthorizedAdmin(role)) {
+				if (Access.isAuthorized(user.getRole(),"isAuthorizedAdmin")) {
 					Predicate<Integer, UserEntry> p = new PredicateBuilderImpl().getEntryObject().get("masterId")
 							.equal(systemId);
 					Set<Integer> set = new HashSet<Integer>(GlobalVars.UserEntries.keySet());
@@ -265,15 +239,15 @@ public class KeywordServiceImpl implements KeywordService {
 					users = set.toArray(new Integer[0]);
 				} else {
 					users = new Integer[1];
-					users[0] = user.getUserId().intValue();
+					users[0] = user.getId();
 				}
 				list = listKeyWord(users);
 				if (list.isEmpty()) {
-					logger.error(systemId + "[" + role + "] Keyword List Empty");
+					logger.error(systemId + "[" + user.getRole() + "] Keyword List Empty");
 					logger.error("error: record unavailable");
 					throw new NotFoundException("error: record unavailable. Empty Keyword list");
 				} else {
-					logger.info(systemId + "[" + role + "] Keyword List:" + list.size());
+					logger.info(systemId + "[" + user.getRole() + "] Keyword List:" + list.size());
 					target = IConstants.SUCCESS_KEY;
 					return ResponseEntity.ok(list);
 				}
@@ -301,22 +275,18 @@ public class KeywordServiceImpl implements KeywordService {
 
 	@Override
 	public ResponseEntity<String> updateKeyword(KeywordEntryForm entryForm, String username) {
-		String target = IConstants.FAILURE_KEY;
-		Optional<User> optionalUser = loginRepo.findBySystemId(username);
-		User user = null;
-		Set<Role> role = new HashSet<>();
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			role = user.getRoles();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-
-		int userId = user.getUserId().intValue();
+		String target = IConstants.FAILURE_KEY;
+		int userId = user.getId();
 		WebMenuAccessEntry webMenu = null;
 		Optional<WebMenuAccessEntry> webEntryOptional = this.webMenuRepo.findById(userId);
 		if (webEntryOptional.isPresent()) {
@@ -325,18 +295,12 @@ public class KeywordServiceImpl implements KeywordService {
 			throw new NotFoundException("WebMenuAccessEntry not found.");
 		}
 
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
-		logger.info(systemId + "[" + role + "] Update Keyword Request: " + entryForm.getId() + "]");
+		String systemId = user.getSystemId();
+		
+		logger.info(systemId + "[" + user.getRole() + "] Update Keyword Request: " + entryForm.getId() + "]");
 
 		try {
-			if (Access.isAuthorizedSuperAdminAndAdmin(role) || webMenu.isTwoWay()) {
+			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndAdmin") || webMenu.isTwoWay()) {
 				KeywordEntry entry = new KeywordEntry();
 				BeanUtils.copyProperties(entryForm, entry);
 				KeywordEntry updateEntry = this.keywordRepo.findById(entry.getId())
@@ -345,7 +309,7 @@ public class KeywordServiceImpl implements KeywordService {
 				target = IConstants.SUCCESS_KEY;
 				MultiUtility.changeFlag(Constants.KEYWORD_FLAG_FILE, "707");
 			} else {
-				logger.error(systemId + "[" + role + "] Unauthorized Request");
+				logger.error(systemId + "[" + user.getRole() + "] Unauthorized Request");
 				throw new UnauthorizedException("Unauthorized Request");
 			}
 		} catch (UnauthorizedException e) {
@@ -366,30 +330,19 @@ public class KeywordServiceImpl implements KeywordService {
 
 	@Override
 	public ResponseEntity<String> deleteKeyword(int id, String username) {
-		String target = IConstants.FAILURE_KEY;
-
-		Optional<User> optionalUser = loginRepo.findBySystemId(username);
-		User user = null;
-		Set<Role> role = new HashSet<>();
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			role = user.getRoles();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
-		int userId = user.getUserId().intValue();
+		String target = IConstants.FAILURE_KEY;
+		String systemId = user.getSystemId();
+		int userId = user.getId();
 		WebMenuAccessEntry webMenu = null;
 		Optional<WebMenuAccessEntry> webEntryOptional = this.webMenuRepo.findById(userId);
 		if (webEntryOptional.isPresent()) {
@@ -397,15 +350,15 @@ public class KeywordServiceImpl implements KeywordService {
 		} else {
 			throw new NotFoundException("WebMenuAccessEntry not found.");
 		}
-		logger.info(systemId + "[" + role + "] Delete Keyword Request: " + id + "]");
+		logger.info(systemId + "[" + user.getRole() + "] Delete Keyword Request: " + id + "]");
 
 		try {
-			if (Access.isAuthorizedSuperAdminAndSystem(role) || webMenu.isTwoWay()) {
+			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem") || webMenu.isTwoWay()) {
 				this.keywordRepo.deleteById(id);
 				target = IConstants.SUCCESS_KEY;
 				MultiUtility.changeFlag(Constants.KEYWORD_FLAG_FILE, "707");
 			} else {
-				logger.info(systemId + "[" + role + "] Unauthorized Request");
+				logger.info(systemId + "[" +user.getRole()+ "] Unauthorized Request");
 				throw new UnauthorizedException("Unauthorized Request");
 			}
 		} catch (UnauthorizedException e) {
@@ -423,29 +376,19 @@ public class KeywordServiceImpl implements KeywordService {
 
 	@Override
 	public ResponseEntity<Collection<UserEntry>> setupKeyword(String username) {
-		String target = IConstants.FAILURE_KEY;
-		Optional<User> optionalUser = loginRepo.findBySystemId(username);
-		User user = null;
-		Set<Role> role = new HashSet<>();
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			role = user.getRoles();
-			if (!Access.isAuthorizedSuperAdminAndSystemAndAdmin(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystemAndAdmin")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
-		int userId = user.getUserId().intValue();
+		String target = IConstants.FAILURE_KEY;
+		String systemId = user.getSystemId();
+		int userId = user.getId();
 		WebMenuAccessEntry webMenu = null;
 		Optional<WebMenuAccessEntry> webEntryOptional = this.webMenuRepo.findById(userId);
 		if (webEntryOptional.isPresent()) {
@@ -453,13 +396,13 @@ public class KeywordServiceImpl implements KeywordService {
 		} else {
 			throw new NotFoundException("WebMenuAccessEntry not found.");
 		}
-		logger.info(systemId + "[" + role + "] Setup Keyword Request");
+		logger.info(systemId + "[" + user.getRole() + "] Setup Keyword Request");
 		Collection<UserEntry> users = null;
 		try {
-			if (Access.isAuthorizedSuperAdminAndSystem(role)) {
-				if (Access.isAuthorizedSystem(role)) {
+			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
+				if (Access.isAuthorized(user.getRole(),"isAuthorizedSystem")) {
 					EntryObject e = new PredicateBuilderImpl().getEntryObject();
-					Predicate p = e.get("role").in("admin", "user").or(e.get("id").equal(userOptional.get().getId()));
+					Predicate p = e.get("role").in("admin", "user").or(e.get("id").equal(user.getId()));
 					users = GlobalVars.UserEntries.values(p);
 				} else {
 					users = GlobalVars.UserEntries.values();
@@ -467,7 +410,7 @@ public class KeywordServiceImpl implements KeywordService {
 				target = IConstants.SUCCESS_KEY;
 				return ResponseEntity.ok(users);
 			} else if (webMenu.isTwoWay()) {
-				if (Access.isAuthorizedAdmin(role)) {
+				if (Access.isAuthorized(user.getRole(),"isAuthorizedAdmin")) {
 					Predicate<Integer, UserEntry> p = new PredicateBuilderImpl().getEntryObject().get("masterId")
 							.equal(systemId);
 					users = new ArrayList<UserEntry>(GlobalVars.UserEntries.values(p));
@@ -507,33 +450,19 @@ public class KeywordServiceImpl implements KeywordService {
 
 	@Override
 	public ResponseEntity<KeywordEntry> viewKeyword(int id, String username) {
-		String target = IConstants.FAILURE_KEY;
-		
-		Optional<User> optionalUser = loginRepo.findBySystemId(username);
-
-		User user = null;
-		Set<Role> role = new HashSet<>();
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			role = user.getRoles();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
-		
-		int userId = user.getUserId().intValue();
+		String target = IConstants.FAILURE_KEY;		
+		String systemId = user.getSystemId();
+		int userId = user.getId();
 		WebMenuAccessEntry webMenu = null;
 		Optional<WebMenuAccessEntry> webEntryOptional = this.webMenuRepo.findById(userId);
 		if (webEntryOptional.isPresent()) {
@@ -541,10 +470,10 @@ public class KeywordServiceImpl implements KeywordService {
 		} else {
 			throw new NotFoundException("WebMenuAccessEntry not found.");
 		}
-		logger.info(systemId + "[" + role + "] View Keyword Request: " + id);
+		logger.info(systemId + "[" + user.getRole() + "] View Keyword Request: " + id);
 		KeywordEntry entry = null;
 		try {
-			if (Access.isAuthorizedSuperAdminAndSystem(role) || webMenu.isTwoWay()) {
+			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem") || webMenu.isTwoWay()) {
 				entry = getEntry(id);
 				target = IConstants.SUCCESS_KEY;
 				if (entry == null) {
@@ -596,31 +525,45 @@ public class KeywordServiceImpl implements KeywordService {
 		List<ReportEntry> list = new ArrayList<ReportEntry>();
 
 		try {
+            this.jdbcTemplate.query(sql, (rs) -> {
+                try {
+                    ReportEntry entry = new ReportEntry(
+                            rs.getString("A.source"),
+                            rs.getString("A.short_code"),
+                            rs.getString("A.received_text"),
+                            rs.getString("A.receivedOn"),
+                            rs.getBoolean("A.reply"),
+                            rs.getString("A.reply_msg"),
+                            rs.getString("A.msg_id"),
+                            rs.getString("A.remarks"));
 
-			Query nativeQuery = entityManager.createNativeQuery(sql, "ReportEntryRsMapping");
-			List<ReportEntryRs> result = nativeQuery.getResultList();
+                    String prefix = rs.getString("C.prefix");
+                    String suffix = rs.getString("C.suffix");
 
-			result.forEach(rs -> {
-				ReportEntry entry = new ReportEntry(rs.getSource(), rs.getShortCode(), rs.getReceivedText(),
-						rs.getReceivedOn(), rs.isReply(), rs.getReplyMessage(), rs.getMessageId(), rs.getRemarks());
-				if (rs.getSuffix() != null) {
-					entry.setKeyword(rs.getPrefix() + " " + rs.getSuffix());
-				} else {
-					entry.setKeyword(rs.getPrefix());
-				}
-				entry.setSystemId(rs.getSystemId());
+                    if (suffix != null) {
+                        entry.setKeyword(prefix + " " + suffix);
+                    } else {
+                        entry.setKeyword(prefix);
+                    }
 
-				list.add(entry);
+                    entry.setSystemId(rs.getString("B.system_id"));
 
-			});
-
-		} catch (DataAccessException e) {
-			logger.error(e.toString());
-			throw new AccessDataException("Error fetching data."+e.getLocalizedMessage());
-		} catch (Exception e) {
-			logger.error(e.toString());
-			throw new InternalServerException("Error fetching data."+e.getLocalizedMessage());
-		}
+                    list.add(entry);
+                } catch (SQLException e) {
+                    logger.error("SQL ERROR: "+e.toString());
+                    throw new InternalServerException("SQL ERROR: "+e.getLocalizedMessage());
+                } catch (Exception e) {
+                    logger.error("ERROR: "+e.toString());
+                    throw new InternalServerException("ERROR: "+e.getLocalizedMessage());
+                }
+            });
+        } catch (DataAccessException e) {
+            logger.error("DataAccess ERROR: "+e.toString());
+            throw new InternalServerException("ERROR: "+e.getLocalizedMessage());
+        } catch (Exception e) {
+            logger.error("ERROR: "+e.toString());
+            throw new InternalServerException("ERROR: "+e.getLocalizedMessage());
+        }
 		
 		List<ReportEntry> final_list = list;
 		logger.info(" 2WayReport: " + sql);
@@ -666,12 +609,13 @@ public class KeywordServiceImpl implements KeywordService {
 	public ResponseEntity<StreamingResponseBody> generateXls(TwowayReportForm reportForm, String locale,
 			String username) {
 		
-		Optional<User> optionalUser = loginRepo.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			if (!Access.isAuthorizedAll(optionalUser.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
@@ -737,12 +681,13 @@ public class KeywordServiceImpl implements KeywordService {
 	@Override
 	public ResponseEntity<StreamingResponseBody> generatePdf(TwowayReportForm reportForm, String locale,
 			String username) {
-		Optional<User> optionalUser = loginRepo.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			if (!Access.isAuthorizedAll(optionalUser.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
@@ -803,6 +748,16 @@ public class KeywordServiceImpl implements KeywordService {
 	@Override
 	public ResponseEntity<StreamingResponseBody> generateDoc(TwowayReportForm reportForm, String locale,
 			String username) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 		String target = IConstants.FAILURE_KEY;
 		logger.info("<-- Preparing Outputstream --> ");
 		HttpHeaders headers = new HttpHeaders();
@@ -859,6 +814,16 @@ public class KeywordServiceImpl implements KeywordService {
 
 	@Override
 	public ResponseEntity<?> view(TwowayReportForm reportForm, String locale, String username) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 		String target = IConstants.SUCCESS_KEY;
 		JasperPrint print = null;
 		try {
@@ -885,35 +850,26 @@ public class KeywordServiceImpl implements KeywordService {
 
 	@Override
 	public ResponseEntity<Collection<UserEntry>> setupTwowayReport(String username) {
-		Optional<User> optionalUser = loginRepo.findBySystemId(username);
-		User user = null;
-		Set<Role> role = new HashSet<>();
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			role = user.getRoles();
-			if (!Access.isAuthorizedSuperAdminAndSystemAndAdmin(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystemAndAdmin")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
+		String systemId = user.getSystemId();
+		
 		String target = IConstants.FAILURE_KEY;
-		logger.info(systemId + "[" + role + "] TwoWay Report Request");
+		logger.info(systemId + "[" + user.getRole() + "] TwoWay Report Request");
 		Collection<UserEntry> list = null;
 
 		try {
-			if (Access.isAuthorizedSuperAdminAndSystem(role)) {
-				if (Access.isAuthorizedSystem(role)) {
+			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
+				if (Access.isAuthorized(user.getRole(),"isAuthorizedSystem")) {
 					EntryObject e = new PredicateBuilderImpl().getEntryObject();
 					Predicate p = e.get("role").in("admin", "user").or(e.get("id").equal(userOptional.get().getId()));
 					list = GlobalVars.UserEntries.values(p);
@@ -922,7 +878,7 @@ public class KeywordServiceImpl implements KeywordService {
 				}
 
 			}else {
-				if(Access.isAuthorizedAdmin(role)) {
+				if(Access.isAuthorized(user.getRole(),"isAuthorizedAdmin")) {
 					EntryObject e = new PredicateBuilderImpl().getEntryObject();
 					Predicate p = e.get("masterId").equal(userOptional.get().getSystemId())
 							.or(e.get("id").equal(userOptional.get().getId()));
