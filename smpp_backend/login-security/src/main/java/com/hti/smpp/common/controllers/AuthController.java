@@ -329,6 +329,8 @@ public class AuthController {
 		ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
 				.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
 		user.setPassword(encoder.encode(newPassword));
+		user.setEditOn(LocalDateTime.now() + "");
+		user.setEditBy(username);
 		driverInfoRepository.save(new DriverInfo(user.getId(),
 				new PasswordConverter().convertToDatabaseColumn(newPassword), LocalDateTime.now()));
 		userEntryRepository.save(user);
@@ -410,7 +412,11 @@ public class AuthController {
 				// Valid old password, update the password
 				String newPassword = encoder.encode(passwordUpdateRequest.getNewPassword());
 				userEntry.setPassword(newPassword);
+				userEntry.setEditOn(LocalDateTime.now() + "");
+				userEntry.setEditBy(username);
 				userEntryRepository.save(userEntry);
+				driverInfoRepository.save(new DriverInfo(userEntry.getId(),
+						new PasswordConverter().convertToDatabaseColumn(newPassword), LocalDateTime.now()));
 				ProfessionEntry professionEntry = professionEntryRepository.findById(userEntry.getId())
 						.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
 				if (EmailValidator.isEmailValid(professionEntry.getDomainEmail())) {
@@ -442,6 +448,8 @@ public class AuthController {
 			ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
 					.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
 			updateUserData(user, profileUpdateRequest, professionEntry);
+			user.setEditOn(LocalDateTime.now() + "");
+			user.setEditBy(username);
 			userEntryRepository.save(user);
 			professionEntryRepository.save(professionEntry);
 			return ResponseEntity.ok("Profile updated successfully");
