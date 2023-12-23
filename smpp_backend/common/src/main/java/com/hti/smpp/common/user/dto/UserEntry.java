@@ -54,7 +54,7 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 	@Column(name = "editby")
 	private String editBy;
 	@Column(name = "editOn")
-	private String editOn="2023-01-12";
+	private String editOn = "2023-01-12";
 	@Column(name = "sender_length")
 	private int senderLength;
 	@Column(name = "sender_trim")
@@ -91,7 +91,7 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 	private String password;
 	@Column(name = "role")
 	private String role;
-	
+
 	public String getRole() {
 		return role;
 	}
@@ -440,9 +440,20 @@ public class UserEntry implements Serializable, Comparable<UserEntry> {
 		this.recordMnp = recordMnp;
 	}
 
+	@Override
 	public String toString() {
-		return "id=" + id + ",SystemId=" + systemId + ",MasterId=" + masterId + ",AdminDepend=" + adminDepend
-				+ ",Currency=" + currency + ",hlr=" + hlr + ",timeout=" + timeout + ",CreatedOn:" + createdOn;
+		return "UserEntry [id=" + id + ", systemId=" + systemId + ", masterId=" + masterId + ", adminDepend="
+				+ adminDepend + ", expiry=" + expiry + ", hlr=" + hlr + ", currency=" + currency + ", systemType="
+				+ systemType + ", sleep=" + sleep + ", remark=" + remark + ", priority=" + priority + ", forceDelay="
+				+ forceDelay + ", timeout=" + timeout + ", createdOn=" + createdOn + ", accessIp=" + accessIp
+				+ ", logging=" + logging + ", logDays=" + logDays + ", createdBy=" + createdBy + ", editBy=" + editBy
+				+ ", editOn=" + editOn + ", senderLength=" + senderLength + ", senderTrim=" + senderTrim
+				+ ", dltDefaultSender=" + dltDefaultSender + ", fixLongSms=" + fixLongSms + ", bindAlert=" + bindAlert
+				+ ", alertWaitDuration=" + alertWaitDuration + ", alertNumber=" + alertNumber + ", alertEmail="
+				+ alertEmail + ", alertUrl=" + alertUrl + ", skipLoopingRule=" + skipLoopingRule + ", skipContent="
+				+ skipContent + ", loopSmscId=" + loopSmscId + ", passwordExpiresOn=" + passwordExpiresOn
+				+ ", forcePasswordChange=" + forcePasswordChange + ", accessCountry=" + accessCountry + ", recordMnp="
+				+ recordMnp + ", password=" + password + ", role=" + role + ", flagStatus=" + flagStatus + "]";
 	}
 
 	@Override

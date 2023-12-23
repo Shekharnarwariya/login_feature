@@ -12,4 +12,6 @@ public interface OtpEntryRepository extends JpaRepository<OTPEntry, Integer> {
 
 	public Optional<OTPEntry> findBySystemId(String username);
 
+	public boolean existsBySystemId(String username);
+
 }

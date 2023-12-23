@@ -17,7 +17,7 @@ import com.hti.smpp.common.route.dto.RouteEntryExt;
 import com.hti.smpp.common.route.repository.RouteEntryRepository;
 import com.hti.smpp.common.service.RouteDAService;
 import com.hti.smpp.common.service.SmscDAService;
-import com.hti.smpp.common.sms.util.GlobalVars;
+import com.hti.smpp.common.util.GlobalVars;
 
 @Service
 public class RouteDAServiceImpl implements RouteDAService {

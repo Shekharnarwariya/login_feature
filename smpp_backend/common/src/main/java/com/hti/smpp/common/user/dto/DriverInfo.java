@@ -18,7 +18,7 @@ public class DriverInfo {
 	@Column(name = "driver")
 	private String driver;
 
-	@Column(name = "update_on")
+	@Column(name = "updateOn")
 	private LocalDateTime updateOn;
 
 	public int getId() {

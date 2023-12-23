@@ -58,8 +58,6 @@ import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.ScheduledTimeException;
 import com.hti.smpp.common.exception.UnauthorizedException;
-import com.hti.smpp.common.login.dto.User;
-import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.management.dto.BulkMgmtEntry;
 import com.hti.smpp.common.management.repository.BulkMgmtEntryRepository;
 import com.hti.smpp.common.messages.dto.BulkContentEntry;
@@ -69,6 +67,8 @@ import com.hti.smpp.common.messages.dto.QueueBackupExt;
 import com.hti.smpp.common.messages.dto.SummaryReport;
 import com.hti.smpp.common.messages.repository.BulkEntryRepository;
 import com.hti.smpp.common.messages.repository.SummaryReportRepository;
+import com.hti.smpp.common.request.BulkRequest;
+import com.hti.smpp.common.request.SmsRequest;
 import com.hti.smpp.common.response.BulkResponse;
 import com.hti.smpp.common.response.SmsResponse;
 import com.hti.smpp.common.schedule.dto.ScheduleEntry;
@@ -76,22 +76,23 @@ import com.hti.smpp.common.schedule.repository.ScheduleEntryRepository;
 import com.hti.smpp.common.service.RouteDAService;
 import com.hti.smpp.common.service.SendSmsService;
 import com.hti.smpp.common.service.SmsService;
-import com.hti.smpp.common.sms.request.BulkRequest;
-import com.hti.smpp.common.sms.request.SmsRequest;
-import com.hti.smpp.common.sms.session.SessionHandler;
-import com.hti.smpp.common.sms.session.UserSession;
-import com.hti.smpp.common.sms.util.Body;
-import com.hti.smpp.common.sms.util.GlobalVars;
-import com.hti.smpp.common.sms.util.ProgressEvent;
-import com.hti.smpp.common.sms.util.SmsConverter;
+import com.hti.smpp.common.session.SessionHandler;
+import com.hti.smpp.common.session.UserSession;
 import com.hti.smpp.common.user.dto.BalanceEntry;
+import com.hti.smpp.common.user.dto.DriverInfo;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.BalanceEntryRepository;
+import com.hti.smpp.common.user.repository.DriverInfoRepository;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.Body;
+import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.PasswordConverter;
+import com.hti.smpp.common.util.ProgressEvent;
+import com.hti.smpp.common.util.SmsConverter;
 import com.logica.smpp.Data;
 import com.logica.smpp.Session;
 import com.logica.smpp.pdu.SubmitSM;
@@ -112,9 +113,6 @@ public class SmsServiceImpl implements SmsService {
 
 	@Autowired
 	private ScheduleEntryRepository scheduleEntryRepository;
-
-	@Autowired
-	private UserRepository userRepository;
 
 	@Autowired
 	private RouteDAService routeService;
@@ -144,32 +142,34 @@ public class SmsServiceImpl implements SmsService {
 
 	private Random rand = new Random();
 
+	@Autowired
+	private DriverInfoRepository driverInfoRepository;
+
 	public SmsResponse sendSms(SmsRequest smsRequest, String username) {
-		Optional<User> userOptional = userRepository.findBySystemId(username);
-		User user = null;
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry userEntry = null;
 		if (userOptional.isPresent()) {
-			user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			userEntry = userOptional.get();
+			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		Optional<UserEntry> userEntryOptional = userEntryRepository.findBySystemId(user.getSystemId());
-		UserEntry userEntry = null;
-		if (userEntryOptional.isPresent()) {
-			userEntry = userEntryOptional.get();
+		DriverInfo driverInfo = null;
+		Optional<DriverInfo> OptionalDriverInfo = driverInfoRepository.findById(userEntry.getId());
+		if (OptionalDriverInfo.isPresent()) {
+			driverInfo = OptionalDriverInfo.get();
 		}
 		SmsResponse smsResponse = new SmsResponse();
 		String target = IConstants.FAILURE_KEY;
 		BulkSmsDTO bulkSmsDTO = new BulkSmsDTO();
 		bulkSmsDTO.setClientId(userEntry.getSystemId());
 		bulkSmsDTO.setSystemId(userEntry.getSystemId());
-		bulkSmsDTO.setPassword(userEntry.getPassword());
+		bulkSmsDTO.setPassword(new PasswordConverter().convertToEntityAttribute(driverInfo.getDriver()));
 		bulkSmsDTO.setSchedule(false);
 		bulkSmsDTO.setTimestart("");
 		bulkSmsDTO.setGmt("");
-
 		String bulkSessionId = bulkSmsDTO.getSystemId() + "_" + Long.toString(System.currentTimeMillis());
 		bulkSmsDTO.setSenderId(smsRequest.getSenderId());
 		bulkSmsDTO.setFrom("mobile");
@@ -200,7 +200,7 @@ public class SmsServiceImpl implements SmsService {
 			// check wallet balance
 			Optional<BalanceEntry> masterBalanceOptional = balanceEntryRepository
 					.findBySystemId((userEntry.getMasterId()));
-			Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findBySystemId(user.getSystemId());
+			Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findBySystemId(userEntry.getSystemId());
 			String wallet_flag = null;
 			double wallet = 0;
 			double adminWallet = 0;
@@ -265,7 +265,7 @@ public class SmsServiceImpl implements SmsService {
 			int total = 0;
 			ArrayList<String> destinationList = new ArrayList<String>();
 			String destination = bulkSmsDTO.getDestinationNumber();
-			WebMasterEntry webEntry = webMasterEntryRepository.findByUserId(user.getUserId().intValue());
+			WebMasterEntry webEntry = webMasterEntryRepository.findByUserId(userEntry.getId());
 			if (destination != null) {
 				String[] tokens;
 				if (destination.contains(",")) {
@@ -313,7 +313,7 @@ public class SmsServiceImpl implements SmsService {
 			total_msg = destinationList.size() * no_of_msg;
 			if (wallet_flag.equalsIgnoreCase("yes")) {
 				bulkSmsDTO.setUserMode("wallet");
-				totalcost = routeService.calculateRoutingCost(user.getUserId().intValue(), destinationList, no_of_msg);
+				totalcost = routeService.calculateRoutingCost(userEntry.getId(), destinationList, no_of_msg);
 				if (destinationList.size() > 0) {
 					boolean amount = false;
 					if (userEntry.isAdminDepend()) {
@@ -1079,13 +1079,13 @@ public class SmsServiceImpl implements SmsService {
 	}
 
 	@Override
-	public BulkResponse sendBulkSms(BulkRequest bulkRequest, String username, MultipartFile destinationNumberFile,
+	public BulkResponse sendBulkSms(BulkRequest bulkRequest, String username, List<MultipartFile> destinationNumberFile,
 			HttpSession session) {
-		Optional<User> userOptional = userRepository.findBySystemId(username);
-
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
 		if (userOptional.isPresent()) {
-			User user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -1098,13 +1098,8 @@ public class SmsServiceImpl implements SmsService {
 		List<String> destinationList = null;
 		List<String> temp_number_list = new ArrayList<String>();
 		ProgressEvent progressEvent = new ProgressEvent(session);
-		userOptional = userRepository.findBySystemId(username);
-		User user = null;
-		if (userOptional.isPresent()) {
-			user = userOptional.get();
-		}
 		BulkResponse bulkResponse = new BulkResponse();
-		String bulkSessionId = user.getUserId() + "_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
+		String bulkSessionId = user.getId() + "_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
 
 		try {
 
@@ -1174,201 +1169,203 @@ public class SmsServiceImpl implements SmsService {
 			// String fileName = IConstants.WEBAPP_DIR + "upload" + "//" + bulkSessionId;
 			// bulkSmsDTO.writeToFile(fileName);
 			if (bulkSmsDTO.isSchedule()) {
-				logger.info(bulkSessionId + " Bulk Schedule Request <" + destinationNumberFile.getSize() + ">");
+				logger.info(bulkSessionId + " Bulk Schedule Request <" + destinationNumberFile.size() + ">");
 			} else {
-				logger.info(bulkSessionId + " Bulk Upload Request <" + destinationNumberFile.getSize() + ">");
+				logger.info(bulkSessionId + " Bulk Upload Request <" + destinationNumberFile.size() + ">");
 			}
 			// ------ merge uploaded files into a list ---------------
 			Map<String, Integer> errors = new HashMap<String, Integer>();
 			int invalidCount = 0;
 			int total = 0;
 			logger.info(bulkSessionId + " Start Processing Uploaded Files.");
-			String fileMode = null;
-			String fileName = destinationNumberFile.getOriginalFilename();
-			logger.info(bulkSessionId + " Processing File: " + fileName);
-
-			if (fileName.endsWith(".txt")) {
-				fileMode = "txt";
-			} else if (fileName.endsWith(".csv")) {
-				fileMode = "csv";
-			} else if (fileName.endsWith(".xls") || fileName.endsWith(".xlsx")) {
-				fileMode = "xls";
-			} else {
-				logger.warn(bulkSessionId + " Invalid File Uploaded: " + fileName);
-			}
-
-			Set<String> excludeSet = new HashSet<>();
-
-			if (bulkRequest.getExclude() != null && bulkRequest.getExclude().length() > 0) {
-				String seperator = ",";
-				if (bulkRequest.getExclude().contains(",")) {
-					seperator = ",";
+			for (MultipartFile uploaded_file : destinationNumberFile) {
+				String fileName = uploaded_file.getOriginalFilename();
+				logger.info(bulkSessionId + " Processing File: " + fileName);
+				String fileMode = null;
+				if (fileName.endsWith(".txt")) {
+					fileMode = "txt";
+				} else if (fileName.endsWith(".csv")) {
+					fileMode = "csv";
+				} else if (fileName.endsWith(".xls") || fileName.endsWith(".xlsx")) {
+					fileMode = "xls";
 				} else {
-					seperator = "\n";
+					logger.warn(bulkSessionId + " Invalid File Uploaded: " + fileName);
 				}
-				StringTokenizer tokens = new StringTokenizer(bulkRequest.getExclude(), seperator);
-				while (tokens.hasMoreTokens()) {
-					String next = tokens.nextToken();
-					if (next != null && next.length() > 0) {
-						next = next.replaceAll("\\s+", ""); // Replace all the spaces in the String with empty
-															// character.
-						try {
-							long num = Long.parseLong(next);
-							excludeSet.add(String.valueOf(num));
-						} catch (NumberFormatException ne) {
-							logger.info("Invalid Exclude Number Found: " + next);
-						}
+
+				Set<String> excludeSet = new HashSet<>();
+
+				if (bulkRequest.getExclude() != null && bulkRequest.getExclude().length() > 0) {
+					String seperator = ",";
+					if (bulkRequest.getExclude().contains(",")) {
+						seperator = ",";
+					} else {
+						seperator = "\n";
 					}
-				}
-			}
-			/*
-			 * try { String savedExcludeNumbers =
-			 * com.hti.webems.util.MultiUtility.readExcludeNumbers(systemId); if
-			 * (savedExcludeNumbers != null) { for (String excluded :
-			 * savedExcludeNumbers.split("\n")) { try { long num = Long.parseLong(excluded);
-			 * excludeSet.add(String.valueOf(num)); } catch (NumberFormatException ne) {
-			 * System.out .println(bulkSessionId + " Invalid Exclude Number Found: " +
-			 * excluded); } } } } catch (Exception ex) { System.out.println(bulkSessionId +
-			 * " " + ex); }
-			 */
-			if (!excludeSet.isEmpty()) {
-				try {
-					writeExcludeNumbers(String.valueOf(user.getUserId()), String.join("\n", excludeSet));
-				} catch (Exception ex) {
-					System.out.println(bulkSessionId + " " + ex);
-				}
-			} else {
-				try {
-					removeExcludeNumbers(String.valueOf(user.getUserId()));
-				} catch (Exception ex) {
-					System.out.println(bulkSessionId + " " + ex);
-				}
-			}
-			if (fileMode != null) {
-				InputStream stream = destinationNumberFile.getInputStream();
-				int file_total_counter = 0;
-				if (fileMode.equalsIgnoreCase("txt")) {
-					ByteArrayOutputStream baos = new ByteArrayOutputStream();
-					int bytesRead = 0;
-					byte[] buffer = new byte[8192];
-					while ((bytesRead = stream.read(buffer, 0, 8192)) != -1) {
-						baos.write(buffer, 0, bytesRead);
-					}
-					String data = new String(baos.toByteArray());
-					StringTokenizer st = new StringTokenizer(data, "\n");
-					// total = st.countTokens();
-					int row = 0;
-					while (st.hasMoreTokens()) {
-						row++;
-						String destinationNumber = st.nextToken();
-						if (destinationNumber != null && destinationNumber.trim().length() > 0) {
-							total++;
-							file_total_counter++;
-							destinationNumber = destinationNumber.replaceAll("\\s+", ""); // Replace all the spaces in
-																							// the String with empty
-																							// character.
+					StringTokenizer tokens = new StringTokenizer(bulkRequest.getExclude(), seperator);
+					while (tokens.hasMoreTokens()) {
+						String next = tokens.nextToken();
+						if (next != null && next.length() > 0) {
+							next = next.replaceAll("\\s+", ""); // Replace all the spaces in the String with empty
+																// character.
 							try {
-								long num = Long.parseLong(destinationNumber);
-								if (!excludeSet.contains(String.valueOf(num))) {
-									temp_number_list.add(String.valueOf(num));
-								} else {
-									logger.info("<------ " + num + " Excluded ------> ");
-								}
-							} catch (NumberFormatException nfe) {
-								int counter = 0;
-								if (errors.containsKey("Invalid Destination")) {
-									counter = errors.get("Invalid Destination");
-								}
-								errors.put("Invalid Destination", ++counter);
-								logger.info("Invalid Destination Number -> " + destinationNumber);
-								invalidCount++;
+								long num = Long.parseLong(next);
+								excludeSet.add(String.valueOf(num));
+							} catch (NumberFormatException ne) {
+								logger.info("Invalid Exclude Number Found: " + next);
 							}
-						} else {
-							int counter = 0;
-							if (errors.containsKey("Empty Row")) {
-								counter = errors.get("Empty Row");
-							}
-							errors.put("Empty Row", ++counter);
-							logger.info("<-- Empty Row Found[" + row + "] --> ");
-							invalidCount++;
 						}
+					}
+				}
+				/*
+				 * try { String savedExcludeNumbers =
+				 * com.hti.webems.util.MultiUtility.readExcludeNumbers(systemId); if
+				 * (savedExcludeNumbers != null) { for (String excluded :
+				 * savedExcludeNumbers.split("\n")) { try { long num = Long.parseLong(excluded);
+				 * excludeSet.add(String.valueOf(num)); } catch (NumberFormatException ne) {
+				 * System.out .println(bulkSessionId + " Invalid Exclude Number Found: " +
+				 * excluded); } } } } catch (Exception ex) { System.out.println(bulkSessionId +
+				 * " " + ex); }
+				 */
+				if (!excludeSet.isEmpty()) {
+					try {
+						writeExcludeNumbers(String.valueOf(user.getId()), String.join("\n", excludeSet));
+					} catch (Exception ex) {
+						System.out.println(bulkSessionId + " " + ex);
 					}
 				} else {
 					try {
-						Workbook workbook = null;
-						if (destinationNumberFile.getOriginalFilename() != null
-								&& destinationNumberFile.getOriginalFilename().endsWith(".xlsx")) {
-							workbook = new XSSFWorkbook(stream);
-						} else {
-							workbook = new HSSFWorkbook(stream);
-						}
-						int numberOfSheets = workbook.getNumberOfSheets();
-						for (int i = 0; i < numberOfSheets; i++) {
-							Sheet firstSheet = workbook.getSheetAt(i);
-							int total_rows = firstSheet.getPhysicalNumberOfRows();
-							logger.info(destinationNumberFile.getName() + " Total Rows[" + i + "]: " + total_rows);
-							if (total_rows == 0) {
-								continue;
-							}
-							Iterator<org.apache.poi.ss.usermodel.Row> iterator = firstSheet.iterator();
-							while (iterator.hasNext()) {
-								org.apache.poi.ss.usermodel.Row nextRow = iterator.next();
-								// logger.info(nextRow.getRowNum() + " Total Cells: " +
-								// nextRow.getPhysicalNumberOfCells());
-								Iterator<Cell> cellIterator = nextRow.cellIterator();
-								String destination = null;
-								int cell_number = 0;
-								while (cellIterator.hasNext()) {
-									Cell cell = cellIterator.next();
-									if (cell_number > 0) {
-										logger.info((nextRow.getRowNum() + 1) + " <- Invalid Column Found -> ");
-										break;
-									}
-									total++;
-									file_total_counter++;
-									destination = new DataFormatter().formatCellValue(cell);
-									// logger.info((nextRow.getRowNum() + 1) + " -> " + destination);
-									if (destination != null && destination.length() > 0) {
-										destination = destination.replaceAll("\\s+", ""); // Replace all the spaces in
-																							// the String with empty
-																							// character.
-										try {
-											long num = Long.parseLong(destination);
-											if (!excludeSet.contains(String.valueOf(num))) {
-												temp_number_list.add(String.valueOf(num));
-											} else {
-												logger.info("<------ " + num + " Excluded ------> ");
-											}
-										} catch (NumberFormatException nfe) {
-											int counter = 0;
-											if (errors.containsKey("Invalid Destination")) {
-												counter = (Integer) errors.get("Invalid Destination");
-											}
-											errors.put("Invalid Destination", ++counter);
-											logger.info("Invalid Destination Number -> " + destination);
-											invalidCount++;
-										}
-									} else {
-										int counter = 0;
-										if (errors.containsKey("Empty Row")) {
-											counter = (Integer) errors.get("Empty Row");
-										}
-										errors.put("Empty Row", ++counter);
-										invalidCount++;
-									}
-									cell_number++;
-								}
-							}
-							logger.info(destinationNumberFile.getName() + " Sheet[" + i + "] Processed");
-						}
-						// *********************************************************
+						removeExcludeNumbers(String.valueOf(user.getId()));
 					} catch (Exception ex) {
-						logger.error("Parsing File: " + destinationNumberFile.getName(), ex);
+						System.out.println(bulkSessionId + " " + ex);
 					}
 				}
-				logger.info(destinationNumberFile.getName() + " NumberCounter: " + file_total_counter);
+				if (fileMode != null) {
+					InputStream stream = uploaded_file.getInputStream();
+					int file_total_counter = 0;
+					if (fileMode.equalsIgnoreCase("txt")) {
+						ByteArrayOutputStream baos = new ByteArrayOutputStream();
+						int bytesRead = 0;
+						byte[] buffer = new byte[8192];
+						while ((bytesRead = stream.read(buffer, 0, 8192)) != -1) {
+							baos.write(buffer, 0, bytesRead);
+						}
+						String data = new String(baos.toByteArray());
+						StringTokenizer st = new StringTokenizer(data, "\n");
+						// total = st.countTokens();
+						int row = 0;
+						while (st.hasMoreTokens()) {
+							row++;
+							String destinationNumber = st.nextToken();
+							if (destinationNumber != null && destinationNumber.trim().length() > 0) {
+								total++;
+								file_total_counter++;
+								destinationNumber = destinationNumber.replaceAll("\\s+", ""); // Replace all the spaces
+																								// in
+																								// the String with empty
+																								// character.
+								try {
+									long num = Long.parseLong(destinationNumber);
+									if (!excludeSet.contains(String.valueOf(num))) {
+										temp_number_list.add(String.valueOf(num));
+									} else {
+										logger.info("<------ " + num + " Excluded ------> ");
+									}
+								} catch (NumberFormatException nfe) {
+									int counter = 0;
+									if (errors.containsKey("Invalid Destination")) {
+										counter = errors.get("Invalid Destination");
+									}
+									errors.put("Invalid Destination", ++counter);
+									logger.info("Invalid Destination Number -> " + destinationNumber);
+									invalidCount++;
+								}
+							} else {
+								int counter = 0;
+								if (errors.containsKey("Empty Row")) {
+									counter = errors.get("Empty Row");
+								}
+								errors.put("Empty Row", ++counter);
+								logger.info("<-- Empty Row Found[" + row + "] --> ");
+								invalidCount++;
+							}
+						}
+					} else {
+						try {
+							Workbook workbook = null;
+							if (uploaded_file.getOriginalFilename() != null
+									&& uploaded_file.getOriginalFilename().endsWith(".xlsx")) {
+								workbook = new XSSFWorkbook(stream);
+							} else {
+								workbook = new HSSFWorkbook(stream);
+							}
+							int numberOfSheets = workbook.getNumberOfSheets();
+							for (int i = 0; i < numberOfSheets; i++) {
+								Sheet firstSheet = workbook.getSheetAt(i);
+								int total_rows = firstSheet.getPhysicalNumberOfRows();
+								logger.info(uploaded_file.getName() + " Total Rows[" + i + "]: " + total_rows);
+								if (total_rows == 0) {
+									continue;
+								}
+								Iterator<org.apache.poi.ss.usermodel.Row> iterator = firstSheet.iterator();
+								while (iterator.hasNext()) {
+									org.apache.poi.ss.usermodel.Row nextRow = iterator.next();
+									// logger.info(nextRow.getRowNum() + " Total Cells: " +
+									// nextRow.getPhysicalNumberOfCells());
+									Iterator<Cell> cellIterator = nextRow.cellIterator();
+									String destination = null;
+									int cell_number = 0;
+									while (cellIterator.hasNext()) {
+										Cell cell = cellIterator.next();
+										if (cell_number > 0) {
+											logger.info((nextRow.getRowNum() + 1) + " <- Invalid Column Found -> ");
+											break;
+										}
+										total++;
+										file_total_counter++;
+										destination = new DataFormatter().formatCellValue(cell);
+										// logger.info((nextRow.getRowNum() + 1) + " -> " + destination);
+										if (destination != null && destination.length() > 0) {
+											destination = destination.replaceAll("\\s+", ""); // Replace all the spaces
+																								// in
+																								// the String with empty
+																								// character.
+											try {
+												long num = Long.parseLong(destination);
+												if (!excludeSet.contains(String.valueOf(num))) {
+													temp_number_list.add(String.valueOf(num));
+												} else {
+													logger.info("<------ " + num + " Excluded ------> ");
+												}
+											} catch (NumberFormatException nfe) {
+												int counter = 0;
+												if (errors.containsKey("Invalid Destination")) {
+													counter = (Integer) errors.get("Invalid Destination");
+												}
+												errors.put("Invalid Destination", ++counter);
+												logger.info("Invalid Destination Number -> " + destination);
+												invalidCount++;
+											}
+										} else {
+											int counter = 0;
+											if (errors.containsKey("Empty Row")) {
+												counter = (Integer) errors.get("Empty Row");
+											}
+											errors.put("Empty Row", ++counter);
+											invalidCount++;
+										}
+										cell_number++;
+									}
+								}
+								logger.info(uploaded_file.getName() + " Sheet[" + i + "] Processed");
+							}
+							// *********************************************************
+						} catch (Exception ex) {
+							logger.error("Parsing File: " + uploaded_file.getName(), ex);
+						}
+					}
+					logger.info(uploaded_file.getName() + " NumberCounter: " + file_total_counter);
+				}
 			}
-
 			logger.info(bulkSessionId + " End Processing Uploaded Files. Numbers Found: " + temp_number_list.size());
 			Set<String> hashSet = new HashSet<String>(temp_number_list);
 			if (bulkRequest.isAllowDuplicate()) {
@@ -1454,8 +1451,7 @@ public class SmsServiceImpl implements SmsService {
 			if (wallet_flag.equalsIgnoreCase("yes")) {
 				bulkSmsDTO.setUserMode("wallet");
 				if (destinationList.size() > 0) {
-					totalcost = routeService.calculateRoutingCost(user.getUserId().intValue(), destinationList,
-							no_of_msg);
+					totalcost = routeService.calculateRoutingCost(user.getId(), destinationList, no_of_msg);
 					logger.info(bulkSessionId + " Balance:" + wallet + " Calculated Cost: " + totalcost);
 					boolean amount = false;
 					// boolean inherit = false;
@@ -1492,7 +1488,7 @@ public class SmsServiceImpl implements SmsService {
 							logger.info(bulkSessionId + " <-- Insufficient Balance -->");
 						}
 					}
-					WebMasterEntry webEntry = webMasterEntryRepository.findByUserId(user.getUserId().intValue());
+					WebMasterEntry webEntry = webMasterEntryRepository.findByUserId(user.getId());
 					if (amount) {
 						// String applicationName = request.getContextPath();
 						bulkSmsDTO.setMsgCount(destinationList.size() * no_of_msg);
@@ -1505,7 +1501,7 @@ public class SmsServiceImpl implements SmsService {
 							if (filename != null) {
 
 								generated_id = scheduleEntryRepository
-										.save(new ScheduleEntry(String.valueOf(user.getUserId()),
+										.save(new ScheduleEntry(String.valueOf(user.getId()),
 												bulkSmsDTO.getDate() + " " + bulkSmsDTO.getTime(), bulkSmsDTO.getGmt(),
 												bulkSmsDTO.getTimestart(), IConstants.SERVER_ID, "false", filename,
 												bulkSmsDTO.getRepeat(), bulkSmsDTO.getReqType(), null))
@@ -1538,7 +1534,7 @@ public class SmsServiceImpl implements SmsService {
 						} else {
 
 							String value = sendBulkSms(bulkSmsDTO, progressEvent, webEntry.isBulkOnApprove(),
-									user.getUserId());
+									user.getId());
 							if (!value.contains("Error")) {
 								target = IConstants.SUCCESS_KEY;
 								logger.info("message.batchSuccess");
@@ -1608,12 +1604,10 @@ public class SmsServiceImpl implements SmsService {
 							int generated_id = 0;
 							if (filename != null) {
 
-								generated_id = scheduleEntryRepository
-										.save(new ScheduleEntry(String.valueOf(user.getUserId()),
-												bulkSmsDTO.getDate() + " " + bulkSmsDTO.getTime(), bulkSmsDTO.getGmt(),
-												bulkSmsDTO.getTimestart(), IConstants.SERVER_ID, "false", filename,
-												bulkSmsDTO.getRepeat(), bulkSmsDTO.getReqType(), null))
-										.getId();
+								generated_id = scheduleEntryRepository.save(new ScheduleEntry(user.getSystemId(),
+										bulkSmsDTO.getDate() + " " + bulkSmsDTO.getTime(), bulkSmsDTO.getGmt(),
+										bulkSmsDTO.getTimestart(), IConstants.SERVER_ID, "false", filename,
+										bulkSmsDTO.getRepeat(), bulkSmsDTO.getReqType(), null)).getId();
 								if (generated_id > 0) {
 									String today = getTodayDateFormat();
 									if (today.equalsIgnoreCase(bulkSmsDTO.getDate().trim())) {
@@ -1638,11 +1632,10 @@ public class SmsServiceImpl implements SmsService {
 								logger.error("error.duplicateSchedule");
 							}
 						} else {
-							WebMasterEntry webEntry = webMasterEntryRepository
-									.findByUserId(user.getUserId().intValue());
+							WebMasterEntry webEntry = webMasterEntryRepository.findByUserId(user.getId());
 
 							String value = sendBulkSms(bulkSmsDTO, progressEvent, webEntry.isBulkOnApprove(),
-									user.getUserId());
+									user.getId());
 							if (!value.contains("Error")) {
 								target = IConstants.SUCCESS_KEY;
 								logger.info("message.batchSuccess");
@@ -1734,7 +1727,7 @@ public class SmsServiceImpl implements SmsService {
 	}
 
 	public String sendBulkSms(BulkSmsDTO bulkSmsDTO, ProgressEvent progressEvent, boolean waitForApprove,
-			Long System_Id) {
+			int System_Id) {
 
 		String response = "";
 		try {
@@ -1749,7 +1742,7 @@ public class SmsServiceImpl implements SmsService {
 		return response;
 	}
 
-	public String sendBulkMsg(BulkSmsDTO bulkSmsDTO, boolean waitForApprove, Long System_Id) {
+	public String sendBulkMsg(BulkSmsDTO bulkSmsDTO, boolean waitForApprove, int System_Id) {
 
 		logger.info(bulkSmsDTO.getSystemId() + " " + bulkSmsDTO.getReqType() + " isAlert: " + bulkSmsDTO.isAlert()
 				+ " Number: " + bulkSmsDTO.getDestinationNumber());
@@ -1759,7 +1752,7 @@ public class SmsServiceImpl implements SmsService {
 		int ston = 5;
 		int snpi = 0;
 		String ret = "";
-		int user_id = System_Id.intValue();
+		int user_id = System_Id;
 		WebMasterEntry webEntry = webMasterEntryRepository.findByUserId(user_id);
 		if (bulkSmsDTO.getFrom().compareToIgnoreCase("Mobile") == 0) {
 			ston = 1;
@@ -2103,10 +2096,11 @@ public class SmsServiceImpl implements SmsService {
 	@Override
 	public BulkResponse sendBulkCustome(BulkRequest bulkRequest, String username, MultipartFile destinationNumberFile,
 			HttpSession session) {
-		Optional<User> userOptional = userRepository.findBySystemId(username);
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
 		if (userOptional.isPresent()) {
-			User user = userOptional.get();
-			if (!Access.isAuthorizedAll(user.getRoles())) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -2120,26 +2114,13 @@ public class SmsServiceImpl implements SmsService {
 		ArrayList destinationList = null;
 		List<String> temp_number_list = new ArrayList<String>();
 		ProgressEvent progressEvent = new ProgressEvent(session);
-		userOptional = userRepository.findBySystemId(username);
-		User user = null;
-		if (userOptional.isPresent()) {
-			user = userOptional.get();
-		}
 		boolean allowDuplicate = false;
 		Map errors = new HashMap();
 		BulkResponse bulkResponse = new BulkResponse();
-		String bulkSessionId = user.getUserId() + "_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
+		String bulkSessionId = user.getId() + "_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
 		WebMasterEntry webEntry = null;
 		BulkSmsDTO bulkSmsDTO = new BulkSmsDTO();
-		UserEntry userEntry = null;
 		try {
-
-			Optional<UserEntry> userEntryOptional = userEntryRepository.findBySystemId(user.getSystemId());
-
-			if (userEntryOptional.isPresent()) {
-				userEntry = userEntryOptional.get();
-			}
-
 			bulkSmsDTO.setSenderId(bulkRequest.getSenderId());
 			bulkSmsDTO.setSton(bulkRequest.getSton());
 			bulkSmsDTO.setSnpi(bulkRequest.getSnpi());
@@ -2236,13 +2217,13 @@ public class SmsServiceImpl implements SmsService {
 		}
 		if (!excludeSet.isEmpty()) {
 			try {
-				writeExcludeNumbers(String.valueOf(user.getUserId()), String.join("\n", excludeSet));
+				writeExcludeNumbers(String.valueOf(user.getId()), String.join("\n", excludeSet));
 			} catch (Exception ex) {
 				System.out.println(bulkSessionId + " " + ex);
 			}
 		} else {
 			try {
-				removeExcludeNumbers(String.valueOf(user.getUserId()));
+				removeExcludeNumbers(String.valueOf(user.getId()));
 			} catch (Exception ex) {
 				System.out.println(bulkSessionId + " " + ex);
 			}
@@ -2258,9 +2239,8 @@ public class SmsServiceImpl implements SmsService {
 		try {
 			// String userExparyDate = (userSessionObject.getExpiry()).toString();
 			// String adminId = userSessionObject.getMasterId();
-			Optional<BalanceEntry> masterBalanceOptional = balanceEntryRepository
-					.findByUserId(Integer.parseInt(userEntry.getMasterId()));
-			Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findByUserId(user.getUserId().intValue());
+			Optional<BalanceEntry> masterBalanceOptional = balanceEntryRepository.findBySystemId(user.getMasterId());
+			Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findBySystemId(user.getSystemId());
 			System.out.println(balanceOptional.get());
 			String wallet_flag = null;
 			double wallet = 0;
@@ -2523,7 +2503,7 @@ public class SmsServiceImpl implements SmsService {
 							list = new ArrayList<String>();
 						}
 						list.add(msg);
-						webEntry = webMasterEntryRepository.findByUserId(user.getUserId().intValue());
+						webEntry = webMasterEntryRepository.findByUserId(user.getId());
 						if (webEntry.isPrefixApply()) {
 							if (destNumber.length() < webEntry.getNumberLength()) {
 								System.out.println(destNumber + " length is less then " + webEntry.getNumberLength());
@@ -2683,14 +2663,17 @@ public class SmsServiceImpl implements SmsService {
 					if (wallet_flag.equalsIgnoreCase("yes")) {
 						bulkSmsDTO.setUserMode("wallet");
 
-						totalcost = routeService.calculateRoutingCost(user.getUserId().intValue(), msgLengthTable);
+						totalcost = routeService.calculateRoutingCost(user.getId(), msgLengthTable);
 						logger.info(bulkSessionId + " Balance:" + wallet + " Calculated Cost: " + totalcost);
 						boolean amount = false;
-						if (userEntry.isAdminDepend()) {
-							adminCost = routeService.calculateRoutingCost(Integer.parseInt(userEntry.getMasterId()),
-									msgLengthTable);
-							logger.info(bulkSessionId + " Admin[" + Integer.parseInt(userEntry.getMasterId())
-									+ "] Balance:" + adminWallet + " Calculated Cost: " + adminCost);
+						if (user.isAdminDepend()) {
+							Optional<UserEntry> masterOptional = userEntryRepository.findBySystemId(user.getMasterId());
+							if (!masterOptional.isPresent()) {
+								throw new NotFoundException("User not found with the provided username.");
+							}
+							adminCost = routeService.calculateRoutingCost(masterOptional.get().getId(), msgLengthTable);
+							logger.info(bulkSessionId + " Admin[" + masterOptional.get().getId() + "] Balance:"
+									+ adminWallet + " Calculated Cost: " + adminCost);
 							if ((adminWallet >= adminCost)) {
 								if (wallet >= totalcost) {
 									adminWallet = adminWallet - adminCost;
@@ -2706,7 +2689,7 @@ public class SmsServiceImpl implements SmsService {
 							} else {
 								// Insufficient Admin balance
 								logger.info(bulkSessionId + " <-- Insufficient Admin("
-										+ Integer.parseInt(userEntry.getMasterId()) + ") Balance --> " + adminWallet);
+										+ Integer.parseInt(user.getMasterId()) + ") Balance --> " + adminWallet);
 							}
 						} else {
 							if (wallet >= totalcost) {
@@ -2760,7 +2743,7 @@ public class SmsServiceImpl implements SmsService {
 								}
 							} else {
 								String value = sendBulkSms(bulkSmsDTO, progressEvent, webEntry.isBulkOnApprove(),
-										user.getUserId());
+										user.getId());
 								if (!value.contains("Error")) {
 									target = IConstants.SUCCESS_KEY;
 									logger.info("message.batchSuccess");
@@ -2792,7 +2775,7 @@ public class SmsServiceImpl implements SmsService {
 						long credits = balanceEntry.getCredits();
 						long adminCredit = masterbalance.getCredits();
 						boolean amount = false;
-						if (userEntry.isAdminDepend()) {
+						if (user.isAdminDepend()) {
 							if (adminCredit >= totalMsg) {
 								if (credits >= totalMsg) {
 									adminCredit = adminCredit - totalMsg;
@@ -2803,11 +2786,11 @@ public class SmsServiceImpl implements SmsService {
 									balanceEntryRepository.save(balanceEntry);
 									balanceEntryRepository.save(masterbalance);
 								} else {
-									System.out.println(user.getUserId() + " <-- Insufficient Credits -->");
+									System.out.println(user.getId() + " <-- Insufficient Credits -->");
 								}
 							} else {
-								System.out.println(user.getUserId() + " <-- Insufficient Admin("
-										+ userEntry.getMasterId() + ") Credits -->");
+								System.out.println(user.getId() + " <-- Insufficient Admin(" + user.getMasterId()
+										+ ") Credits -->");
 							}
 						} else {
 							if (credits >= totalMsg) {
@@ -2816,7 +2799,7 @@ public class SmsServiceImpl implements SmsService {
 								balanceEntryRepository.save(balanceEntry);
 								amount = true;
 							} else {
-								System.out.println(user.getUserId() + " <-- Insufficient Credits -->");
+								System.out.println(user.getId() + " <-- Insufficient Credits -->");
 							}
 						}
 						if (amount) {
@@ -2857,7 +2840,7 @@ public class SmsServiceImpl implements SmsService {
 								}
 							} else {
 								String value = sendBulkSms(bulkSmsDTO, progressEvent, webEntry.isBulkOnApprove(),
-										user.getUserId());
+										user.getId());
 								if (!value.contains("Error")) {
 									target = IConstants.SUCCESS_KEY;
 									logger.info("message.batchSuccess");

@@ -150,7 +150,7 @@ public class AuthController {
 			return ResponseEntity.ok(jwtResponse);
 
 		} catch (AuthenticationException e) {
-			log.error("Authentication failed for user: {}", loginRequest.getUsername(), e);
+			log.error("Authentication failed for user: {}", loginRequest.getUsername(), e.getMessage());
 			System.out.println("error authentication........");
 			throw new AuthenticationExceptionFailed("Authentication failed" + e);
 
@@ -262,7 +262,7 @@ public class AuthController {
 		if (optionalOtp.isPresent()) {
 			OTPEntry otpEntry = optionalOtp.get();
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-			LocalTime localTime = LocalTime.parse(otpEntry.getExpiresOn(), formatter);
+			LocalTime localTime = LocalTime.parse(otpEntry.getExpiresOn().subSequence(0, 8), formatter);
 			if (String.valueOf(otpEntry.getOneTimePass()).equals(otp)) {
 				if (localTime.isAfter(LocalTime.now().minusMinutes(2))) {
 					// OTP validation successful
@@ -358,11 +358,22 @@ public class AuthController {
 
 				// Set OTP Secret Key for User
 				UserEntry user = userOptional.get();
-				OTPEntry OTP = new OTPEntry();
-				OTP.setOneTimePass(Integer.parseInt(generateOTP));
-				OTP.setExpiresOn(LocalTime.now() + "");
-				OTP.setSystemId(username);
-				otpEntryRepository.save(OTP);
+				Optional<OTPEntry> optionalOTP = otpEntryRepository.findBySystemId(username);
+				if (!optionalOTP.isPresent()) {
+					OTPEntry OTP = new OTPEntry();
+					OTP.setOneTimePass(Integer.parseInt(generateOTP));
+					OTP.setExpiresOn(LocalTime.now() + "");
+					OTP.setSystemId(username);
+					otpEntryRepository.save(OTP);
+				} else {
+
+					OTPEntry otpEntry = optionalOTP.get();
+					otpEntry.setOneTimePass(Integer.parseInt(generateOTP));
+					otpEntry.setExpiresOn(LocalTime.now() + "");
+					otpEntry.setSystemId(username);
+					otpEntryRepository.save(otpEntry);
+				}
+
 				ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
 						.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
 				// Send Email with OTP
@@ -392,15 +403,16 @@ public class AuthController {
 		Optional<UserEntry> optionalUser = userEntryRepository.findBySystemId(username);
 
 		if (optionalUser.isPresent()) {
-			UserEntry user = optionalUser.get();
-			String currentPassword = user.getPassword();
+			UserEntry userEntry = optionalUser.get();
+			String currentPassword = userEntry.getPassword();
 
 			if (encoder.matches(passwordUpdateRequest.getOldPassword(), currentPassword)) {
 				// Valid old password, update the password
-				user.setPassword(encoder.encode(passwordUpdateRequest.getNewPassword()));
-				ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
+				String newPassword = encoder.encode(passwordUpdateRequest.getNewPassword());
+				userEntry.setPassword(newPassword);
+				userEntryRepository.save(userEntry);
+				ProfessionEntry professionEntry = professionEntryRepository.findById(userEntry.getId())
 						.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
-				userEntryRepository.save(user);
 				if (EmailValidator.isEmailValid(professionEntry.getDomainEmail())) {
 					emailSender.sendEmail(professionEntry.getDomainEmail(), Constant.PASSWORD_UPDATE_SUBJECT,
 							Constant.TEMPLATE_PATH,

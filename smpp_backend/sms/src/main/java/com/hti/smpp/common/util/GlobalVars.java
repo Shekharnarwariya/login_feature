@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.hti.smpp.common.sms.util;
+package com.hti.smpp.common.util;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,7 +18,7 @@ import com.hti.smpp.common.dto.BatchObject;
 import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.route.dto.HlrRouteEntry;
 import com.hti.smpp.common.route.dto.OptionalRouteEntry;
-import com.hti.smpp.common.sms.session.SessionHandler;
+import com.hti.smpp.common.session.SessionHandler;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 

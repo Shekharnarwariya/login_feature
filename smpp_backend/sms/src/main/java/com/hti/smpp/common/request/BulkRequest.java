@@ -1,4 +1,4 @@
-package com.hti.smpp.common.sms.request;
+package com.hti.smpp.common.request;
 
 public class BulkRequest {
 	private String senderId;

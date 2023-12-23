@@ -1,4 +1,4 @@
-package com.hti.smpp.common.sms.session;
+package com.hti.smpp.common.session;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -12,8 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import com.hti.smpp.common.sms.util.GlobalVars;
 import com.hti.smpp.common.user.dto.UserEntry;
+import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.logica.smpp.Connection;
 import com.logica.smpp.Data;

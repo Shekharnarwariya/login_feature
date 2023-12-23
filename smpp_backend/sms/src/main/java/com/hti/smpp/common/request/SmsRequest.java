@@ -1,4 +1,4 @@
-package com.hti.smpp.common.sms.request;
+package com.hti.smpp.common.request;
 
 import org.springframework.stereotype.Component;
 
@@ -10,7 +10,15 @@ public class SmsRequest {
 	private String message;
 	private String from;
 	private String destinationNumber;
-
+	private String repeat;
+	private boolean isSchedule;
+	private int charCount;
+	private int smsParts;
+	private int charLimit;
+	private String timestart;
+	private String peId;
+	private String templateId;
+	private String telemarketerId;
 	public String getSenderId() {
 		return senderId;
 	}

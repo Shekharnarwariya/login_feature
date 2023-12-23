@@ -1,5 +1,5 @@
 
-package com.hti.smpp.common.sms.session;
+package com.hti.smpp.common.session;
 
 import org.springframework.stereotype.Component;
 

@@ -73,12 +73,6 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
-
-		<dependency>
-			<groupId>com.hti.smpp.common</groupId>
-			<artifactId>sms</artifactId>
-			<version>1.0</version>
-		</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>

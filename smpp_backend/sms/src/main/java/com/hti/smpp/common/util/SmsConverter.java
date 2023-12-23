@@ -1,4 +1,4 @@
-package com.hti.smpp.common.sms.util;
+package com.hti.smpp.common.util;
 
 import java.io.File;
 import java.io.FileInputStream;
