@@ -19,9 +19,6 @@ import org.springframework.stereotype.Service;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
-import com.hti.smpp.common.login.dto.Role;
-import com.hti.smpp.common.login.dto.User;
-import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.request.SalesEntryForm;
 import com.hti.smpp.common.response.ViewSalesEntry;
 import com.hti.smpp.common.sales.dto.SalesEntry;
@@ -40,10 +37,7 @@ public class SalesServiceImpl implements SalesService {
 
 	@Autowired
 	private SalesRepository salesRepository;
-
-	@Autowired
-	private UserRepository userLoginRepo;
-
+	
 	@Autowired
 	private UserEntryRepository userRepository;
 
@@ -62,30 +56,23 @@ public class SalesServiceImpl implements SalesService {
 	@Override
 	public ResponseEntity<String> save(SalesEntryForm salesEntryForm, String username) {
 		
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		Set<Role> role = new HashSet<>();
-		if (user.isPresent()) {
-			if(!Access.isAuthorizedAll(user.get().getRoles())) {
-				throw new UnauthorizedException("User Does'nt have Required Access.");
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-			role = user.get().getRoles();
 		} else {
-			throw new NotFoundException("User not found");
+			throw new NotFoundException("User not found with the provided username.");
 		}
-		
 		String target = IConstants.FAILURE_KEY;
 		SalesEntry entry = new SalesEntry();
-		// Finding the user by system ID
-		String systemId = null;
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found");
-		}
 
+		String systemId = user.getSystemId();
+	
 		logger.info("Sales User [{}-{}] Add Requested By {} [{}]", salesEntryForm.getUsername(),
-				salesEntryForm.getRole(), systemId, role);
+				salesEntryForm.getRole(), systemId, user.getRole());
 		try {
 			BeanUtils.copyProperties(salesEntryForm, entry);
 			if (GlobalVars.UserMapping.containsKey(entry.getUsername())) {
@@ -127,26 +114,21 @@ public class SalesServiceImpl implements SalesService {
 	
 	@Override
 	public ResponseEntity<String> update(SalesEntryForm form, String username) {
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		Set<Role> role = new HashSet<>();
-		if (user.isPresent()) {
-			if(!Access.isAuthorizedAll(user.get().getRoles())) {
-				throw new UnauthorizedException("User Does'nt have Required Access.");
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-			role = user.get().getRoles();
 		} else {
-			throw new NotFoundException("User not found");
+			throw new NotFoundException("User not found with the provided username.");
 		}
 		String target = IConstants.FAILURE_KEY;
 		// Finding the user by system ID
-		String systemId = null;
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found");
-		}
-		logger.info("Executive [{}] Update Requested By {} [{}]", form.getId(), systemId, role);
+		String systemId = user.getSystemId();
+		
+		logger.info("Executive [{}] Update Requested By {} [{}]", form.getId(), systemId, user.getRole());
 		SalesEntry seller = new SalesEntry();
 		try {
 			BeanUtils.copyProperties(form, seller);
@@ -186,13 +168,15 @@ public class SalesServiceImpl implements SalesService {
 	
 	@Override
 	public ResponseEntity<String> delete(int id, String username) {
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		if (user.isPresent()) {
-			if(!Access.isAuthorizedAll(user.get().getRoles())) {
-				throw new UnauthorizedException("User Does'nt have Required Access.");
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
-			throw new NotFoundException("User not found");
+			throw new NotFoundException("User not found with the provided username.");
 		}
 		
 		logger.info("Delete Requested for Sale ID: " + id);
@@ -292,43 +276,27 @@ public class SalesServiceImpl implements SalesService {
 	@Override
 	public ResponseEntity<Collection<SalesEntry>> listSalesUsers(String username) {
 		
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		Set<Role> role = new HashSet<>();
-		if (user.isPresent()) {
-			if(!Access.isAuthorizedAll(user.get().getRoles())) {
-				throw new UnauthorizedException("User Does'nt have Required Access.");
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-			role = user.get().getRoles();
 		} else {
-			throw new NotFoundException("User not found");
+			throw new NotFoundException("User not found with the provided username.");
 		}
 		
 		String target = IConstants.FAILURE_KEY;
-		String masterId = null;
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			masterId = userOptional.get().getMasterId();
-		} else {
-			throw new NotFoundException("UserEntry not found");
-		}
-		logger.info("Executive List Requested By {} [{}]", masterId, role);
+		String masterId = user.getMasterId();
+		logger.info("Executive List Requested By {} [{}]", masterId, user.getRole());
 		SalesEntry salesEntry = this.salesRepository.findByMasterId(masterId);
 		Collection<SalesEntry> salesList = null;
 		try {
-			if (Access.isAuthorizedSuperAdminAndSystem(role)) {
-				try {
+			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 					salesList = list().values();
-				} catch (Exception e) {
-					logger.error(e.getLocalizedMessage());
-					throw new InternalServerException(e.getLocalizedMessage());
-				}
-			} else if (salesEntry.getRole().equalsIgnoreCase("manager") || Access.isAuthorizedAdmin(role)) {
-				try {
+			} else if (salesEntry.getRole().equalsIgnoreCase("manager") || Access.isAuthorized(user.getRole(),"isAuthorizedAdmin")) {
 					salesList = listSellersUnderManager(masterId, "seller").values();
-				} catch (Exception e) {
-					logger.error(e.getLocalizedMessage());
-					throw new InternalServerException(e.getLocalizedMessage());
-				}
 			}
 
 			if (salesList != null && !salesList.isEmpty()) {
@@ -336,8 +304,8 @@ public class SalesServiceImpl implements SalesService {
 				logger.info("Executives Under [" + masterId + "] : " + salesList.size());
 			} else {
 				target = IConstants.FAILURE_KEY;
-				logger.error("No Executive Found Under " + masterId + "[" + role + "]" + "|" + target);
-				throw new NotFoundException("No Executive Found Under " + masterId + "[" + role + "]" + "|" + target);
+				logger.error("No Executive Found Under " + masterId + "[" + user.getRole() + "]" + "|" + target);
+				throw new NotFoundException("No Executive Found Under " + masterId + "[" + user.getRole() + "]" + "|" + target);
 			}
 
 		} catch (NotFoundException e) {
@@ -368,26 +336,20 @@ public class SalesServiceImpl implements SalesService {
 	
 	@Override
 	public ResponseEntity<?> viewSalesEntry(int id, String username) {
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		Set<Role> role = new HashSet<>();
-		if (user.isPresent()) {
-			if(!Access.isAuthorizedSuperAdminAndSystem(user.get().getRoles())) {
-				throw new UnauthorizedException("User Does'nt have Required Access.");
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-			role = user.get().getRoles();
 		} else {
-			throw new NotFoundException("User not found");
+			throw new NotFoundException("User not found with the provided username.");
 		}
 		String target = IConstants.FAILURE_KEY;
 		// Finding the user by system ID
-		String systemId = null;
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found");
-		}
-		logger.info("Executive[" + id + "] Details Requested By " + systemId + "[" + role + "]");
+		String systemId = user.getSystemId();
+		logger.info("Executive[" + id + "] Details Requested By " + systemId + "[" + user.getRole() + "]");
 		ViewSalesEntry response = new ViewSalesEntry();
 		try {
 			SalesEntry seller = null;
@@ -400,7 +362,7 @@ public class SalesServiceImpl implements SalesService {
 			}
 			logger.info("Requested: " + seller);
 			if (seller != null) {
-				if (Access.isAuthorizedSuperAdminAndSystem(role)) {
+				if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 					Collection<SalesEntry> list = null;
 					try {
 						list = list("manager").values();
@@ -441,31 +403,25 @@ public class SalesServiceImpl implements SalesService {
 	
 	@Override
 	public ResponseEntity<Collection<SalesEntry>> setupSalesEntry(String username) {
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		Set<Role> role = new HashSet<>();
-		if (user.isPresent()) {
-			if(!Access.isAuthorizedAll(user.get().getRoles())) {
-				throw new UnauthorizedException("User Does'nt have Required Access.");
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-			role = user.get().getRoles();
 		} else {
-			throw new NotFoundException("User not found");
+			throw new NotFoundException("User not found with the provided username.");
 		}
 		String target = IConstants.SUCCESS_KEY;
 		// Finding the user by system ID
-		String systemId = null;
-		String masterId = null;
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-			masterId = userOptional.get().getMasterId();
-		} else {
-			throw new NotFoundException("UserEntry not found");
-		}
-		logger.info("Sales User Setup Requested By " + systemId + "[" + role + "]");
+		String systemId = user.getSystemId();
+		String masterId = user.getMasterId();
+		
+		logger.info("Sales User Setup Requested By " + systemId + "[" + user.getRole() + "]");
 		SalesEntry salesEntry = this.salesRepository.findByMasterId(masterId);
 		Collection<SalesEntry> list = null;
-		if (Access.isAuthorizedSuperAdminAndSystem(role)) {
+		if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 			try {
 				list = list("manager").values();
 			} catch (Exception e) {
@@ -473,7 +429,7 @@ public class SalesServiceImpl implements SalesService {
 				throw new NotFoundException(e.getLocalizedMessage());
 			}
 		} else {
-			if (salesEntry.getRole().equalsIgnoreCase("manager") || Access.isAuthorizedAdmin(role)) {
+			if (salesEntry.getRole().equalsIgnoreCase("manager") || Access.isAuthorized(user.getRole(),"isAuthorizedAdmin")) {
 				logger.info("Authorized User :" + systemId);
 			} else {
 				target = "invalidRequest";

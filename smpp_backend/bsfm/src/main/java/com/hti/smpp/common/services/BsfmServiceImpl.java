@@ -35,8 +35,6 @@ import com.hti.smpp.common.contacts.repository.GroupEntryRepository;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
-import com.hti.smpp.common.login.dto.User;
-import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.network.repository.NetworkEntryRepository;
 import com.hti.smpp.common.request.BsfmFilterFrom;
@@ -45,6 +43,7 @@ import com.hti.smpp.common.response.DeleteProfileResponse;
 import com.hti.smpp.common.smsc.dto.SmscEntry;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
+import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMenuAccessEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.Constants;
@@ -70,34 +69,35 @@ public class BsfmServiceImpl implements BsfmService {
 
 	@Autowired
 	private GroupEntryRepository groupEntryRepository;
-
+	
 	@Autowired
-	private UserRepository loginRepository;
+	private UserEntryRepository userRepository;
 
 	@Override
 	@Transactional
 	public String addBsfmProfile(BsfmFilterFrom bsfmForm, String username) throws Exception {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		User user = null;
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystemAndAdmin(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystemAndAdmin")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
+	
 		String target = IConstants.FAILURE_KEY;
 		String systemid = user.getSystemId();
-		logger.info(systemid + "[" + user.getRoles() + "] Add Spam Profile: " + bsfmForm.getProfilename());
+		logger.info(systemid + "[" + user.getRole() + "] Add Spam Profile: " + bsfmForm.getProfilename());
 		Bsfm bdto = new Bsfm();
 		BeanUtils.copyProperties(bsfmForm, bdto);
 		boolean proceed = true;
-		if (Access.isAuthorizedAdmin(user.getRoles())) {
+		if (Access.isAuthorized(user.getRole(),"isAuthorizedAdmin")) {
 			if (bsfmForm.getUsername() != null && bsfmForm.getUsername().length > 0) {
 				bdto.setUsername(String.join(",", bsfmForm.getUsername()));
 			} else {
-				logger.error(systemid + "[" + user.getRoles() + "]  No User Selected.");
+				logger.error(systemid + "[" + user.getRole() + "]  No User Selected.");
 				proceed = false;
 			}
 		} else {
@@ -139,7 +139,8 @@ public class BsfmServiceImpl implements BsfmService {
 					try {
 						encoded_content += UTF16(content_token) + ",";
 					} catch (Exception e) {
-						e.printStackTrace();
+						logger.error(e.toString());
+						throw new InternalServerException(e.getLocalizedMessage());
 					}
 				}
 				if (encoded_content.length() > 0) {
@@ -234,17 +235,18 @@ public class BsfmServiceImpl implements BsfmService {
 
 	@Override
 	public BSFMResponse checked(String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		User user = null;
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		logger.info("Checked Request By username: "+username+" userId: "+user.getUserId());
+
+		logger.info("Checked Request By username: "+username+" userId: "+user.getId());
 		BSFMResponse bSFMResponse = new BSFMResponse();
 		String systemId = user.getSystemId();
 		String target = IConstants.FAILURE_KEY;
@@ -267,8 +269,8 @@ public class BsfmServiceImpl implements BsfmService {
 		bSFMResponse.setNetworkmap(networkmap);
 		bSFMResponse.setOperatormap(operatormap);
 		target = IConstants.SUCCESS_KEY;
-		if (Access.isAuthorizedAdmin(user.getRoles())
-				&& menuAccessEntryRepository.findById(user.getUserId().intValue()).get().isBsfm()) {
+		if (Access.isAuthorized(user.getRole(),"isAuthorizedAdmin")
+				&& menuAccessEntryRepository.findById(user.getId()).get().isBsfm()) {
 			Collection<String> values = listNames(systemId).values();
 			bSFMResponse.setSmscList((Map<Integer, String>) values);
 			List<String> users = new ArrayList<String>(listUsersUnderMaster(systemId).values());
@@ -373,11 +375,11 @@ public class BsfmServiceImpl implements BsfmService {
 	@Override
 	public DeleteProfileResponse deleteProfile(String username, int id) {
 		DeleteProfileResponse deleteProfileResponse = new DeleteProfileResponse();
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		User user = null;
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystemAndAdmin(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystemAndAdmin")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -385,7 +387,7 @@ public class BsfmServiceImpl implements BsfmService {
 		}
 		String target = IConstants.FAILURE_KEY;
 		String systemid = user.getSystemId();
-		logger.info(user.getRoles() + " Edit Profile Request: " + id);
+		logger.info(user.getRole() + " Edit Profile Request: " + id);
 		try {
 			Optional<Bsfm> bsfmOptional = bsfmRepo.findById(id);
 			Bsfm bsfm = null;
@@ -398,7 +400,7 @@ public class BsfmServiceImpl implements BsfmService {
 				}
 				List<String> underUserList = null;
 				Collection<String> smscList = null;
-				if (Access.isAuthorizedAdmin(user.getRoles())) {
+				if (Access.isAuthorized(user.getRole(),"isAuthorizedAdmin")) {
 					smscList = listNames(systemid).values();
 					underUserList = new ArrayList<String>(listUsersUnderMaster(systemid).values());
 					Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject()
@@ -634,18 +636,20 @@ public class BsfmServiceImpl implements BsfmService {
 
 	@Override
 	public List<Bsfm> showBsfmProfile(String username) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-
-			if (!Access.isAuthorizedSuperAdminAndSystemAndAdmin(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystemAndAdmin")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 
-			if (menuAccessEntryRepository.findById(user.getUserId().intValue()).get().isBsfm()) {
+			if (menuAccessEntryRepository.findById(user.getId()).get().isBsfm()) {
 				List<Bsfm> list;
-				if (Access.isAuthorizedAdmin(user.getRoles())) {
+				if (Access.isAuthorized(user.getRole(),"isAuthorizedAdmin")) {
 					list = bsfmRepo.findByMasterIdOrderByPriority(user.getSystemId());
 				} else {
 					list = bsfmRepo.findByMasterIdOrderByPriority(null);
@@ -660,20 +664,17 @@ public class BsfmServiceImpl implements BsfmService {
 			} else {
 				throw new InternalServerException("Invalid request for user without Bsfm access.");
 			}
-		} else {
-			throw new NotFoundException("User not found with the provided username.");
-		}
 		return Collections.emptyList(); // Return an empty list if no data is found
 	}
 
 	@Override
 	public String updateBsfmProfil(BsfmFilterFrom bsfmForm, String username) {
 
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		User user = null;
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystemAndAdmin(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystemAndAdmin")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -681,15 +682,15 @@ public class BsfmServiceImpl implements BsfmService {
 		}
 		String target = IConstants.FAILURE_KEY;
 		String systemid = user.getSystemId();
-		logger.info(systemid + "[" + user.getRoles() + "] Update Spam Profile: " + bsfmForm.getProfilename());
+		logger.info(systemid + "[" + user.getRole() + "] Update Spam Profile: " + bsfmForm.getProfilename());
 		Bsfm bdto = new Bsfm();
 		BeanUtils.copyProperties(bsfmForm, bdto);
 		boolean proceed = true;
-		if (Access.isAuthorizedAdmin(user.getRoles())) {
+		if (Access.isAuthorized(user.getRole(),"isAuthorizedAdmin")) {
 			if (bsfmForm.getUsername() != null && bsfmForm.getUsername().length > 0) {
 				bdto.setUsername(String.join(",", bsfmForm.getUsername()));
 			} else {
-				logger.error(systemid + "[" + user.getRoles() + "]  No User Selected.");
+				logger.error(systemid + "[" + user.getRole() + "]  No User Selected.");
 				proceed = false;
 			}
 		} else {
@@ -716,7 +717,7 @@ public class BsfmServiceImpl implements BsfmService {
 					try {
 						encoded_content += UTF16(content_token) + ",";
 					} catch (Exception e) {
-						logger.error(systemid + "[" + user.getRoles() + "]  [" + content_token + "]", e);
+						logger.error(systemid + "[" + user.getRole() + "]  [" + content_token + "]", e);
 						logger.error("An error occured in line {}: {}", Thread.currentThread().getStackTrace()[1].getLineNumber(), e.getMessage());
 						throw new InternalServerException("Error: "+e.getLocalizedMessage());
 					}
@@ -749,10 +750,12 @@ public class BsfmServiceImpl implements BsfmService {
 					MultiUtility.changeFlag(Constants.BSFM_FLAG_FILE, "707");
 				}
 			} else {
-				logger.error("Failed to update Spam Profile: {}", bsfmForm.getProfilename());      //
+				logger.error("Failed to update Spam Profile: {}", bsfmForm.getProfilename()); 
+				throw new InternalServerException("Failed to update Spam Profile: "+bsfmForm.getProfilename());//
 			}
 		} else {
-			logger.error("No user selected for the update.");             //
+			logger.error("No user selected for the update.");  
+			throw new InternalServerException("No user selected for the update.");//
 		}
 		return target;
 	}
@@ -769,17 +772,17 @@ public class BsfmServiceImpl implements BsfmService {
 
 	@Override
 	public String delete(String username, BsfmFilterFrom bsfmFilterFrom) {
-		String target = IConstants.FAILURE_KEY;
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		User user = null;
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystemAndAdmin(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystemAndAdmin")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
+		String target = IConstants.FAILURE_KEY;
 		logger.info("Delete request by username: "+username);
 		Bsfm bdto = new Bsfm();
 		BeanUtils.copyProperties(bsfmFilterFrom, bdto);
@@ -816,11 +819,11 @@ public class BsfmServiceImpl implements BsfmService {
 
 	@Override
 	public String updateBsfmProfileFlag(String username, BsfmFilterFrom filterFrom) {
-		Optional<User> optionalUser = loginRepository.findBySystemId(username);
-		User user = null;
-		if (optionalUser.isPresent()) {
-			user = optionalUser.get();
-			if (!Access.isAuthorizedSuperAdminAndSystemAndAdmin(user.getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystemAndAdmin")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {

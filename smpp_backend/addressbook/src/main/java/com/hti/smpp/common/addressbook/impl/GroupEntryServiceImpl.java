@@ -26,9 +26,6 @@ import com.hti.smpp.common.contacts.repository.GroupEntryDTORepository;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
-import com.hti.smpp.common.login.dto.Role;
-import com.hti.smpp.common.login.dto.User;
-import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.user.dto.MultiUserEntry;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
@@ -60,9 +57,6 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 	private WebMasterEntryRepository webMasterRepo;
 
 	@Autowired
-	private UserRepository userLoginRepo;
-
-	@Autowired
 	private GroupDataEntryRepository groupDataEntryRepository;
 
 	@Autowired
@@ -79,29 +73,20 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 	@Override
 	public ResponseEntity<?> saveGroupEntry(GroupEntryRequest form, String username) {
 
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		User getUser = null;
-		if (user.isPresent()) {
-			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-			getUser = user.get();
 		} else {
-			throw new NotFoundException("User not found.");
+			throw new NotFoundException("User not found with the provided username.");
 		}
 
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
-
-		Set<Role> role = user.get().getRoles();
-
-		logger.info(systemId + "[" + role + "]" + " Add Contact Group Request");
+		String systemId = user.getSystemId();
+	
+		logger.info(systemId + "[" + user.getRole() + "]" + " Add Contact Group Request");
 		String target = IConstants.FAILURE_KEY;
 		GroupEntryDTO entry = null;
 		int total = form.getName().length;
@@ -118,23 +103,17 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 					entry.setMasterId(systemId);
 					MultiUserEntry multiUserEntry = null;
 					try {
-						multiUserEntry = multiUserEntryRepository.findByUserId(getUser.getUserId().intValue());
-					} catch (NotFoundException e) {
-						logger.error(e.getLocalizedMessage());
-						throw new NotFoundException(e.getLocalizedMessage());
+						multiUserEntry = multiUserEntryRepository.findByUserId(user.getId());
 					} catch (Exception e) {
 						logger.error(e.getLocalizedMessage());
-						throw new InternalServerException(e.getLocalizedMessage());
+						throw new NotFoundException(e.getLocalizedMessage());
 					}
 					WebMasterEntry webEntry = null;
 					try {
-						webEntry = this.webMasterRepo.findByUserId(getUser.getUserId().intValue());
-					} catch (NotFoundException e) {
-						logger.error(e.getLocalizedMessage());
-						throw new NotFoundException(e.getLocalizedMessage());
+						webEntry = this.webMasterRepo.findByUserId(user.getId());
 					} catch (Exception e) {
 						logger.error(e.getLocalizedMessage());
-						throw new InternalServerException(e.getLocalizedMessage());
+						throw new NotFoundException(e.getLocalizedMessage());
 					}
 
 					// Check if multi-user access is enabled and the access name is not null
@@ -178,29 +157,21 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 	@Override
 	@Transactional
 	public ResponseEntity<?> modifyGroupEntryUpdate(GroupEntryRequest form, String username) {
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		Set<Role> role = new HashSet<>();
-		if (user.isPresent()) {
-			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-			role = user.get().getRoles();
 		} else {
-			throw new NotFoundException("User not found.");
+			throw new NotFoundException("User not found with the provided username.");
 		}
 		String target = IConstants.FAILURE_KEY;
 
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
-
+		String systemId = user.getSystemId();
 		GroupEntryDTO entry = null;
-		logger.info(systemId + "[" + role + "]" + " Modify Contact Group Request");
+		logger.info(systemId + "[" + user.getRole() + "]" + " Modify Contact Group Request");
 		List<GroupEntryDTO> list = new ArrayList<GroupEntryDTO>();
 		int[] id = form.getId();
 		String[] names = form.getName();
@@ -215,7 +186,7 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 						list.add(entry);
 						logger.info(entry.toString());
 					} else {
-						logger.info(systemId + "[" + role + "]" + " Invalid Group Name: " + names[i]);
+						logger.info(systemId + "[" + user.getRole() + "]" + " Invalid Group Name: " + names[i]);
 						continue;
 					}
 				}
@@ -282,30 +253,23 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 	@Transactional
 	public ResponseEntity<?> modifyGroupEntryDelete(GroupEntryRequest form, String username) {
 
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		Set<Role> role = new HashSet<>();
-		if (user.isPresent()) {
-			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-			role = user.get().getRoles();
 		} else {
-			throw new NotFoundException("User not found.");
+			throw new NotFoundException("User not found with the provided username.");
 		}
 
 		String target = IConstants.FAILURE_KEY;
 
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
+		String systemId = user.getSystemId();
 
 		GroupEntryDTO entry = null;
-		logger.info(systemId + "[" + role + "]" + " Remove Contact Group Request");
+		logger.info(systemId + "[" + user.getRole() + "]" + " Remove Contact Group Request");
 		List<GroupEntryDTO> list = new ArrayList<GroupEntryDTO>();
 		int[] id = form.getId();
 		String[] names = form.getName();
@@ -408,41 +372,32 @@ public class GroupEntryServiceImpl implements GroupEntryService {
  */
 	@Override
 	public ResponseEntity<?> listGroup(String purpose, String groupData, String username) {
-
-		String target = IConstants.FAILURE_KEY;
-		User user = null;
-		Optional<User> optionalUser = userLoginRepo.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			if (!Access.isAuthorizedAll(optionalUser.get().getRoles())) {
+		
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-			user = optionalUser.get();
-
 		} else {
-			logger.error("Error: Unable to found user with username: " + username);
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		Long id = user.getUserId();
+		
+		String target = IConstants.FAILURE_KEY;
 
 		WebMenuAccessEntry webEntry = null;
-		Optional<WebMenuAccessEntry> webMenu = this.webMenuRepo.findById((int) id.longValue());
+		Optional<WebMenuAccessEntry> webMenu = this.webMenuRepo.findById(user.getId());
 		if (webMenu.isPresent()) {
 			webEntry = webMenu.get();
 
 		} else {
-			logger.error("Error: Unable to found WebMenuAccessEntry with userId: " + id);
+			logger.error("Error: Unable to found WebMenuAccessEntry with userId: " + user.getId());
 			throw new NotFoundException("Unable to found WebMenuAccessEntry.");
 		}
 
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
-
+		String systemId = user.getSystemId();
+		
 		logger.info(systemId + " Setup Contacts Group Request");
 		boolean proceed = true;
 		ListGroupResponse response = new ListGroupResponse();
@@ -450,26 +405,26 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 
 			if (purpose != null) {
 				if (purpose.equalsIgnoreCase("sms")) {
-					if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles()) || webEntry.isMessaging()) {
+					if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem") || webEntry.isMessaging()) {
 					} else {
-						logger.error(systemId + "[" + user.getRoles() + "]" + " <- Invalid Request ->");
+						logger.error(systemId + "[" + user.getRole() + "]" + " <- Invalid Request ->");
 						target = "invalidRequest";
 						proceed = false;
 						throw new UnauthorizedException("User does not have the required roles for this operation.");
 					}
 				} else {
-					if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles()) || webEntry.isAddbook()) {
+					if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem") || webEntry.isAddbook()) {
 					} else {
-						logger.error(systemId + "[" + user.getRoles() + "]" + " <- Invalid Request ->");
+						logger.error(systemId + "[" + user.getRole() + "]" + " <- Invalid Request ->");
 						target = "invalidRequest";
 						proceed = false;
 						throw new UnauthorizedException("User does not have the required roles for this operation.");
 					}
 				}
 			} else {
-				if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles()) || webEntry.isAddbook()) {
+				if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem") || webEntry.isAddbook()) {
 				} else {
-					logger.error(systemId + "[" + user.getRoles() + "]" + " <- Invalid Request ->");
+					logger.error(systemId + "[" + user.getRole() + "]" + " <- Invalid Request ->");
 					target = "invalidRequest";
 					proceed = false;
 					throw new UnauthorizedException("User does not have the required roles for this operation.");

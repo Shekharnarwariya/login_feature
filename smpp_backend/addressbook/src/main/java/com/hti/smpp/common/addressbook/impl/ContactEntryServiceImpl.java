@@ -51,9 +51,6 @@ import com.hti.smpp.common.exception.JsonProcessingError;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.exception.WorkBookException;
-import com.hti.smpp.common.login.dto.Role;
-import com.hti.smpp.common.login.dto.User;
-import com.hti.smpp.common.login.repository.UserRepository;
 import com.hti.smpp.common.templates.dto.TemplatesDTO;
 import com.hti.smpp.common.templates.repository.TemplatesRepository;
 import com.hti.smpp.common.user.dto.UserEntry;
@@ -79,21 +76,20 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 	@Autowired
 	private TemplatesRepository tempRepository;
 
-	@Autowired
-	private UserRepository userLoginRepo;
+
 /**
  *  Saves contact entries based on user authorization and input data
  */
 	@Override
 	public ResponseEntity<?> saveContactEntry(String reqdata, MultipartFile file, String username) {
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		Set<Role> role = new HashSet<>();
-
-		if (user.isPresent()) {
-			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-			role = user.get().getRoles();
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
@@ -111,16 +107,8 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		}
 
 		String target = IConstants.FAILURE_KEY;
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found");
-		}
 
-		logger.info(systemId + "[" + role + "]" + " Adding Contact To Group: " + form.getGroupId());
+		logger.info(user.getSystemId() + "[" + user.getRole() + "]" + " Adding Contact To Group: " + form.getGroupId());
 		try {
 			int groupId = form.getGroupId();
 			String mode = form.getType();
@@ -261,12 +249,9 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 									entry_list.add(new ContactEntry(name, number, email, groupId));
 								}
 							}
-						} catch (WorkBookException ex) {
+						} catch (Exception ex) {
 							logger.error("Error: " + ex.getLocalizedMessage());
 							throw new WorkBookException("Error Processing Workbook: " + ex.getLocalizedMessage());
-						} catch (Exception e) {
-							logger.error("Error: " + e.getLocalizedMessage());
-							throw new InternalServerException("Error Message: " + e.getLocalizedMessage());
 						} finally {
 							if (workbook != null) {
 								try {
@@ -325,30 +310,23 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 	@Override
 	public ResponseEntity<?> contactForBulk(List<Long> numbers, int groupId, String username) {
 
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		Long masterId = null;
-		if (user.isPresent()) {
-			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-			masterId = user.get().getUserId();
 		} else {
-			throw new NotFoundException("User not found.");
+			throw new NotFoundException("User not found with the provided username.");
 		}
 
 		String target = IConstants.FAILURE_KEY;
 		String uploadedNumbers = "";
 		ContactForBulk response = new ContactForBulk();
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
 
-		logger.info("Proceed Contact For Bulk Request by " + systemId);
+		logger.info("Proceed Contact For Bulk Request by " + user.getSystemId());
 		try {
 			if (numbers != null && numbers.size() > 0) {
 				int number_count = 0;
@@ -361,13 +339,10 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 				response.setGroupId(groupId);
 				List<TemplatesDTO> templates = null;
 				try {
-					templates = this.tempRepository.findByMasterId(masterId);
-				} catch (NotFoundException ex) {
-					logger.error("Error: " + ex.getLocalizedMessage());
-					throw new NotFoundException("Templates not found: " + ex.getLocalizedMessage());
+					templates = this.tempRepository.findByMasterId(user.getSystemId());
 				} catch (Exception ex) {
 					logger.error("Error: " + ex.getLocalizedMessage());
-					throw new InternalServerException("Error: " + ex.getLocalizedMessage());
+					throw new NotFoundException("Templates not found: " + ex.getLocalizedMessage());
 				}
 				if (templates != null) {
 					response.setTemplates(templates);
@@ -380,33 +355,33 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 					if (webMasterEntry.getSenderId() != null && webMasterEntry.getSenderId().length() > 1) {
 						Set<String> senders = new HashSet<String>(
 								Arrays.asList(webMasterEntry.getSenderId().split(",")));
-						logger.info(systemId + " Configured Senders: " + senders);
+						logger.info(user.getSystemId() + " Configured Senders: " + senders);
 						response.setSenders(senders);
 					} else {
-						logger.error(systemId + " No Senders Configured");
+						logger.error(user.getSystemId() + " No Senders Configured");
 						throw new InternalServerException("No Senders Configured");
 					}
 				} else {
-					logger.error(systemId + " Webmaster Entry Not Found");
+					logger.error(user.getSystemId() + " Webmaster Entry Not Found");
 					throw new NotFoundException("Webmaster Entry Not Found");
 				}
 				target = IConstants.SUCCESS_KEY;
 			} else {
-				logger.error(systemId + " No Record Found For Selected Criteria");
+				logger.error(user.getSystemId() + " No Record Found For Selected Criteria");
 				throw new NotFoundException("No Record Found For Selected Criteria");
 			}
 			response.setStatus(target);
 		} catch (NotFoundException ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]");
-			logger.error(systemId, ex.getLocalizedMessage());
+			logger.error(user.getSystemId(), ex.getLocalizedMessage());
 			throw new NotFoundException("Exception: " + ex.getLocalizedMessage());
 		} catch (InternalServerException ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]");
-			logger.error(systemId, ex.getLocalizedMessage());
+			logger.error(user.getSystemId(), ex.getLocalizedMessage());
 			throw new InternalServerException("Process Error: " + ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]");
-			logger.error(systemId, ex.getLocalizedMessage());
+			logger.error(user.getSystemId(), ex.getLocalizedMessage());
 			throw new InternalServerException("Process Error: " + ex.getLocalizedMessage());
 		}
 
@@ -418,25 +393,20 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 	@Override
 	public ResponseEntity<List<ContactEntry>> viewSearchContact(List<Integer> ids, String username) {
 
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-
-		if (user.isPresent()) {
-			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
-
+		String systemId = user.getSystemId();
+	
 		logger.info("List Contact For Bulk Request by " + systemId);
 		List<ContactEntry> list = new ArrayList<ContactEntry>();
 		try {
@@ -476,25 +446,20 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 	@Override
 	public ResponseEntity<ContactForBulk> proceedSearchContact(List<Integer> ids, String username) {
 
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		Long masterId = null;
-		if (user.isPresent()) {
-			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-			masterId = user.get().getUserId();
 		} else {
-			throw new NotFoundException("Unable to found user.");
+			throw new NotFoundException("User not found with the provided username.");
 		}
 
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
+		String systemId = user.getSystemId();
+		
 		logger.info("Proceed Contact For Bulk Request by " + systemId);
 		String target = IConstants.FAILURE_KEY;
 		String uploadedNumbers = "";
@@ -527,7 +492,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 				response.setTotalNumbers(list.size());
 				List<TemplatesDTO> templates = null;
 				try {
-					templates = this.tempRepository.findByMasterId(masterId);
+					templates = this.tempRepository.findByMasterId(systemId);
 				} catch (Exception ex) {
 					logger.error("Error: " + ex.getLocalizedMessage());
 					throw new NotFoundException("Templates not found.");
@@ -578,30 +543,22 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 	@Transactional
 	public ResponseEntity<?> modifyContactUpdate(ContactEntryRequest form, String username) {
 
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		Set<Role> role = new HashSet<>();
-
-		if (user.isPresent()) {
-			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-			role = user.get().getRoles();
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 
 		String target = IConstants.FAILURE_KEY;
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
-
+		String systemId = user.getSystemId();
 		int groupId = form.getGroupId();
-		logger.info(systemId + "[" + role + "]" + " Modify Contact Request For GroupId: " + groupId);
+		logger.info(systemId + "[" + user.getRole() + "]" + " Modify Contact Request For GroupId: " + groupId);
 		ContactEntry entry = null;
 		List<ContactEntry> list = new ArrayList<ContactEntry>();
 		int[] id = form.getId();
@@ -661,13 +618,16 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 	@Override
 	@Transactional
 	public ResponseEntity<?> modifyContactDelete(List<Integer> ids, String username) {
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		if (user.isPresent()) {
-			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
-			throw new NotFoundException("User not found.");
+			throw new NotFoundException("User not found with the provided username.");
 		}
 
 		String target = IConstants.FAILURE_KEY;
@@ -819,30 +779,24 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 	@Override
 	public ResponseEntity<?> modifyContactExport(ContactEntryRequest form, String username) {
 
-		Optional<User> user = userLoginRepo.findBySystemId(username);
-		Set<Role> role = new HashSet<>();
-		if (user.isPresent()) {
-			if (!Access.isAuthorizedAll(user.get().getRoles())) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-			role = user.get().getRoles();
 		} else {
-			throw new NotFoundException("User not found.");
+			throw new NotFoundException("User not found with the provided username.");
 		}
 
 		String target = IConstants.FAILURE_KEY;
 		ContactEntry entry = null;
-		String systemId = null;
-		// Finding the user by system ID
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isPresent()) {
-			systemId = userOptional.get().getSystemId();
-		} else {
-			throw new NotFoundException("UserEntry not found.");
-		}
+		String systemId = user.getSystemId();
 
 		int groupId = form.getGroupId();
-		logger.info(systemId + "[" + role + "]" + " Export Contact Request For GroupId: " + groupId);
+		logger.info(systemId + "[" + user.getRole() + "]" + " Export Contact Request For GroupId: " + groupId);
 		List<ContactEntry> list = new ArrayList<ContactEntry>();
 		int[] id = form.getId();
 		String[] names = form.getName();
@@ -865,12 +819,9 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 				Workbook workbook = null;
 				try {
 					workbook = getWorkBook(list);
-				} catch (WorkBookException e1) {
+				} catch (Exception e1) {
 					logger.error("WorkBook Exception: " + e1.toString());
 					throw new WorkBookException("WorkBook Error: " + e1.getLocalizedMessage());
-				} catch (Exception e1) {
-					logger.error("Exception: " + e1.toString());
-					throw new InternalServerException("Error: " + e1.getLocalizedMessage());
 				}
 				String filename = systemId + "_Contact[" + groupId + "]" + ".xlsx";
 				ByteArrayOutputStream bos = new ByteArrayOutputStream();
