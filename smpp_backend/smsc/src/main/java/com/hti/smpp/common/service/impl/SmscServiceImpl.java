@@ -131,6 +131,7 @@ public class SmscServiceImpl implements SmscService {
 			}
 			// Saving the SMS entry
 			SmscEntry savedEntry = smscEntryRepository.save(convertedRequest);
+			logger.info("SmscEntry saved successfully with id: "+savedEntry.getId());
 			MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
 			return "Successfully saved this id: " + savedEntry.getId();
 		} catch (NotFoundException e) {
@@ -167,6 +168,7 @@ public class SmscServiceImpl implements SmscService {
 				SmscEntry convertRequest = ConvertRequest(smscEntryRequest);
 				convertRequest.setId(smscId);
 				smscEntryRepository.save(convertRequest);
+				logger.info("SmscEntry with ID " + smscId + " has been successfully updated.");
 				MultiUtility.changeFlag(Constants.SMSC_FLAG_DIR + "" + convertRequest.getName() + ".txt", "505");
 				MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
 				return "SmscEntry with ID " + smscId + " has been successfully updated.";
@@ -201,8 +203,8 @@ public class SmscServiceImpl implements SmscService {
 				throw new NotFoundException("SmscEntry with ID " + smscId + " was not found in the database.");
 			}
 			smscEntryRepository.deleteById(smscId);
+			logger.info("SmscEntry with ID " + smscId + " has been successfully deleted.");
 			MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
-			System.out.println("run delete ...");
 			return "SmscEntry with ID " + smscId + " has been successfully deleted.";
 		} catch (NotFoundException e) {
 			logger.error("An error occurred during the update operation: " + e.getMessage());
@@ -237,7 +239,7 @@ public class SmscServiceImpl implements SmscService {
 		} catch (NotFoundException e) {
 			// Log the exception for debugging purposes
 			logger.error("CustomEntryNotFoundException: " + e.getMessage());
-			throw e;
+			throw new NotFoundException("CustomEntryNotFoundException: " + e.getMessage());
 		} catch (DataAccessException e) {
 			// Log the exception for debugging purposes
 			logger.error("DataAccessError: " + e.getMessage());
@@ -293,6 +295,7 @@ public class SmscServiceImpl implements SmscService {
 				CustomEntry convertRequest = ConvertRequest(customRequest);
 				convertRequest.setSmscId(customId); // Ensure the ID is set
 				customEntryRepository.save(convertRequest);
+				logger.info("CustomEntry updated successfully");
 				MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
 				return "CustomEntry updated successfully";
 			} else {
@@ -326,6 +329,7 @@ public class SmscServiceImpl implements SmscService {
 			if (optionalCustomEntry.isPresent()) {
 				CustomEntry entry = optionalCustomEntry.get();
 				customEntryRepository.delete(entry);
+				logger.info("CustomEntry deleted successfully");
 				MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
 				return "CustomEntry deleted successfully";
 			} else {
@@ -360,6 +364,7 @@ public class SmscServiceImpl implements SmscService {
 			List<LimitEntry> convertRequest = ConvertRequest(limitRequest);
 			limitEntryRepository.saveAll(convertRequest);
 			MultiUtility.changeFlag(Constants.SMSC_LT_FLAG_FILE, "707");
+			logger.info("LimitEntry Saved Successfully!");
 			return "LimitEntry saved successfully.";
 		} catch (DataAccessException e) {
 			logger.error("A data access error occurred while saving the LimitEntry: {}", e.getMessage(), e);
@@ -388,6 +393,7 @@ public class SmscServiceImpl implements SmscService {
 					if (entry.getId() == limitId) {
 						limitEntryRepository.save(entry);
 						MultiUtility.changeFlag(Constants.SMSC_LT_FLAG_FILE, "707");
+						logger.info("LimitId: "+limitId+" Updated Successfully!");
 						return "Limit updated successfully";
 					}
 				}
@@ -400,7 +406,7 @@ public class SmscServiceImpl implements SmscService {
 			throw new DataAccessError("Failed to update LimitEntry. Data access error occurred.");
 		} catch (NotFoundException e) {
 			logger.error("LimitEntryNotFoundException: {}", e.getMessage(), e);
-			throw e;
+			throw new NotFoundException("LimitEntryNotFoundException: "+e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while updating the LimitEntry: {}", e.getMessage(), e);
 			throw new InternalServerException("Failed to update LimitEntry. Unexpected error occurred.");
@@ -421,6 +427,7 @@ public class SmscServiceImpl implements SmscService {
 		try {
 			if (limitEntryRepository.existsById(limitId)) {
 				limitEntryRepository.deleteById(limitId);
+				logger.info("LimitEntry with ID " + limitId + " deleted successfully");
 				MultiUtility.changeFlag(Constants.SMSC_LT_FLAG_FILE, "707");
 				return "LimitEntry with ID " + limitId + " deleted successfully";
 			} else {
@@ -509,6 +516,7 @@ public class SmscServiceImpl implements SmscService {
 				if (groupEntryRepository.existsById(group.getId())) {
 					groupEntryRepository.save(group);
 					MultiUtility.changeFlag(Constants.DGM_FLAG_FILE, "707");
+					logger.info("GroupEntry updated successfully with Id: "+group.getId());
 				} else {
 					logger.info("Group not found with id: {}", group.getId());
 					throw new NotFoundException("Group not found with id: " + group.getId());
@@ -544,6 +552,7 @@ public class SmscServiceImpl implements SmscService {
 				throw new NotFoundException("Group with ID " + groupId + " was not found in the database.");
 			}
 			groupEntryRepository.deleteById(groupId);
+			logger.info("Group with ID " + groupId + " has been deleted successfully.");
 			MultiUtility.changeFlag(Constants.DGM_FLAG_FILE, "707");
 			return "Group with ID " + groupId + " has been deleted successfully.";
 		} catch (DataAccessException e) {
@@ -551,7 +560,7 @@ public class SmscServiceImpl implements SmscService {
 			throw new DataAccessError("Failed to delete GroupEntry. Data access error occurred.");
 		} catch (NotFoundException e) {
 			logger.error("Group not found: {}", e.getMessage(), e);
-			throw e;
+			throw new NotFoundException("Group not found: "+e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred while deleting the GroupEntry: {}", e.getMessage(), e);
 			throw new InternalServerException("Failed to delete GroupEntry. Unexpected error occurred.");
@@ -602,6 +611,7 @@ public class SmscServiceImpl implements SmscService {
 				groupMemberEntryRepository.save(entry);
 
 			}
+			logger.info("GroupMemberEntry Saved Successfully!");
 			MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
 			MultiUtility.changeFlag(Constants.DGM_FLAG_FILE, "707");
 			return "Group members saved successfully.";
@@ -632,6 +642,7 @@ public class SmscServiceImpl implements SmscService {
 				if (groupMemberEntryRepository.existsById(entry.getId())) {
 					groupMemberEntryRepository.save(entry);
 					MultiUtility.changeFlag(Constants.DGM_FLAG_FILE, "707");
+					logger.info("Group member updated with ID: " + entry.getId());
 				} else {
 					throw new NotFoundException("Group member not found with ID: " + entry.getId());
 				}
@@ -663,6 +674,7 @@ public class SmscServiceImpl implements SmscService {
 		try {
 			if (groupMemberEntryRepository.existsById(groupMemberId)) {
 				groupMemberEntryRepository.deleteById(groupMemberId);
+				logger.info("Group member with ID " + groupMemberId + " has been deleted successfully.");
 				MultiUtility.changeFlag(Constants.DGM_FLAG_FILE, "707");
 				return "Group member with ID " + groupMemberId + " has been deleted successfully.";
 			} else {
@@ -686,6 +698,7 @@ public class SmscServiceImpl implements SmscService {
 			List<TrafficScheduleEntry> convertedEntries = ConvertRequest(trafficScheduleRequest);
 			for (TrafficScheduleEntry entry : convertedEntries) {
 				trafficScheduleEntryRepository.save(entry);
+				logger.info("Traffic schedule saved with id: "+entry.getId());
 				MultiUtility.changeFlag(Constants.SMSC_SH_FLAG_FILE, "707");
 			}
 			return "Traffic schedule saved successfully.";
@@ -714,6 +727,7 @@ public class SmscServiceImpl implements SmscService {
 			for (TrafficScheduleEntry entry : convertRequest) {
 				if (trafficScheduleEntryRepository.existsById(entry.getId())) {
 					trafficScheduleEntryRepository.save(entry);
+					logger.info("Traffic schedule saved with id: "+entry.getId());
 					MultiUtility.changeFlag(Constants.SMSC_SH_FLAG_FILE, "707");
 				} else {
 					throw new NotFoundException("Traffic schedule not found with ID: " + entry.getId());
@@ -826,6 +840,7 @@ public class SmscServiceImpl implements SmscService {
 			SmscLooping convertRequest = ConvertRequest(smscLoopingRequest);
 			if (smscLoopingRepository.existsById(convertRequest.getSmscId())) {
 				smscLoopingRepository.save(convertRequest);
+				logger.info("SmscLooping entry updated with id: "+convertRequest.getSmscId());
 				MultiUtility.changeFlag(Constants.SMSC_LOOP_FLAG_FILE, "707");
 				return "SmscLooping entry updated successfully";
 			} else {
@@ -858,6 +873,7 @@ public class SmscServiceImpl implements SmscService {
 		try {
 			if (smscLoopingRepository.existsById(smscId)) {
 				smscLoopingRepository.deleteById(smscId);
+				logger.info("SmscLooping entry deleted with id: "+smscId);
 				MultiUtility.changeFlag(Constants.SMSC_LOOP_FLAG_FILE, "707");
 				return "SmscLooping entry deleted successfully";
 			} else {
@@ -1179,10 +1195,16 @@ public class SmscServiceImpl implements SmscService {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 
-		SmscBsfmEntry smscBsfmEntry = new SmscBsfmEntry();
-		ConvertRequest(smscBsfmEntryRequest, smscBsfmEntry);
-		smscBsfmEntryRepository.save(smscBsfmEntry);
-		MultiUtility.changeFlag(Constants.SMSC_BSFM_FLAG_FILE, "707");
+		try {
+			SmscBsfmEntry smscBsfmEntry = new SmscBsfmEntry();
+			ConvertRequest(smscBsfmEntryRequest, smscBsfmEntry);
+			smscBsfmEntryRepository.save(smscBsfmEntry);
+			logger.info("SmscBsfmEntry Saved Successfully!");
+			MultiUtility.changeFlag(Constants.SMSC_BSFM_FLAG_FILE, "707");
+		} catch (Exception e) {
+			logger.error(e.getLocalizedMessage());
+			throw new InternalServerException("Unable to save SmscBsfmEntry: "+e.getLocalizedMessage());
+		}
 		return "saccessfully save....";
 
 	}
@@ -1272,6 +1294,7 @@ public class SmscServiceImpl implements SmscService {
 				smscBsfmEntry.setSmscName(smscBsfmEntryRequest.getSmscName());
 				smscBsfmEntry.setSource(smscBsfmEntryRequest.getSource());
 				smscBsfmEntryRepository.save(smscBsfmEntry);
+				logger.info("Entry updated with id: "+smscBsfmEntryRequest.getId());
 				MultiUtility.changeFlag(Constants.SMSC_BSFM_FLAG_FILE, "707");
 				return new ResponseEntity<>("Entry updated successfully", HttpStatus.OK);
 			} else {
@@ -1298,14 +1321,17 @@ public class SmscServiceImpl implements SmscService {
 		try {
 			if (smscBsfmEntryRepository.existsById(id)) {
 				smscBsfmEntryRepository.deleteById(id);
+				logger.info("Entry deleted with id: "+id);
 				MultiUtility.changeFlag(Constants.SMSC_BSFM_FLAG_FILE, "707");
 				return new ResponseEntity<>("Entry deleted successfully", HttpStatus.OK);
 			} else {
 				throw new NotFoundException("Entry not found with ID: " + id);
 			}
 		} catch (NotFoundException e) {
+			logger.error("Entry not found: "+e.getLocalizedMessage());
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
 		} catch (Exception e) {
+			logger.error("Unexpected Exception: "+e.getLocalizedMessage());
 			return new ResponseEntity<>("Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -1326,13 +1352,17 @@ public class SmscServiceImpl implements SmscService {
 
 			if (optionalSmscEntry.isPresent()) {
 				SmscEntry smscEntry = optionalSmscEntry.get();
+				logger.info("Entry retrieved successfully with id: "+id);
 				return new ResponseEntity<>(smscEntry, HttpStatus.OK);
 			} else {
+				logger.error("SMS entry not found with ID: " + id);
 				throw new NotFoundException("SMS entry not found with ID: " + id);
 			}
 		} catch (NotFoundException e) {
+			logger.error("NotFoundException: "+e.getLocalizedMessage());
 			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
+			logger.error("Unexpected Exception: "+e.getLocalizedMessage());
 			throw new InternalServerException(e.getMessage());
 		}
 	}

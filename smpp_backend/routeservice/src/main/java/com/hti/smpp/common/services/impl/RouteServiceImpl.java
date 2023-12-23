@@ -3,6 +3,7 @@ package com.hti.smpp.common.services.impl;
 import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.SQLException;
@@ -43,6 +44,7 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -52,8 +54,12 @@ import com.hazelcast.query.impl.PredicateBuilderImpl;
 import com.hti.smpp.common.contacts.dto.GroupEntry;
 import com.hti.smpp.common.contacts.repository.GroupEntryRepository;
 import com.hti.smpp.common.dto.UserEntryExt;
+import com.hti.smpp.common.exception.DataAccessError;
+import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
+import com.hti.smpp.common.exception.ScheduledTimeException;
 import com.hti.smpp.common.exception.UnauthorizedException;
+import com.hti.smpp.common.exception.WorkBookException;
 import com.hti.smpp.common.login.dto.Role;
 import com.hti.smpp.common.login.dto.User;
 import com.hti.smpp.common.login.repository.UserRepository;
@@ -226,7 +232,7 @@ public class RouteServiceImpl implements RouteServices {
 
 			}
 			if (userWiseRouting.isEmpty()) {
-				logger.error("error.record.unavailable");
+				logger.error("error: record unavailable");
 			} else {
 				try {
 					// ----- check for auto_copy_routing users ------------
@@ -261,7 +267,8 @@ public class RouteServiceImpl implements RouteServices {
 										try {
 											margin = Double.parseDouble(margin_str);
 										} catch (Exception ex) {
-											logger.info(subUserId + "Invalid margin: " + margin_str);
+											logger.error(subUserId + "Invalid margin: " + margin_str);
+											throw new InternalServerException("Parse Exception: "+ex.getLocalizedMessage());
 										}
 									}
 									logger.info(
@@ -325,11 +332,12 @@ public class RouteServiceImpl implements RouteServices {
 					MultiUtility.changeFlag(Constants.CLIENT_FLAG_FILE, "707");
 				} catch (Exception ex) {
 					logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
-					ex.printStackTrace();
+					throw new InternalServerException("Unexpected Exception: "+ex.getLocalizedMessage());
 				}
 			}
 		} else {
-			logger.error("error.record.unavailable");
+			logger.error("error: record unavailable");
+			throw new NotFoundException("Exception: Record Unavailable!");
 		}
 		return target;
 	}
@@ -357,22 +365,41 @@ public class RouteServiceImpl implements RouteServices {
 	@Transactional
 	public void deleteRouteEntries(List<RouteEntry> list) {
 		for (RouteEntry entry : list) {
-			routeEntryRepository.delete(entry);
+			try {
+				routeEntryRepository.delete(entry);
+			} catch (Exception e) {
+				logger.error(e.getLocalizedMessage());
+				throw new InternalServerErrorException("Error in Deletion: "+e.getLocalizedMessage());
+			}
 
 			HlrRouteEntry hlr = new HlrRouteEntry();
 			hlr.setRouteId(entry.getId());
-			hlrRouteEntryRepository.delete(hlr);
+			try {
+				hlrRouteEntryRepository.delete(hlr);
+			} catch (Exception e) {
+				logger.error(e.getLocalizedMessage());
+				throw new InternalServerErrorException("Error in Deletion: "+e.getLocalizedMessage());
+			}
 
 			OptionalRouteEntry opt = new OptionalRouteEntry();
 			opt.setRouteId(entry.getId());
-			optionalRouteEntryRepository.delete(opt);
+			try {
+				optionalRouteEntryRepository.delete(opt);
+			} catch (Exception e) {
+				logger.error(e.getLocalizedMessage());
+				throw new InternalServerErrorException("Error in Deletion: "+e.getLocalizedMessage());
+			}
 		}
 	}
 
 	@Override
 	@Transactional
 	public void updateRouteEntries(List<RouteEntry> list) {
-		routeEntryRepository.saveAll(list);
+		try {
+			routeEntryRepository.saveAll(list);
+		} catch (Exception e) {
+			throw new InternalServerException("Exception: "+e.getLocalizedMessage());
+		}
 	}
 
 	@Override
@@ -384,7 +411,12 @@ public class RouteServiceImpl implements RouteServices {
 	@Override
 	@Transactional
 	public void updateHlrRouteEntries(List<HlrRouteEntry> list) {
-		hlrRouteEntryRepository.saveAll(list);
+		try {
+			hlrRouteEntryRepository.saveAll(list);
+		} catch (Exception e) {
+			logger.error(e.toString());
+			throw new InternalServerException(e.getLocalizedMessage());
+		}
 	}
 
 	@Override
@@ -408,8 +440,8 @@ public class RouteServiceImpl implements RouteServices {
 				optionalRouteEntryRepository.save(opt);
 
 			} catch (Exception e) {
-				// Handle exceptions if needed
-				e.printStackTrace();
+				logger.error(e.getLocalizedMessage());
+				throw new InternalServerErrorException("Error in Saving: "+e.getLocalizedMessage());
 			}
 		}
 
@@ -418,7 +450,13 @@ public class RouteServiceImpl implements RouteServices {
 	@Override
 	public Map<Integer, RouteEntryExt> listRouteEntries(int userId, boolean hlr, boolean optional, boolean display) {
 
-		List<RouteEntry> basicEntries = routeEntryRepository.findByUserId(userId);
+		List<RouteEntry> basicEntries = null;
+		try {
+			basicEntries = routeEntryRepository.findByUserId(userId);
+		} catch (Exception e) {
+			logger.error(e.toString());
+			throw new InternalServerException(e.getLocalizedMessage());
+		}
 
 		if (basicEntries.isEmpty()) {
 			logger.info("Routing Entries Not Found For " + userId);
@@ -431,12 +469,24 @@ public class RouteServiceImpl implements RouteServices {
 					// Additional processing logic...
 
 					if (hlr) {
-						HlrRouteEntry hlrEntry = hlrRouteEntryRepository.findByRouteId(basic.getId());
+						HlrRouteEntry hlrEntry = null;
+						try {
+							hlrEntry = hlrRouteEntryRepository.findByRouteId(basic.getId());
+						} catch (Exception e) {
+							logger.error(e.getLocalizedMessage());
+							throw new InternalServerException(e.getLocalizedMessage());
+						}
 						entry.setHlrRouteEntry(hlrEntry);
 					}
 
 					if (optional) {
-						OptionalRouteEntry optionalEntry = optionalRouteEntryRepository.findByRouteId(basic.getId());
+						OptionalRouteEntry optionalEntry = null;
+						try {
+							optionalEntry = optionalRouteEntryRepository.findByRouteId(basic.getId());
+						} catch (Exception e) {
+							logger.error(e.getLocalizedMessage());
+							throw new InternalServerException(e.getLocalizedMessage());
+						}
 						entry.setRouteOptEntry(optionalEntry);
 						// Additional processing logic...
 					}
@@ -450,10 +500,15 @@ public class RouteServiceImpl implements RouteServices {
 
 	@Override
 	public Map<Integer, RouteEntry> getNetworkRouting(int userId) {
-		Map<Integer, RouteEntry> networkRouting = new HashMap<Integer, RouteEntry>();
-		Predicate<Integer, RouteEntry> p = new PredicateBuilderImpl().getEntryObject().get("userId").equal(userId);
-		for (RouteEntry entry : GlobalVars.BasicRouteEntries.values(p)) {
-			networkRouting.put(entry.getNetworkId(), entry);
+		Map<Integer, RouteEntry> networkRouting = null;
+		try {
+			networkRouting = new HashMap<Integer, RouteEntry>();
+			Predicate<Integer, RouteEntry> p = new PredicateBuilderImpl().getEntryObject().get("userId").equal(userId);
+			for (RouteEntry entry : GlobalVars.BasicRouteEntries.values(p)) {
+				networkRouting.put(entry.getNetworkId(), entry);
+			}
+		} catch (Exception e) {
+			throw new InternalServerException(e.getLocalizedMessage());
 		}
 		return networkRouting;
 	}
@@ -554,12 +609,17 @@ public class RouteServiceImpl implements RouteServices {
 
 	@Override
 	public Map<Integer, RouteEntryLog> listBasicLogEntries(int[] routeId) {
-		List<RouteEntryLog> list = listBasicLog(routeId);
-		Map<Integer, RouteEntryLog> map = new LinkedHashMap<Integer, RouteEntryLog>();
-		for (RouteEntryLog entryLog : list) {
-			if (!map.containsKey(entryLog.getId())) {
-				map.put(entryLog.getId(), entryLog);
+		Map<Integer, RouteEntryLog> map = null;
+		try {
+			List<RouteEntryLog> list = listBasicLog(routeId);
+			map = new LinkedHashMap<Integer, RouteEntryLog>();
+			for (RouteEntryLog entryLog : list) {
+				if (!map.containsKey(entryLog.getId())) {
+					map.put(entryLog.getId(), entryLog);
+				}
 			}
+		} catch (Exception e) {
+			throw new InternalServerException(e.getLocalizedMessage());
 		}
 		return map;
 	}
@@ -725,7 +785,8 @@ public class RouteServiceImpl implements RouteServices {
 			optionalRouteEntryRepository.save(opt);
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Error in saving: "+e.getLocalizedMessage());
+			throw new InternalServerErrorException("Exception: "+e.getLocalizedMessage());
 		}
 	}
 
@@ -836,7 +897,7 @@ public class RouteServiceImpl implements RouteServices {
 						}
 						result.put(basic.getId(), entry);
 					} else {
-						logger.info(id + " Cached Entry Not Found ");
+						logger.error(id + " Cached Entry Not Found ");
 					}
 				}
 			} else {
@@ -1061,19 +1122,26 @@ public class RouteServiceImpl implements RouteServices {
 							result.put(basic.getId(), entry);
 						}
 					} else {
-						logger.info(id + " Cached Entry Not Found ");
+						logger.error(id + " Cached Entry Not Found ");
 					}
 				}
 			}
 		} catch (Exception e) {
-			logger.error("", e.fillInStackTrace());
+			logger.error("Exception", e.fillInStackTrace());
+			throw new InternalServerException("Exception: "+e.getLocalizedMessage());
 		}
 		return result;
 	}
 
 	public Map<Integer, Set<String>> getSmscGroupMapping() {
 		Map<Integer, Set<String>> groupMapping = new HashMap<>();
-		List<SmscEntry> results = SmscEntryRepository.findAll();
+		List<SmscEntry> results = null;
+		try {
+			results = SmscEntryRepository.findAll();
+		} catch (Exception e) {
+			logger.error("Exception: "+e.toString());
+			throw new InternalServerException("Unexpected Exception: "+e.getLocalizedMessage());
+		}
 
 		for (SmscEntry result : results) {
 			int smscId = result.getId(); // Assuming SmscEntry has a getSmscId() method
@@ -1090,7 +1158,13 @@ public class RouteServiceImpl implements RouteServices {
 	public Map<Integer, String> listNames() {
 		Map<Integer, String> names = new HashMap<Integer, String>();
 
-		List<SmscEntry> smscEntry = SmscEntryRepository.findAll();
+		List<SmscEntry> smscEntry = null;
+		try {
+			smscEntry = SmscEntryRepository.findAll();
+		} catch (Exception e) {
+			logger.error(e.toString());
+			throw new InternalServerException("Error: "+e.getLocalizedMessage());
+		}
 
 		for (SmscEntry entry : smscEntry) {
 			names.put(entry.getId(), entry.getName());
@@ -1103,7 +1177,13 @@ public class RouteServiceImpl implements RouteServices {
 	public Map<Integer, String> listGroupNames() {
 		Map<Integer, String> names = new HashMap<Integer, String>();
 		names.put(0, "NONE");
-		List<GroupEntry> groups = groupEntryRepository.findAll();
+		List<GroupEntry> groups = null;
+		try {
+			groups = groupEntryRepository.findAll();
+		} catch (Exception e) {
+			logger.error(e.toString());
+			throw new InternalServerException("Exception: "+e.getLocalizedMessage());
+		}
 		for (GroupEntry entry : groups) {
 			names.put(entry.getId(), entry.getName());
 		}
@@ -1145,8 +1225,8 @@ public class RouteServiceImpl implements RouteServices {
 
 			return routeEntries;
 		} catch (Exception ex) {
-			ex.printStackTrace();
-			return routeEntries;
+			logger.error("Exception: "+ex.toString());
+			throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
 		}
 	}
 
@@ -1346,11 +1426,10 @@ public class RouteServiceImpl implements RouteServices {
 					Date currentDate = df.parse(df.format(new Date()));
 					if (scheduledDate.before(currentDate)) {
 						logger.error(masterid + " Optional Routing Scheduled Date is Before Current Date");
-
 					} else {
 						addOptRouteSchEntry(list, optRouteEntry.getScheduledOn());
 						if (scheduledDate.after(currentDate)) {
-							logger.info(masterid + " Optional Routing Not Scheduled For Today");
+							logger.error(masterid + " Optional Routing Not Scheduled For Today");
 						} else {
 							logger.info(masterid + " Optional Routing Scheduled For Today");
 							Timer t = new Timer();
@@ -1359,8 +1438,12 @@ public class RouteServiceImpl implements RouteServices {
 
 									try {
 										updateOptRouteSch(optRouteEntry.getScheduledOn());
+									} catch (DataAccessException e) {
+										logger.error("Data Access Exception: "+e.getLocalizedMessage());
+										throw new DataAccessError("Data Access Exception: "+e.getLocalizedMessage());
 									} catch (Exception e) {
-										e.printStackTrace();
+										logger.error("Unexpected Error: "+e.getLocalizedMessage());
+										throw new InternalServerException("Exception: "+e.getLocalizedMessage());
 									}
 									for (int user : userWiseRouting.keySet()) {
 										MultiUtility.refreshRouting(user);
@@ -1371,7 +1454,7 @@ public class RouteServiceImpl implements RouteServices {
 							}, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(optRouteEntry.getScheduledOn()));
 						}
 						target = "schedule";
-						logger.info("label.schSuccess");
+						logger.info("Schedule Succesful.");
 					}
 				} else {
 					updateOptionalRouteEntries(list);
@@ -1397,15 +1480,19 @@ public class RouteServiceImpl implements RouteServices {
 						target = "view";
 					} else {
 						target = IConstants.SUCCESS_KEY;
-						logger.info("message.routingSatedSuccessfully");
+						logger.info("Routing Configured Successful!");
 					}
 				}
 			} else {
-				logger.error("error.record.unavailable");
+				logger.error("error: record unavailable");
+				throw new NotFoundException("Error: No Record Found");
 			}
+		} catch (NotFoundException ex) {
+			logger.error(masterid, ex.toString());
+			throw new NotFoundException("NotFoundException: "+ex.getLocalizedMessage());
 		} catch (Exception ex) {
-			logger.error(masterid, ex.fillInStackTrace());
-			ex.printStackTrace();
+			logger.error(masterid, ex.toString());
+			throw new InternalServerException("InternalServerException: "+ex.getLocalizedMessage());
 		}
 		if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY) || target.equalsIgnoreCase("view")) {
 			for (int user : userWiseRouting.keySet()) {
@@ -1495,6 +1582,7 @@ public class RouteServiceImpl implements RouteServices {
 
 			// Log or return success message
 		} catch (Exception e) {
+			logger.error(e.getLocalizedMessage());
 			throw new Exception("Failed to add Optional Route Entries", e);
 		}
 	}
@@ -1553,8 +1641,22 @@ public class RouteServiceImpl implements RouteServices {
 				}
 				if (!list.isEmpty()) {
 					logger.info("Optional Route Update Size: " + list.size());
-					updateOptionalRouteEntries(list);
-					List<RouteEntryExt> routinglist = getUpdateOptionalRoutingList(optRouteEntry.getCriterionEntries());
+					try {
+						updateOptionalRouteEntries(list);
+					} catch (Exception e) {
+						logger.error("Error: "+e.getLocalizedMessage());
+						throw new InternalServerException("Error: "+e.getLocalizedMessage());
+					}
+					List<RouteEntryExt> routinglist = null;
+					try {
+						routinglist = getUpdateOptionalRoutingList(optRouteEntry.getCriterionEntries());
+					} catch (SQLException e) {
+						logger.error("Error: "+e.getLocalizedMessage());
+						throw new DataAccessError("SQL Error: "+e.getLocalizedMessage());
+					} catch (Exception e) {
+						logger.error("Error: "+e.getLocalizedMessage());
+						throw new InternalServerException("Error: "+e.getLocalizedMessage());
+					}
 					if (!routinglist.isEmpty()) {
 						Map<Integer, String> smsclist = listNames();
 						smsclist.put(0, "Down");
@@ -1563,18 +1665,26 @@ public class RouteServiceImpl implements RouteServices {
 						target = "view";
 					} else {
 						target = IConstants.SUCCESS_KEY;
-						logger.info("message.routingSatedSuccessfully");
+						logger.info("Routing Configured Successfully!");
 					}
 				} else {
-					logger.error("error.record.unavailable");
+					logger.error("error: List is empty");
+					throw new NotFoundException("Record not found! List is empty");
 				}
 			} else {
-				logger.error("error.record.unavailable");
+				logger.error("error: record unavailable");
+				throw new NotFoundException("Record Unavailable!");
 			}
+		} catch (NotFoundException ex) {
+			logger.error("NotFound Exception: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.toString());
+			throw new NotFoundException("NotFound Exception: "+ex.getLocalizedMessage());
 		} catch (Exception ex) {
-			logger.info("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
-			logger.error(masterid, ex.fillInStackTrace());
+			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.toString());
+			throw new InternalServerException("Unexpected Exception: "+ex.getLocalizedMessage());
 		}
+		
 		if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY) || target.equalsIgnoreCase("view")) {
 			for (int user : refreshUsers) {
 				MultiUtility.refreshRouting(user);
@@ -1619,20 +1729,33 @@ public class RouteServiceImpl implements RouteServices {
 				List<Long> ids = Arrays.stream(id).asLongStream().boxed().collect(Collectors.toList());
 
 				// Making a request to the repository method
-				List<RouteEntryExt> list = routeEntryRepository.getOptRoutingLog(ids);
+				List<RouteEntryExt> list = null;
+				try {
+					list = routeEntryRepository.getOptRoutingLog(ids);
+				} catch (Exception e) {
+					logger.error(e.getLocalizedMessage());
+					throw new InternalServerException(e.getLocalizedMessage());
+				}
 				if (!list.isEmpty()) {
 					response.setRoutinglist(list);
 					target = "previous";
 				} else {
-					logger.error("error.record.unavailable");
+					logger.error("error: record unavailable");
+					throw new NotFoundException("Record Not Found!");
 				}
 			} else {
-				logger.error("error.record.unavailable");
+				logger.error("error: record unavailable");
+				throw new NotFoundException("Record Unavailble. Id Unavailable.");
 			}
 
+		} catch (NotFoundException ex) {
+			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.toString());
+			throw new NotFoundException("NotFoundException: "+ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
-			logger.error(masterid, ex.fillInStackTrace());
+			logger.error(masterid, ex.toString());
+			throw new InternalServerException("Unexpected Exception: "+ex.getLocalizedMessage());
 		}
 		response.setStatus(target);
 		return response;
@@ -1674,15 +1797,20 @@ public class RouteServiceImpl implements RouteServices {
 					optionRouteResponse.setGroupDetail(listGroupNames());
 					target = "basic";
 				} else {
-					logger.error("error.record.unavailable");
+					logger.error("error: record unavailable");
+					throw new NotFoundException("Record Not Found! List is empty");
 				}
 			} else {
-				logger.error("error.record.unavailable");
+				logger.error("error: record unavailable");
+				throw new NotFoundException("Record not found! Id is null or zero!");
 			}
+		} catch (NotFoundException ex) {
+			logger.error("NotFoundException: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			throw new NotFoundException("NotFoundException: " + ex.getMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
 			throw new InternalServerErrorException("Process Error: " + ex.getMessage());
-		}
+		} 
 		optionRouteResponse.setStatus(target);
 
 		return optionRouteResponse;
@@ -1701,96 +1829,118 @@ public class RouteServiceImpl implements RouteServices {
 		}
 
 		String target = IConstants.FAILURE_KEY;
-		RouteEntryArrForm routingForm = new RouteEntryArrForm();
-		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
+		OptionRouteResponse optionRouteResponse = null;
+		try {
+			RouteEntryArrForm routingForm = new RouteEntryArrForm();
+			optionRouteResponse = new OptionRouteResponse();
 
-		Map<Integer, String> groupDetail = new HashMap<>(listGroupNames());
-		Collection<NetworkEntry> networks = null;
-		if (routingForm.isCountryWise()) {
-			System.out.println("Countries: " + String.join(",", routingForm.getCriteria().getMcc()));
-			if (routingForm.getCriteria().getMcc() != null && routingForm.getCriteria().getMcc().length > 0) {
-				Predicate p = new PredicateBuilderImpl().getEntryObject().get("mcc")
-						.in(routingForm.getCriteria().getMcc());
-				networks = GlobalVars.NetworkEntries.values(p);
+			Map<Integer, String> groupDetail = new HashMap<>(listGroupNames());
+			Collection<NetworkEntry> networks = null;
+			if (routingForm.isCountryWise()) {
+				logger.info("Countries: " + String.join(",", routingForm.getCriteria().getMcc()));
+				if (routingForm.getCriteria().getMcc() != null && routingForm.getCriteria().getMcc().length > 0) {
+					Predicate p = new PredicateBuilderImpl().getEntryObject().get("mcc")
+							.in(routingForm.getCriteria().getMcc());
+					networks = GlobalVars.NetworkEntries.values(p);
+				} else {
+					networks = GlobalVars.NetworkEntries.values();
+				}
 			} else {
-				networks = GlobalVars.NetworkEntries.values();
+				Predicate p = new PredicateBuilderImpl().getEntryObject().get("id")
+						.in(Arrays.stream(routingForm.getNetworkId()).boxed().toArray(Integer[]::new));
+				networks = GlobalVars.NetworkEntries.values(p);
 			}
-		} else {
-			Predicate p = new PredicateBuilderImpl().getEntryObject().get("id")
-					.in(Arrays.stream(routingForm.getNetworkId()).boxed().toArray(Integer[]::new));
-			networks = GlobalVars.NetworkEntries.values(p);
-		}
 
-		System.out.println("Total: " + networks.size());
-		Set<Integer> user_id_list = new HashSet<>();
-		if (routingForm.getCriteria().getAccountType() != null) {
-			EntryObject entryObject = new PredicateBuilderImpl().getEntryObject();
-			Predicate p = new PredicateBuilderImpl().getEntryObject().get("id")
-					.in(Arrays.stream(routingForm.getNetworkId()).boxed().toArray(Integer[]::new));
-			networks = GlobalVars.NetworkEntries.values(p);
-			user_id_list.addAll(GlobalVars.WebmasterEntries.keySet(p));
-		} else {
-			user_id_list.addAll(Arrays.stream(routingForm.getUserId()).boxed().collect(Collectors.toSet()));
-		}
-		Map<Integer, String> smscnames = listNames();
-		int smscId = 0;
-		if (routingForm.getSmscId() != null) {
-			smscId = routingForm.getSmscId()[0];
-		}
-		int groupId = routingForm.getGroupId()[0];
-		double cost = routingForm.getCost()[0];
-		String smscType = routingForm.getSmscType()[0];
-		String remarks = routingForm.getRemarks()[0];
-		String smsc = smscnames.get(smscId);
-		String group = groupDetail.get(groupId);
-		Set<Integer> network_id_list = new HashSet<>();
-		for (NetworkEntry networkEntry : networks) {
-			logger.info("Adding Network: " + networkEntry.getId());
-			network_id_list.add(networkEntry.getId());
-		}
-		Map<Integer, Double> smsc_pricing = getSmscPricing(smsc,
-				network_id_list.stream().map(String::valueOf).collect(Collectors.toSet()));
-		EntryObject entryObj = new PredicateBuilderImpl().getEntryObject();
-		Predicate<Integer, RouteEntry> p = entryObj.get("userId")
-				.in(user_id_list.toArray(new Integer[user_id_list.size()]))
-				.and(entryObj.get("networkId").in(network_id_list.toArray(new Integer[network_id_list.size()])));
-		Map<Integer, Set<Integer>> existUserRoutes = new HashMap<>();
-		for (RouteEntry entry : GlobalVars.BasicRouteEntries.values(p)) {
-			Set<Integer> set = existUserRoutes.computeIfAbsent(entry.getUserId(), k -> new HashSet<>());
-			set.add(entry.getNetworkId());
-			existUserRoutes.put(entry.getUserId(), set);
-		}
-		Map<Integer, Set<String>> group_mapping = getSmscGroupMapping();
-		if (smscId > 0) {
-			if (group_mapping.containsKey(smscId)) {
-				smsc += " " + group_mapping.get(smscId);
+			logger.info("Total: " + networks.size());
+			Set<Integer> user_id_list = new HashSet<>();
+			if (routingForm.getCriteria().getAccountType() != null) {
+				EntryObject entryObject = new PredicateBuilderImpl().getEntryObject();
+				Predicate p = new PredicateBuilderImpl().getEntryObject().get("id")
+						.in(Arrays.stream(routingForm.getNetworkId()).boxed().toArray(Integer[]::new));
+				networks = GlobalVars.NetworkEntries.values(p);
+				user_id_list.addAll(GlobalVars.WebmasterEntries.keySet(p));
+			} else {
+				user_id_list.addAll(Arrays.stream(routingForm.getUserId()).boxed().collect(Collectors.toSet()));
+			}
+			Map<Integer, String> smscnames = listNames();
+			int smscId = 0;
+			if (routingForm.getSmscId() != null) {
+				smscId = routingForm.getSmscId()[0];
+			}
+			int groupId = routingForm.getGroupId()[0];
+			double cost = routingForm.getCost()[0];
+			String smscType = routingForm.getSmscType()[0];
+			String remarks = routingForm.getRemarks()[0];
+			String smsc = smscnames.get(smscId);
+			String group = groupDetail.get(groupId);
+			Set<Integer> network_id_list = new HashSet<>();
+			for (NetworkEntry networkEntry : networks) {
+				logger.info("Adding Network: " + networkEntry.getId());
+				network_id_list.add(networkEntry.getId());
+			}
+			Map<Integer, Double> smsc_pricing = getSmscPricing(smsc,
+					network_id_list.stream().map(String::valueOf).collect(Collectors.toSet()));
+			EntryObject entryObj = new PredicateBuilderImpl().getEntryObject();
+			Predicate<Integer, RouteEntry> p = entryObj.get("userId")
+					.in(user_id_list.toArray(new Integer[user_id_list.size()]))
+					.and(entryObj.get("networkId").in(network_id_list.toArray(new Integer[network_id_list.size()])));
+			Map<Integer, Set<Integer>> existUserRoutes = new HashMap<>();
+			for (RouteEntry entry : GlobalVars.BasicRouteEntries.values(p)) {
+				Set<Integer> set = existUserRoutes.computeIfAbsent(entry.getUserId(), k -> new HashSet<>());
+				set.add(entry.getNetworkId());
+				existUserRoutes.put(entry.getUserId(), set);
+			}
+			Map<Integer, Set<String>> group_mapping = getSmscGroupMapping();
+			if (smscId > 0) {
+				if (group_mapping.containsKey(smscId)) {
+					smsc += " " + group_mapping.get(smscId);
+				} else {
+					smsc += " [NONE]";
+				}
 			} else {
 				smsc += " [NONE]";
 			}
-		} else {
-			smsc += " [NONE]";
-		}
-		Map<Integer, String> smsclist = new HashMap<>();
-		for (int smsc_id : smscnames.keySet()) {
-			String smsc_name = smscnames.get(smsc_id);
-			if (group_mapping.containsKey(smsc_id)) {
-				smsclist.put(smsc_id, smsc_name + " " + group_mapping.get(smsc_id));
-			} else {
-				smsclist.put(smsc_id, smsc_name + " [NONE]");
+			Map<Integer, String> smsclist = new HashMap<>();
+			for (int smsc_id : smscnames.keySet()) {
+				String smsc_name = smscnames.get(smsc_id);
+				if (group_mapping.containsKey(smsc_id)) {
+					smsclist.put(smsc_id, smsc_name + " " + group_mapping.get(smsc_id));
+				} else {
+					smsclist.put(smsc_id, smsc_name + " [NONE]");
+				}
 			}
-		}
-		smsclist.put(0, "DOWN [NONE]");
-		List<RouteEntryExt> routelist = new ArrayList<>();
-		int auto_incr_id = 0;
-		for (int user : user_id_list) {
-			String systemId = GlobalVars.UserEntries.get(user).getSystemId();
-			String accountType = GlobalVars.WebmasterEntries.get(user).getAccountType();
-			Set<Integer> existNetworks = existUserRoutes.get(user);
-			logger.info(systemId + " Configured Networks: " + existNetworks);
-			for (NetworkEntry networkEntry : networks) {
-				int networkId = networkEntry.getId();
-				if (existNetworks != null) {
-					if (!existNetworks.contains(networkId)) {
+			smsclist.put(0, "DOWN [NONE]");
+			List<RouteEntryExt> routelist = new ArrayList<>();
+			int auto_incr_id = 0;
+			for (int user : user_id_list) {
+				String systemId = GlobalVars.UserEntries.get(user).getSystemId();
+				String accountType = GlobalVars.WebmasterEntries.get(user).getAccountType();
+				Set<Integer> existNetworks = existUserRoutes.get(user);
+				logger.info(systemId + " Configured Networks: " + existNetworks);
+				for (NetworkEntry networkEntry : networks) {
+					int networkId = networkEntry.getId();
+					if (existNetworks != null) {
+						if (!existNetworks.contains(networkId)) {
+							RouteEntry entry = new RouteEntry(user, networkId, smscId, groupId, cost, smscType, null, null,
+									remarks);
+							entry.setId(++auto_incr_id);
+							RouteEntryExt ext = new RouteEntryExt(entry);
+							ext.setSystemId(systemId);
+							ext.setCountry(networkEntry.getCountry());
+							ext.setOperator(networkEntry.getOperator());
+							ext.setMcc(networkEntry.getMcc());
+							ext.setMnc(networkEntry.getMnc());
+							ext.setSmsc(smsc);
+							ext.setGroup(group);
+							ext.setAccountType(accountType);
+							if (smsc_pricing.containsKey(networkId)) {
+								ext.setSmscCost(smsc_pricing.get(networkId));
+							}
+							routelist.add(ext);
+						} else {
+							logger.info(systemId + " Already Has Network: " + networkId);
+						}
+					} else {
 						RouteEntry entry = new RouteEntry(user, networkId, smscId, groupId, cost, smscType, null, null,
 								remarks);
 						entry.setId(++auto_incr_id);
@@ -1807,36 +1957,20 @@ public class RouteServiceImpl implements RouteServices {
 							ext.setSmscCost(smsc_pricing.get(networkId));
 						}
 						routelist.add(ext);
-					} else {
-						logger.info(systemId + " Already Has Network: " + networkId);
 					}
-				} else {
-					RouteEntry entry = new RouteEntry(user, networkId, smscId, groupId, cost, smscType, null, null,
-							remarks);
-					entry.setId(++auto_incr_id);
-					RouteEntryExt ext = new RouteEntryExt(entry);
-					ext.setSystemId(systemId);
-					ext.setCountry(networkEntry.getCountry());
-					ext.setOperator(networkEntry.getOperator());
-					ext.setMcc(networkEntry.getMcc());
-					ext.setMnc(networkEntry.getMnc());
-					ext.setSmsc(smsc);
-					ext.setGroup(group);
-					ext.setAccountType(accountType);
-					if (smsc_pricing.containsKey(networkId)) {
-						ext.setSmscCost(smsc_pricing.get(networkId));
-					}
-					routelist.add(ext);
 				}
+
+				optionRouteResponse.setRoutinglist(routelist);
+				optionRouteResponse.setSmsclist(smsclist);
+				optionRouteResponse.setGroupDetail(listGroupNames());
+				target = IConstants.SUCCESS_KEY;
+
 			}
-
-			optionRouteResponse.setRoutinglist(routelist);
-			optionRouteResponse.setSmsclist(smsclist);
-			optionRouteResponse.setGroupDetail(listGroupNames());
-			target = IConstants.SUCCESS_KEY;
-
+			optionRouteResponse.setStatus(target);
+		} catch (Exception e) {
+			logger.error("Exception: "+e.toString());
+			throw new InternalServerException("Exception: "+e.getLocalizedMessage());
 		}
-		optionRouteResponse.setStatus(target);
 
 		return optionRouteResponse;
 
@@ -1882,193 +2016,203 @@ public class RouteServiceImpl implements RouteServices {
 		String margin_str = routingForm.getMargin();
 		String systemId = user.getSystemId();
 
-		if (!Access.isAuthorizedAdminAndUser(user.getRoles())) {
-			Map<Integer, String> users = listUsersUnderMaster(systemId);
-			Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject().get("secondaryMaster")
-					.equal(systemId);
-			for (WebMasterEntry webEntry : GlobalVars.WebmasterEntries.values(p)) {
-				UserEntry userEntry = GlobalVars.UserEntries.get(webEntry.getUserId());
-				users.put(userEntry.getId(), userEntry.getSystemId());
-			}
-			if (from != user.getUserId()) {
-				if (!users.containsKey(from)) {
+		try {
+			if (!Access.isAuthorizedAdminAndUser(user.getRoles())) {
+				Map<Integer, String> users = listUsersUnderMaster(systemId);
+				Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject().get("secondaryMaster")
+						.equal(systemId);
+				for (WebMasterEntry webEntry : GlobalVars.WebmasterEntries.values(p)) {
+					UserEntry userEntry = GlobalVars.UserEntries.get(webEntry.getUserId());
+					users.put(userEntry.getId(), userEntry.getSystemId());
+				}
+				if (from != user.getUserId()) {
+					if (!users.containsKey(from)) {
 
-					proceed = false;
-				}
-			}
-			if (proceed) {
-				for (int i = 0; i < to_user.length; i++) {
-					if (!users.containsKey(to_user[i])) {
-						logger.info(systemId + "[" + userSessionObject.getRole() + "] Invalid To User [" + to_user[i]
-								+ "]");
-						proceed = false;
-						break;
-					}
-				}
-			}
-		}
-		if (proceed) {
-			boolean isPercent = false;
-			double margin = 0;
-			if (margin_str.contains("%")) {
-				isPercent = true;
-				margin_str = margin_str.substring(0, margin_str.indexOf("%")).trim();
-			}
-			try {
-				margin = Double.parseDouble(margin_str);
-			} catch (Exception ex) {
-				logger.info(from + "Invalid margin: " + margin_str);
-			}
-			if (Access.isAuthorizedAdminAndUser(user.getRoles())) {
-				includeHlr = true;
-				includeOpt = true;
-				if (userSessionObject.getBalance().getWalletFlag().equalsIgnoreCase("yes")) {
-					if (margin > 0) {
-						logger.error(systemId + " valid Margin: " + margin);
-					} else {
-						logger.error(systemId + " Invalid Margin: " + margin);
 						proceed = false;
 					}
 				}
-			} else {
-				includeHlr = routingForm.isHlr();
-				includeOpt = routingForm.isOptional();
-			}
-			if (proceed) {
-				logger.info(from + " Checking For Routing Entries");
-				Map<Integer, RouteEntryExt> map = listRouteEntries(from, includeHlr, includeOpt, false);
-				logger.info(from + " Routing Entries Found: " + map.size());
-				String country = routingForm.getMcc();
-				Set<Integer> networks = new HashSet<Integer>();
-				System.out.println("MCC: " + country);
-				System.out.println("MNC: " + Arrays.toString(routingForm.getMnc()));
-				if (!country.equalsIgnoreCase("%")) {
-					Set<String> operators = new HashSet<String>();
-					for (String mnc : routingForm.getMnc()) {
-						if (mnc.equalsIgnoreCase("%")) {
+				if (proceed) {
+					for (int i = 0; i < to_user.length; i++) {
+						if (!users.containsKey(to_user[i])) {
+							logger.info(systemId + "[" + userSessionObject.getRole() + "] Invalid To User [" + to_user[i]
+									+ "]");
+							proceed = false;
 							break;
-						} else {
-							operators.add(mnc);
 						}
 					}
-					Predicate<Integer, NetworkEntry> p = new PredicateBuilderImpl().getEntryObject().get("mcc")
-							.equal(country);
-					for (NetworkEntry network : GlobalVars.NetworkEntries.values(p)) {
-						if (!operators.isEmpty()) {
-							if (operators.contains(network.getMnc())) {
+				}
+			}
+			if (proceed) {
+				boolean isPercent = false;
+				double margin = 0;
+				if (margin_str.contains("%")) {
+					isPercent = true;
+					margin_str = margin_str.substring(0, margin_str.indexOf("%")).trim();
+				}
+				try {
+					margin = Double.parseDouble(margin_str);
+				} catch (Exception ex) {
+					logger.error(from + "Invalid margin: " + margin_str);
+					throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
+				}
+				if (Access.isAuthorizedAdminAndUser(user.getRoles())) {
+					includeHlr = true;
+					includeOpt = true;
+					if (userSessionObject.getBalance().getWalletFlag().equalsIgnoreCase("yes")) {
+						if (margin > 0) {
+							logger.error(systemId + " valid Margin: " + margin);
+						} else {
+							logger.error(systemId + " Invalid Margin: " + margin);
+							proceed = false;
+						}
+					}
+				} else {
+					includeHlr = routingForm.isHlr();
+					includeOpt = routingForm.isOptional();
+				}
+				if (proceed) {
+					logger.info(from + " Checking For Routing Entries");
+					Map<Integer, RouteEntryExt> map = listRouteEntries(from, includeHlr, includeOpt, false);
+					logger.info(from + " Routing Entries Found: " + map.size());
+					String country = routingForm.getMcc();
+					Set<Integer> networks = new HashSet<Integer>();
+					logger.info("MCC: " + country);
+					logger.info("MNC: " + Arrays.toString(routingForm.getMnc()));
+					if (!country.equalsIgnoreCase("%")) {
+						Set<String> operators = new HashSet<String>();
+						for (String mnc : routingForm.getMnc()) {
+							if (mnc.equalsIgnoreCase("%")) {
+								break;
+							} else {
+								operators.add(mnc);
+							}
+						}
+						Predicate<Integer, NetworkEntry> p = new PredicateBuilderImpl().getEntryObject().get("mcc")
+								.equal(country);
+						for (NetworkEntry network : GlobalVars.NetworkEntries.values(p)) {
+							if (!operators.isEmpty()) {
+								if (operators.contains(network.getMnc())) {
+									networks.add(network.getId());
+								}
+							} else {
 								networks.add(network.getId());
 							}
-						} else {
-							networks.add(network.getId());
 						}
 					}
-				}
-				System.out.println("networks: " + networks);
-				// database.IDatabaseService dbService = com.hti.webems.database.HtiSmsDB
-				for (int i = 0; i < to_user.length; i++) {
-					System.out.println("Processing For " + to_user[i]);
-					String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-					List<RouteEntryExt> routinglist = new ArrayList<RouteEntryExt>();
-					Set<Integer> exist_networks = null, to_be_replaced = null;
-					if (!replaceExist) {
-						// exist_networks = NetworkEntryRepository.listExistNetwork(to_user[i]);
-						to_be_replaced = new HashSet<Integer>();
-					}
-					double cost = 0;
-					for (RouteEntryExt toRouteExt : map.values()) {
-						RouteEntry toRoute = toRouteExt.getBasic();
-						if (!networks.isEmpty()) {
-							if (!networks.contains(toRoute.getNetworkId())) {
-								logger.info("Skipping Copy Routing For: " + toRoute.getNetworkId());
-								continue;
-							}
-						}
+					logger.info("networks: " + networks);
+					// database.IDatabaseService dbService = com.hti.webems.database.HtiSmsDB
+					for (int i = 0; i < to_user.length; i++) {
+						logger.info("Processing For " + to_user[i]);
+						String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+						List<RouteEntryExt> routinglist = new ArrayList<RouteEntryExt>();
+						Set<Integer> exist_networks = null, to_be_replaced = null;
 						if (!replaceExist) {
-							if (exist_networks.contains(toRoute.getNetworkId())) {
-								logger.info("Skipping Copy Routing For Exist: " + toRoute.getNetworkId());
-								continue;
-							} else {
-								to_be_replaced.add(toRoute.getNetworkId());
+							// exist_networks = NetworkEntryRepository.listExistNetwork(to_user[i]);
+							to_be_replaced = new HashSet<Integer>();
+						}
+						double cost = 0;
+						for (RouteEntryExt toRouteExt : map.values()) {
+							RouteEntry toRoute = toRouteExt.getBasic();
+							if (!networks.isEmpty()) {
+								if (!networks.contains(toRoute.getNetworkId())) {
+									logger.info("Skipping Copy Routing For: " + toRoute.getNetworkId());
+									continue;
+								}
 							}
-						}
-						RouteEntry route = new RouteEntry(toRoute.getUserId(), toRoute.getNetworkId(),
-								toRoute.getSmscId(), toRoute.getGroupId(), toRoute.getCost(), toRoute.getSmscType(),
-								systemId, editOn, null);
-						cost = route.getCost();
-						if (isPercent) {
-							cost = cost + ((cost * margin) / 100);
-						} else {
-							cost = cost + margin;
-						}
-						route.setId(0);
-						route.setCost(Double.valueOf(new DecimalFormat("#.#####").format(cost)));
-						route.setUserId(to_user[i]);
-						RouteEntryExt ext = new RouteEntryExt(route);
-						if (!includeHlr) {
-							ext.setHlrRouteEntry(new HlrRouteEntry(systemId, editOn));
-						} else {
-							if (toRouteExt.getHlrRouteEntry() != null) {
-								HlrRouteEntry toHlr = toRouteExt.getHlrRouteEntry();
-								ext.setHlrRouteEntry(new HlrRouteEntry(0, toHlr.isHlr(), toHlr.getSmsc(),
-										toHlr.getHlrCache(), toHlr.getCost(), systemId, editOn, toHlr.isMnp()));
+							if (!replaceExist) {
+								if (exist_networks.contains(toRoute.getNetworkId())) {
+									logger.info("Skipping Copy Routing For Exist: " + toRoute.getNetworkId());
+									continue;
+								} else {
+									to_be_replaced.add(toRoute.getNetworkId());
+								}
+							}
+							RouteEntry route = new RouteEntry(toRoute.getUserId(), toRoute.getNetworkId(),
+									toRoute.getSmscId(), toRoute.getGroupId(), toRoute.getCost(), toRoute.getSmscType(),
+									systemId, editOn, null);
+							cost = route.getCost();
+							if (isPercent) {
+								cost = cost + ((cost * margin) / 100);
 							} else {
+								cost = cost + margin;
+							}
+							route.setId(0);
+							route.setCost(Double.valueOf(new DecimalFormat("#.#####").format(cost)));
+							route.setUserId(to_user[i]);
+							RouteEntryExt ext = new RouteEntryExt(route);
+							if (!includeHlr) {
 								ext.setHlrRouteEntry(new HlrRouteEntry(systemId, editOn));
+							} else {
+								if (toRouteExt.getHlrRouteEntry() != null) {
+									HlrRouteEntry toHlr = toRouteExt.getHlrRouteEntry();
+									ext.setHlrRouteEntry(new HlrRouteEntry(0, toHlr.isHlr(), toHlr.getSmsc(),
+											toHlr.getHlrCache(), toHlr.getCost(), systemId, editOn, toHlr.isMnp()));
+								} else {
+									ext.setHlrRouteEntry(new HlrRouteEntry(systemId, editOn));
+								}
 							}
-						}
-						if (!includeOpt) {
-							ext.setRouteOptEntry(new OptionalRouteEntry(systemId, editOn));
-						} else {
-							if (toRouteExt.getRouteOptEntry() != null) {
-								OptionalRouteEntry toOptRouteEntry = toRouteExt.getRouteOptEntry();
-								String msgAppender = toOptRouteEntry.getMsgAppender();
-								String msgAppenderConverted = null;
-								if (msgAppender != null && msgAppender.length() > 0) {
-									// logger.info("msgAppender: " + msgAppender);
-									if (msgAppender.contains("^") || msgAppender.contains("$")) {
-										// convert to hex
-										msgAppenderConverted = (msgAppender);
+							if (!includeOpt) {
+								ext.setRouteOptEntry(new OptionalRouteEntry(systemId, editOn));
+							} else {
+								if (toRouteExt.getRouteOptEntry() != null) {
+									OptionalRouteEntry toOptRouteEntry = toRouteExt.getRouteOptEntry();
+									String msgAppender = toOptRouteEntry.getMsgAppender();
+									String msgAppenderConverted = null;
+									if (msgAppender != null && msgAppender.length() > 0) {
+										// logger.info("msgAppender: " + msgAppender);
+										if (msgAppender.contains("^") || msgAppender.contains("$")) {
+											// convert to hex
+											msgAppenderConverted = (msgAppender);
+										} else {
+											msgAppenderConverted = null;
+										}
 									} else {
 										msgAppenderConverted = null;
 									}
+									ext.setRouteOptEntry(new OptionalRouteEntry(0, toOptRouteEntry.getNumSmscId(),
+											toOptRouteEntry.getBackupSmscId(), toOptRouteEntry.getForceSenderNum(),
+											toOptRouteEntry.getForceSenderAlpha(), toOptRouteEntry.getExpiredOn(),
+											toOptRouteEntry.getSmsLength(), toOptRouteEntry.isRefund(),
+											toOptRouteEntry.getRegSender(), toOptRouteEntry.getRegSmscId(),
+											toOptRouteEntry.getCodeLength(), toOptRouteEntry.isReplaceContent(),
+											toOptRouteEntry.getReplacement(), msgAppenderConverted,
+											toOptRouteEntry.getSourceAppender(), systemId, editOn));
+									ext.getRouteOptEntry().setRegGroupId(toOptRouteEntry.getRegGroupId());
 								} else {
-									msgAppenderConverted = null;
+									ext.setRouteOptEntry(new OptionalRouteEntry(systemId, editOn));
 								}
-								ext.setRouteOptEntry(new OptionalRouteEntry(0, toOptRouteEntry.getNumSmscId(),
-										toOptRouteEntry.getBackupSmscId(), toOptRouteEntry.getForceSenderNum(),
-										toOptRouteEntry.getForceSenderAlpha(), toOptRouteEntry.getExpiredOn(),
-										toOptRouteEntry.getSmsLength(), toOptRouteEntry.isRefund(),
-										toOptRouteEntry.getRegSender(), toOptRouteEntry.getRegSmscId(),
-										toOptRouteEntry.getCodeLength(), toOptRouteEntry.isReplaceContent(),
-										toOptRouteEntry.getReplacement(), msgAppenderConverted,
-										toOptRouteEntry.getSourceAppender(), systemId, editOn));
-								ext.getRouteOptEntry().setRegGroupId(toOptRouteEntry.getRegGroupId());
-							} else {
-								ext.setRouteOptEntry(new OptionalRouteEntry(systemId, editOn));
 							}
+							routinglist.add(ext);
 						}
-						routinglist.add(ext);
-					}
-					logger.info(to_user[i] + " To be Copied Routing Entries: " + routinglist.size());
-					if (replaceExist) {
-						if (networks.isEmpty()) {
-							deleteRouteEntries(to_user[i]);
+						logger.info(to_user[i] + " To be Copied Routing Entries: " + routinglist.size());
+						if (replaceExist) {
+							if (networks.isEmpty()) {
+								deleteRouteEntries(to_user[i]);
+							} else {
+								deleteRouteEntries(to_user[i], networks);
+							}
 						} else {
-							deleteRouteEntries(to_user[i], networks);
+							// skip existing networks
+							deleteRouteEntries(to_user[i], to_be_replaced);
 						}
-					} else {
-						// skip existing networks
-						deleteRouteEntries(to_user[i], to_be_replaced);
+						logger.info(to_user[i] + " All Routing Entries Deleted");
+						saveEntries(routinglist);
+						logger.info(to_user[i] + " All Routing Copied");
+						MultiUtility.refreshRouting(to_user[i]);
 					}
-					logger.info(to_user[i] + " All Routing Entries Deleted");
-					saveEntries(routinglist);
-					logger.info(to_user[i] + " All Routing Copied");
-					MultiUtility.refreshRouting(to_user[i]);
+					MultiUtility.changeFlag(Constants.CLIENT_FLAG_FILE, "707");
+					target = IConstants.SUCCESS_KEY;
 				}
-				MultiUtility.changeFlag(Constants.CLIENT_FLAG_FILE, "707");
-				target = IConstants.SUCCESS_KEY;
+			} else {
+				target = "invalidRequest";
+				throw new UnauthorizedException("Unauthorized User");
 			}
-		} else {
-			target = "invalidRequest";
+		} catch (UnauthorizedException e) {
+			logger.error(e.toString());
+			throw new UnauthorizedException(e.getLocalizedMessage());
+		} catch (Exception e) {
+			logger.error(e.toString());
+			throw new InternalServerException(e.getLocalizedMessage());
 		}
 
 		return target;
@@ -2107,12 +2251,14 @@ public class RouteServiceImpl implements RouteServices {
 		UserEntry userEntry = null;
 		if (userEntityOptional.isPresent()) {
 			userEntry = userEntityOptional.get();
+		}else {
+			throw new NotFoundException("UserEntry not found");
 		}
 		String target = IConstants.FAILURE_KEY;
 		String masterid = userEntry.getMasterId();
 		logger.info("Download Routing Requested By " + masterid + " [" + user.getRoles() + "]");
 		try {
-			if (Access.isAuthorizedUser(null)) {
+			if (!Access.isAuthorizedUser(user.getRoles())) {
 				boolean proceed = true;
 				// RouteDAService routeService = new RouteDAServiceImpl();
 				List<RouteEntryExt> routinglist = new ArrayList<RouteEntryExt>();
@@ -2143,7 +2289,13 @@ public class RouteServiceImpl implements RouteServices {
 						}
 						logger.info(masterid + " Download Routinglist Size: " + routinglist.size());
 						if (!routinglist.isEmpty()) {
-							Workbook workbook = getWorkBook(routinglist);
+							Workbook workbook = null;
+							try {
+								workbook = getWorkBook(routinglist);
+							} catch (Exception e) {
+								logger.error(e.getLocalizedMessage());
+								throw new WorkBookException("WorkBook Exception: "+e.getLocalizedMessage());
+							}
 							String filename = "Routing_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())
 									+ ".xlsx";
 							response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\";");
@@ -2162,8 +2314,12 @@ public class RouteServiceImpl implements RouteServices {
 									out.write(curByte);
 								}
 								out.flush();
+							} catch (IOException ex) {
+								logger.error(masterid + " Routing XLSx Download Error: " + ex.toString());
+								throw new InternalServerException("IO Exception: "+ex.getLocalizedMessage());
 							} catch (Exception ex) {
 								logger.error(masterid + " Routing XLSx Download Error: " + ex.toString());
+								throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
 							} finally {
 								try {
 									if (is != null) {
@@ -2172,26 +2328,45 @@ public class RouteServiceImpl implements RouteServices {
 									if (out != null) {
 										out.close();
 									}
+								} catch (IOException ex) {
+									logger.error("IOException: "+ex.getLocalizedMessage());
+									throw new InternalServerException("IO Exception: "+ex.getLocalizedMessage());
 								} catch (Exception ex) {
+									logger.error("Exception: "+ex.getLocalizedMessage());
+									throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
 								}
 							}
 							target = IConstants.SUCCESS_KEY;
 						} else {
-							logger.error("error.record.unavailable");
+							logger.error("error: record unavailable. Routing list empty.");
+							throw new NotFoundException("Routing list empty!");
 						}
 					} else {
 						target = "invalidRequest";
+						throw new UnauthorizedException("Invalid Request!");
 					}
 				} else {
-					logger.error("error.record.unavailable");
+					logger.error("error: record unavailable");
+					throw new NotFoundException("Id not found!");
 				}
 			} else {
 				logger.error("Authorization Failed[" + user.getRoles() + "] :" + masterid);
 				target = "invalidRequest";
+				throw new UnauthorizedException("Unauthorized User!");
 			}
+		} catch (NotFoundException ex) {
+			logger.error("NotFound Exception: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.toString());
+			throw new NotFoundException("NotFound Exception: "+ex.getLocalizedMessage());
+			
+		} catch (UnauthorizedException ex) {
+			logger.error("Unauthorized Exception: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.toString());
+			throw new UnauthorizedException("Unauthorized Exception: "+ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
-			logger.error(masterid, ex.fillInStackTrace());
+			logger.error(masterid, ex.toString());
+			throw new InternalServerException("Unexpected Exception: "+ex.getLocalizedMessage());
 		}
 		return target;
 
@@ -2310,14 +2485,20 @@ public class RouteServiceImpl implements RouteServices {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		SalesEntry salesEntry = salesRepository.findByMasterId(user.getSystemId());
+		SalesEntry salesEntry = null;
+		try {
+			salesEntry = salesRepository.findByMasterId(user.getSystemId());
+		} catch (Exception e1) {
+			logger.error("NotFoundException: "+e1.toString());
+			throw new NotFoundException("Unable to found SalesEntry. Exception: "+e1.getLocalizedMessage());
+		}
 		String target = null;
 		try {
 			// String usernames="";
 			String masterId = user.getSystemId();
 			logger.info("Routing User list Request For " + purpose + " By " + masterId);
 			if (Access.isAuthorizedUser(user.getRoles())) {
-				System.out.println("Authorized User :" + masterId);
+				logger.info("Authorized User :" + masterId);
 				if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
 					// List<UserEntry> usernames = new ArrayList<UserEntry>();
 					if (purpose.equalsIgnoreCase("add") || purpose.equalsIgnoreCase("search")) {
@@ -2478,12 +2659,17 @@ public class RouteServiceImpl implements RouteServices {
 				// usernames.sort(Comparator.comparing(UserEntry::getSystemId,
 				// String.CASE_INSENSITIVE_ORDER));
 			} else {
-				System.out.println("Authorization Failed :" + masterId);
+				logger.error("Authorization Failed :" + masterId);
 				target = "invalidRequest";
+				throw new UnauthorizedException("Authorization Failed :" + masterId);
 			}
-		} catch (Exception ex) {
+		} catch (UnauthorizedException ex) {
 			logger.error(user.getSystemId(), ex.fillInStackTrace());
 			target = IConstants.FAILURE_KEY;
+			throw new UnauthorizedException("Unauthorized user: "+ex.getLocalizedMessage());
+		} catch (Exception e) {
+			logger.error("Unexpected Exception: "+e.toString());
+			throw new InternalServerException("Unexpected Exception: "+e.getLocalizedMessage());
 		}
 		logger.info("Routing User list Request Target: " + target);
 		routeUserResponse.setStatus(target);
@@ -2493,25 +2679,35 @@ public class RouteServiceImpl implements RouteServices {
 	public Map<Integer, UserEntryExt> listUserEntryUnderManager(String mgrId) {
 		Map<Integer, String> map = listNamesUnderManager(mgrId);
 		Map<Integer, UserEntryExt> users = new HashMap<Integer, UserEntryExt>();
-		for (int seller_id : map.keySet()) {
-			Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject().get("executiveId")
-					.equal(seller_id);
-			for (WebMasterEntry entry : GlobalVars.WebmasterEntries.values(p)) {
-				UserEntry userEntry = GlobalVars.UserEntries.get(entry.getUserId());
-				UserEntryExt ext = new UserEntryExt(userEntry);
-				entry.setExecutiveName(map.get(seller_id));
-				ext.setWebMasterEntry(entry);
-				users.put(userEntry.getId(), ext);
+		try {
+			for (int seller_id : map.keySet()) {
+				Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject().get("executiveId")
+						.equal(seller_id);
+				for (WebMasterEntry entry : GlobalVars.WebmasterEntries.values(p)) {
+					UserEntry userEntry = GlobalVars.UserEntries.get(entry.getUserId());
+					UserEntryExt ext = new UserEntryExt(userEntry);
+					entry.setExecutiveName(map.get(seller_id));
+					ext.setWebMasterEntry(entry);
+					users.put(userEntry.getId(), ext);
+				}
 			}
+		} catch (Exception e) {
+			logger.error("Exception: "+e.toString());
+			throw new InternalServerException("Exception: "+e.getLocalizedMessage());
 		}
 		return users;
 	}
 
 	public Map<Integer, String> listNamesUnderManager(String mgrId) {
 		Map<Integer, String> map = new HashMap<Integer, String>();
-		List<SalesEntry> list = listSellersUnderManager(mgrId);
-		for (SalesEntry entry : list) {
-			map.put(entry.getId(), entry.getUsername());
+		try {
+			List<SalesEntry> list = listSellersUnderManager(mgrId);
+			for (SalesEntry entry : list) {
+				map.put(entry.getId(), entry.getUsername());
+			}
+		} catch (Exception e) {
+			logger.error("Exception: "+e.toString());
+			throw new InternalServerException("Exception: "+e.getLocalizedMessage());
 		}
 		return map;
 	}
@@ -2523,16 +2719,21 @@ public class RouteServiceImpl implements RouteServices {
 	public Map<Integer, UserEntryExt> listUserEntryUnderSeller(int seller, User user) {
 		logger.info("listing UserEntries Under Seller(" + seller + ")");
 		Map<Integer, UserEntryExt> map = new HashMap<Integer, UserEntryExt>();
-		for (WebMasterEntry webEntry : GlobalVars.WebmasterEntries.values()) {
-			if (webEntry.getExecutiveId() == seller) {
-				UserEntryExt entry = getUserEntryExt(webEntry.getUserId());
-				if (Access.isAuthorizedAdmin(user.getRoles())) {
-					Map<Integer, UserEntryExt> under_users = listUserEntryUnderMaster(
-							entry.getUserEntry().getSystemId());
-					map.putAll(under_users);
+		try {
+			for (WebMasterEntry webEntry : GlobalVars.WebmasterEntries.values()) {
+				if (webEntry.getExecutiveId() == seller) {
+					UserEntryExt entry = getUserEntryExt(webEntry.getUserId());
+					if (Access.isAuthorizedAdmin(user.getRoles())) {
+						Map<Integer, UserEntryExt> under_users = listUserEntryUnderMaster(
+								entry.getUserEntry().getSystemId());
+						map.putAll(under_users);
+					}
+					map.put(webEntry.getUserId(), entry);
 				}
-				map.put(webEntry.getUserId(), entry);
 			}
+		} catch (Exception e) {
+			logger.error("Exception: "+e.toString());
+			throw new InternalServerException("Unexpected Exception: "+e.getLocalizedMessage());
 		}
 		logger.info("UserEntries Found Under Seller(" + seller + "): " + map.size());
 		return map;
@@ -2540,7 +2741,13 @@ public class RouteServiceImpl implements RouteServices {
 
 	private Map<String, String> getDistinctCountry() {
 		Map<String, String> countries = new HashMap<>();
-		List<Object[]> resultList = networkEntryRepository.findDistinctCountries();
+		List<Object[]> resultList = null;
+		try {
+			resultList = networkEntryRepository.findDistinctCountries();
+		} catch (Exception e) {
+			logger.error("NotFound Exception: "+e.toString());
+			throw new NotFoundException("Unable to find Distinct Countries. Exception: "+e.getLocalizedMessage());
+		}
 
 		for (Object[] result : resultList) {
 			countries.put((String) result[0], (String) result[1]);
@@ -2557,10 +2764,15 @@ public class RouteServiceImpl implements RouteServices {
 				if (expiry_date.after(new Date())) {
 					filter.add(entry);
 				} else {
-					System.out.println(entry.getSystemId() + " Account Expired: " + entry.getExpiry());
+					logger.error(entry.getSystemId() + " Account Expired: " + entry.getExpiry());
+					throw new InternalServerException(entry.getSystemId() + " Account Expired: " + entry.getExpiry());
 				}
 			} catch (ParseException e) {
 				logger.error(entry.getSystemId(), "Expiry Parse Error: " + entry.getExpiry());
+				throw new InternalServerException("Parse Exception: "+e.getLocalizedMessage());
+			} catch (Exception e) {
+				logger.error("Exception: "+e.toString());
+				throw new InternalServerException("Unexpected Exception: "+e.getLocalizedMessage());
 			}
 		}
 		return filter;
@@ -2568,30 +2780,41 @@ public class RouteServiceImpl implements RouteServices {
 
 	public UserEntryExt getUserEntryExt(int userid) {
 		logger.debug("getUserEntry(" + userid + ")");
-		if (GlobalVars.UserEntries.containsKey(userid)) {
-			UserEntryExt entry = new UserEntryExt(GlobalVars.UserEntries.get(userid));
-			entry.setDlrSettingEntry(GlobalVars.DlrSettingEntries.get(userid));
-			WebMasterEntry webEntry = GlobalVars.WebmasterEntries.get(userid);
-			entry.setWebMasterEntry(webEntry);
-			entry.setProfessionEntry(GlobalVars.ProfessionEntries.get(userid));
-			logger.debug("end getUserEntry(" + userid + ")");
-			return entry;
-		} else {
-			return null;
+		UserEntryExt entry = null;
+		try {
+			if (GlobalVars.UserEntries.containsKey(userid)) {
+				entry = new UserEntryExt(GlobalVars.UserEntries.get(userid));
+				entry.setDlrSettingEntry(GlobalVars.DlrSettingEntries.get(userid));
+				WebMasterEntry webEntry = GlobalVars.WebmasterEntries.get(userid);
+				entry.setWebMasterEntry(webEntry);
+				entry.setProfessionEntry(GlobalVars.ProfessionEntries.get(userid));
+				logger.debug("end getUserEntry(" + userid + ")");
+			} else {
+				return null;
+			}
+		} catch (Exception e) {
+			logger.error("Exception: "+e.toString());
+			throw new InternalServerException("Unexpected Exception: "+e.getLocalizedMessage());
 		}
+		return entry;
 	}
 
 	public Map<Integer, UserEntryExt> listUserEntryUnderMaster(String master) {
 		logger.debug("listUserEntryUnderMaster(" + master + ")");
 		Map<Integer, UserEntryExt> map = new LinkedHashMap<Integer, UserEntryExt>();
-		for (UserEntry userEntry : GlobalVars.UserEntries.values()) {
-			if (userEntry.getMasterId().equalsIgnoreCase(master)) {
-				UserEntryExt entry = new UserEntryExt(userEntry);
-				entry.setDlrSettingEntry(GlobalVars.DlrSettingEntries.get(userEntry.getId()));
-				entry.setWebMasterEntry(GlobalVars.WebmasterEntries.get(userEntry.getId()));
-				entry.setProfessionEntry(GlobalVars.ProfessionEntries.get(userEntry.getId()));
-				map.put(userEntry.getId(), entry);
+		try {
+			for (UserEntry userEntry : GlobalVars.UserEntries.values()) {
+				if (userEntry.getMasterId().equalsIgnoreCase(master)) {
+					UserEntryExt entry = new UserEntryExt(userEntry);
+					entry.setDlrSettingEntry(GlobalVars.DlrSettingEntries.get(userEntry.getId()));
+					entry.setWebMasterEntry(GlobalVars.WebmasterEntries.get(userEntry.getId()));
+					entry.setProfessionEntry(GlobalVars.ProfessionEntries.get(userEntry.getId()));
+					map.put(userEntry.getId(), entry);
+				}
 			}
+		} catch (Exception e) {
+			logger.error("Excpetion: "+e.toString());
+			throw new InternalServerException("Unexpected Exception: "+e.getLocalizedMessage());
 		}
 		return map;
 	}
@@ -2906,7 +3129,13 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		sql += "A.user_id = D.id and A.smsc_id=C.id and A.network_id = B.id and A.group_id = F.id and A.user_id = E.user_id";
 		System.out.println(sql);
-		List<RouteEntryExt> routinglist = getBasicRouting(sql);
+		List<RouteEntryExt> routinglist = null;
+		try {
+			routinglist = getBasicRouting(sql);
+		} catch (Exception e) {
+			logger.error("Exception: "+e.toString());
+			throw new InternalServerErrorException("Exception: "+e.getLocalizedMessage());
+		}
 		return routinglist;
 	}
 
@@ -2968,8 +3197,8 @@ public class RouteServiceImpl implements RouteServices {
 				return ext;
 			});
 		} catch (Exception e) {
-			// Handle exceptions
-			e.printStackTrace();
+			logger.error("Exception: "+e.toString());
+			throw new InternalServerException("Exception: "+e.getLocalizedMessage());
 		}
 
 		return basicRouting;
@@ -2988,8 +3217,8 @@ public class RouteServiceImpl implements RouteServices {
 				return null; // Not used since we are building the result incrementally
 			});
 		} catch (Exception e) {
-			// Handle exceptions
-			e.printStackTrace();
+			logger.error("Exception: "+e.toString());
+			throw new InternalServerException("Exception: "+e.getLocalizedMessage());
 		}
 
 		return smscPricing;
@@ -3076,7 +3305,8 @@ public class RouteServiceImpl implements RouteServices {
 			routinglist.addAll(map.values());
 			logger.info("Requested Routing List: " + routinglist.size());
 		} catch (Exception e) {
-			logger.error("", e.fillInStackTrace());
+			logger.error("Exception: ", e.toString());
+			throw new InternalServerException("Exception: "+e.getLocalizedMessage());
 		}
 		return routinglist;
 	}
@@ -3097,20 +3327,33 @@ public class RouteServiceImpl implements RouteServices {
 		String target = "lookup";
 		String masterid = user.getSystemId();
 		logger.info(masterid + "[" + user.getRoles() + "] Lookup RouteEntries Search Request Using Advanced Criteria");
-		if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
-			List<RouteEntryExt> routinglist = getRoutingList(routingForm, true, false);
-			if (!routinglist.isEmpty()) {
-				optionRouteResponse.setRoutinglist(routinglist);
+		try {
+			if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				List<RouteEntryExt> routinglist = getRoutingList(routingForm, true, false);
+				if (!routinglist.isEmpty()) {
+					optionRouteResponse.setRoutinglist(routinglist);
+				} else {
+					target = IConstants.FAILURE_KEY;
+					logger.error("error: record unavailable");
+					throw new NotFoundException("Routing list not found!");
+				}
 			} else {
-				target = IConstants.FAILURE_KEY;
-				logger.error("error.record.unavailable");
-				// messages.add(ActionMessages.GLOBAL_MESSAGE, message);
+				logger.info(masterid + "[" + user.getRoles() + "] Authorization Failed");
+				target = "invalidRequest";
+				throw new UnauthorizedException("Unauthorized User!");
 			}
-		} else {
-			logger.info(masterid + "[" + user.getRoles() + "] Authorization Failed");
-			target = "invalidRequest";
+			optionRouteResponse.setStatus(target);
+		} catch (NotFoundException e) {
+			logger.error("NotFoundException: "+e.toString());
+			throw new NotFoundException("NotFoundException: "+e.getLocalizedMessage());
+		} catch (UnauthorizedException e) {
+			logger.error("UnauthorizedException: "+e.toString());
+			throw new NotFoundException("UnauthorizedException: "+e.getLocalizedMessage());
+		} catch (Exception e) {
+			logger.error("Exception: "+e.toString());
+			throw new NotFoundException("Exception: "+e.getLocalizedMessage());
 		}
-		optionRouteResponse.setStatus(target);
+		
 		return optionRouteResponse;
 	}
 
@@ -3129,35 +3372,47 @@ public class RouteServiceImpl implements RouteServices {
 		String target = IConstants.FAILURE_KEY;
 		String masterid = user.getSystemId();
 		logger.info(masterid + "[" + user.getRoles() + "] Lookup RouteEntries Search Request Using Advanced Criteria");
-		if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
-			List<RouteEntryExt> routinglist = getRoutingList(routingForm, false, true);
-			if (!routinglist.isEmpty()) {
-				Map<Integer, String> groupDetail = new HashMap<Integer, String>(listGroupNames());
-				Map<Integer, String> smsclist = new HashMap<Integer, String>();
-				Map<Integer, Set<String>> group_mapping = getSmscGroupMapping();
-				Map<Integer, String> smscnames = listNames();
-				for (int smsc_id : smscnames.keySet()) {
-					String smsc_name = smscnames.get(smsc_id);
-					if (group_mapping.containsKey(smsc_id)) {
-						smsclist.put(smsc_id, smsc_name + " " + group_mapping.get(smsc_id));
-					} else {
-						smsclist.put(smsc_id, smsc_name + " [NONE]");
+		try {
+			if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
+				List<RouteEntryExt> routinglist = getRoutingList(routingForm, false, true);
+				if (!routinglist.isEmpty()) {
+					Map<Integer, String> groupDetail = new HashMap<Integer, String>(listGroupNames());
+					Map<Integer, String> smsclist = new HashMap<Integer, String>();
+					Map<Integer, Set<String>> group_mapping = getSmscGroupMapping();
+					Map<Integer, String> smscnames = listNames();
+					for (int smsc_id : smscnames.keySet()) {
+						String smsc_name = smscnames.get(smsc_id);
+						if (group_mapping.containsKey(smsc_id)) {
+							smsclist.put(smsc_id, smsc_name + " " + group_mapping.get(smsc_id));
+						} else {
+							smsclist.put(smsc_id, smsc_name + " [NONE]");
+						}
 					}
+					smsclist.put(0, "DOWN [NONE]");
+					optionRouteResponse.setGroupDetail(groupDetail);
+					optionRouteResponse.setRoutinglist(routinglist);
+					optionRouteResponse.setSmsclist(smsclist);
+				} else {
+					target = IConstants.FAILURE_KEY;
+					logger.error("error: record unavailable");
+					throw new NotFoundException("NotFound Exception: Routing List Not Found");
 				}
-				smsclist.put(0, "DOWN [NONE]");
-				optionRouteResponse.setGroupDetail(groupDetail);
-				optionRouteResponse.setRoutinglist(routinglist);
-				optionRouteResponse.setSmsclist(smsclist);
 			} else {
-				target = IConstants.FAILURE_KEY;
-				logger.error("error.record.unavailable");
-				// messages.add(ActionMessages.GLOBAL_MESSAGE, message);
+				logger.error(masterid + "[" + user.getRoles() + "] Authorization Failed");
+				target = "invalidRequest";
+				throw new UnauthorizedException("Unauthorized User Exception!");
 			}
-		} else {
-			logger.info(masterid + "[" + user.getRoles() + "] Authorization Failed");
-			target = "invalidRequest";
+			optionRouteResponse.setStatus(target);
+		} catch (NotFoundException e) {
+			logger.error("NotFound Exception: "+e.toString());
+			throw new NotFoundException("NotFound Exception: "+e.getLocalizedMessage());
+		} catch (UnauthorizedException e) {
+			logger.error("Unauthorized Exception: "+e.toString());
+			throw new NotFoundException("Unauthorized Exception: "+e.getLocalizedMessage());
+		} catch (Exception e) {
+			logger.error("Unexpected Exception: "+e.toString());
+			throw new NotFoundException("Exception: "+e.getLocalizedMessage());
 		}
-		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;
 	}
 
@@ -3215,7 +3470,7 @@ public class RouteServiceImpl implements RouteServices {
 					// refreshUsers.add(userid[i]);
 				}
 				if (userWiseRouting.isEmpty()) {
-					logger.error("error.record.unavailable");
+					logger.error("error: record unavailable. user wise routing is empty!");
 				} else {
 					// ----- check for auto_copy_routing users ------------
 					// EntryObject e = new PredicateBuilder().getEntryObject();
@@ -3250,7 +3505,8 @@ public class RouteServiceImpl implements RouteServices {
 										try {
 											margin = Double.parseDouble(margin_str);
 										} catch (Exception ex) {
-											logger.info(subUserId + "Invalid margin: " + margin_str);
+											logger.error(subUserId + "Invalid margin: " + margin_str);
+											throw new InternalServerException("Parse Exception: "+ex.getLocalizedMessage());
 										}
 									}
 									logger.info(
@@ -3322,9 +3578,12 @@ public class RouteServiceImpl implements RouteServices {
 						} else {
 							logger.error(masterid + " RouteId[" + id[i] + "] Invalid Network[" + basic.getNetworkId()
 									+ "] Update Request");
+							throw new InternalServerException(masterid + " RouteId[" + id[i] + "] Invalid Network[" + basic.getNetworkId()
+							+ "] Update Request");
 						}
 					} else {
 						logger.error(masterid + " Invalid RouteId[" + id[i] + "] Update Request");
+						throw new InternalServerException(masterid + " Invalid RouteId[" + id[i] + "] Update Request");
 					}
 				}
 			}
@@ -3349,23 +3608,30 @@ public class RouteServiceImpl implements RouteServices {
 									try {
 										updateRouteSch(routingForm.getScheduledOn());
 									} catch (Exception e) {
-										System.out.println(masterid + " " + e.fillInStackTrace());
+										logger.error(masterid + " " + e.fillInStackTrace());
+										throw new InternalServerErrorException(e.getLocalizedMessage());
 									}
 									for (int user : refreshUsers) {
 										MultiUtility.refreshRouting(user);
 									}
 									MultiUtility.changeFlag(Constants.CLIENT_FLAG_FILE, "707");
-									System.out.println(masterid + " Routemaster Scheduled Update Task End");
+									logger.info(masterid + " Routemaster Scheduled Update Task End");
 								}
 							}, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(routingForm.getScheduledOn()));
 						}
 						target = "schedule";
-						logger.info("label.schSuccess");
+						logger.info("Schedule configured successfully!");
 					}
 				} else {
 					updateRouteEntries(list);
 					if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
-						List<RouteEntryExt> routinglist = getUpdateBasicRoutingList(routingForm.getCriterionEntries());
+						List<RouteEntryExt> routinglist = null;
+						try {
+							routinglist = getUpdateBasicRoutingList(routingForm.getCriterionEntries());
+						} catch (Exception e) {
+							logger.error("Exception: "+e.toString());
+							throw new InternalServerException("Exception: "+e.getLocalizedMessage());
+						}
 						if (routinglist != null && !routinglist.isEmpty()) {
 							Map<Integer, String> smscnames = listNames();
 							Map<Integer, String> smsclist = new HashMap<Integer, String>();
@@ -3385,19 +3651,29 @@ public class RouteServiceImpl implements RouteServices {
 							target = "view";
 						} else {
 							target = IConstants.SUCCESS_KEY;
-							logger.info("message.routingSatedSuccessfully");
+							logger.info("Routing Configured");
 						}
 					} else {
 						target = IConstants.SUCCESS_KEY;
-						logger.info("message.routingSatedSuccessfully");
+						logger.info("Routing Configured");
 					}
 				}
 			} else {
-				logger.info("error.record.unavailable");
+				logger.info("error: record unavailable");
+				throw new NotFoundException("No data in list Exception!");
 			}
+		} catch (InternalServerException ex) {
+			logger.info("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+			throw new InternalServerException("Process Error: "+ex.getLocalizedMessage());
+		} catch (NotFoundException ex) {
+			logger.info("NotFound Exception: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+			throw new NotFoundException("NotFound Exception: "+ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.info("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
 			logger.error(masterid, ex.fillInStackTrace());
+			throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
 		}
 		if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY) || target.equalsIgnoreCase("view")) {
 			for (int user1 : refreshUsers) {
@@ -3506,7 +3782,7 @@ public class RouteServiceImpl implements RouteServices {
 					}
 				}
 				if (userWiseRouting.isEmpty()) {
-					logger.error("error.record.unavailable");
+					logger.error("error: record unavailable!");
 				} else {
 					// ----- check for auto_copy_routing users ------------
 					// EntryObject e = new PredicateBuilder().getEntryObject();
@@ -3577,9 +3853,12 @@ public class RouteServiceImpl implements RouteServices {
 						} else {
 							logger.error(masterid + " RouteId[" + id[i] + "] Invalid Network[" + basic.getNetworkId()
 									+ "] remove Request");
+							throw new InternalServerException(masterid + " RouteId[" + id[i] + "] Invalid Network[" + basic.getNetworkId()
+							+ "] remove Request");
 						}
 					} else {
 						logger.error(masterid + " Invalid RouteId[" + id[i] + "] remove Request");
+						throw new InternalServerException(masterid + " Invalid RouteId[" + id[i] + "] remove Request");
 					}
 				}
 			}
@@ -3587,7 +3866,12 @@ public class RouteServiceImpl implements RouteServices {
 				// logger.info("deleting records");
 				deleteRouteEntries(list);
 				if (Access.isAuthorizedSuperAdminAndSystem(user.getRoles())) {
-					List<RouteEntryExt> routinglist = getUpdateBasicRoutingList(routingForm.getCriterionEntries());
+					List<RouteEntryExt> routinglist = null;
+					try {
+						routinglist = getUpdateBasicRoutingList(routingForm.getCriterionEntries());
+					} catch (Exception e) {
+						throw new InternalServerException(e.getLocalizedMessage());
+					}
 					if (routinglist != null && !routinglist.isEmpty()) {
 						Map<Integer, String> smscnames = listNames();
 						Map<Integer, String> smsclist = new HashMap<Integer, String>();
@@ -3607,18 +3891,28 @@ public class RouteServiceImpl implements RouteServices {
 						target = "view";
 					} else {
 						target = IConstants.SUCCESS_KEY;
-						logger.info("message.routingSatedSuccessfully");
+						logger.info("Routing Configured!");
 					}
 				} else {
 					target = IConstants.SUCCESS_KEY;
-					logger.info("message.routingSatedSuccessfully");
+					logger.info("Routing Configured!");
 				}
 			} else {
-				logger.error("error.record.unavailable");
+				logger.error("error: record unavailable");
+				throw new NotFoundException("Record Not Found!");
 			}
+		} catch (InternalServerException ex) {
+			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+			throw new InternalServerException("Process Error: "+ex.getLocalizedMessage());
+		} catch (NotFoundException ex) {
+			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+			throw new NotFoundException("NotFound Exception: "+ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
 			logger.error(masterid, ex.fillInStackTrace());
+			throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
 		}
 		if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY) || target.equalsIgnoreCase("view")) {
 			for (int user1 : refreshUsers) {
@@ -3688,21 +3982,28 @@ public class RouteServiceImpl implements RouteServices {
 							target = "view";
 						} else {
 							target = IConstants.SUCCESS_KEY;
-							logger.info("message.routingSatedSuccessfully");
+							logger.info("Routing Configured!");
 						}
 					} else {
 						target = IConstants.SUCCESS_KEY;
-						logger.info("message.routingSatedSuccessfully");
+						logger.info("Routing Configured!");
 					}
 				} else {
-					logger.error("error.record.unavailable");
+					logger.error("error: record unavailable");
+					throw new NotFoundException("Log List Not Found!");
 				}
 			} else {
-				logger.error("error.record.unavailable");
+				logger.error("error: record unavailable");
+				throw new NotFoundException("Id is null or not found!");
 			}
+		} catch (NotFoundException ex) {
+			logger.error("NotFound Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+			throw new NotFoundException("NotFound Exception: "+ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
 			logger.error(masterid, ex.fillInStackTrace());
+			throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
 		}
 		if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY) || target.equalsIgnoreCase("view")) {
 			for (int user1 : refreshUsers) {
@@ -3750,18 +4051,30 @@ public class RouteServiceImpl implements RouteServices {
 						optionRouteResponse.setRoutinglist(list);
 						target = "previous";
 					} else {
-						logger.error("error.record.unavailable");
+						logger.error("error: record unavailable");
+						throw new NotFoundException("No data found in RouteEntryExt List.");
 					}
 				} else {
-					logger.error("error.record.unavailable");
+					logger.error("error: record unavailable");
+					throw new NotFoundException("Id not found or is null!");
 				}
 			} else {
 				logger.info(masterid + "[" + user.getRoles() + "] Authorization Failed");
 				target = "invalidRequest";
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
+		} catch (NotFoundException ex) {
+			logger.error("NotFoundException: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+			throw new NotFoundException("NotFoundException: "+ex.getLocalizedMessage());
+		} catch (UnauthorizedException ex) {
+			logger.error("UnauthorizedException: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+			throw new UnauthorizedException("Unauthorized Exception: "+ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
 			logger.error(masterid, ex.fillInStackTrace());
+			throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
 		}
 		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;
@@ -3795,18 +4108,30 @@ public class RouteServiceImpl implements RouteServices {
 						optionRouteResponse.setRoutinglist(list);
 						target = "hlr";
 					} else {
-						logger.error("error.record.unavailable");
+						logger.error("error: record unavailable");
+						throw new NotFoundException("No data found in RouteEntryExt List.");
 					}
 				} else {
-					logger.error("error.record.unavailable");
+					logger.error("error: record unavailable");
+					throw new NotFoundException("Id not found or is null!");
 				}
 			} else {
 				logger.info(masterid + "[" + user.getRoles() + "] Authorization Failed");
 				target = "invalidRequest";
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
+		} catch (NotFoundException ex) {
+			logger.error("NotFoundException: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+			throw new NotFoundException("NotFoundException: "+ex.getLocalizedMessage());
+		} catch (UnauthorizedException ex) {
+			logger.error("UnauthorizedException: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+			throw new UnauthorizedException("Unauthorized Exception: "+ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
 			logger.error(masterid, ex.fillInStackTrace());
+			throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
 		}
 		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;
@@ -3856,18 +4181,30 @@ public class RouteServiceImpl implements RouteServices {
 						optionRouteResponse.setSmsclist(smsclist);
 						target = "optional";
 					} else {
-						logger.error("error.record.unavailable");
+						logger.error("error: record unavailable");
+						throw new NotFoundException("No data found in RouteEntryExt List.");
 					}
 				} else {
-					logger.error("error.record.unavailable");
+					logger.error("error: record unavailable");
+					throw new NotFoundException("Id not found or is null!");
 				}
 			} else {
 				logger.info(masterid + "[" + user.getRoles() + "] Authorization Failed");
 				target = "invalidRequest";
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
+		} catch (NotFoundException ex) {
+			logger.error("NotFoundException: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+			throw new NotFoundException("NotFoundException: "+ex.getLocalizedMessage());
+		} catch (UnauthorizedException ex) {
+			logger.error("UnauthorizedException: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+			throw new UnauthorizedException("Unauthorized Exception: "+ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
 			logger.error(masterid, ex.fillInStackTrace());
+			throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
 		}
 		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;
@@ -4022,25 +4359,37 @@ public class RouteServiceImpl implements RouteServices {
 							}, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(hlrRouteEntry.getScheduledOn()));
 						}
 						target = "schedule";
-						logger.info("label.schSuccess");
+						logger.info("Schedule Successful!");
 					}
 				} else {
 					updateHlrRouteEntries(list);
-					List<RouteEntryExt> routinglist = getUpdateHlrRoutingList(hlrRouteEntry.getCriterionEntries());
+					List<RouteEntryExt> routinglist = null;
+					try {
+						routinglist = getUpdateHlrRoutingList(hlrRouteEntry.getCriterionEntries());
+					} catch (Exception e) {
+						logger.error("Exception: "+e.toString());
+						throw new InternalServerException("Exception: "+e.getLocalizedMessage());
+					}
 					if (!routinglist.isEmpty()) {
 						optionRouteResponse.setRoutinglist(routinglist);
 						target = "view";
 					} else {
 						target = IConstants.SUCCESS_KEY;
-						logger.info("message.routingSatedSuccessfully");
+						logger.info("Routing Configured");
 					}
 				}
 			} else {
-				logger.error("error.record.unavailable");
+				logger.error("No Records Found to Proceed");
+				throw new NotFoundException("No Records Found to Proceed");
 			}
+		} catch (NotFoundException ex) {
+			logger.error("NotFound Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+			throw new NotFoundException("NotFoundException: "+ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
 			logger.error(masterid, ex.fillInStackTrace());
+			throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
 		}
 		if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY) || target.equalsIgnoreCase("view")) {
 			for (int user1 : userWiseRouting.keySet()) {
@@ -4139,23 +4488,36 @@ public class RouteServiceImpl implements RouteServices {
 				if (!list.isEmpty()) {
 					logger.info("HlrRoute Update Size: " + list.size());
 					updateHlrRouteEntries(list);
-					List<RouteEntryExt> routinglist = getUpdateHlrRoutingList(hlrRouteEntry.getCriterionEntries());
+					List<RouteEntryExt> routinglist = null;
+					try {
+						routinglist = getUpdateHlrRoutingList(hlrRouteEntry.getCriterionEntries());
+					} catch (Exception e) {
+						logger.error(e.toString());
+						throw new InternalServerException("Exception: "+e.getLocalizedMessage());
+					}
 					if (!routinglist.isEmpty()) {
 						optionRouteResponse.setRoutinglist(routinglist);
 						target = "view";
 					} else {
 						target = IConstants.SUCCESS_KEY;
-						logger.info("message.routingSatedSuccessfully");
+						logger.info("Routing Configured");
 					}
 				} else {
-					logger.error("error.record.unavailable");
+					logger.error("No Records Found to Proceed");
+					throw new NotFoundException("No Records Found to Proceed. List is empty!");
 				}
 			} else {
-				logger.error("error.record.unavailable");
+				logger.error("No Records Found to Proceed");
+				throw new NotFoundException("No Records Found to Proceed. Id not found or is null!");
 			}
+		} catch (NotFoundException ex) {
+			logger.error("NotFound Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+			throw new NotFoundException("NotFoundException: "+ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
 			logger.error(masterid, ex.fillInStackTrace());
+			throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
 		}
 		if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY) || target.equalsIgnoreCase("view")) {
 			for (int user1 : refreshUsers) {
@@ -4202,15 +4564,21 @@ public class RouteServiceImpl implements RouteServices {
 					optionRouteResponse.setRoutinglist(list);
 					target = "previous";
 				} else {
-					logger.error("error.record.unavailable");
+					logger.error("No Records Found to Proceed");
+					throw new NotFoundException("No Records Found to Proceed. List is empty.");
 				}
 			} else {
-				logger.error("error.record.unavailable");
+				logger.error("No Records Found to Proceed");
+				throw new NotFoundException("No Records Found to Proceed. Id not found or is null!");
 			}
-
+		} catch (NotFoundException ex) {
+			logger.error("NotFound Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+			throw new NotFoundException("NotFoundException: "+ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
 			logger.error(masterid, ex.fillInStackTrace());
+			throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
 		}
 		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;
@@ -4258,15 +4626,21 @@ public class RouteServiceImpl implements RouteServices {
 					optionRouteResponse.setSmsclist(smsclist);
 					target = "basic";
 				} else {
-					logger.error("error.record.unavailable");
+					logger.error("No Records Found to Proceed");
+					throw new NotFoundException("No Records Found to Proceed. List is empty.");
 				}
 			} else {
-				logger.error("error.record.unavailable");
+				logger.error("No Records Found to Proceed");
+				throw new NotFoundException("No Records Found to Proceed. Id not found or is null!");
 			}
-
+		} catch (NotFoundException ex) {
+			logger.error("NotFound Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+			throw new NotFoundException("NotFoundException: "+ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
 			logger.error(masterid, ex.fillInStackTrace());
+			throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
 		}
 		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;
@@ -4316,18 +4690,30 @@ public class RouteServiceImpl implements RouteServices {
 						optionRouteResponse.setSmsclist(smsclist);
 						target = "optional";
 					} else {
-						logger.error("error.record.unavailable");
+						logger.error("error: record unavailable");
+						throw new NotFoundException("No data found in RouteEntryExt List.");
 					}
 				} else {
-					logger.error("error.record.unavailable");
+					logger.error("error: record unavailable");
+					throw new NotFoundException("Id not found or is null!");
 				}
 			} else {
-				logger.info(masterid + "[" + role + "] Authorization Failed");
+				logger.info(masterid + "[" + user.getRoles() + "] Authorization Failed");
 				target = "invalidRequest";
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
+		} catch (NotFoundException ex) {
+			logger.error("NotFoundException: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+			throw new NotFoundException("NotFoundException: "+ex.getLocalizedMessage());
+		} catch (UnauthorizedException ex) {
+			logger.error("UnauthorizedException: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+			throw new UnauthorizedException("Unauthorized Exception: "+ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
 			logger.error(masterid, ex.fillInStackTrace());
+			throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
 		}
 		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;
@@ -4360,15 +4746,22 @@ public class RouteServiceImpl implements RouteServices {
 					optionRouteResponse.setRoutinglist(list);
 					target = "hlr";
 				} else {
-					logger.error("error.record.unavailable");
+					logger.error("error: record unavailable");
+					throw new NotFoundException("No Data Found in RouteEntryExt List!");
 				}
 			} else {
-				logger.error("error.record.unavailable");
+				logger.error("error: record unavailable");
+				throw new NotFoundException("Id not found or is null!");
 			}
 
+		} catch (NotFoundException ex) {
+			logger.error("NotFoundException: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(masterid, ex.fillInStackTrace());
+			throw new NotFoundException("NotFoundException: "+ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
 			logger.error(masterid, ex.fillInStackTrace());
+			throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
 		}
 		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;

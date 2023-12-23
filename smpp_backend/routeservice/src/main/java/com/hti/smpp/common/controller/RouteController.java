@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.bind.annotation.RequestBody;
 import com.hti.smpp.common.request.HlrEntryArrForm;
 import com.hti.smpp.common.request.OptEntryArrForm;
 import com.hti.smpp.common.request.RouteEntryArrForm;
@@ -28,7 +28,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletResponse;
@@ -43,22 +42,31 @@ public class RouteController {
 
 	// if (role.equalsIgnoreCase("superadmin") || role.equalsIgnoreCase("system")) {
 	@PostMapping("/save")
-	@Operation(summary = "Save a route")
-	@ApiResponse(responseCode = "201", description = "Route saved successfully")
-	@ApiResponse(responseCode = "500", description = "Internal Server Error")
+	@Operation(summary = "Save a route", description = "Save a new route entries")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "201", description = "Route saved successfully"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error. Route Not Saved."),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+			@ApiResponse(responseCode = "404", description = "Content Not Found")
+	})
 	public ResponseEntity<String> saveRoute(
-			@RequestBody(description = "Route request object") RouteRequest routeRequest,
+		    @RequestBody RouteRequest routeRequest,
 			@Parameter(description = "Username in request header", required = true) @RequestHeader("username") String username) {
 		String savedRoute = routeService.saveRoute(routeRequest, username);
 		return new ResponseEntity<>(savedRoute, HttpStatus.CREATED);
 	}
 
 	@PutMapping("/updateOptionalRoute")
-	@Operation(summary = "Update an optional route")
-	@ApiResponse(responseCode = "200", description = "Update successful")
-	@ApiResponse(responseCode = "500", description = "Internal Server Error")
+	@Operation(summary = "Update an optional route", description = "Api To Update an Optional Route ")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Update successful"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error. Update Failed."),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+			@ApiResponse(responseCode = "404", description = "Content Not Found"),
+			@ApiResponse(responseCode = "400", description = "Bad Request. ScheduleTime Exception."),
+	})
 	public ResponseEntity<String> updateOptionalRoute(
-			@RequestBody(description = "Optional entry array form") OptEntryArrForm optEntryArrForm,
+			@RequestBody OptEntryArrForm optEntryArrForm,
 			@Parameter(description = "Username in request header", required = true) @RequestHeader("username") String username) {
 		try {
 			routeService.updateOptionalRoute(optEntryArrForm, username);
@@ -69,9 +77,13 @@ public class RouteController {
 	}
 
 	@GetMapping("/undo")
-	@Operation(summary = "Undo an operation")
-	@ApiResponse(responseCode = "200", description = "Undo operation successful")
-	@ApiResponse(responseCode = "500", description = "Internal Server Error")
+	@Operation(summary = "Undo an operation", description = "API to undo an operation")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Undo operation successful"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+			@ApiResponse(responseCode = "404", description = "Content Not Found")
+	})
 	public OptionRouteResponse undo(@RequestBody OptEntryArrForm optEntryArrForm,
 			@RequestHeader("username") String username) {
 		return routeService.UpdateOptionalRouteUndo(optEntryArrForm, username);
@@ -79,9 +91,13 @@ public class RouteController {
 
 	// if (role.equalsIgnoreCase("superadmin") || role.equalsIgnoreCase("system")) {
 	@GetMapping("/previous")
-	@Operation(summary = "Get previous operation result")
-	@ApiResponse(responseCode = "200", description = "Previous operation result retrieved successfully")
-	@ApiResponse(responseCode = "500", description = "Internal Server Error")
+	@Operation(summary = "Get previous operation result", description = "API for Get previous operation result")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Previous operation result retrieved successfully"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+			@ApiResponse(responseCode = "404", description = "Content Not Found")
+	})
 	public OptionRouteResponse previous(@RequestBody OptEntryArrForm optEntryArrForm,
 			@RequestHeader("username") String username) {
 		return routeService.UpdateOptionalRoutePrevious(optEntryArrForm, username);
@@ -89,6 +105,12 @@ public class RouteController {
 
 	@GetMapping("/basic")
 	@Operation(summary = "Perform a basic operation", description = "This endpoint performs a basic operation.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Basic operation done successfully"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+			@ApiResponse(responseCode = "404", description = "Content Not Found")
+	})
 	public OptionRouteResponse basic(@RequestBody OptEntryArrForm optEntryArrForm,
 			@Parameter(description = "The username provided in the request header", required = true, example = "john_doe") @RequestHeader("username") String username) {
 		return routeService.UpdateOptionalRouteBasic(optEntryArrForm, username);
@@ -96,19 +118,35 @@ public class RouteController {
 
 	@GetMapping("/check-existing")
 	@Operation(summary = "Check Existing Route", description = "Check if a route already exists.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Check Existing Route Successful"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+			@ApiResponse(responseCode = "404", description = "Content Not Found")
+	})
 	public OptionRouteResponse checkExisting(@RequestBody RouteEntryArrForm routeEntryArrForm, String username) {
-
 		return routeService.checkExisting(routeEntryArrForm, username);
 	}
-
+	
 	@PostMapping("/CopyRouting")
-	@Operation(summary = "", description = "Check if  copy route exists.")
+	@Operation(summary = "Copy Routing", description = "Check if copy route exists.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Copy routing Successful"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+			@ApiResponse(responseCode = "404", description = "Content Not Found")
+	})
 	public String execute(@PathVariable String username) {
 		return routeService.execute(username);
 	}
 
 	@Operation(summary = "Download Route", description = "Download route data for a user.")
-	@ApiResponse(responseCode = "200", description = "Download successful", content = @Content(mediaType = "text/plain"))
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "Download successful", content = @Content(mediaType = "text/plain")),
+		@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+		@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+		@ApiResponse(responseCode = "404", description = "Content Not Found")
+	})
 	@GetMapping("/download")
 	@ResponseBody
 	public String downloadRoute(@RequestParam String username, @RequestParam RouteEntryArrForm routingForm,
@@ -118,7 +156,12 @@ public class RouteController {
 	}
 
 	@Operation(summary = "Route User List", description = "Get the list of route users for a specific purpose.")
-	@ApiResponse(responseCode = "200", description = "Successful retrieval of route user list", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RouteUserResponse.class)))
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "Successful retrieval of route user list", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RouteUserResponse.class))),
+		@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+		@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+		@ApiResponse(responseCode = "404", description = "Content Not Found")
+	})
 	@GetMapping("/userList")
 	@ResponseBody
 	public RouteUserResponse routeUserList(@RequestParam String username, @RequestParam String purpose) {
@@ -127,7 +170,12 @@ public class RouteController {
 	}
 
 	@Operation(summary = "Search Routing (Basic)", description = "Search for routes using basic criteria.")
-	@ApiResponse(responseCode = "200", description = "Successful search for routes", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OptionRouteResponse.class)))
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "Successful search for routes", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OptionRouteResponse.class))),
+		@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+		@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+		@ApiResponse(responseCode = "404", description = "Content Not Found")
+	})
 	@GetMapping("/searchBasic")
 	@ResponseBody
 	public OptionRouteResponse searchRoutingBasic(@RequestParam String username,
@@ -137,7 +185,12 @@ public class RouteController {
 	}
 
 	@Operation(summary = "Search Routing (Optional)", description = "Search for routes using optional criteria.")
-	@ApiResponse(responseCode = "200", description = "Successful search for routes", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OptionRouteResponse.class)))
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "Successful search for routes", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OptionRouteResponse.class))),
+		@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+		@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+		@ApiResponse(responseCode = "404", description = "Content Not Found")
+	})
 	@GetMapping("/searchOptional")
 	@ResponseBody
 	public OptionRouteResponse searchRoutingOptional(@RequestParam String username,
@@ -147,7 +200,12 @@ public class RouteController {
 	}
 
 	@Operation(summary = "Search Routing (Lookup)", description = "Search for routes using lookup criteria.")
-	@ApiResponse(responseCode = "200", description = "Successful search for routes", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OptionRouteResponse.class)))
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "Successful search for routes", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OptionRouteResponse.class))),
+		@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+		@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+		@ApiResponse(responseCode = "404", description = "Content Not Found")
+	})
 	@GetMapping("/searchLookup")
 	@ResponseBody
 	public OptionRouteResponse searchRoutingLookup(@RequestParam String username,
@@ -158,17 +216,25 @@ public class RouteController {
 
 	@PostMapping("/basic")
 	@Operation(summary = "Create Basic Route", description = "Create a basic route.")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Route created successfully"),
-			@ApiResponse(responseCode = "400", description = "Bad Request") })
+	@ApiResponses(value = { 
+			@ApiResponse(responseCode = "200", description = "Route created successfully"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+			@ApiResponse(responseCode = "404", description = "Content Not Found")
+	})
 	public OptionRouteResponse basicRoute(@RequestParam String username, @RequestBody RouteEntryArrForm routingForm) {
 		// Implementation goes here
 		return routeService.BasicRouteBasicRoute(username, routingForm);
 	}
 
-	@DeleteMapping("/basic")
+	@DeleteMapping("/delete-basic")
 	@Operation(summary = "Delete Basic Route", description = "Delete a basic route.")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Route deleted successfully"),
-			@ApiResponse(responseCode = "400", description = "Bad Request") })
+	@ApiResponses(value = { 
+			@ApiResponse(responseCode = "200", description = "Route deleted successfully"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+			@ApiResponse(responseCode = "404", description = "Content Not Found")
+	})
 	public OptionRouteResponse deleteRouteBasicRoute(@RequestParam String username,
 			@RequestBody RouteEntryArrForm routingForm) {
 		// Implementation goes here
@@ -177,8 +243,12 @@ public class RouteController {
 
 	@PostMapping("/undo")
 	@Operation(summary = "Undo Basic Route", description = "Undo a basic route.")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Undo successful"),
-			@ApiResponse(responseCode = "400", description = "Bad Request") })
+	@ApiResponses(value = { 
+			@ApiResponse(responseCode = "200", description = "Undo successful"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+			@ApiResponse(responseCode = "404", description = "Content Not Found")
+	})
 	public OptionRouteResponse undoRouteBasicRoute(@RequestParam String username,
 			@RequestBody RouteEntryArrForm routingForm) {
 		// Implementation goes here
@@ -187,8 +257,12 @@ public class RouteController {
 
 	@PostMapping("/previous")
 	@Operation(summary = "Previous Basic Route", description = "Get the previous basic route.")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Previous route retrieved successfully"),
-			@ApiResponse(responseCode = "400", description = "Bad Request") })
+	@ApiResponses(value = { 
+			@ApiResponse(responseCode = "200", description = "Previous route retrieved successfully"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+			@ApiResponse(responseCode = "404", description = "Content Not Found")
+	})
 	public OptionRouteResponse previousRouteBasicRoute(@RequestParam String username,
 			@RequestBody RouteEntryArrForm routingForm) {
 		// Implementation goes here
@@ -197,18 +271,26 @@ public class RouteController {
 
 	@PostMapping("/hlr")
 	@Operation(summary = "HLR Basic Route", description = "Perform HLR routing.")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "HLR routing successful"),
-			@ApiResponse(responseCode = "400", description = "Bad Request") })
+	@ApiResponses(value = { 
+			@ApiResponse(responseCode = "200", description = "HLR routing successful"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+			@ApiResponse(responseCode = "404", description = "Content Not Found")
+	})
 	public OptionRouteResponse hlrRouteBasicRoute(@RequestParam String username,
 			@RequestBody RouteEntryArrForm routingForm) {
 		// Implementation goes here
-		return null;
+		return routeService.hlrRouteBasicRoute(username, routingForm);
 	}
 
 	@PostMapping("/optional")
 	@Operation(summary = "Optional Basic Route", description = "Create an optional basic route.")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Optional route created successfully"),
-			@ApiResponse(responseCode = "400", description = "Bad Request") })
+	@ApiResponses(value = { 
+			@ApiResponse(responseCode = "200", description = "Optional route created successfully"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+			@ApiResponse(responseCode = "404", description = "Content Not Found")
+	})
 	public OptionRouteResponse optionalRouteBasicRoute(@RequestParam String username,
 			@RequestBody RouteEntryArrForm routingForm) {
 		// Implementation goes here
@@ -216,54 +298,72 @@ public class RouteController {
 	}
 
 	@Operation(summary = "Update Optional Route HLR")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Success"),
-			@ApiResponse(responseCode = "400", description = "Bad Request"),
-			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
+	@ApiResponses(value = { 
+			@ApiResponse(responseCode = "200", description = "Success"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+			@ApiResponse(responseCode = "404", description = "Content Not Found")		
+	})
 	@PostMapping("/updateOptionalRouteHlr")
 	public OptionRouteResponse updateOptionalRouteHlr(@RequestBody OptEntryArrForm optEntryArrForm, String username) {
 		return routeService.UpdateOptionalRouteHlr(optEntryArrForm, username);
 	}
 
 	@Operation(summary = "HLR Route Update")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Success"),
-			@ApiResponse(responseCode = "400", description = "Bad Request"),
-			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
+	@ApiResponses(value = { 
+			@ApiResponse(responseCode = "200", description = "Success"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+			@ApiResponse(responseCode = "404", description = "Content Not Found")	
+	})
 	@PostMapping("/hlrRouteUpdate")
 	public OptionRouteResponse hlrRouteUpdate(String username, @RequestBody HlrEntryArrForm hlrEntryArrForm) {
 		return routeService.hlrRouteUpdate(username, hlrEntryArrForm);
 	}
 
 	@Operation(summary = "HLR Route Undo")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Success"),
-			@ApiResponse(responseCode = "400", description = "Bad Request"),
-			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
+	@ApiResponses(value = { 
+			@ApiResponse(responseCode = "200", description = "Success"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+			@ApiResponse(responseCode = "404", description = "Content Not Found")	
+	})
 	@PostMapping("/hlrRouteUndo")
 	public OptionRouteResponse hlrRouteUndo(String username, @RequestBody HlrEntryArrForm hlrEntryArrForm) {
 		return routeService.hlrRouteUndo(username, hlrEntryArrForm);
 	}
 
 	@Operation(summary = "HLR Route Previous")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Success"),
-			@ApiResponse(responseCode = "400", description = "Bad Request"),
-			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
+	@ApiResponses(value = { 
+			@ApiResponse(responseCode = "200", description = "Success"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+			@ApiResponse(responseCode = "404", description = "Content Not Found")
+	})
 	@PostMapping("/hlrRoutePrevious")
 	public OptionRouteResponse hlrRoutePrevious(String username, @RequestBody HlrEntryArrForm hlrEntryArrForm) {
 		return routeService.hlrRoutePrevious(username, hlrEntryArrForm);
 	}
 
 	@Operation(summary = "HLR Route Basic")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Success"),
-			@ApiResponse(responseCode = "400", description = "Bad Request"),
-			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
+	@ApiResponses(value = { 
+			@ApiResponse(responseCode = "200", description = "Success"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+			@ApiResponse(responseCode = "404", description = "Content Not Found")	
+	})
 	@PostMapping("/hlrRouteBasic")
 	public OptionRouteResponse hlrRouteBasic(String username, @RequestBody HlrEntryArrForm hlrEntryArrForm) {
 		return routeService.hlrRouteBasic(username, hlrEntryArrForm);
 	}
 
 	@Operation(summary = "HLR Route Optional")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Success"),
-			@ApiResponse(responseCode = "400", description = "Bad Request"),
-			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
+	@ApiResponses(value = { 
+			@ApiResponse(responseCode = "200", description = "Success"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
+			@ApiResponse(responseCode = "404", description = "Content Not Found")	
+	})
 	@PostMapping("/hlrRouteOptional")
 	public OptionRouteResponse hlrRouteOptional(String username, @RequestBody HlrEntryArrForm hlrEntryArrForm) {
 		return routeService.hlrRouteOptional(username, hlrEntryArrForm);
