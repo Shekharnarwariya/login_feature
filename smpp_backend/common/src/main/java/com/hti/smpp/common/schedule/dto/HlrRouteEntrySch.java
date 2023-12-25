@@ -6,7 +6,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
+/**
+ * Entity class representing HLR (Home Location Register) routing entries with JPA annotations.
+ */
 @Entity
 @Table(name = "hlr_routing")
 public class HlrRouteEntrySch implements Serializable {
@@ -121,7 +123,11 @@ public class HlrRouteEntrySch implements Serializable {
 	public void setMnp(boolean mnp) {
 		this.mnp = mnp;
 	}
+	 // Getters and setters for all fields...
 
+    /**
+     * Custom toString method for displaying HLR route details.
+     */
 	public String toString() {
 		return "hlr: Routeid=" + routeId + ",ishlr=" + hlr + ",hlrSmscId=" + smsc + ",Cache=" + hlrCache + ",Cost="
 				+ cost;

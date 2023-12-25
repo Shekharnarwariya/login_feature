@@ -1,5 +1,10 @@
 package com.hti.smpp.common.util;
 
+/**
+ * The MemberEventListener class implements the Hazelcast MembershipListener interface to listen for cluster membership events.
+ * It logs information about member additions and removals, and checks for the master member in the Hazelcast cluster.
+ */
+
 import java.util.Iterator;
 import java.util.Set;
 
@@ -19,12 +24,27 @@ public class MemberEventListener implements MembershipListener {
 		checkMasterMember();
 	}
 
+	 /**
+     * This method is invoked when a new member is added to the Hazelcast cluster.
+     * It logs information about the connected member and checks for the master member.
+     *
+     * @param membershipEvent The event indicating the addition of a member.
+     */
+	
 	@Override
 	public void memberRemoved(MembershipEvent membershipEvent) {
 		logger.info("Member Removed: " + membershipEvent.getMember().getAddress().getHost());
 		checkMasterMember();
 	}
 
+
+    /**
+     * This method is invoked when a member is removed from the Hazelcast cluster.
+     * It logs information about the removed member and checks for the master member.
+     *
+     * @param membershipEvent The event indicating the removal of a member.
+     */
+	
 	private void checkMasterMember() {
 		System.out.println(" *********** Members *****************");
 		Set<Member> members = GlobalVars.hazelInstance.getCluster().getMembers();

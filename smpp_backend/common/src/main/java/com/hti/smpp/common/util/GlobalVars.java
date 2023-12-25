@@ -27,8 +27,16 @@ import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.util.dto.AlertDTO;
 
+/**
+ * The GlobalVars class serves as a repository for various global variables used
+ * across the application. It includes settings, distributed maps, and other
+ * shared data structures.
+ */
+
 public class GlobalVars {
 	public static HazelcastInstance hazelInstance;
+	
+	 // HazelcastInstance representing the distributed Hazelcast cluster.
 	
 	public static boolean MASTER_CLIENT = false;
 	public static boolean DB_CLUSTER = false;
@@ -47,6 +55,11 @@ public class GlobalVars {
 	// public static Set<String> UsedCurrencies = new TreeSet<String>();
 	public static Map<String, String> currencies = new java.util.TreeMap<String, String>();
 	public static Set<String> smscTypes = new TreeSet<String>();
+	// Distributed maps for storing various entries using Hazelcast IMap.
+    // --------------------------------------------------------------
+    
+    // Group entries related to SMS centers.
+	
 	// public static Set<String> UsedSmscTypes = new TreeSet<String>();
 	public static Map<String, String> GmtMapping = Collections.synchronizedMap(new LinkedHashMap<String, String>());
 	public static Map<String, Integer> PrefixMapping = Collections.synchronizedMap(new HashMap<String, Integer>());
@@ -64,6 +77,7 @@ public class GlobalVars {
 	public static IMap<Integer, OptionalRouteEntry> OptionalRouteEntries;
 	// public static MultiMap<Integer, Integer> RouteIdentity;
 	// ------ user based entries ---------------------
+	
 	public static IMap<String, String> UserFlagStatus;
 	public static IMap<Integer, UserEntry> UserEntries;
 	public static IMap<Integer, BalanceEntry> BalanceEntries;

@@ -8,6 +8,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+/**
+ * Entity class representing scheduled optional route entries with JPA annotations.
+ */
 
 @Entity
 @Table(name = "route_opt_sch")
@@ -57,15 +60,25 @@ public class OptionalRouteEntrySchedule implements Serializable {
 	private String scheduleOn;
 	@Transient
 	private Map<String, String> replaceContentMap;
-
+	 /**
+     * Default constructor.
+     */
 	public OptionalRouteEntrySchedule(String editBy, String editOn) {
 		this.editBy = editBy;
 		this.editOn = editOn;
 	}
-
+	/**
+     * Constructor with route details.
+     */
 	public OptionalRouteEntrySchedule() {
-	}
+	} /**
+     * Constructor for updating the entity's edit information.
+     */
+	// Getters and setters for all fields...
 
+    /**
+     * Custom toString method for displaying optional route details.
+     */
 	public OptionalRouteEntrySchedule(int routeId, int numSmscId, int backupSmscId, String forceSenderNum,
 			String forceSenderAlpha, String expiredOn, int smsLength, boolean refund, String regSender, int regSmscId,
 			int codeLength, boolean replaceContent, String replacement, String msgAppender, String sourceAppender,

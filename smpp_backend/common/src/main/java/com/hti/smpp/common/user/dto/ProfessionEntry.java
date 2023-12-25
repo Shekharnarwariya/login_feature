@@ -7,6 +7,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+/**
+ * Entity class representing user-specific delivery receipt (DLR) settings with JPA annotations.
+ */
 @Entity
 @Table(name = "profession_info")
 public class ProfessionEntry implements Serializable {

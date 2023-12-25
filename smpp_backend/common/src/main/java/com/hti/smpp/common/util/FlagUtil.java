@@ -6,7 +6,19 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Scanner;
 
+/**
+ * Utility class for reading and changing flag values in a file.
+ */
+
 public class FlagUtil {
+	
+
+    /**
+     * Read the flag value from the specified file.
+     *
+     * @param path The path to the file containing the flag.
+     * @return The read flag value.
+     */
 	
 	public static String readFlag(String path) {
         String flagValue = FlagStatus.DEFAULT;
@@ -25,6 +37,14 @@ public class FlagUtil {
 
         return flagValue;
     }
+	
+	 /**
+     * Change the flag value in the specified file.
+     *
+     * @param path      The path to the file containing the flag.
+     * @param flagValue The new flag value to set.
+     * @return True if the flag value was successfully changed, false otherwise.
+     */
 	
 	public static boolean changeFlag(String path, String flagValue) {
         String writeData = "FLAG = " + flagValue;

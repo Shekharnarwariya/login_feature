@@ -6,7 +6,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
+/**
+ * Entity bean with JPA annotations representing an entry related to bulk management.
+ */
 @Entity
 @Table(name = "bulk_mgmt_entry")
 public class BulkMgmtEntry {

@@ -6,7 +6,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
+/**
+ * Entity class representing templates with JPA annotations.
+ */
 @Entity
 @Table(name = "http_request_entry")
 public class HttpRequestEntry {

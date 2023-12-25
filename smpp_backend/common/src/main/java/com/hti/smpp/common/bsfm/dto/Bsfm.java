@@ -8,6 +8,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+/**
+ * Represents the Bsfm entity with attributes such as ID, profilename, username, content, smsc, prefixes, sourceid,
+ * active, reverse, reroute, editBy, editOn, schedule, dayTime, activeOnScheduleTime, priority, senderType,
+ * masterId, forceSenderId, rerouteGroupId, rerouteGroupName, msgLength, lengthOpr, and networks.
+ */
+
 @Entity
 @Table(name = "bsfm_master")
 public class Bsfm {

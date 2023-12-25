@@ -6,7 +6,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
+/**
+ * Represents a contact entry with attributes such as ID, groupId, name, email, and number.
+ */
 @Entity
 @Table(name = "addbook")
 public class ContactEntry {

@@ -2,8 +2,19 @@ package com.hti.smpp.common.util;
 
 import java.math.BigInteger;
 
+/**
+ * Utility class containing methods for converting data types.
+ */
+
 public class Converters {
 
+	 /**
+     * Convert a byte to its hexadecimal representation.
+     *
+     * @param data The byte to convert.
+     * @return The hexadecimal representation of the byte.
+     */
+	
 	public String byteToHex(byte data) {
 		StringBuffer buf = new StringBuffer();
 		buf.append(toHexChar((data >>> 4) & 0x0F));
@@ -11,6 +22,13 @@ public class Converters {
 		return (buf.toString()).toUpperCase();
 	}
 
+	  /**
+     * Convert an integer to its hexadecimal character representation.
+     *
+     * @param i The integer to convert.
+     * @return The hexadecimal character representation.
+     */
+	
 	public char toHexChar(int i) {
 		if ((i >= 0) && (i <= 9)) {
 			return (char) ('0' + i);
@@ -19,6 +37,13 @@ public class Converters {
 		}
 	}
 
+	 /**
+     * Convert a UTF-16 encoded string to its hexadecimal representation.
+     *
+     * @param utf16TA The UTF-16 encoded string.
+     * @return The hexadecimal representation of the UTF-16 string.
+     */
+	
 	public String UTF16(String utf16TA) {
 		byte[] byteBuff;
 		StringBuffer strBuff = new StringBuffer();
@@ -45,6 +70,13 @@ public class Converters {
 		return utf16TA;
 	}
 
+	 /**
+     * Convert a message containing hexadecimal values of Unicode to Unicode characters.
+     *
+     * @param msg The message containing hexadecimal values of Unicode.
+     * @return The converted Unicode string.
+     */
+	
 	public String HexCodePointsToCharMsg(String msg) {
 		// this mthd made decreasing codes, only.
 		// This mthd will take msg who contain hex values of unicode, then it will

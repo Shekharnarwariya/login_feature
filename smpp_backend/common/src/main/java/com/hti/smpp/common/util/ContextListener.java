@@ -11,10 +11,15 @@ import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.cluster.Member;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+/**
+ * Application context listener responsible for initializing properties and connecting to Hazelcast Cluster.
+ */
 
 public class ContextListener {
 	private static final Logger logger = LoggerFactory.getLogger(ContextListener.class);
 
+	  // Load properties file during class initialization
+	
 	public static Properties property = new Properties();
 
 	static {
@@ -22,6 +27,10 @@ public class ContextListener {
 		connectToHazelcastCluster();
 	}
 
+	/**
+     * Initialize application properties from the "ApplicationResources.properties" file.
+     */
+	
 	private static void initializeProperties() {
 		try (InputStream input = ContextListener.class.getClassLoader()
 				.getResourceAsStream("ApplicationResources.properties")) {
@@ -32,6 +41,10 @@ public class ContextListener {
 		}
 	}
 
+	/**
+     * Connect to the Hazelcast Cluster and log cluster members.
+     */
+	
 	private static void connectToHazelcastCluster() {
 		logger.info("Connecting to Hazelcast Cluster");
 
@@ -49,6 +62,10 @@ public class ContextListener {
 		}
 	}
 
+	/**
+     * Log details of all cluster members.
+     */
+	
 	private static void logClusterMembers() {
 		logger.info("Cluster Members:");
 		Set<Member> members = GlobalVars.hazelInstance.getCluster().getMembers();
@@ -59,6 +76,11 @@ public class ContextListener {
 			i++;
 		}
 	}
+	
+	/**
+     * Log details of a specific cluster member.
+     */
+	
 
 	private static void logMemberDetails(Member member, int memberIndex) {
 		int memberId = Integer.parseInt(member.getAttribute("member-id"));
