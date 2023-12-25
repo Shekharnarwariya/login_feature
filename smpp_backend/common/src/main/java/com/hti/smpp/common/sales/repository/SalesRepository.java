@@ -14,4 +14,6 @@ public interface SalesRepository extends JpaRepository<SalesEntry, Integer> {
 
 	public List<SalesEntry> findByMasterIdAndRole(String mgrId, String role);
 
+	public List<SalesEntry> findByRole(String role);
+
 }
