@@ -1,5 +1,6 @@
 package com.hti.smpp.common.request;
 
+//Class representing the request for creating or updating an HLR SMS entry
 public class HlrSmscEntryRequest {
 
 	private String name;

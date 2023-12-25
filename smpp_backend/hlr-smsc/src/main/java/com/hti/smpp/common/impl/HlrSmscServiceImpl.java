@@ -34,12 +34,17 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 	@Autowired
 	private UserEntryRepository userRepository;
 
+	// Method to save a new HLR SMS entry
 	@Override
 	public ResponseEntity<HlrSmscEntry> save(HlrSmscEntryRequest hlrSmscEntryRequest, String username) {
+		   // Fetch user information
+		
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
+			
+			 // Check if user has required authorization
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
@@ -47,6 +52,7 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 		try {
+			 // Convert and save the HLR SMS entry
 			HlrSmscEntry entry = convertToHlrSmscEntry(hlrSmscEntryRequest);
 			entry.setSystemId(String.valueOf(user.getSystemId()));
 			entry.setSystemType(user.getSystemType());
@@ -61,8 +67,10 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 		}
 	}
 
+	// Method to update an existing HLR SMS entry
 	@Override
 	public ResponseEntity<HlrSmscEntry> update(int id, HlrSmscEntryRequest hlrSmscEntryRequest, String username) {
+		// Fetch user information
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -75,13 +83,14 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 		}
 
 		try {
-
+			// Check if the HLR SMS entry exists
 			Optional<HlrSmscEntry> existingEntry = hlrSmscRepository.findByIdAndSystemId(id, username);
 			if (existingEntry.isEmpty()) {
 				logger.warn("HlrSmscEntry with ID {} and systemId {} not found", id, username);
 				return ResponseEntity.notFound().build();
 			}
 
+			  // Update and save the HLR SMS entry
 			HlrSmscEntry updatedEntry = convertToHlrSmscEntry(hlrSmscEntryRequest);
 			updatedEntry.setId(id);
 			hlrSmscRepository.save(updatedEntry);
@@ -96,6 +105,7 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 		}
 	}
 
+	  // Method to delete an existing HLR SMS entry
 	@Override
 	public ResponseEntity<Void> delete(int id, String username) {
 
@@ -118,6 +128,7 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 				return ResponseEntity.notFound().build();
 			}
 
+			   // Delete the HLR SMS entry
 			hlrSmscRepository.deleteById(id);
 			logger.info("HlrSmscEntry with ID {} deleted successfully", id);
 			return ResponseEntity.noContent().build();
@@ -130,6 +141,7 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 		}
 	}
 
+	// Method to get details of a specific HLR SMS entry
 	@Override
 	public ResponseEntity<HlrSmscEntry> getEntry(int id, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -160,6 +172,7 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 		}
 	}
+	 // Method to list all HLR SMS entries for a user
 
 	@Override
 	public List<HlrSmscEntry> list(String username) {
@@ -189,6 +202,8 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 			return Collections.emptyList();
 		}
 	}
+	
+	// Helper method to convert HlrSmscEntryRequest to HlrSmscEntry
 
 	private HlrSmscEntry convertToHlrSmscEntry(HlrSmscEntryRequest request) {
 		try {

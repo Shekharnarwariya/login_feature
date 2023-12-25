@@ -32,12 +32,18 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 @OpenAPIDefinition(info = @Info(title = "SMPP Hlr Smsc API..", version = "1.0", description = "API for managing SMPP Hlr Smsc..."))
 public class HlrSmscController {
 
+	// Service to handle HLR SMS entry operations
 	private final HlrSmscService hlrSmscService;
+	
+
+	// Constructor injection for HlrSmscService
 
 	@Autowired
 	public HlrSmscController(HlrSmscService hlrSmscService) {
 		this.hlrSmscService = hlrSmscService;
 	}
+	
+	// Endpoint to save a new HLR SMS entry
 
 	@PostMapping
 	@Operation(summary = "Save HLR SMS Entry", description = "Save a new HLR SMS entry")
@@ -45,6 +51,8 @@ public class HlrSmscController {
 			@RequestHeader("username") String username) {
 		return ResponseEntity.ok(hlrSmscService.save(hlrSmscEntryRequest, username));
 	}
+    // Endpoint to update an existing HLR SMS entry
+
 
 	@PutMapping("/{id}")
 	@Operation(summary = "Update HLR SMS Entry", description = "Update an existing HLR SMS entry")
@@ -52,13 +60,14 @@ public class HlrSmscController {
 			@RequestBody @Valid HlrSmscEntryRequest hlrSmscEntryRequest, @RequestHeader("username") String username) {
 		return ResponseEntity.ok(hlrSmscService.update(id, hlrSmscEntryRequest, username));
 	}
-
+	 // Endpoint to delete an existing HLR SMS entry
 	@DeleteMapping("/{id}")
 	@Operation(summary = "Delete HLR SMS Entry", description = "Delete an existing HLR SMS entry")
 	public ResponseEntity<?> deleteHlrSmscEntry(@PathVariable int id, @RequestHeader("username") String username) {
 		hlrSmscService.delete(id, username);
 		return ResponseEntity.noContent().build();
 	}
+	// Endpoint to get details of a specific HLR SMS entry
 
 	@GetMapping("/{id}")
 	@Operation(summary = "Get HLR SMS Entry", description = "Get details of a specific HLR SMS entry")
@@ -67,7 +76,7 @@ public class HlrSmscController {
 			@RequestHeader("username") String username) {
 		return hlrSmscService.getEntry(id, username);
 	}
-
+	 // Endpoint to get a list of all HLR SMS entries
 	@GetMapping
 	@Operation(summary = "List HLR SMS Entries", description = "Get a list of all HLR SMS entries")
 	@ApiResponse(responseCode = "200", description = "Successful retrieval of HLR SMS entries", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HlrSmscEntry.class)))
