@@ -1,5 +1,11 @@
 package com.hti.smpp.common.util;
 
+/**
+ * The IConstants class contains constant values used throughout the application.
+ * These constants include database batch size, file paths, prefix settings, and various configuration parameters.
+ * All constants are loaded from a configuration file during application startup.
+ */
+
 public final class IConstants {
 	public static final int DB_BATCH_SIZE = Integer.parseInt(ContextListener.property.getProperty("load.batch.size"));
 	// -------- path ------------------------------

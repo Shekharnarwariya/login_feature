@@ -6,6 +6,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+/**
+ * Represents the DLT (Do Not Disturb) entry entity with attributes such as ID, username, sender, peId, and telemarketerId.
+ */
 
 @Entity
 @Table(name = "dlt_config")

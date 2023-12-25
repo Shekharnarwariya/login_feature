@@ -24,10 +24,14 @@ public class ScheduleEntry {
 	private String scheduleType;
 	private String createdOn;
 	private String webId;
-
+	/**
+     * Default constructor for the ScheduleEntry class.
+     */
 	public ScheduleEntry() {
 	}
-
+	 /**
+     * Parameterized constructor for creating a ScheduleEntry instance with initial values.
+     */
 	public ScheduleEntry(String username, String serverTime, String clientGmt, String clientTime, int serverId,
 			String status, String fileName, String repeated, String scheduleType, String webId) {
 		this.username = username;
@@ -45,7 +49,9 @@ public class ScheduleEntry {
 	public int getId() {
 		return id;
 	}
-
+	 /**
+     * Set the unique identifier of the scheduled SMS entry.
+     */
 	public void setId(int id) {
 		this.id = id;
 	}
@@ -81,7 +87,9 @@ public class ScheduleEntry {
 	public void setClientTime(String clientTime) {
 		this.clientTime = clientTime;
 	}
-
+	 /**
+     * Get the server ID associated with the scheduled SMS entry.
+     */
 	public int getServerId() {
 		return serverId;
 	}

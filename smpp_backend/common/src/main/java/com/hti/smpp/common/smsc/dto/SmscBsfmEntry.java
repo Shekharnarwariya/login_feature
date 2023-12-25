@@ -5,7 +5,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
+/**
+ * Entity class representing custom settings for a specific SMSC with JPA annotations.
+ */
 @Entity
 @Table(name = "bsfm_smsc")
 public class SmscBsfmEntry {

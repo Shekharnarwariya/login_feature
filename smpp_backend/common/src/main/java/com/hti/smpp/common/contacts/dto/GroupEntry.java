@@ -7,6 +7,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+/**
+ * Represents an entry in the smsc_group table with attributes such as ID, name, duration, checkDuration,
+ * checkVolume, noOfRepeat, keepRepeatDays, primeMember, remarks, and a transient field primeMemberName.
+ */
 
 @Entity
 @Table(name = "smsc_group")

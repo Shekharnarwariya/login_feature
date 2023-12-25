@@ -6,7 +6,9 @@ import com.hti.smpp.common.bsfm.dto.Bsfm;
 import com.hti.smpp.common.request.BsfmFilterFrom;
 import com.hti.smpp.common.response.BSFMResponse;
 import com.hti.smpp.common.response.DeleteProfileResponse;
-
+/**
+ * Service interface for Bsfm operations.
+ */
 public interface BsfmService {
 
 	public String addBsfmProfile(BsfmFilterFrom bsfmFilterFrom, String username) throws Exception;

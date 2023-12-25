@@ -11,6 +11,7 @@ import jakarta.persistence.Transient;
 /**
  * Entity bean with JPA annotations
  */
+
 @Entity
 @Table(name = "hlr_smsc")
 public class HlrSmscEntry {
@@ -39,9 +40,14 @@ public class HlrSmscEntry {
 	@Transient
 	private String flag;
 
+    /**
+     * Default constructor.
+     */
 	public HlrSmscEntry() {
 	}
-
+	 /**
+     * Parameterized constructor to initialize HLR/SMSC properties.
+     */
 	public HlrSmscEntry(String name, String systemId, String password, String ip, int port, String systemType,
 			String bindmode, int sleep) {
 		this.name = name;
@@ -53,7 +59,7 @@ public class HlrSmscEntry {
 		this.bindmode = bindmode;
 		this.sleep = sleep;
 	}
-
+	 // Getter and setter methods for each property
 	public int getId() {
 		return id;
 	}

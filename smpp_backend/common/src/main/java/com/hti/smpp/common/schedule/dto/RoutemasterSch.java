@@ -8,7 +8,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
+/**
+ * Entity class representing scheduled route entries with JPA annotations.
+ */
 @Entity
 @Table(name = "routemaster_sch")
 public class RoutemasterSch {
@@ -16,13 +18,17 @@ public class RoutemasterSch {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
-
+	 /**
+     * Get the unique identifier of the scheduled route entry.
+     */
 	@Column(name = "user_id")
 	private int userId;
 
 	@Column(name = "network_id")
 	private int networkId;
-
+	 /**
+     * Set the unique identifier of the scheduled route entry.
+     */
 	@Column(name = "smsc_id")
 	private int smscId;
 

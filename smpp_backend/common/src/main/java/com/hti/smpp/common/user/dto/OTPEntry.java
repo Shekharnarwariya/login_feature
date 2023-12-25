@@ -7,6 +7,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+/**
+ * Entity class representing user-specific delivery receipt (DLR) settings with JPA annotations.
+ */
 @Entity
 @Table(name = "otp_master")
 public class OTPEntry {

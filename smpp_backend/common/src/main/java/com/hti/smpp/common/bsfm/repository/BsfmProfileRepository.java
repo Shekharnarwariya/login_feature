@@ -10,7 +10,9 @@ import org.springframework.stereotype.Repository;
 import com.hti.smpp.common.bsfm.dto.Bsfm;
 
 import jakarta.transaction.Transactional;
-
+/**
+ * Repository interface for Bsfm profiles, extending JpaRepository for CRUD operations.
+ */
 @Repository
 public interface BsfmProfileRepository extends JpaRepository<Bsfm, Integer> {
 	@Query("SELECT MAX(b.priority) FROM Bsfm b")

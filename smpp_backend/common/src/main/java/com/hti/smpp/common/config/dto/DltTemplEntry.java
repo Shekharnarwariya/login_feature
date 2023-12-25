@@ -6,6 +6,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+/**
+ * Represents the DLT (Do Not Disturb) template entry entity with attributes such as ID, template, templateId, and peId.
+ */
 
 @Entity
 @Table(name = "dlt_templ")

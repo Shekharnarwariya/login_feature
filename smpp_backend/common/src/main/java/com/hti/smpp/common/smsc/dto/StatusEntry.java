@@ -9,7 +9,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
-
+/**
+ * Entity class representing custom settings for a specific SMSC with JPA annotations.
+ */
 @Entity
 @Table(name = "smsc_status")
 public class StatusEntry implements Serializable {

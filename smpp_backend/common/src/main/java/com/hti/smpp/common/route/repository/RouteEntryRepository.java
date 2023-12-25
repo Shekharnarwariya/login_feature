@@ -28,7 +28,9 @@ public interface RouteEntryRepository extends JpaRepository<RouteEntry, Integer>
 	public List<RouteEntry> findByUserIdInAndSmscIdInAndGroupIdInAndNetworkIdInAndSmscTypeInAndCostBetween(
 			int[] userIds, int[] smscIds, int[] groupIds, int[] networkIds, String[] smscTypes, double minCost,
 			double maxCost);
-
+	/**
+	 * Spring Data JPA repository interface for interacting with the database regarding the RouteEntry and related entities.
+	 */
 	@Transactional
 	@Modifying
 	@Query(value = "update RouteOpt A, RouteOptSch B set A.isReplaceContent = B.isReplaceContent, "
@@ -41,7 +43,12 @@ public interface RouteEntryRepository extends JpaRepository<RouteEntry, Integer>
 			+ "A.regGroupId = B.regGroupId "
 			+ "where A.routeId = B.routeId and B.scheduleOn = :scheduledOn", nativeQuery = true)
 	public int updateOptRouteSchAndDelete(String scheduledOn);
-
+	 /**
+     * Finds all route entries based on a given specification.
+     */
+	 /**
+     * Updates route optimization based on a schedule and deletes entries.
+     */
 	@Query(value = "SELECT new com.example.RouteEntryExt(A.userId, A.networkId, B.routeId, B.isReplaceContent, B.contentReplace, B.backupSmscId, B.numSmscId, B.regSmscId, "
 			+ "B.regSenderId, B.forceSIDNum, B.forceSIDAlpha, B.setExpiry, B.smsLength, B.codeLength, B.refund, B.affectedOn, B.msgAppender, B.sourceAppender, B.editBy, "
 			+ "B.senderReplFrom, B.senderReplTo, C.country, C.operator, D.name as backupSmsc, F.name as numSmsc, G.name as regSmsc, E.systemId, H.name as regGroupName) "

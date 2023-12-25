@@ -6,6 +6,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
+/**
+ * Entity class representing user-specific delivery receipt (DLR) settings with JPA annotations.
+ */
 @Entity
 @Table(name = "user_limit")
 public class UserlimitEntry {

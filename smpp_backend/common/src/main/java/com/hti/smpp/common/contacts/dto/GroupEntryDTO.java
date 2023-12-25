@@ -8,6 +8,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
+/**
+ * Represents an entry in the addgroup table with attributes such as ID, masterId, name, groupData, createdBy, and a
+ * transient field members.
+ */
+
 @Entity
 @Table(name = "addgroup")
 public class GroupEntryDTO {

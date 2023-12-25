@@ -5,7 +5,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
-
+/**
+ * Entity class representing custom settings for a specific SMSC with JPA annotations.
+ */
 @Entity
 @Table(name = "smsc_looping_rule")
 public class SmscLooping {
