@@ -2,7 +2,9 @@ package com.hti.smpp.common.response;
 
 import java.util.List;
 import java.util.Map;
-
+/**
+ * Represents the response object for BSFM-related operations.
+ */
 public class BSFMResponse {
 
 	private Map<Integer, String> smscList;
@@ -16,7 +18,7 @@ public class BSFMResponse {
 	private Map<Integer, String> operatormap;
 
 	private List<String> users;
-
+//Getter and Setter
 	public List<String> getUsers() {
 		return users;
 	}

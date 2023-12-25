@@ -6,6 +6,9 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 @SpringBootApplication
 @EnableDiscoveryClient
+/**
+ * Entry point for the Spring Boot application.
+ */
 public class BsfmApplication {
 
 	public static void main(String[] args) {

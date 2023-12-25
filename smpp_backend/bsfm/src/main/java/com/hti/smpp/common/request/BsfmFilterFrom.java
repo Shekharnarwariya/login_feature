@@ -1,5 +1,7 @@
 package com.hti.smpp.common.request;
-
+/**
+ * Represents the filter form for Bsfm profiles.
+ */
 public class BsfmFilterFrom {
 	private int id;
 	private String profilename;
@@ -25,6 +27,7 @@ public class BsfmFilterFrom {
 	private String[] mcc;
 	private boolean countryWise;
 
+	//Getter and setter methods for BsfmFilterFrom properties.
 	public boolean isActiveOnScheduleTime() {
 		return activeOnScheduleTime;
 	}

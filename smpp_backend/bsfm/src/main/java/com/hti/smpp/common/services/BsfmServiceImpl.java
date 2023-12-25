@@ -52,7 +52,9 @@ import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MultiUtility;
 
 import jakarta.transaction.Transactional;
-
+/**
+ * Service interface for Bsfm operations.
+ */
 @Service
 public class BsfmServiceImpl implements BsfmService {
 
@@ -72,7 +74,9 @@ public class BsfmServiceImpl implements BsfmService {
 	
 	@Autowired
 	private UserEntryRepository userRepository;
-
+/**
+ * Adds a new Bsfm profile based on the provided filter and username.
+ */
 	@Override
 	@Transactional
 	public String addBsfmProfile(BsfmFilterFrom bsfmForm, String username) throws Exception {
@@ -181,7 +185,11 @@ public class BsfmServiceImpl implements BsfmService {
 		}
 		return target;
 	}
-
+/**
+ * Adds a new Bsfm profile to the database.
+ * @param bdto
+ * @return
+ */
 	private boolean addNewBsfmProfile(Bsfm bdto) {
 		try {
 			bsfmRepo.save(bdto);
@@ -191,7 +199,11 @@ public class BsfmServiceImpl implements BsfmService {
 			return false;
 		}
 	}
-
+/**
+ * Converts a UTF-16 encoded string to its hexadecimal representation.
+ * @param utf16TA
+ * @return
+ */
 	public String UTF16(String utf16TA) {
 		byte[] byteBuff;
 		StringBuffer strBuff = new StringBuffer();
@@ -217,14 +229,22 @@ public class BsfmServiceImpl implements BsfmService {
 		}
 		return utf16TA;
 	}
-
+/**
+ * Converts a byte to its hexadecimal representation.
+ * @param data
+ * @return
+ */
 	public String byteToHex(byte data) {
 		StringBuffer buf = new StringBuffer();
 		buf.append(toHexChar((data >>> 4) & 0x0F));
 		buf.append(toHexChar(data & 0x0F));
 		return (buf.toString()).toUpperCase();
 	}
-
+/**
+ * Converts an integer to its corresponding hexadecimal character.
+ * @param i
+ * @return
+ */
 	public char toHexChar(int i) {
 		if ((i >= 0) && (i <= 9)) {
 			return (char) ('0' + i);
@@ -232,7 +252,9 @@ public class BsfmServiceImpl implements BsfmService {
 			return (char) ('a' + (i - 10));
 		}
 	}
-
+/**
+ *  Retrieves information for Bsfm profiles based on the provided username.
+ */
 	@Override
 	public BSFMResponse checked(String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -299,7 +321,11 @@ public class BsfmServiceImpl implements BsfmService {
 		}
 		return bSFMResponse;
 	}
-
+/**
+ * Retrieves distinct countries and their codes from the network repository.
+ * @return
+ * @throws SQLException
+ */
 	public Map<String, String> getDistinctCountry() throws SQLException {
 		Map<String, String> countries = new LinkedHashMap<>();
 		try {
@@ -312,7 +338,11 @@ public class BsfmServiceImpl implements BsfmService {
 		}
 		return countries;
 	}
-
+/**
+ * Retrieves a map of user IDs and usernames under the specified master ID.
+ * @param master
+ * @return
+ */
 	public Map<Integer, String> listUsersUnderMaster(String master) {
 		logger.debug("listUsersUnderMaster(" + master + ")");
 		Map<Integer, String> map = new HashMap<Integer, String>();
@@ -326,7 +356,10 @@ public class BsfmServiceImpl implements BsfmService {
 				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 		return sortedMap;
 	}
-
+/**
+ * Retrieves a sorted map of SMS center IDs and names.
+ * @return
+ */
 	public Map<Integer, String> listNames() {
 		Map<Integer, String> names = new HashMap<Integer, String>();
 		for (SmscEntry entry : GlobalVars.SmscEntries.values()) {
@@ -336,7 +369,10 @@ public class BsfmServiceImpl implements BsfmService {
 				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 		return names;
 	}
-
+/**
+ * Retrieves a sorted map of user IDs and usernames.
+ * @return
+ */
 	public Map<Integer, String> listUsers() {
 		logger.debug("listUsers()");
 		Map<Integer, String> map = new HashMap<Integer, String>();
@@ -348,7 +384,10 @@ public class BsfmServiceImpl implements BsfmService {
 				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 		return sortedMap;
 	}
-
+/**
+ * Retrieves a sorted map of group IDs and names.
+ * @return
+ */
 	public Map<Integer, String> listGroupNames() {
 		Map<Integer, String> names = new HashMap<Integer, String>();
 		names.put(0, "NONE");
@@ -360,7 +399,11 @@ public class BsfmServiceImpl implements BsfmService {
 				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 		return names;
 	}
-
+/**
+ * Retrieves a sorted map of SMS center IDs and names for a specific master ID.
+ * @param masterId
+ * @return
+ */
 	public Map<Integer, String> listNames(String masterId) {
 		Map<Integer, String> names = new HashMap<Integer, String>();
 		Predicate<Integer, SmscEntry> p = new PredicateBuilderImpl().getEntryObject().get("masterId").equal(masterId);
@@ -371,7 +414,9 @@ public class BsfmServiceImpl implements BsfmService {
 				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 		return names;
 	}
-
+/**
+ * Deletes a Bsfm profile based on the provided username and profile ID.
+ */
 	@Override
 	public DeleteProfileResponse deleteProfile(String username, int id) {
 		DeleteProfileResponse deleteProfileResponse = new DeleteProfileResponse();
@@ -544,7 +589,11 @@ public class BsfmServiceImpl implements BsfmService {
 		deleteProfileResponse.setStatus(target);
 		return deleteProfileResponse;
 	}
-
+/**
+ *  Converts a string containing hex values of Unicode to Unicode characters.
+ * @param msg
+ * @return
+ */
 	public static String hexCodePointsToCharMsg(String msg)// Implemented by Abhishek Sahu
 	{
 		// this mthd made decreasing codes, only.
@@ -587,7 +636,10 @@ public class BsfmServiceImpl implements BsfmService {
 		}
 		return msg;
 	}
-
+/**
+ *  Retrieves a map of network entries with their corresponding country and operator information.
+ * @return
+ */
 	public Map<Integer, String> listCountries() {
 		Map<Integer, String> countries = new HashMap<Integer, String>();
 		for (NetworkEntry entry : GlobalVars.NetworkEntries.values()) {
@@ -595,7 +647,11 @@ public class BsfmServiceImpl implements BsfmService {
 		}
 		return countries;
 	}
-
+/**
+ * Converts a Unicode hex string to a character message.
+ * @param msg
+ * @return
+ */
 	public String uniHexToCharMsg(String msg) {
 		if (msg == null || msg.length() == 0) {
 			msg = "0020";
@@ -633,7 +689,9 @@ public class BsfmServiceImpl implements BsfmService {
 		}
 		return msg;
 	}
-
+/**
+ * Retrieves a list of Bsfm profiles for the specified user.
+ */
 	@Override
 	public List<Bsfm> showBsfmProfile(String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -666,7 +724,9 @@ public class BsfmServiceImpl implements BsfmService {
 			}
 		return Collections.emptyList(); // Return an empty list if no data is found
 	}
-
+/**
+ * Updates a Bsfm profile based on the provided form data and the user's authorization.
+ */
 	@Override
 	public String updateBsfmProfil(BsfmFilterFrom bsfmForm, String username) {
 
@@ -759,7 +819,11 @@ public class BsfmServiceImpl implements BsfmService {
 		}
 		return target;
 	}
-
+/**
+ * Updates the Bsfm profile in the repository.
+ * @param bdto
+ * @return
+ */
 	private boolean updatedBsfmProfile(Bsfm bdto) {
 		try {
 			bsfmRepo.save(bdto);
@@ -769,7 +833,9 @@ public class BsfmServiceImpl implements BsfmService {
 			return false;
 		}
 	}
-
+/**
+ * Deletes the Bsfm profile based on the provided filter parameters.
+ */
 	@Override
 	public String delete(String username, BsfmFilterFrom bsfmFilterFrom) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -804,7 +870,11 @@ public class BsfmServiceImpl implements BsfmService {
 		}
 		return target;
 	}
-
+/**
+ * 
+ * @param profileName
+ * @return
+ */
 	@Transactional
 	public boolean deleteBsfmActiveProfile(String profileName) {
 		try {
@@ -816,7 +886,9 @@ public class BsfmServiceImpl implements BsfmService {
 			return false;
 		}
 	}
-
+/**
+ * Updates the Bsfm profile flag based on the provided information.
+ */
 	@Override
 	public String updateBsfmProfileFlag(String username, BsfmFilterFrom filterFrom) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);

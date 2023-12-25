@@ -5,7 +5,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.hti.smpp.common.bsfm.dto.Bsfm;
-
+/**
+ * Response object for profile deletion.
+ * Contains various lists and maps related to the deletion operation.
+ */
 public class DeleteProfileResponse {
 
 	private List<String[]> daytimelist;
@@ -17,7 +20,9 @@ public class DeleteProfileResponse {
 	private Map<Integer, String> grouping;
 	private Map<Integer, String> networkmap;
 	private Map<Integer, String> existNetworks;
-
+	
+//Getter and setter methods for the properties...
+	
 	private String status;
 
 	public String getStatus() {
