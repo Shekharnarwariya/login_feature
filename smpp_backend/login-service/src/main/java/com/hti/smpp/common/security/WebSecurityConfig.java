@@ -42,7 +42,8 @@ public class WebSecurityConfig {
 	}
 
 	private final String[] PUBLIC_URL = { "/swagger-ui/**", "/webjars/**", "/swagger-resources/**", "/v3/api-docs/**",
-			"/login/jwt", "/login/register", "/login/user/data", "login/status" };
+			"/login/jwt", "/login/register", "/login/user/data", "login/status","/login/sendOTP",
+			"/login/forgotPassword", "/login/validateOtp", "/login/updatePassword","/login/forgotPassword" };
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

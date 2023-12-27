@@ -14,9 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -99,7 +99,7 @@ public class LoginServiceImpl implements LoginService {
 	@Autowired
 	private EmailSender emailSender;
 
-	private static final Logger log = LoggerFactory.getLogger(LoginServiceImpl.class);
+	private static final Logger logger = LoggerFactory.getLogger(LoginServiceImpl.class);
 
 	public enum UserRole {
 		ADMIN, SUPERADMIN, SYSTEM, USER
@@ -107,11 +107,18 @@ public class LoginServiceImpl implements LoginService {
 
 	@Override
 	public ResponseEntity<?> login(LoginRequest loginRequest) {
-		try {
-			log.info("Attempting to authenticate user: {}", loginRequest.getUsername());
+		String username = loginRequest.getUsername();
 
-			Authentication authentication = authenticationManager.authenticate(
-					new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+		try {
+			logger.info("Attempting to authenticate user: {}", username);
+
+			if (!userEntryRepository.existsBySystemId(username)) {
+				logger.error("Authentication failed. User not found: {}", username);
+				throw new AuthenticationExceptionFailed("Authentication failed. Please check your Username");
+			}
+
+			Authentication authentication = authenticationManager
+					.authenticate(new UsernamePasswordAuthenticationToken(username, loginRequest.getPassword()));
 
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -120,20 +127,21 @@ public class LoginServiceImpl implements LoginService {
 			List<String> roles = userDetails.getAuthorities().stream().map(item -> item.getAuthority())
 					.collect(Collectors.toList());
 
-			log.info("Authentication successful for user: {}", userDetails.getUsername());
+			logger.info("Authentication successful for user: {}", username);
 
 			JwtResponse jwtResponse = new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), roles);
 
 			return ResponseEntity.ok(jwtResponse);
 
-		} catch (AuthenticationException e) {
-			log.error("Authentication failed for user: {}", loginRequest.getUsername(), e.getMessage());
-			System.out.println("error authentication........");
-			throw new AuthenticationExceptionFailed("Authentication failed" + e);
-
+		} catch (BadCredentialsException e) {
+			logger.error("Authentication failed for user: {}", username, e.getMessage());
+			throw new AuthenticationExceptionFailed("Authentication failed. Please check your Password");
+		} catch (AuthenticationExceptionFailed e) {
+			logger.error("Authentication failed for user: {}", username, e.getMessage());
+			throw new AuthenticationExceptionFailed(e.getMessage());
 		} catch (Exception e) {
-			log.error("Internal server error during authentication", e);
-			throw new InternalServerException("Internal server error" + e);
+			logger.error("Internal server error during authentication", e.getMessage());
+			throw new InternalServerException("Internal server error" + e.getMessage());
 		}
 	}
 
@@ -309,6 +317,7 @@ public class LoginServiceImpl implements LoginService {
 
 	@Override
 	public ResponseEntity<?> sendOTP(String username) {
+		System.out.println("send otp method called  username{}" + username);
 		try {
 			Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
 
@@ -355,6 +364,7 @@ public class LoginServiceImpl implements LoginService {
 
 	@Override
 	public ResponseEntity<?> updatePassword(PasswordUpdateRequest passwordUpdateRequest, String username) {
+		System.out.println("called update password username{}" + username);
 		Optional<UserEntry> optionalUser = userEntryRepository.findBySystemId(username);
 
 		if (optionalUser.isPresent()) {

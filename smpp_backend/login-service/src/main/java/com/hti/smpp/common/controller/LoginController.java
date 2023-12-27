@@ -18,20 +18,27 @@ import com.hti.smpp.common.request.ProfileUpdateRequest;
 import com.hti.smpp.common.request.SignupRequest;
 import com.hti.smpp.common.service.LoginService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/login")
+@Tag(name = "Login Controller", description = "APIs related to user authentication and profile management")
 public class LoginController {
 
 	@Autowired
 	private LoginService loginService;
 
 	@PostMapping("/jwt")
-	public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
+	@Operation(summary = "Authenticate User", description = "Endpoint to authenticate a user and generate a JWT token.")
+	public ResponseEntity<?> authenticateUser(@RequestBody @Valid LoginRequest loginRequest) {
 		System.out.println("authenticate Username" + loginRequest.getUsername());
 		return loginService.login(loginRequest);
 	}
 
 	@PostMapping("/register")
+	@Operation(summary = "Register User", description = "Endpoint to register a new user.")
 	public ResponseEntity<?> registerUser(@RequestBody SignupRequest signUpRequest) {
 		return loginService.registerUser(signUpRequest);
 	}
@@ -51,7 +58,7 @@ public class LoginController {
 		return loginService.validateOtp(username, otp);
 	}
 
-	@PostMapping("/forgotPassword")
+	@PutMapping("/forgotPassword")
 	public ResponseEntity<?> forgotPassword(@RequestParam String newPassword,
 			@RequestHeader("username") String username) {
 		return loginService.forgotPassword(newPassword, username);
@@ -62,7 +69,7 @@ public class LoginController {
 		return loginService.sendOTP(username);
 	}
 
-	@PostMapping("/updatePassword")
+	@PutMapping("/updatePassword")
 	public ResponseEntity<?> updatePassword(@RequestBody PasswordUpdateRequest passwordUpdateRequest,
 			@RequestHeader("username") String username) {
 		return loginService.updatePassword(passwordUpdateRequest, username);
