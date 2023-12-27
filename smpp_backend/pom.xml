@@ -26,8 +26,7 @@
 		<module>common</module>
 		<module>discoveryserver</module>
 		<module>hlr-smsc</module>
-		<module>login</module>
-		<module>login-security</module>
+		<module>login-service</module>
 		<module>personalservice</module>
 		<module>routeservice</module>
 		<module>Sales</module>

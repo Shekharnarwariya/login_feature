@@ -39,8 +39,6 @@ import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.cfg.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1171,12 +1169,7 @@ public class DataBase {
 		Connection con = null;
 		Map<String, Map<Integer, String>> content_map = new HashMap<String, Map<Integer, String>>();
 		try {
-			 // Use the Hibernate configuration to create a SessionFactory
-		    SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
-		    openSession = sessionFactory.openSession();
-		    
-		    // Obtain the JDBC Connection from the Hibernate Session
-		    con = openSession.connection();
+			con = entityManager.unwrap(Connection.class); 
 			pStmt = con.prepareStatement(sql, java.sql.ResultSet.TYPE_FORWARD_ONLY,
 					java.sql.ResultSet.CONCUR_READ_ONLY);
 			pStmt.setFetchSize(Integer.MIN_VALUE);

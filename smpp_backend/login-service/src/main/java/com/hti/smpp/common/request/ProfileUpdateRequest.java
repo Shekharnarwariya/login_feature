@@ -1,0 +1,45 @@
+package com.hti.smpp.common.request;
+
+public class ProfileUpdateRequest {
+
+	private String email;
+
+	public String getContact() {
+		return Contact;
+	}
+
+	public void setContact(String contact) {
+		Contact = contact;
+	}
+
+	private String firstName;
+
+	private String LastName;
+
+	private String Contact;
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public String getLastName() {
+		return LastName;
+	}
+
+	public void setLastName(String lastName) {
+		LastName = lastName;
+	}
+
+}
