@@ -1,5 +1,5 @@
 package com.hti.smpp.common.controller;
-
+//Import statements for required classes and annotations
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -25,7 +25,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-
+//Controller class for handling SMPP Templates-related operations
 @RestController
 @RequestMapping("/templates")
 @Validated // Add this annotation to enable method-level validation
@@ -34,12 +34,12 @@ import jakarta.validation.Valid;
 public class TemplatesController {
 
 	private final TemplatesService templatesService;
-
+	// Autowired constructor for injecting TemplatesService
 	@Autowired
 	public TemplatesController(TemplatesService templatesService) {
 		this.templatesService = templatesService;
 	}
-
+	 // Create a new template endpoint
 	@Operation(summary = "Create a new template", description = "To save a new Template")
 	@ApiResponses(value = { @ApiResponse(responseCode = "201", description = "Template created successfully"),
 			@ApiResponse(responseCode = "404", description = "No content found"),
@@ -50,7 +50,7 @@ public class TemplatesController {
 			@Parameter(description = "Username in header") @RequestHeader("username") String username) {
 		return this.templatesService.createTemplate(request, username);
 	}
-
+	 // Get a template by ID endpoint
 	@Operation(summary = "Get a template by ID", description = "Find a template by giving id")
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Template retrieved successfully"),
 			@ApiResponse(responseCode = "404", description = "No content found"),
@@ -61,7 +61,7 @@ public class TemplatesController {
 			@Parameter(description = "Username in header") @RequestHeader("username") String username) {
 		return this.templatesService.getTemplateById(id, username);
 	}
-
+	  // Get all templates endpoint
 	@Operation(summary = "Get all templates", description = "Find all the templates")
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "All templates retrieved successfully"),
 			@ApiResponse(responseCode = "404", description = "No content found"),
@@ -72,7 +72,7 @@ public class TemplatesController {
 			@Parameter(description = "Username in header") @RequestHeader("username") String username) {
 		return this.templatesService.getAllTemplates(username);
 	}
-
+	// Update a template by ID endpoint
 	@Operation(summary = "Update a template by ID", description = "To update a template by id")
 	@ApiResponses(value = { @ApiResponse(responseCode = "201", description = "Template updated successfully"),
 			@ApiResponse(responseCode = "404", description = "No content found"),
@@ -84,7 +84,7 @@ public class TemplatesController {
 			@Parameter(description = "Username in header") @RequestHeader("username") String username) {
 		return this.templatesService.updateTemplate(id, request, username);
 	}
-
+	  // Delete a template by ID endpoint
 	@Operation(summary = "Delete a template by ID", description = "Delete's a template by id")
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Template deleted successfully"),
 			@ApiResponse(responseCode = "404", description = "No content found"),
@@ -95,7 +95,7 @@ public class TemplatesController {
 			@Parameter(description = "Username in header") @RequestHeader("username") String username) {
 		return templatesService.deleteTemplate(id, username);
 	}
-
+	 // Recently Used Template endpoint
 	@Operation(summary = " Recently Used Template ", description = "Template that was recently used ")
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Recently used template  successfully"),
 			@ApiResponse(responseCode = "404", description = "Template not found"),

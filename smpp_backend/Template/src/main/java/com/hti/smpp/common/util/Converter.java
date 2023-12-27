@@ -48,7 +48,8 @@ public class Converter {
 		}
 		return msg;
 	}
-
+//This method takes a string utf16TA as input, converts it to UTF-16 bytes, processes 
+//	the bytes, and returns the resulting UTF-16 string.
 	public static String UTF16(String utf16TA) {
 		byte[] byteBuff;
 		StringBuffer strBuff = new StringBuffer();
@@ -74,14 +75,14 @@ public class Converter {
 		}
 		return utf16TA;
 	}
-
+//This method converts a byte to its hexadecimal representation.
 	public static String byteToHex(byte data) {
 		StringBuffer buf = new StringBuffer();
 		buf.append(toHexChar((data >>> 4) & 0x0F));
 		buf.append(toHexChar(data & 0x0F));
 		return (buf.toString()).toUpperCase();
 	}
-
+//This method converts an integer to its corresponding hexadecimal character.
 	public static char toHexChar(int i) {
 		if ((i >= 0) && (i <= 9)) {
 			return (char) ('0' + i);

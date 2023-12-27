@@ -1,5 +1,5 @@
 package com.hti.smpp.common.service.impl;
-
+//Import statements for required classes and annotations
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -46,7 +46,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 	@Autowired
 	private UserEntryRepository userRepository;
-
+	 // Method for creating a new template
 	@Override
 	public ResponseEntity<?> createTemplate(TemplatesRequest request, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -94,7 +94,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 		}
 
 	}
-
+	   // Method for retrieving a template by ID
 	@Override
 	public ResponseEntity<?> getTemplateById(int id, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -132,7 +132,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 		}
 
 	}
-
+	// Method for retrieving all templates
 	@Override
 	public ResponseEntity<?> getAllTemplates(String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -176,7 +176,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 		}
 
 	}
-
+	 // Method for updating a template by ID
 	@Override
 	public ResponseEntity<?> updateTemplate(int id, TemplatesRequest request, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -196,6 +196,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 		TemplatesDTO template = templatesRepository.findByIdAndMasterId(id, system_id)
 				.orElseThrow(() -> new NotFoundException("Template with id: " + id + " not found."));
+		// Error handling statement
 		TemplatesDTO updatedTemplate = null;
 		if (template != null) {
 			template.setMessage(Converter.UTF16(request.getMessage()));
@@ -221,7 +222,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 			return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
 		}
 	}
-
+	// Transactional method for deleting a template by ID
 	@Transactional
 	@Override
 	public ResponseEntity<?> deleteTemplate(int id, String username) {
@@ -252,7 +253,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 			return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
 		}
 	}
-
+	// Method for mapping TemplatesDTO to TemplatesResponse
 	private TemplatesResponse mapToResponse(TemplatesDTO template) {
 		TemplatesResponse response = new TemplatesResponse();
 		response.setId(template.getId());
@@ -261,7 +262,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 		response.setTitle(template.getTitle());
 		return response;
 	}
-
+	 // Method for retrieving recently used template
 	@Override
 	public ResponseEntity<?> RecentUseTemplate(String username) {
 
