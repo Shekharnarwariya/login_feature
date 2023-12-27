@@ -1,5 +1,7 @@
 package com.hti.smpp.common.request;
-
+/**
+ * The HlrEntryArrForm class represents a form containing arrays of various parameters related to HLR routing.
+ */
 public class HlrEntryArrForm {
 	private int[] routeId;
 	private boolean[] hlr;
@@ -12,7 +14,7 @@ public class HlrEntryArrForm {
 	private String criterionEntries; // all id fetched under selected criteria to view again
 	private boolean schedule;
 	private String scheduledOn;
-
+   //Getter and setter
 	public int[] getRouteId() {
 		return routeId;
 	}

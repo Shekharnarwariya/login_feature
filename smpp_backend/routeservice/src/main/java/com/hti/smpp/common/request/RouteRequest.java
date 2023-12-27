@@ -1,7 +1,9 @@
 package com.hti.smpp.common.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-
+/**
+ * The RouteRequest class represents a request DTO (Data Transfer Object) for managing route information.
+ */
 @Schema(description = "RouteDTO class")
 public class RouteRequest {
 	private int[] id;
@@ -19,7 +21,9 @@ public class RouteRequest {
 	private boolean countryWise;
 	private boolean schedule;
 	private String scheduledOn;
-
+/**
+ *  The EditCriteria class represents criteria for editing route entries.
+ */
 	public class EditCriteria {
 		// private String purpose;
 		private String[] mcc;
@@ -29,7 +33,7 @@ public class RouteRequest {
 		private double maxCost;
 		private String[] currency;
 		private String[] accountType;
-
+//Getter and Setter
 		public String[] getAccountType() {
 			return accountType;
 		}

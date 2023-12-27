@@ -1,5 +1,7 @@
 package com.hti.smpp.common.request;
-
+/**
+ * The SearchCriteria class represents criteria for searching route entries.
+ */
 public class SearchCriteria {
 	private int[] routeId;
 	private int[] userId;
@@ -14,7 +16,7 @@ public class SearchCriteria {
 	private double maxCost;
 	private boolean hlrEntry;
 	private boolean optEntry;
-
+//Getter and Setter
 	public int[] getGroupId() {
 		return groupId;
 	}

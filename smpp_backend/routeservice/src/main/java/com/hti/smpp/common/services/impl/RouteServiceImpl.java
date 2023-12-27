@@ -110,7 +110,9 @@ import jakarta.persistence.Query;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.InternalServerErrorException;
-
+/**
+ *  Implementation of the RouteServices interface providing route-related functionality.
+ */
 @Service
 public class RouteServiceImpl implements RouteServices {
 
@@ -163,7 +165,9 @@ public class RouteServiceImpl implements RouteServices {
 
 	@Autowired
 	private HlrRouteEntrySchRepository hlrRouteEntrySchRepository;
-
+/**
+ * Saves routes based on the provided RouteRequest and username.
+ */
 	@Override
 	@Transactional
 	public String saveRoute(RouteRequest RouteRequest, String username) {
@@ -330,7 +334,9 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return target;
 	}
-
+/**
+ * Saves default route entries for the provided RouteEntry.
+ */
 	@Override
 	public void saveDefaultEntries(RouteEntry entry) {
 		RouteEntryExt defaultEntryExt = new RouteEntryExt(entry);
@@ -338,18 +344,24 @@ public class RouteServiceImpl implements RouteServices {
 		defaultEntryExt.setRouteOptEntry(new OptionalRouteEntry(entry.getEditBy(), entry.getEditOn()));
 		saveRouteEntry(defaultEntryExt);
 	}
-
+/**
+ *  Deletes route entries for the specified user ID.
+ */
 	@Override
 	public void deleteRouteEntries(int userId) {
 		routeEntryRepository.deleteByUserId(userId);
 
 	}
-
+/**
+ * Deletes route entries for the specified user ID and network IDs.
+ */
 	@Override
 	public void deleteRouteEntries(int userId, Set<Integer> networks) {
 		routeEntryRepository.deleteByUserIdAndNetworkIdIn(userId, new ArrayList<>(networks));
 	}
-
+/**
+ * Deletes route entries, HLR route entries, and optional route entries for the specified list of route entries.
+ */
 	@Override
 	@Transactional
 	public void deleteRouteEntries(List<RouteEntry> list) {
@@ -380,7 +392,9 @@ public class RouteServiceImpl implements RouteServices {
 			}
 		}
 	}
-
+/**
+ * Updates the specified list of route entries.
+ */
 	@Override
 	@Transactional
 	public void updateRouteEntries(List<RouteEntry> list) {
@@ -390,13 +404,17 @@ public class RouteServiceImpl implements RouteServices {
 			throw new InternalServerException("Exception: "+e.getLocalizedMessage());
 		}
 	}
-
+/**
+ *  Updates the specified list of optional route entries
+ */
 	@Override
 	@Transactional
 	public void updateOptionalRouteEntries(List<OptionalRouteEntry> list) {
 		optionalRouteEntryRepository.saveAll(list);
 	}
-
+/**
+ * Updates the specified list of HLR route entries.
+ */
 	@Override
 	@Transactional
 	public void updateHlrRouteEntries(List<HlrRouteEntry> list) {
@@ -407,7 +425,9 @@ public class RouteServiceImpl implements RouteServices {
 			throw new InternalServerException(e.getLocalizedMessage());
 		}
 	}
-
+/**
+ * Saves the specified list of route entries along with their associated HLR and optional route entries.
+ */
 	@Override
 	@Transactional
 	public void saveEntries(List<RouteEntryExt> list) {
@@ -435,7 +455,9 @@ public class RouteServiceImpl implements RouteServices {
 		}
 
 	}
-
+/**
+ * Retrieves and returns a map of route entries for the specified user ID with optional details such as HLR and optional route entries.
+ */
 	@Override
 	public Map<Integer, RouteEntryExt> listRouteEntries(int userId, boolean hlr, boolean optional, boolean display) {
 
@@ -486,7 +508,9 @@ public class RouteServiceImpl implements RouteServices {
 		logger.info(userId + " RouteEntries: " + routeEntries.size());
 		return routeEntries;
 	}
-
+/**
+ * Retrieves and returns a map of network routing entries for the specified user ID.
+ */
 	@Override
 	public Map<Integer, RouteEntry> getNetworkRouting(int userId) {
 		Map<Integer, RouteEntry> networkRouting = null;
@@ -501,7 +525,9 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return networkRouting;
 	}
-
+/**
+ * Lists coverage information for the specified user, considering display and cached options.
+ */
 	@Override
 	public Map<Integer, RouteEntryExt> listCoverage(int userId, boolean display, boolean cached) {
 		Map<Integer, RouteEntryExt> list = new LinkedHashMap<Integer, RouteEntryExt>();
@@ -585,17 +611,25 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return list;
 	}
-
+/**
+ * Retrieves a list of RouteEntry objects for the specified user ID.
+ * @param userId
+ * @return
+ */
 	public List<RouteEntry> listRoute(int userId) {
 		return routeEntryRepository.findByUserId(userId);
 	}
-
+/**
+ *  Retrieves a map of RouteEntryExt objects for the specified system ID, considering the specified display and cached parameters.
+ */
 	@Override
 	public Map<Integer, RouteEntryExt> listCoverage(String systemId, boolean display, boolean cached) {
 		int userId = GlobalVars.UserMapping.get(systemId);
 		return listCoverage(userId, display, cached);
 	}
-
+/**
+ * Retrieves a map of RouteEntryLog objects for the specified array of route IDs.
+ */
 	@Override
 	public Map<Integer, RouteEntryLog> listBasicLogEntries(int[] routeId) {
 		Map<Integer, RouteEntryLog> map = null;
@@ -612,11 +646,18 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return map;
 	}
-
+/**
+ * Retrieves a list of RouteEntryLog objects for the specified array of route IDs.
+ * @param routeId
+ * @return
+ */
 	public List<RouteEntryLog> listBasicLog(int[] routeId) {
 		return routeEntryLogRepository.findByIdInOrderByAffectedOnDesc(routeId);
 	}
-
+/**
+ * Retrieves a map of HlrEntryLog objects for the specified array of route IDs.
+ *
+ */
 	@Override
 	public Map<Integer, HlrEntryLog> listHlrLog(int[] routeId) {
 		List<HlrEntryLog> list = hlrEntryLogRepository.findByRouteIdInOrderByAffectedOnDesc(routeId);
@@ -628,7 +669,9 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return map;
 	}
-
+/**
+ *  Retrieves a map of OptionalEntryLog objects for the specified array of route IDs.
+ */
 	@Override
 	public Map<Integer, OptionalEntryLog> listOptLog(int[] routeId) {
 		List<OptionalEntryLog> list = optionalEntryLogRepository.findByRouteIdInOrderByAffectedOnDesc(routeId);
@@ -641,7 +684,9 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return map;
 	}
-
+/**
+ * Retrieves a set of distinct SMS types from the global BasicRouteEntries
+ */
 	@Override
 	public Set<String> distinctSmscTypes() {
 		Set<String> smscTypes = new TreeSet<String>();
@@ -652,7 +697,9 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return smscTypes;
 	}
-
+/**
+ * Calculates the lookup cost for a given user and list of destination numbers.
+ */
 	@Override
 	public double calculateLookupCost(int userId, List<String> numbers) {
 		Map<String, Integer> prefix_mapping = new HashMap<String, Integer>(GlobalVars.PrefixMapping);
@@ -683,7 +730,12 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return totalcost;
 	}
-
+/**
+ * Retrieves network routing entries for a given user.
+ * @param userId
+ * @param hlr
+ * @return
+ */
 	private Map<Integer, RouteEntryExt> getNetworkRouting(int userId, boolean hlr) {
 		Map<Integer, RouteEntryExt> networkRouting = new HashMap<Integer, RouteEntryExt>();
 		Map<Integer, RouteEntryExt> routingEntries = listRouteEntries(userId, hlr, false, false);
@@ -692,7 +744,10 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return networkRouting;
 	}
-
+/**
+ * Calculates the total cost for routing messages based on user preferences.
+ *
+ */
 	@Override
 	public double calculateRoutingCost(int userId, List<String> numbers, int msgParts) {
 		Map<String, Integer> prefix_mapping = new HashMap<String, Integer>(GlobalVars.PrefixMapping);
@@ -723,7 +778,9 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return totalcost;
 	}
-
+/**
+ * Calculates the total cost for routing messages based on user preferences and the number of message parts.
+ */
 	@Override
 	public double calculateRoutingCost(int userId, Map<String, Integer> numbersParts) {
 		Map<String, Integer> prefix_mapping = new HashMap<String, Integer>(GlobalVars.PrefixMapping);
@@ -756,7 +813,9 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return totalcost;
 	}
-
+/**
+ * Saves a RouteEntryExt object along with its associated HlrRouteEntry and OptionalRouteEntry.
+ */
 	@Override
 	@Transactional
 	public void saveRouteEntry(RouteEntryExt entry) {
@@ -778,7 +837,9 @@ public class RouteServiceImpl implements RouteServices {
 			throw new InternalServerErrorException("Exception: "+e.getLocalizedMessage());
 		}
 	}
-
+/**
+ * This method retrieves and processes route entries based on the provided search criteria. 
+ */
 	@Override
 	public Map<Integer, RouteEntryExt> listRouteEntries(SearchCriteria searchCriteria) {
 		Map<Integer, RouteEntryExt> result = new HashMap<Integer, RouteEntryExt>();
@@ -1121,7 +1182,11 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return result;
 	}
-
+/**
+ * Retrieves and maps SMSC (Short Message Service Center) entries to their corresponding groups.
+ *
+ * @return
+ */
 	public Map<Integer, Set<String>> getSmscGroupMapping() {
 		Map<Integer, Set<String>> groupMapping = new HashMap<>();
 		List<SmscEntry> results = null;
@@ -1143,7 +1208,10 @@ public class RouteServiceImpl implements RouteServices {
 
 		return groupMapping;
 	}
-
+/**
+ * Retrieves and sorts SMS center names along with their corresponding IDs.
+ * @return
+ */
 	public Map<Integer, String> listNames() {
 		Map<Integer, String> names = new HashMap<Integer, String>();
 
@@ -1162,7 +1230,10 @@ public class RouteServiceImpl implements RouteServices {
 				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 		return names;
 	}
-
+/**
+ * Retrieves and sorts group names along with their corresponding IDs.
+ * @return
+ */
 	public Map<Integer, String> listGroupNames() {
 		Map<Integer, String> names = new HashMap<Integer, String>();
 		names.put(0, "NONE");
@@ -1180,7 +1251,11 @@ public class RouteServiceImpl implements RouteServices {
 				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 		return names;
 	}
-
+/**
+ * Checks if a user entry has expired based on its expiry date.
+ * @param entry
+ * @return
+ */
 	private boolean expired(UserEntry entry) {
 		boolean expired = true;
 		try {
@@ -1195,7 +1270,11 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return expired;
 	}
-
+/**
+ * Retrieves a list of route entries based on the specified search criteria.
+ * @param searchCriteria
+ * @return
+ */
 	public List<RouteEntry> listRoute(SearchCriteria searchCriteria) {
 		List<RouteEntry> routeEntries = new ArrayList<>();
 
@@ -1218,7 +1297,9 @@ public class RouteServiceImpl implements RouteServices {
 			throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
 		}
 	}
-
+/**
+ * Updates optional routing information based on the provided parameters.
+ */
 	@Override
 	public OptionRouteResponse updateOptionalRoute(OptEntryArrForm optRouteEntry, String username) {
 
@@ -1488,7 +1569,11 @@ public class RouteServiceImpl implements RouteServices {
 		return responce;
 
 	}
-
+/**
+ * Converts a UTF-16 encoded string to its hexadecimal representation, excluding '0D' (carriage return) characters.
+ * @param utf16TA
+ * @return
+ */
 	public String UTF16(String utf16TA) {
 		byte[] byteBuff;
 		StringBuffer strBuff = new StringBuffer();
@@ -1514,7 +1599,11 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return utf16TA;
 	}
-
+/**
+ * Converts a byte to its hexadecimal representation.
+ * @param data
+ * @return
+ */
 	public String byteToHex(byte data) {
 		StringBuffer buf = new StringBuffer();
 		buf.append(toHexChar((data >>> 4) & 0x0F));
@@ -1532,7 +1621,12 @@ public class RouteServiceImpl implements RouteServices {
 			return (char) ('a' + (i - 10));
 		}
 	}
-
+/**
+ * Adds a list of OptionalRouteEntry objects to the OptionalRouteEntrySchedule repository for a specific schedule.
+ * @param list
+ * @param scheduleOn
+ * @throws Exception
+ */
 	@Transactional
 	public void addOptRouteSchEntry(List<OptionalRouteEntry> list, String scheduleOn) throws Exception {
 		try {
@@ -1570,11 +1664,16 @@ public class RouteServiceImpl implements RouteServices {
 			throw new Exception("Failed to add Optional Route Entries", e);
 		}
 	}
-
+/**
+ * Updates the Optional Route Schedule based on the specified schedule date and deletes outdated entries.
+ * @param scheduledOn
+ */
 	public void updateOptRouteSch(String scheduledOn) {
 		routeEntryRepository.updateOptRouteSchAndDelete(scheduledOn);
 	}
-
+/**
+ * Updates Optional Route entries based on the provided undo information and criteria.
+ */
 	@Override
 	public OptionRouteResponse UpdateOptionalRouteUndo(OptEntryArrForm optRouteEntry, String username) {
 
@@ -1674,7 +1773,9 @@ public class RouteServiceImpl implements RouteServices {
 		responce.setStatus(target);
 		return responce;
 	}
-
+/**
+ *  Retrieves the log of previous Optional Route configurations based on the provided route IDs.
+ */
 	@Override
 	public OptionRouteResponse UpdateOptionalRoutePrevious(OptEntryArrForm routingForm, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -1735,7 +1836,9 @@ public class RouteServiceImpl implements RouteServices {
 		response.setStatus(target);
 		return response;
 	}
-
+/**
+ * Retrieves basic information about Optional Route configurations based on the provided criteria.
+ */
 	@Override
 	public OptionRouteResponse UpdateOptionalRouteBasic(OptEntryArrForm routingForm, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -1791,7 +1894,9 @@ public class RouteServiceImpl implements RouteServices {
 
 		return optionRouteResponse;
 	}
-
+/**
+ * Checks for existing Optional Route configurations based on the provided criteria and generates a response.
+ */
 	@Override
 	public OptionRouteResponse checkExisting(RouteEntryArrForm routeEntryArrForm, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -1952,7 +2057,9 @@ public class RouteServiceImpl implements RouteServices {
 		return optionRouteResponse;
 
 	}
-
+/**
+ * Retrieves SMS gateway pricing for the specified SMS gateway and network IDs.
+ */
 	public Map<Integer, Double> getSmscPricing(String smsc, Set<String> networks) {
 		Map<Integer, Double> smscPricing = new HashMap<>();
 		List<Object[]> results = optionalRouteEntryRepository.findSmscPricing(smsc, networks);
@@ -1966,6 +2073,9 @@ public class RouteServiceImpl implements RouteServices {
 	}
 
 /////////////CopyRouting
+	/**
+	 * Executes the routing entry copy operation for the specified user.
+	 */
 	@Override
 	public String execute(String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -2194,7 +2304,11 @@ public class RouteServiceImpl implements RouteServices {
 		return target;
 
 	}
-
+/**
+ * Retrieves a sorted map of users under the specified master based on system IDs.
+ * @param systemId
+ * @return
+ */
 	public Map<Integer, String> listUsersUnderMaster(String systemId) {
 		Map<Integer, String> sortedMap = GlobalVars.UserEntries.values().stream()
 				.filter(entry -> entry.getMasterId().equalsIgnoreCase(systemId))
@@ -2209,7 +2323,9 @@ public class RouteServiceImpl implements RouteServices {
 
 		return sortedMap;
 	}
-
+/**
+ * Handles the download of routing information in Excel format.
+ */
 	@Override
 	public String downloadRoute(String username, RouteEntryArrForm routingForm, HttpServletResponse response) {
 
@@ -2349,7 +2465,11 @@ public class RouteServiceImpl implements RouteServices {
 		return target;
 
 	}
-
+/**
+ *  Creates and returns an Excel workbook containing routing data.
+ * @param routinglist
+ * @return
+ */
 	private Workbook getWorkBook(List<RouteEntryExt> routinglist) {
 		logger.info("Start Creating WorkBook.");
 		SXSSFWorkbook workbook = new SXSSFWorkbook();
@@ -2449,7 +2569,9 @@ public class RouteServiceImpl implements RouteServices {
 		logger.info("Routing Workbook Created");
 		return workbook;
 	}
-
+/**
+ * Handles routing user lists based on the specified purpose and user credentials.
+ */
 	@Override
 	public RouteUserResponse RouteUserList(String username, String purpose) {
 		RouteUserResponse routeUserResponse = new RouteUserResponse();
@@ -2654,7 +2776,11 @@ public class RouteServiceImpl implements RouteServices {
 		routeUserResponse.setStatus(target);
 		return routeUserResponse;
 	}
-
+/**
+ *  Retrieves a map of UserEntryExt objects under a manager, mapped by user ID.
+ * @param mgrId
+ * @return
+ */
 	public Map<Integer, UserEntryExt> listUserEntryUnderManager(String mgrId) {
 		Map<Integer, String> map = listNamesUnderManager(mgrId);
 		Map<Integer, UserEntryExt> users = new HashMap<Integer, UserEntryExt>();
@@ -2676,7 +2802,12 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return users;
 	}
-
+/**
+ *  Retrieves a map of seller IDs and usernames under the specified manager.
+ *
+ * @param mgrId
+ * @return
+ */
 	public Map<Integer, String> listNamesUnderManager(String mgrId) {
 		Map<Integer, String> map = new HashMap<Integer, String>();
 		try {
@@ -2690,11 +2821,20 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return map;
 	}
-
+/**
+ * Retrieves a list of sellers under the specified manager.
+ * @param mgrId
+ * @return
+ */
 	private List<SalesEntry> listSellersUnderManager(String mgrId) {
 		return salesRepository.findByMasterIdAndRole(mgrId, "seller");
 	}
-
+/**
+ * Retrieves a map of UserEntryExt objects under the specified seller.
+ * @param seller
+ * @param user
+ * @return
+ */
 	public Map<Integer, UserEntryExt> listUserEntryUnderSeller(int seller, UserEntry user) {
 		logger.info("listing UserEntries Under Seller(" + seller + ")");
 		Map<Integer, UserEntryExt> map = new HashMap<Integer, UserEntryExt>();
@@ -2718,7 +2858,10 @@ public class RouteServiceImpl implements RouteServices {
 		logger.info("UserEntries Found Under Seller(" + seller + "): " + map.size());
 		return map;
 	}
-
+/**
+ * Retrieves a map of distinct country names and their corresponding codes.
+ * @return
+ */
 	private Map<String, String> getDistinctCountry() {
 		Map<String, String> countries = new HashMap<>();
 		List<Object[]> resultList = null;
@@ -2735,7 +2878,11 @@ public class RouteServiceImpl implements RouteServices {
 
 		return countries;
 	}
-
+/**
+ * Filters a collection of user entries based on their expiry dates.
+ * @param users
+ * @return
+ */
 	private List<UserEntry> filter(Collection<UserEntry> users) {
 		List<UserEntry> filter = new ArrayList<UserEntry>();
 		for (UserEntry entry : users) {
@@ -2757,7 +2904,11 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return filter;
 	}
-
+/**
+ * Retrieves a UserEntryExt object for the given user ID.
+ * @param userid
+ * @return
+ */
 	public UserEntryExt getUserEntryExt(int userid) {
 		logger.debug("getUserEntry(" + userid + ")");
 		UserEntryExt entry = null;
@@ -2778,7 +2929,11 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return entry;
 	}
-
+/**
+ * Lists UserEntryExt objects under a specified master.
+ * @param master
+ * @return
+ */
 	public Map<Integer, UserEntryExt> listUserEntryUnderMaster(String master) {
 		logger.debug("listUserEntryUnderMaster(" + master + ")");
 		Map<Integer, UserEntryExt> map = new LinkedHashMap<Integer, UserEntryExt>();
@@ -2798,6 +2953,9 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return map;
 	}
+	/**
+	 * Searches for route entries using advanced criteria.
+	 */
 
 	@Override
 	public OptionRouteResponse SearchRoutingBasic(String username, RouteEntryArrForm routingForm) {
@@ -2997,7 +3155,11 @@ public class RouteServiceImpl implements RouteServices {
 		return optionRouteResponse;
 
 	}
-
+/**
+ * Retrieves a list of RouteEntryExt objects based on the provided search criteria.
+ * @param routingForm
+ * @return
+ */
 	private List<RouteEntryExt> getRoutingList(RouteEntryArrForm routingForm) {
 		String sql = "select A.id,A.user_id,A.smsc_id,A.group_id,A.network_id,CAST(A.cost AS CHAR) AS cost,A.smsc_type,A.editBy,A.edit_on,A.remarks,"
 				+ "B.country,B.operator,B.mcc,B.mnc,C.name,D.system_id,D.master_id,D.currency,E.acc_type,F.name"
@@ -3118,7 +3280,11 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return routinglist;
 	}
-
+/**
+ * Retrieves a list of RouteEntryExt objects based on the provided SQL query.
+ * @param sql
+ * @return
+ */
 	private List<RouteEntryExt> getBasicRouting(String sql) {
 		List<RouteEntryExt> basicRouting = new ArrayList<>();
 
@@ -3183,7 +3349,10 @@ public class RouteServiceImpl implements RouteServices {
 
 		return basicRouting;
 	}
-
+/**
+ * Retrieves SMS pricing information from the database.
+ * @return
+ */
 	public Map<String, Map<Integer, Double>> getSmscPricing() {
 		Map<String, Map<Integer, Double>> smscPricing = new HashMap<>();
 
@@ -3203,7 +3372,13 @@ public class RouteServiceImpl implements RouteServices {
 
 		return smscPricing;
 	}
-
+/**
+ * Retrieves a list of route entries based on the specified search criteria.
+ * @param routingForm
+ * @param hlrEntry
+ * @param optEntry
+ * @return
+ */
 	private List<RouteEntryExt> getRoutingList(RouteEntryArrForm routingForm, boolean hlrEntry, boolean optEntry) {
 		List<RouteEntryExt> routinglist = new ArrayList<RouteEntryExt>();
 		String logText = "Routing Search Criteria: ";
@@ -3290,7 +3465,9 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return routinglist;
 	}
-
+/**
+ * Searches for route entries using advanced criteria for lookup purposes.
+ */
 	@Override
 	public OptionRouteResponse SearchRoutingLookup(String username, RouteEntryArrForm routingForm) {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
@@ -3337,7 +3514,9 @@ public class RouteServiceImpl implements RouteServices {
 		
 		return optionRouteResponse;
 	}
-
+/**
+ * Searches for optional route entries using advanced criteria.
+ */
 	public OptionRouteResponse SearchRoutingOptional(String username, RouteEntryArrForm routingForm) {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -3397,7 +3576,9 @@ public class RouteServiceImpl implements RouteServices {
 		}
 		return optionRouteResponse;
 	}
-
+/**
+ * Searches for optional route entries using advanced criteria.
+ */
 	@Override
 	public OptionRouteResponse BasicRouteBasicRoute(String username, RouteEntryArrForm routingForm) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -3668,7 +3849,10 @@ public class RouteServiceImpl implements RouteServices {
 		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;
 	}
-
+/**
+ * This method updates the RouteMaster based on entries in RouteMasterSch and deletes
+ * @param scheduledOn
+ */
 	protected void updateRouteSch(String scheduledOn) {
 		try {
 			// Update routemaster based on routemaster_sch
@@ -3692,7 +3876,11 @@ public class RouteServiceImpl implements RouteServices {
 			throw new InternalServerErrorException("ERROR: updateRouteSch()" + e);
 		}
 	}
-
+/**
+ * Adds entries to the RoutemasterSch table based on the provided list of RouteEntry instances.
+ * @param list
+ * @param scheduledOn
+ */
 	private void addRouteSchEntry(List<RouteEntry> list, String scheduledOn) {
 
 		try {
@@ -3722,7 +3910,9 @@ public class RouteServiceImpl implements RouteServices {
 			throw new RuntimeException("Error adding Route Entries", e);
 		}
 	}
-
+/**
+ *  Deletes specified route entries based on the provided RouteEntryArrForm and user information.
+ */
 	@Override
 	public OptionRouteResponse deleteRouteBasicRoute(String username, RouteEntryArrForm routingForm) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -3909,7 +4099,9 @@ public class RouteServiceImpl implements RouteServices {
 		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;
 	}
-
+/**
+ * Undoes the deletion of specified route entries based on the provided RouteEntryArrForm and user information.
+ */
 	@Override
 	public OptionRouteResponse undoRouteBasicRoute(String username, RouteEntryArrForm routingForm) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -3999,7 +4191,9 @@ public class RouteServiceImpl implements RouteServices {
 		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;
 	}
-
+/**
+ * Retrieves the previous route information based on the provided RouteEntryArrForm and user information.
+ */
 	@Override
 	public OptionRouteResponse previousRouteBasicRoute(String username, RouteEntryArrForm routingForm) {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
@@ -4064,7 +4258,9 @@ public class RouteServiceImpl implements RouteServices {
 		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;
 	}
-
+/**
+ * Retrieves the High-Level Route (HLR) information based on the provided RouteEntryArrForm and user information.
+ */
 	@Override
 	public OptionRouteResponse hlrRouteBasicRoute(String username, RouteEntryArrForm routingForm) {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
@@ -4121,7 +4317,9 @@ public class RouteServiceImpl implements RouteServices {
 		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;
 	}
-
+/**
+ * Retrieves the optional route information based on the provided RouteEntryArrForm and user information.
+ */
 	@Override
 	public OptionRouteResponse optionalRouteBasicRoute(String username, RouteEntryArrForm routingForm) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -4194,7 +4392,9 @@ public class RouteServiceImpl implements RouteServices {
 		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;
 	}
-
+/**
+ * Updates HlrRoute entries based on the provided HlrEntryArrForm and user information.
+ */
 	@Override
 	public OptionRouteResponse hlrRouteUpdate(String username, HlrEntryArrForm hlrRouteEntry) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -4385,7 +4585,11 @@ public class RouteServiceImpl implements RouteServices {
 		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;
 	}
-
+/**
+ * Adds HlrRouteEntrySch instances to the database based on the provided list of HlrRouteEntry instances
+ * @param list
+ * @param scheduledOn
+ */
 	private void addHlrRouteSchEntry(List<HlrRouteEntry> list, String scheduledOn) {
 		try {
 			list.forEach(entry -> {
@@ -4407,7 +4611,10 @@ public class RouteServiceImpl implements RouteServices {
 
 		}
 	}
-
+/**
+ *  Updates HlrRouteEntry entities based on the scheduled date.
+ * @param scheduledOn
+ */
 	@Transactional
 	public void updateHlrRouteSch(String scheduledOn) {
 		try {
@@ -4434,7 +4641,9 @@ public class RouteServiceImpl implements RouteServices {
 			throw new InternalServerErrorException("Failed to update Hlr Route Entries", e);
 		}
 	}
-
+/**
+ * Undo HLR route changes based on the provided parameters.
+ */
 	@Override
 	public OptionRouteResponse hlrRouteUndo(String username, HlrEntryArrForm hlrRouteEntry) {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
@@ -4513,7 +4722,9 @@ public class RouteServiceImpl implements RouteServices {
 		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;
 	}
-
+/**
+ * Retrieve previous HLR route configurations based on the provided parameters.
+ */
 	@Override
 	public OptionRouteResponse hlrRoutePrevious(String username, HlrEntryArrForm routingForm) {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
@@ -4567,7 +4778,9 @@ public class RouteServiceImpl implements RouteServices {
 		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;
 	}
-
+/**
+ * Retrieve HLR route configurations based on the provided parameters.
+ */
 	@Override
 	public OptionRouteResponse hlrRouteBasic(String username, HlrEntryArrForm routingForm) {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
@@ -4628,7 +4841,9 @@ public class RouteServiceImpl implements RouteServices {
 		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;
 	}
-
+/**
+ * Retrieve optional HLR route configurations based on the provided parameters and user authorization.
+ */
 	@Override
 	public OptionRouteResponse hlrRouteOptional(String username, HlrEntryArrForm routingForm) {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
@@ -4700,7 +4915,9 @@ public class RouteServiceImpl implements RouteServices {
 		optionRouteResponse.setStatus(target);
 		return optionRouteResponse;
 	}
-
+/**
+ * Update optional HLR route configurations based on the provided parameters and user authorization.
+ */
 	@Override
 	public OptionRouteResponse UpdateOptionalRouteHlr(OptEntryArrForm routingForm, String username) {
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
@@ -4741,6 +4958,7 @@ public class RouteServiceImpl implements RouteServices {
 			logger.error(masterid, ex.fillInStackTrace());
 			throw new NotFoundException("NotFoundException: "+ex.getLocalizedMessage());
 		} catch (Exception ex) {
+			
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
 			logger.error(masterid, ex.fillInStackTrace());
 			throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
@@ -4749,7 +4967,12 @@ public class RouteServiceImpl implements RouteServices {
 		return optionRouteResponse;
 
 	}
-
+/**
+ * Retrieve optional route configurations based on the provided criteria.
+ * @param criterianEntries
+ * @return
+ * @throws SQLException
+ */
 	private List<RouteEntryExt> getUpdateOptionalRoutingList(String criterianEntries) throws SQLException {
 		String sql = "select A.user_id,A.network_id,"
 				+ "B.route_id,B.isReplaceContent,B.content_replace,B.backup_smsc_id,B.num_smsc_id,B.reg_smsc_id,B.reg_group_id,B.reg_sender_id,B.forceSIDNum,B.forceSIDAlpha,B.set_expiry,"
@@ -4763,7 +4986,12 @@ public class RouteServiceImpl implements RouteServices {
 		List<RouteEntryExt> routinglist = nativeQuery.getResultList();
 		return routinglist;
 	}
-
+/**
+ * Retrieve HLR routing configurations based on the provided criteria.
+ * @param criterianEntries
+ * @return
+ * @throws SQLException
+ */
 	private List<RouteEntryExt> getUpdateHlrRoutingList(String criterianEntries) throws SQLException {
 		String sql = "select A.user_id,A.network_id,B.route_id,B.isHlr,B.hlr_smsc,B.hlr_cache,B.cost,B.edit_on,B.editBy,B.is_mnp,C.country,C.operator,C.mcc,C.mnc,D.system_id "
 				+ "from routemaster A,hlr_routing B,network C,usermaster D where " + "B.route_id in(" + criterianEntries
@@ -4773,7 +5001,12 @@ public class RouteServiceImpl implements RouteServices {
 		List<RouteEntryExt> routinglist = nativeQuery.getResultList();
 		return routinglist;
 	}
-
+/**
+ *  Retrieve basic routing configurations based on the provided criteria.
+ * @param criterianEntries
+ * @return
+ * @throws SQLException
+ */
 	private List<RouteEntryExt> getUpdateBasicRoutingList(String criterianEntries) throws SQLException {
 		String sql = "select A.id,A.user_id,A.smsc_id,A.group_id,A.network_id,CAST(A.cost AS CHAR) AS cost,A.smsc_type,A.editBy,A.edit_on,A.remarks,"
 				+ "B.country,B.operator,B.mcc,B.mnc,C.name,D.system_id,D.master_id,D.currency,E.acc_type,F.name"
@@ -4785,7 +5018,12 @@ public class RouteServiceImpl implements RouteServices {
 		List<RouteEntryExt> routinglist = nativeQuery.getResultList();
 		return routinglist;
 	}
-
+/**
+ * Retrieve basic routing configurations based on the provided criteria.
+ * @param criterianEntries
+ * @return
+ * @throws SQLException
+ */
 	private List<RouteEntryExt> getBasicRoutingList(String criterianEntries) throws SQLException {
 		String sql = "select A.id,A.user_id,A.smsc_id,A.group_id,A.network_id,CAST(A.cost AS CHAR) AS cost,A.smsc_type,A.editBy,A.edit_on,A.remarks,"
 				+ "B.country,B.operator,B.mcc,B.mnc,C.name,D.system_id,D.master_id,D.currency,E.acc_type,F.name"
@@ -4797,7 +5035,11 @@ public class RouteServiceImpl implements RouteServices {
 		List<RouteEntryExt> routinglist = nativeQuery.getResultList();
 		return routinglist;
 	}
-
+/**
+ * Retrieve optional routing configurations based on the provided criteria.
+ * @param criterianEntries
+ * @return
+ */
 	private List<RouteEntryExt> getOptionalList(String criterianEntries) {
 		String sql = "select A.user_id,A.network_id,"
 				+ "B.route_id,B.isReplaceContent,B.content_replace,B.backup_smsc_id,B.num_smsc_id,B.reg_smsc_id,B.reg_group_id,B.reg_sender_id,B.forceSIDNum,B.forceSIDAlpha,B.set_expiry,"
@@ -4811,7 +5053,11 @@ public class RouteServiceImpl implements RouteServices {
 		List<RouteEntryExt> routinglist = nativeQuery.getResultList();
 		return routinglist;
 	}
-
+/**
+ * Retrieve HLR routing configurations based on the provided criteria.
+ * @param criterianEntries
+ * @return
+ */
 	private List<RouteEntryExt> getHlrRoutingList(String criterianEntries) {
 		String sql = "select A.user_id,A.network_id,B.route_id,B.isHlr,B.hlr_smsc,B.hlr_cache,B.cost,B.edit_on,B.editBy,B.is_mnp,C.country,C.operator,C.mcc,C.mnc,D.system_id "
 				+ "from routemaster A,hlr_routing B,network C,usermaster D where " + "B.route_id in(" + criterianEntries

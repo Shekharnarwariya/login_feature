@@ -7,9 +7,11 @@ import java.util.TreeSet;
 
 import com.hti.smpp.common.dto.UserEntryExt;
 import com.hti.smpp.common.user.dto.UserEntry;
-
+/**
+ * The RouteUserResponse class represents a response containing information about route users.
+ */
 public class RouteUserResponse {
-
+// The OptionRouteResponse class is a component representing a response with various maps,
 	Map<String, String> networkmap;
 
 	Map<Integer, String> operatormap;
@@ -29,7 +31,7 @@ public class RouteUserResponse {
 	String status;
 
 	Map<Integer, UserEntryExt> userEntries;
-
+//Getter and Setter
 	public Map<String, String> getNetworkmap() {
 		return networkmap;
 	}

@@ -2,7 +2,9 @@ package com.hti.smpp.common.request;
 
 import com.hti.smpp.common.route.dto.HlrRouteEntry;
 import com.hti.smpp.common.route.dto.OptionalRouteEntry;
-
+/**
+ * The RouteEntryForm class represents a form for creating or updating a route entry, including properties
+ */
 public class RouteEntryForm {
 	private int id;
 	private int userId;
@@ -23,7 +25,7 @@ public class RouteEntryForm {
 	private HlrRouteEntry hlrRouteEntry;
 	private OptionalRouteEntry routeOptEntry;
 	private boolean replaceExisting;
-
+//Getter and Setter
 	public int getId() {
 		return id;
 	}

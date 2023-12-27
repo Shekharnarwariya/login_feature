@@ -6,16 +6,19 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import com.hti.smpp.common.route.dto.RouteEntryExt;
-
+/**
+ *  The OptionRouteResponse class represents the response for optional route operations.
+ */
 @Component
 public class OptionRouteResponse {
-
+// The RouteEntryExtList class represents a container for route entry extension information.
 	private List<RouteEntryExt> routinglist;
 	private Map<Integer, String> smsclist;
 	private Map<Integer, String> groupDetail;
 
 	private String status;
-
+	
+// Constructors, getters, and setters...
 	public List<RouteEntryExt> getRoutinglist() {
 		return routinglist;
 	}

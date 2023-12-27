@@ -1,5 +1,7 @@
 package com.hti.smpp.common.request;
-
+/**
+ * The OptEntryArrForm class represents a form containing arrays of various parameters related to optional routing.
+ */
 public class OptEntryArrForm {
 	private int[] routeId;
 	private int[] numSmscId;
@@ -24,7 +26,7 @@ public class OptEntryArrForm {
 	private String criterionEntries; // all id fetched under selected criteria to view again
 	private boolean schedule;
 	private String scheduledOn;
-
+//Getter Setter
 	public int[] getRouteId() {
 		return routeId;
 	}

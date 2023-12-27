@@ -35,6 +35,9 @@ import jakarta.servlet.http.HttpServletResponse;
 @OpenAPIDefinition(info = @Info(title = "SMPP Route API", version = "1.0", description = "API for managing SMPP routes"))
 @RestController
 @RequestMapping("/routes")
+/**
+ * Controller class for handling route-related operations.
+ */
 public class RouteController {
 
 	@Autowired
@@ -49,6 +52,12 @@ public class RouteController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
 			@ApiResponse(responseCode = "404", description = "Content Not Found")
 	})
+	/**
+	 * REST endpoint for saving a route with additional parameters.
+	 * @param routeRequest
+	 * @param username
+	 * @return
+	 */
 	public ResponseEntity<String> saveRoute(
 		    @RequestBody RouteRequest routeRequest,
 			@Parameter(description = "Username in request header", required = true) @RequestHeader("username") String username) {
@@ -65,6 +74,12 @@ public class RouteController {
 			@ApiResponse(responseCode = "404", description = "Content Not Found"),
 			@ApiResponse(responseCode = "400", description = "Bad Request. ScheduleTime Exception."),
 	})
+	/**
+	 * REST endpoint for updating an optional route.
+	 * @param optEntryArrForm
+	 * @param username
+	 * @return
+	 */
 	public ResponseEntity<String> updateOptionalRoute(
 			@RequestBody OptEntryArrForm optEntryArrForm,
 			@Parameter(description = "Username in request header", required = true) @RequestHeader("username") String username) {
@@ -84,6 +99,13 @@ public class RouteController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
 			@ApiResponse(responseCode = "404", description = "Content Not Found")
 	})
+	
+	/**
+	 * REST endpoint for undoing an operation.
+	 * @param optEntryArrForm
+	 * @param username
+	 * @return
+	 */
 	public OptionRouteResponse undo(@RequestBody OptEntryArrForm optEntryArrForm,
 			@RequestHeader("username") String username) {
 		return routeService.UpdateOptionalRouteUndo(optEntryArrForm, username);
@@ -98,6 +120,12 @@ public class RouteController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
 			@ApiResponse(responseCode = "404", description = "Content Not Found")
 	})
+	/**
+	 * REST endpoint for retrieving the result of the previous operation.
+	 * @param optEntryArrForm
+	 * @param username
+	 * @return
+	 */
 	public OptionRouteResponse previous(@RequestBody OptEntryArrForm optEntryArrForm,
 			@RequestHeader("username") String username) {
 		return routeService.UpdateOptionalRoutePrevious(optEntryArrForm, username);
@@ -111,6 +139,9 @@ public class RouteController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
 			@ApiResponse(responseCode = "404", description = "Content Not Found")
 	})
+	/**
+	 * REST endpoint for performing a basic operation.
+	 */
 	public OptionRouteResponse basic(@RequestBody OptEntryArrForm optEntryArrForm,
 			@Parameter(description = "The username provided in the request header", required = true, example = "john_doe") @RequestHeader("username") String username) {
 		return routeService.UpdateOptionalRouteBasic(optEntryArrForm, username);
@@ -124,6 +155,12 @@ public class RouteController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
 			@ApiResponse(responseCode = "404", description = "Content Not Found")
 	})
+	/**
+	 * REST endpoint for checking the existence of a route.
+	 * @param routeEntryArrForm
+	 * @param username
+	 * @return
+	 */
 	public OptionRouteResponse checkExisting(@RequestBody RouteEntryArrForm routeEntryArrForm, String username) {
 		return routeService.checkExisting(routeEntryArrForm, username);
 	}
@@ -136,6 +173,11 @@ public class RouteController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized User"),
 			@ApiResponse(responseCode = "404", description = "Content Not Found")
 	})
+	/**
+	 * REST endpoint for executing a route operation.
+	 * @param username
+	 * @return
+	 */
 	public String execute(@PathVariable String username) {
 		return routeService.execute(username);
 	}
@@ -147,6 +189,13 @@ public class RouteController {
 		@ApiResponse(responseCode = "401", description = "Unauthorized User"),
 		@ApiResponse(responseCode = "404", description = "Content Not Found")
 	})
+	/**
+	 * REST endpoint for downloading route data.
+	 * @param username
+	 * @param routingForm
+	 * @param response
+	 * @return
+	 */
 	@GetMapping("/download")
 	@ResponseBody
 	public String downloadRoute(@RequestParam String username, @RequestParam RouteEntryArrForm routingForm,
@@ -162,6 +211,12 @@ public class RouteController {
 		@ApiResponse(responseCode = "401", description = "Unauthorized User"),
 		@ApiResponse(responseCode = "404", description = "Content Not Found")
 	})
+	/**
+	 *  REST endpoint for retrieving the route user list
+	 * @param username
+	 * @param purpose
+	 * @return
+	 */
 	@GetMapping("/userList")
 	@ResponseBody
 	public RouteUserResponse routeUserList(@RequestParam String username, @RequestParam String purpose) {
@@ -176,6 +231,13 @@ public class RouteController {
 		@ApiResponse(responseCode = "401", description = "Unauthorized User"),
 		@ApiResponse(responseCode = "404", description = "Content Not Found")
 	})
+	
+	/**
+	 * REST endpoint for searching routes using basic criteria.
+	 * @param username
+	 * @param routingForm
+	 * @return
+	 */
 	@GetMapping("/searchBasic")
 	@ResponseBody
 	public OptionRouteResponse searchRoutingBasic(@RequestParam String username,
@@ -183,7 +245,12 @@ public class RouteController {
 		// Implementation for SearchRoutingBasic method
 		return routeService.SearchRoutingBasic(username, routingForm);
 	}
-
+/**
+ * REST endpoint for searching routes using optional criteria.
+ * @param username
+ * @param routingForm
+ * @return
+ */
 	@Operation(summary = "Search Routing (Optional)", description = "Search for routes using optional criteria.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "Successful search for routes", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OptionRouteResponse.class))),
@@ -198,7 +265,12 @@ public class RouteController {
 		// Implementation for SearchRoutingOptional method
 		return routeService.SearchRoutingOptional(username, routingForm);
 	}
-
+/**
+ * REST endpoint for searching routes using lookup criteria.
+ * @param username
+ * @param routingForm
+ * @return
+ */
 	@Operation(summary = "Search Routing (Lookup)", description = "Search for routes using lookup criteria.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "Successful search for routes", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OptionRouteResponse.class))),
@@ -213,7 +285,12 @@ public class RouteController {
 		// Implementation for SearchRoutingLookup method
 		return routeService.SearchRoutingLookup(username, routingForm);
 	}
-
+/**
+ * REST endpoint for creating a basic route.
+ * @param username
+ * @param routingForm
+ * @return
+ */
 	@PostMapping("/basic")
 	@Operation(summary = "Create Basic Route", description = "Create a basic route.")
 	@ApiResponses(value = { 
@@ -226,7 +303,12 @@ public class RouteController {
 		// Implementation goes here
 		return routeService.BasicRouteBasicRoute(username, routingForm);
 	}
-
+/**
+ * REST endpoint for deleting a basic route.
+ * @param username
+ * @param routingForm
+ * @return
+ */
 	@DeleteMapping("/delete-basic")
 	@Operation(summary = "Delete Basic Route", description = "Delete a basic route.")
 	@ApiResponses(value = { 
@@ -240,7 +322,12 @@ public class RouteController {
 		// Implementation goes here
 		return routeService.deleteRouteBasicRoute(username, routingForm);
 	}
-
+/**
+ * REST endpoint for undoing a basic route.
+ * @param username
+ * @param routingForm
+ * @return
+ */
 	@PostMapping("/undo")
 	@Operation(summary = "Undo Basic Route", description = "Undo a basic route.")
 	@ApiResponses(value = { 
@@ -254,7 +341,12 @@ public class RouteController {
 		// Implementation goes here
 		return routeService.undoRouteBasicRoute(username, routingForm);
 	}
-
+/**
+ * REST endpoint for getting the previous basic route.
+ * @param username
+ * @param routingForm
+ * @return
+ */
 	@PostMapping("/previous")
 	@Operation(summary = "Previous Basic Route", description = "Get the previous basic route.")
 	@ApiResponses(value = { 
@@ -268,7 +360,12 @@ public class RouteController {
 		// Implementation goes here
 		return routeService.previousRouteBasicRoute(username, routingForm);
 	}
-
+/**
+ * REST endpoint for performing HLR routing.
+ * @param username
+ * @param routingForm
+ * @return
+ */
 	@PostMapping("/hlr")
 	@Operation(summary = "HLR Basic Route", description = "Perform HLR routing.")
 	@ApiResponses(value = { 
@@ -282,7 +379,12 @@ public class RouteController {
 		// Implementation goes here
 		return routeService.hlrRouteBasicRoute(username, routingForm);
 	}
-
+/**
+ * REST endpoint for creating an optional basic route.
+ * @param username
+ * @param routingForm
+ * @return
+ */
 	@PostMapping("/optional")
 	@Operation(summary = "Optional Basic Route", description = "Create an optional basic route.")
 	@ApiResponses(value = { 
@@ -296,7 +398,12 @@ public class RouteController {
 		// Implementation goes here
 		return routeService.optionalRouteBasicRoute(username, routingForm);
 	}
-
+/**
+ * REST endpoint for updating an optional route with HLR information.
+ * @param optEntryArrForm
+ * @param username
+ * @return
+ */
 	@Operation(summary = "Update Optional Route HLR")
 	@ApiResponses(value = { 
 			@ApiResponse(responseCode = "200", description = "Success"),
@@ -308,7 +415,12 @@ public class RouteController {
 	public OptionRouteResponse updateOptionalRouteHlr(@RequestBody OptEntryArrForm optEntryArrForm, String username) {
 		return routeService.UpdateOptionalRouteHlr(optEntryArrForm, username);
 	}
-
+/**
+ * REST endpoint for updating HLR route information.
+ * @param username
+ * @param hlrEntryArrForm
+ * @return
+ */
 	@Operation(summary = "HLR Route Update")
 	@ApiResponses(value = { 
 			@ApiResponse(responseCode = "200", description = "Success"),
@@ -320,7 +432,12 @@ public class RouteController {
 	public OptionRouteResponse hlrRouteUpdate(String username, @RequestBody HlrEntryArrForm hlrEntryArrForm) {
 		return routeService.hlrRouteUpdate(username, hlrEntryArrForm);
 	}
-
+/**
+ * REST endpoint for undoing HLR route information.
+ * @param username
+ * @param hlrEntryArrForm
+ * @return
+ */
 	@Operation(summary = "HLR Route Undo")
 	@ApiResponses(value = { 
 			@ApiResponse(responseCode = "200", description = "Success"),
@@ -332,7 +449,12 @@ public class RouteController {
 	public OptionRouteResponse hlrRouteUndo(String username, @RequestBody HlrEntryArrForm hlrEntryArrForm) {
 		return routeService.hlrRouteUndo(username, hlrEntryArrForm);
 	}
-
+/**
+ * REST endpoint for retrieving previous HLR route information.
+ * @param username
+ * @param hlrEntryArrForm
+ * @return
+ */
 	@Operation(summary = "HLR Route Previous")
 	@ApiResponses(value = { 
 			@ApiResponse(responseCode = "200", description = "Success"),
@@ -344,7 +466,12 @@ public class RouteController {
 	public OptionRouteResponse hlrRoutePrevious(String username, @RequestBody HlrEntryArrForm hlrEntryArrForm) {
 		return routeService.hlrRoutePrevious(username, hlrEntryArrForm);
 	}
-
+/**
+ * REST endpoint for performing basic operations on HLR routes.
+ * @param username
+ * @param hlrEntryArrForm
+ * @return
+ */
 	@Operation(summary = "HLR Route Basic")
 	@ApiResponses(value = { 
 			@ApiResponse(responseCode = "200", description = "Success"),
@@ -357,7 +484,13 @@ public class RouteController {
 		return routeService.hlrRouteBasic(username, hlrEntryArrForm);
 	}
 
-	@Operation(summary = "HLR Route Optional")
+	/**
+	 * REST endpoint for performing optional operations on HLR routes.
+	 * @param username
+	 * @param hlrEntryArrForm
+	 * @return
+	 */
+	@Operation(summary ="HLR Route Optional")
 	@ApiResponses(value = { 
 			@ApiResponse(responseCode = "200", description = "Success"),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error"),

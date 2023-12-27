@@ -22,7 +22,9 @@ import com.hti.smpp.common.route.dto.RouteEntryExt;
 import com.hti.smpp.common.route.dto.RouteEntryLog;
 
 import jakarta.servlet.http.HttpServletResponse;
-
+/**
+ * The RouteServices interface defines the contract for handling route-related operations.
+ */
 @Service
 public interface RouteServices {
 

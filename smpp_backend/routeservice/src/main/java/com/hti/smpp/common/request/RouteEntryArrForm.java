@@ -1,6 +1,8 @@
 package com.hti.smpp.common.request;
 
-
+/**
+ * The RouteEntryArrForm class represents a form containing arrays of various parameters related to route entries.
+ */
 public class RouteEntryArrForm  {
 	private int[] id;
 	private int[] userId;
@@ -17,7 +19,9 @@ public class RouteEntryArrForm  {
 	private boolean countryWise;
 	private boolean schedule;
 	private String scheduledOn;
-
+/**
+ * The EditCriteria class represents criteria used for editing purposes, including parameters such as
+ */
 	public class EditCriteria {
 		// private String purpose;
 		private String[] mcc;
@@ -27,7 +31,7 @@ public class RouteEntryArrForm  {
 		private double maxCost;
 		private String[] currency;
 		private String[] accountType;
-
+//Getter and Setter
 		public String[] getAccountType() {
 			return accountType;
 		}
