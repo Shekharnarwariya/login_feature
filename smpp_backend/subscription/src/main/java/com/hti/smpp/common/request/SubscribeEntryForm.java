@@ -2,6 +2,8 @@ package com.hti.smpp.common.request;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 public class SubscribeEntryForm {
 	private int id;
 	private String pageName;
@@ -15,7 +17,9 @@ public class SubscribeEntryForm {
 	private String countryCode;
 	private String username;
 	private String password;
+	@Schema(hidden = true)
 	private MultipartFile headerFile;
+	@Schema(hidden = true)
 	private MultipartFile footerFile;
 
 	public int getId() {
