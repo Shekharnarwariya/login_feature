@@ -10,7 +10,9 @@ import com.hti.smpp.common.twoway.dto.KeywordEntry;
 import com.hti.smpp.common.twoway.request.KeywordEntryForm;
 import com.hti.smpp.common.twoway.request.TwowayReportForm;
 import com.hti.smpp.common.user.dto.UserEntry;
-
+/**
+ * The `KeywordService` interface defines methods for handling keyword-related operations.
+ */
 public interface KeywordService {
 	
 	public ResponseEntity<String> addKeyword(KeywordEntryForm form, String username);

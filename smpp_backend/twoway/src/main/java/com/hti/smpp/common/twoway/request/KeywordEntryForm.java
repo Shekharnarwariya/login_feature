@@ -1,5 +1,7 @@
 package com.hti.smpp.common.twoway.request;
-
+/**
+ *  The `KeywordEntryForm` class represents the form for creating or updating a keyword entry.
+ */
 public class KeywordEntryForm {
 	
 	private int id;
@@ -21,6 +23,25 @@ public class KeywordEntryForm {
 	public KeywordEntryForm() {
 	
 	}
+	/**
+	 * Parameterized constructor for creating a `KeywordEntryForm` instance with provided values.
+	 * @param id
+	 * @param userId
+	 * @param prefix
+	 * @param suffix
+	 * @param type
+	 * @param shortCode
+	 * @param expiresOn
+	 * @param reply
+	 * @param replyMessage
+	 * @param replyOnFailed
+	 * @param replyOnExpire
+	 * @param alertNumber
+	 * @param alertEmail
+	 * @param alertUrl
+	 * @param replySender
+	 * @param sources
+	 */
 	public KeywordEntryForm(int id, int userId, String prefix, String suffix, String type, String shortCode,
 			String expiresOn, boolean reply, String replyMessage, String replyOnFailed, String replyOnExpire,
 			String alertNumber, String alertEmail, String alertUrl, String replySender, String sources) {
@@ -42,6 +63,7 @@ public class KeywordEntryForm {
 		this.replySender = replySender;
 		this.sources = sources;
 	}
+	//Getter and Setter 
 	public int getId() {
 		return id;
 	}

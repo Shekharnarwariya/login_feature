@@ -74,7 +74,10 @@ import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
 import net.sf.jasperreports.engine.fill.JRSwapFileVirtualizer;
 import net.sf.jasperreports.engine.util.JRSwapFile;
 import net.sf.jasperreports.engine.xml.JRXmlLoader;
-
+/**
+ * The `KeywordServiceImpl` class implements the `KeywordService` interface and
+ * provides the implementation for keyword-related operations.
+ */
 @Service
 public class KeywordServiceImpl implements KeywordService {
 
@@ -94,7 +97,9 @@ public class KeywordServiceImpl implements KeywordService {
 
 	private String template_file = null;
 	private Locale locale = null;
-
+/**
+ * Adds a new keyword entry.
+ */
 	@Override
 	public ResponseEntity<String> addKeyword(KeywordEntryForm entryForm, String username) {
 
@@ -156,7 +161,10 @@ public class KeywordServiceImpl implements KeywordService {
 
 		return new ResponseEntity<>(target,HttpStatus.CREATED);
 	}
-
+/**
+ *  Retrieves a list of all keyword entries.
+ * @return
+ */
 	public List<KeywordEntry> listKeyWord() {
 		List<KeywordEntry> list = null;
 		try {
@@ -172,7 +180,11 @@ public class KeywordServiceImpl implements KeywordService {
 		}
 		return list;
 	}
-
+/**
+ * Retrieves a list of keyword entries for specified user identifiers.
+ * @param users
+ * @return
+ */
 	public List<KeywordEntry> listKeyWord(Integer[] users) {
 		List<KeywordEntry> list = null;
 		try {
@@ -188,7 +200,9 @@ public class KeywordServiceImpl implements KeywordService {
 		}
 		return list;
 	}
-
+/**
+ * Lists keyword entries based on user authorization and role.
+ */
 	@Override
 	public ResponseEntity<List<KeywordEntry>> listKeyword(String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -272,7 +286,9 @@ public class KeywordServiceImpl implements KeywordService {
 		}
 
 	}
-
+/**
+ * Updates an existing keyword entry.
+ */
 	@Override
 	public ResponseEntity<String> updateKeyword(KeywordEntryForm entryForm, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -327,7 +343,9 @@ public class KeywordServiceImpl implements KeywordService {
 		}
 		return new ResponseEntity<String>(target, HttpStatus.CREATED);
 	}
-
+/**
+ * Deletes a keyword entry by its identifier.
+ */
 	@Override
 	public ResponseEntity<String> deleteKeyword(int id, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -373,7 +391,9 @@ public class KeywordServiceImpl implements KeywordService {
 
 		return new ResponseEntity<String>(target,HttpStatus.OK);
 	}
-
+/**
+ * Sets up keyword configuration by providing a collection of user entries.
+ */
 	@Override
 	public ResponseEntity<Collection<UserEntry>> setupKeyword(String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -433,7 +453,11 @@ public class KeywordServiceImpl implements KeywordService {
 
 		return ResponseEntity.ok(users);
 	}
-
+/**
+ * Retrieves a keyword entry by its identifier.
+ * @param id
+ * @return
+ */
 	public KeywordEntry getEntry(int id) {
 		Optional<KeywordEntry> entryOptional = this.keywordRepo.findById(id);
 		KeywordEntry entry = null;
@@ -447,7 +471,9 @@ public class KeywordServiceImpl implements KeywordService {
 		}
 		return entry;
 	}
-
+/**
+ * Retrieves details of a keyword entry by its identifier for viewing purposes.
+ */
 	@Override
 	public ResponseEntity<KeywordEntry> viewKeyword(int id, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -498,7 +524,14 @@ public class KeywordServiceImpl implements KeywordService {
 		}
 		return ResponseEntity.ok(entry);
 	}
-
+/**
+ * Retrieves the JasperPrint object for the 2-way report based on the provided form and paging parameter.
+ * @param reportForm
+ * @param paging
+ * @return
+ * @throws JRException
+ * @throws DataAccessException
+ */
 	private JasperPrint getReportList(TwowayReportForm reportForm, boolean paging)
 			throws JRException, DataAccessException{
 
@@ -594,7 +627,11 @@ public class KeywordServiceImpl implements KeywordService {
 		return print;
 
 	}
-
+/**
+ * Sorts the list of ReportEntry objects by systemId, keyword, and receivedOn.
+ * @param list
+ * @return
+ */
 	private List<ReportEntry> sortList(List<ReportEntry> list) {
 		logger.info(" sortListBySender ");
 		Comparator<ReportEntry> comparator = null;
@@ -604,7 +641,10 @@ public class KeywordServiceImpl implements KeywordService {
 		List<ReportEntry> sortedlist = personStream.collect(Collectors.toList());
 		return sortedlist;
 	}
-
+/**
+ * Generates an Excel (XLSX) report based on the provided TwowayReportForm parameters.
+ * The generated report is streamed as a response.
+ */
 	@Override
 	public ResponseEntity<StreamingResponseBody> generateXls(TwowayReportForm reportForm, String locale,
 			String username) {
@@ -677,7 +717,9 @@ public class KeywordServiceImpl implements KeywordService {
 		}
 
 	}
-
+/**
+ * Generates a PDF report based on the provided TwowayReportForm parameters.
+ */
 	@Override
 	public ResponseEntity<StreamingResponseBody> generatePdf(TwowayReportForm reportForm, String locale,
 			String username) {
@@ -744,7 +786,10 @@ public class KeywordServiceImpl implements KeywordService {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
 		}
 	}
-
+/**
+ * Generates a DOC report based on the provided TwowayReportForm parameters.
+ * The generated report is streamed as a response.
+ */
 	@Override
 	public ResponseEntity<StreamingResponseBody> generateDoc(TwowayReportForm reportForm, String locale,
 			String username) {
@@ -811,7 +856,9 @@ public class KeywordServiceImpl implements KeywordService {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
 		}
 	}
-
+/**
+ * Generates a report based on the provided TwowayReportForm parameters and returns it.
+ */
 	@Override
 	public ResponseEntity<?> view(TwowayReportForm reportForm, String locale, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -847,7 +894,9 @@ public class KeywordServiceImpl implements KeywordService {
 		}
 
 	}
-
+/**
+ *  Sets up a collection of UserEntry objects for TwoWay Report based on the provided username.
+ */
 	@Override
 	public ResponseEntity<Collection<UserEntry>> setupTwowayReport(String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);

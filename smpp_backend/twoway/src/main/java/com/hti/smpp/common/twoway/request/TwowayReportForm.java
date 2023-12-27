@@ -1,5 +1,7 @@
 package com.hti.smpp.common.twoway.request;
-
+/**
+ * The `TwowayReportForm` class represents the form for generating a Two-Way Report.
+ */
 public class TwowayReportForm {
 	
 	private int[] userId;
@@ -12,7 +14,15 @@ public class TwowayReportForm {
 	public TwowayReportForm() {
 		super();
 	}
-
+/**
+ *  Parameterized constructor for creating a `TwowayReportForm` instance with provided values.
+ * @param userId
+ * @param shortCode
+ * @param keyword
+ * @param startTime
+ * @param endTime
+ * @param type
+ */
 	public TwowayReportForm(int[] userId, String shortCode, String keyword, String startTime, String endTime,
 			String[] type) {
 		super();
@@ -24,7 +34,7 @@ public class TwowayReportForm {
 		this.type = type;
 	}
 
-
+//Getter and Setter
 	public String getShortCode() {
 		return shortCode;
 	}
