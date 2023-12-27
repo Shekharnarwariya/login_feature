@@ -94,6 +94,7 @@ public class SmscServiceImpl implements SmscService {
 	@Autowired
 	private UserEntryRepository userRepository;
 
+	// Method to save an SMS entry
 	@Override
 	public String smscEntrySave(SmscEntryRequest smscEntryRequest, String username) {
 
@@ -129,13 +130,13 @@ public class SmscServiceImpl implements SmscService {
 			throw new InternalServerException("Failed to save SmscEntry. Error: " + e.getMessage());
 		}
 	}
-
+	// Helper method to set fields for the converted request
 	private void setConvertedRequestFields(SmscEntry convertedRequest, UserEntry userEntry) {
 		convertedRequest.setSystemId(String.valueOf(userEntry.getSystemId()));
 		convertedRequest.setSystemType(userEntry.getSystemType());
 		convertedRequest.setMasterId(userEntry.getMasterId());
 	}
-
+	// Method to update an SMS entry
 	@Override
 	public String smscupdate(int smscId, SmscEntryRequest smscEntryRequest, String username) {
 
@@ -170,7 +171,7 @@ public class SmscServiceImpl implements SmscService {
 			throw new InternalServerException("Failed to update SmscEntry: Unexpected error occurred.");
 		}
 	}
-
+	// Method to delete an SMS entry
 	@Override
 	public String smscdelete(int smscId, String username) {
 
@@ -202,6 +203,8 @@ public class SmscServiceImpl implements SmscService {
 			throw new InternalServerException("Failed to delete SmscEntry: " + ex.getLocalizedMessage());
 		}
 	}
+	
+	// Method to retrieve a custom entry for an SMS entry
 
 	@Override
 	public CustomEntry getCustomEntry(int smscId, String username) {
@@ -240,6 +243,7 @@ public class SmscServiceImpl implements SmscService {
 		}
 	}
 
+	// Method to save a custom entry for an SMS entry
 	@Override
 	public String saveCustom(CustomRequest customRequest, String username) {
 
@@ -268,11 +272,13 @@ public class SmscServiceImpl implements SmscService {
 			throw new InternalServerException("Failed to save CustomEntry. Unexpected error occurred.");
 		}
 	}
-
+	// Method to update a CustomEntry with the provided ID, based on user authorization
 	@Override
 	public String updateCustom(int customId, CustomRequest customRequest, String username) {
+		 // Check user authorization
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry userEntry = null;
+		 // Check if the user is present
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
@@ -303,7 +309,8 @@ public class SmscServiceImpl implements SmscService {
 			throw new InternalServerException("Failed to update CustomEntry. Unexpected error occurred.");
 		}
 	}
-
+	// Method to delete a CustomEntry with the provided ID, based on user authorization
+	// and ensuring the user has the required roles for the operation.
 	@Override
 	public String deleteCustom(int customId, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -338,7 +345,9 @@ public class SmscServiceImpl implements SmscService {
 			throw new InternalServerException("Failed to delete CustomEntry. Unexpected error occurred.");
 		}
 	}
-
+	
+	// Method to save a list of LimitEntry objects based on user authorization
+	// and ensuring the user has the required roles for the operation.
 	@Override
 	public String saveLimit(LimitRequest limitRequest, String username) {
 
@@ -367,6 +376,9 @@ public class SmscServiceImpl implements SmscService {
 			throw new InternalServerException("Failed to save LimitEntry. Unexpected error occurred.");
 		}
 	}
+	
+	// Method to update a LimitEntry with the provided ID, based on user authorization
+	// and ensuring the user has the required roles for the operation.
 
 	@Override
 	public String updateLimit(int limitId, LimitRequest limitRequest, String username) {
@@ -406,9 +418,13 @@ public class SmscServiceImpl implements SmscService {
 			throw new InternalServerException("Failed to update LimitEntry. Unexpected error occurred.");
 		}
 	}
-
+	
+	
+	// Method to delete a LimitEntry with the provided ID, based on user authorization
+	// and ensuring the user has the required roles for the operation.
 	@Override
 	public String deleteLimit(int limitId, String username) {
+		 // Check user authorization
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -439,9 +455,14 @@ public class SmscServiceImpl implements SmscService {
 			throw new InternalServerException("Failed to delete LimitEntry. Unexpected error occurred.");
 		}
 	}
+	
+	// Method to list all LimitEntries based on user authorization
+	// and ensuring the user has the required roles for the operation.
 
 	@Override
 	public List<LimitEntry> listLimit(String username) {
+	    // Check user authorization
+
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -466,6 +487,9 @@ public class SmscServiceImpl implements SmscService {
 		}
 	}
 
+
+	// Method to save a GroupEntry based on user authorization
+	// and ensuring the user has the required roles for the operation.
 	@Override
 	public String saveGroup(GroupRequest groupRequest, String username) {
 
@@ -494,6 +518,8 @@ public class SmscServiceImpl implements SmscService {
 			throw new InternalServerException("Failed to save GroupEntry. Unexpected error occurred.");
 		}
 	}
+	// Method to update a GroupEntry based on user authorization
+	// and ensuring the user has the required roles for the operation.
 
 	@Override
 	public String updateGroup(GroupRequest groupRequest, String username) {
@@ -531,6 +557,9 @@ public class SmscServiceImpl implements SmscService {
 			throw new InternalServerException("Failed to update GroupEntry. Unexpected error occurred.");
 		}
 	}
+	
+	// Method to delete a GroupEntry with the provided ID, based on user authorization
+	// and ensuring the user has the required roles for the operation.
 
 	@Override
 	public String deleteGroup(int groupId, String username) {
@@ -565,6 +594,8 @@ public class SmscServiceImpl implements SmscService {
 		}
 	}
 
+	// Method to list all GroupEntries based on user authorization
+	// and ensuring the user has the required roles for the operation.
 	@Override
 	public List<GroupEntry> listGroup(String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -592,6 +623,8 @@ public class SmscServiceImpl implements SmscService {
 		}
 	}
 
+	// Method to save a list of GroupMemberEntry objects based on user authorization
+	// and ensuring the user has the required roles for the operation.
 	@Override
 	public String saveGroupMember(GroupMemberRequest groupMemberRequest, String username) {
 
@@ -607,6 +640,7 @@ public class SmscServiceImpl implements SmscService {
 		}
 
 		try {
+			// Convert request and save all GroupMemberEntry objects
 			List<GroupMemberEntry> convertRequest = ConvertRequest(groupMemberRequest);
 			for (GroupMemberEntry entry : convertRequest) {
 				groupMemberEntryRepository.save(entry);
@@ -624,6 +658,9 @@ public class SmscServiceImpl implements SmscService {
 			throw new InternalServerException("Failed to save GroupMemberEntry. Unexpected error occurred.");
 		}
 	}
+	
+	// Method to update a list of GroupMemberEntry objects based on user authorization
+	// and ensuring the user has the required roles for the operation.
 
 	@Override
 	public String updateGroupMember(GroupMemberRequest groupMemberRequest, String username) {
@@ -662,6 +699,8 @@ public class SmscServiceImpl implements SmscService {
 		}
 	}
 
+	 //Deletes a group member with the specified ID and performs authorization checks.
+	
 	@Override
 	public String deleteGroupMember(int groupMemberId, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -695,6 +734,7 @@ public class SmscServiceImpl implements SmscService {
 		}
 	}
 
+	// Saves traffic schedule entries based on the provided TrafficScheduleRequest.
 	@Override
 	public String saveSchedule(TrafficScheduleRequest trafficScheduleRequest) {
 		try {
@@ -713,6 +753,7 @@ public class SmscServiceImpl implements SmscService {
 			throw new InternalServerException("Failed to save TrafficScheduleEntry. Unexpected error occurred.");
 		}
 	}
+   // Updates traffic schedule entries based on the provided TrafficScheduleRequest and performs authorization checks.
 
 	@Override
 	public String updateSchedule(TrafficScheduleRequest trafficScheduleRequest, String username) {
@@ -750,6 +791,7 @@ public class SmscServiceImpl implements SmscService {
 		}
 	}
 
+	//Deletes a traffic schedule entry with the specified ID and performs authorization checks
 	@Override
 	public String deleteSchedule(int scheduleId, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -779,6 +821,10 @@ public class SmscServiceImpl implements SmscService {
 			throw new InternalServerException("Failed to delete TrafficScheduleEntry. Unexpected error occurred.");
 		}
 	}
+	
+	
+	// Lists all traffic schedule entries, sets day names, SMS gateway names, and returns a map.
+	 
 
 	public Map<String, TrafficScheduleEntry> listSchedule() {
 		try {
@@ -800,11 +846,15 @@ public class SmscServiceImpl implements SmscService {
 		}
 	}
 
+	//Sets the day name for a TrafficScheduleEntry based on the day of the week.
+	
 	private void setDayName(TrafficScheduleEntry entry) {
 		Map<Integer, String> daysMap = Map.of(0, "EveryDay", 1, "Sunday", 2, "Monday", 3, "Tuesday", 4, "Wednesday", 5,
 				"Thursday", 6, "Friday", 7, "Saturday");
 		entry.setDayName(daysMap.getOrDefault(entry.getDay(), "Unknown"));
 	}
+
+	//  Sets the SMS gateway name for a TrafficScheduleEntry and adds it to the provided map.
 
 	private void setSmscNameAndAddToMap(TrafficScheduleEntry entry, Map<String, TrafficScheduleEntry> map) {
 		Optional<SmscEntry> smscEntry = smscEntryRepository.findById(entry.getSmscId());
@@ -813,7 +863,7 @@ public class SmscServiceImpl implements SmscService {
 			map.put(entry.getSmscId() + "#" + entry.getDay(), entry);
 		}
 	}
-
+ //Saves an SmscLooping entry based on the provided SmscLoopingRequest.
 	@Override
 	public String saveLoopingRule(SmscLoopingRequest smscLoopingRequest) {
 		try {
@@ -829,6 +879,9 @@ public class SmscServiceImpl implements SmscService {
 			throw new InternalServerException("Failed to save SmscLooping entry. Unexpected error occurred.");
 		}
 	}
+	
+	//  Updates an SmscLooping entry based on the provided SmscLoopingRequest and performs authorization checks.
+
 
 	@Override
 	public String loopingRuleupdate(SmscLoopingRequest smscLoopingRequest, String username) {
@@ -836,6 +889,7 @@ public class SmscServiceImpl implements SmscService {
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
+			// Check if the user is authorized as a super admin and system user
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
@@ -843,7 +897,9 @@ public class SmscServiceImpl implements SmscService {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 		try {
+			  // Convert the request to a SmscLooping object
 			SmscLooping convertRequest = ConvertRequest(smscLoopingRequest);
+			// Check if the SmscLooping entry exists
 			if (smscLoopingRepository.existsById(convertRequest.getSmscId())) {
 				smscLoopingRepository.save(convertRequest);
 				logger.info("SmscLooping entry updated with id: " + convertRequest.getSmscId());
@@ -863,13 +919,20 @@ public class SmscServiceImpl implements SmscService {
 			throw new InternalServerException("Failed to update SmscLooping entry. Unexpected error occurred.");
 		}
 	}
+	
+	// * Deletes an SmscLooping entry with the specified ID and performs authorization checks.
+
 
 	@Override
 	public String loopingRuledelete(int smscId, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
+		
+		// Check if the user exists
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
+			
+			  // Check if the user is authorized as a super admin and system user
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
@@ -879,6 +942,8 @@ public class SmscServiceImpl implements SmscService {
 
 		try {
 			if (smscLoopingRepository.existsById(smscId)) {
+	            // Delete the SmscLooping entry, trigger a flag change, and return success message
+
 				smscLoopingRepository.deleteById(smscId);
 				logger.info("SmscLooping entry deleted with id: " + smscId);
 				MultiUtility.changeFlag(Constants.SMSC_LOOP_FLAG_FILE, "707");
@@ -898,8 +963,12 @@ public class SmscServiceImpl implements SmscService {
 		}
 	}
 
+	// * Retrieves an SmscLooping entry with the specified ID and performs authorization checks.
+
 	@Override
 	public SmscLooping getLoopingRule(int smscId, String username) {
+		
+		 // Retrieve user information based on the provided username
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -928,12 +997,16 @@ public class SmscServiceImpl implements SmscService {
 			throw new InternalServerException("Failed to retrieve SmscLooping rule. Unexpected error occurred.");
 		}
 	}
+	
+	//Lists all SmscLooping entries and performs authorization checks.
 
 	@Override
 	public List<SmscLooping> listLoopingRule(String username) {
-
+		// Retrieve user information based on the provided username
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
+		
+		// Check if the user exists
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
@@ -953,6 +1026,8 @@ public class SmscServiceImpl implements SmscService {
 	public SmscEntry ConvertRequest(SmscEntryRequest smscEntryRequest) {
 		try {
 			SmscEntry smsc = new SmscEntry();
+			
+			 // Set properties based on SmscEntryRequest
 			smsc.setAlertUrl(smscEntryRequest.getAlertUrl());
 			smsc.setAllowedSources(smscEntryRequest.getAllowedSources());
 			smsc.setBackupIp(smscEntryRequest.getBackupIp());
@@ -1019,6 +1094,8 @@ public class SmscServiceImpl implements SmscService {
 		try {
 			CustomEntry custom = new CustomEntry();
 
+			 // Set properties based on CustomRequest
+			
 			custom.setGsnpi(customRequest.getGsnpi());
 			custom.setGston(customRequest.getGston());
 			custom.setLsnpi(customRequest.getLsnpi());
@@ -1074,6 +1151,7 @@ public class SmscServiceImpl implements SmscService {
 
 	public List<GroupMemberEntry> ConvertRequest(GroupMemberRequest groupMemberRequest) {
 		try {
+			// Set properties based on GroupMemberRequest
 			int[] smsc = groupMemberRequest.getSmscId();
 			int[] percent = groupMemberRequest.getPercent();
 			List<GroupMemberEntry> list = new ArrayList<>();
@@ -1085,12 +1163,15 @@ public class SmscServiceImpl implements SmscService {
 			for (int i = 0; i < smsc.length; i++) {
 				if (map.containsKey(smsc[i])) {
 					GroupMemberEntry existEntry = map.get(smsc[i]);
+					 // Set properties based on GroupMemberRequest
 					existEntry.setGroupId(groupMemberRequest.getGroupId());
 					existEntry.setSmscId(smsc[i]);
 					existEntry.setPercent(percent[i]);
 					list.add(existEntry);
 				} else {
 					GroupMemberEntry entry = new GroupMemberEntry();
+					 // Set properties based on GroupMemberRequest
+					
 					entry.setGroupId(groupMemberRequest.getGroupId());
 					entry.setSmscId(smsc[i]);
 					entry.setPercent(percent[i]);
@@ -1141,6 +1222,7 @@ public class SmscServiceImpl implements SmscService {
 		SmscLooping smscLooping = null;
 		try {
 			smscLooping = new SmscLooping();
+			// Set properties based on SmscLoopingRequest
 			smscLooping.setActive(smscLoopingRequest.isActive());
 			smscLooping.setCount(smscLoopingRequest.getCount());
 			smscLooping.setDuration(smscLoopingRequest.getDuration());
@@ -1161,6 +1243,7 @@ public class SmscServiceImpl implements SmscService {
 	public List<TrafficScheduleEntry> ConvertRequest(TrafficScheduleRequest trafficScheduleRequest) {
 
 		try {
+			 // Set properties based on TrafficScheduleRequest
 			int[] smscId = trafficScheduleRequest.getSmscId();
 			String[] gmt = trafficScheduleRequest.getGmt();
 			int[] day = trafficScheduleRequest.getDay();
@@ -1191,6 +1274,9 @@ public class SmscServiceImpl implements SmscService {
 
 		}
 	}
+	
+	/// Saves a SmscBsfmEntry based on the provided SmscBsfmEntryRequest and username
+	// Only users with the required roles are authorized to perform this operation
 
 	@Override
 	public String saveSmscBsfm(SmscBsfmEntryRequest smscBsfmEntryRequest, String username) {
@@ -1218,6 +1304,8 @@ public class SmscServiceImpl implements SmscService {
 		return "saccessfully save....";
 
 	}
+	
+	// Converts a SmscBsfmEntryRequest to SmscBsfmEntry and sets its properties
 
 	private void ConvertRequest(SmscBsfmEntryRequest smscBsfmEntryRequest, SmscBsfmEntry smscBsfmEntry) {
 		smscBsfmEntry.setContent(smscBsfmEntryRequest.getContent());
@@ -1226,6 +1314,9 @@ public class SmscServiceImpl implements SmscService {
 		smscBsfmEntry.setSource(smscBsfmEntryRequest.getSmscId() + "");
 
 	}
+	
+	// Retrieves a list of TrafficScheduleEntry for the provided username
+	// Only users with the required roles are authorized to perform this operation
 
 	@Override
 	public List<TrafficScheduleEntry> listTrafficSchedule(String username) {
@@ -1264,6 +1355,8 @@ public class SmscServiceImpl implements SmscService {
 		}
 	}
 
+	// Retrieves a list of SMS/C BSFM entries for the provided username
+	// Only users with the required roles are authorized to perform this operation
 	@Override
 	public List<SmscBsfmEntry> listSmscBsfm(String username) {
 		try {
@@ -1308,6 +1401,8 @@ public class SmscServiceImpl implements SmscService {
 
 	}
 
+	// Updates a SMS/C BSFM entry based on the provided SmscBsfmEntryRequest and username
+	// Only users with the required roles are authorized to perform this operation
 	@Override
 	public ResponseEntity<String> bsfmupdate(SmscBsfmEntryRequest smscBsfmEntryRequest, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -1342,6 +1437,8 @@ public class SmscServiceImpl implements SmscService {
 		}
 	}
 
+	// Deletes a SMS/C BSFM entry based on the provided ID and username
+	// Only users with the required roles are authorized to perform this operation
 	@Override
 	public ResponseEntity<String> bsfmdelete(int id, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -1372,6 +1469,8 @@ public class SmscServiceImpl implements SmscService {
 		}
 	}
 
+	// Retrieves a SMS entry based on the provided ID and username
+	// Only users with the required roles are authorized to perform this operation
 	@Override
 	public ResponseEntity<SmscEntry> getSmscEntry(int id, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -1403,6 +1502,9 @@ public class SmscServiceImpl implements SmscService {
 			throw new InternalServerException(e.getMessage());
 		}
 	}
+	
+	// Retrieves a group member based on the provided ID and username
+	// Only users with the required roles are authorized to perform this operation
 
 	@Override
 	public ResponseEntity<?> getGroupMember(int id, String username) {

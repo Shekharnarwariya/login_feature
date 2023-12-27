@@ -49,12 +49,17 @@ public class SmscController {
 
 	@Autowired
 	private SmscService smscDAOImpl;
+	
+    // Endpoint for checking the service status
+
 
 	@Operation(summary = "Check Service Status", description = "Retrieve the status of the service.")
 	@GetMapping("/status")
 	public ResponseEntity<String> getStatus() {
 		return new ResponseEntity<>("Service is up and running", HttpStatus.OK);
 	}
+	
+	// Endpoint for saving SMS entry to the system
 
 	@Operation(summary = "Save SMS Entry", description = "Save the SMS entry to the system.")
 	@ApiResponses(value = {
@@ -72,6 +77,9 @@ public class SmscController {
 		return new ResponseEntity<>(result, HttpStatus.CREATED);
 	}
 
+    // Endpoint for saving custom entry to the system
+
+	
 	@Operation(summary = "Save Custom Entry", description = "Save the custom entry to the system.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "201", description = "CustomEntry Saved Successfully."),
@@ -80,6 +88,9 @@ public class SmscController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized User."),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.")
 	})
+	
+	// Controller method to handle HTTP POST requests for saving custom entries
+
 	@PostMapping("/custom/save")
 	public ResponseEntity<String> saveCustom(
 			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Request body for Custom Entry", required = true, content = @Content(schema = @Schema(implementation = CustomRequest.class))) @RequestBody CustomRequest customRequest,
@@ -96,6 +107,9 @@ public class SmscController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized User."),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.")
 	})
+	
+	// Controller method to handle HTTP POST requests for saving SmscBsfm entries
+
 	@PostMapping("/bsfm/save")
 	public ResponseEntity<String> saveSmscBsfm(
 			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Request body for SmscBsfmEntry ", required = true, content = @Content(schema = @Schema(implementation = SmscBsfmEntryRequest.class))) @RequestBody SmscBsfmEntryRequest smscBsfmEntryRequest,
@@ -112,6 +126,9 @@ public class SmscController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized User."),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.")
 	})
+	
+	// Controller method to handle HTTP POST requests for saving group entries
+
 	@PostMapping("/group/save")
 	public ResponseEntity<String> saveGroup(
 			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Request body for Group", required = true, content = @Content(schema = @Schema(implementation = GroupRequest.class))) @RequestBody GroupRequest groupRequest,
@@ -128,6 +145,9 @@ public class SmscController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized User."),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.")
 	})
+	
+	// Controller method to handle HTTP POST requests for saving group member entries
+
 	@PostMapping("/groupMember/save")
 	public ResponseEntity<String> saveGroupMember(
 			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Request body for Group Member", required = true, content = @Content(schema = @Schema(implementation = GroupMemberRequest.class))) @RequestBody GroupMemberRequest groupMemberRequest,
@@ -144,6 +164,9 @@ public class SmscController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized User."),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.")
 	})
+	
+	// Controller method to handle HTTP POST requests for saving limit entries
+
 	@PostMapping("/limit/save")
 	public ResponseEntity<String> saveLimit(
 			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Request body for Limit", required = true, content = @Content(schema = @Schema(implementation = LimitRequest.class))) @RequestBody LimitRequest limitRequest,
@@ -151,6 +174,8 @@ public class SmscController {
 		String result = smscDAOImpl.saveLimit(limitRequest, username);
 		return new ResponseEntity<>(result, HttpStatus.CREATED);
 	}
+
+	// Controller method to handle HTTP PUT requests for updating SMS entries
 
 	@Operation(summary = "Update SMS Entry", description = "Update the SMS entry in the system.")
 	@ApiResponses(value = {
@@ -160,6 +185,9 @@ public class SmscController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized User."),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.")
 	})
+	
+	
+	
 	@PutMapping("/update/{smscId}")
 	public ResponseEntity<String> updateSmscEntry(@PathVariable int smscId,
 			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Request body for SMS Entry", required = true, content = @Content(schema = @Schema(implementation = SmscEntryRequest.class))) @RequestBody SmscEntryRequest smscEntryRequest,
@@ -170,6 +198,8 @@ public class SmscController {
 		}
 		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
+
+	// Controller method to handle HTTP DELETE requests for deleting SMS entries
 
 	@Operation(summary = "Delete SMS Entry", description = "Delete the SMS entry from the system.")
 	@ApiResponses(value = {
@@ -184,6 +214,8 @@ public class SmscController {
 		String result = smscDAOImpl.smscdelete(id, username);
 		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
+
+	// Controller method to handle HTTP GET requests for fetching custom entries by ID
 
 	@Operation(summary = "Get Custom Entry", description = "Get a custom entry based on the provided ID.")
 	@ApiResponses(value = {
@@ -212,12 +244,17 @@ public class SmscController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized User."),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.")
 	})
+	
+	// Controller method to handle HTTP PUT requests for updating custom entries
+
 	@PutMapping("/custom/{customId}")
 	public ResponseEntity<String> updateCustom(@PathVariable int customId, @RequestBody CustomRequest customRequest,
 			@RequestHeader("username") String username) {
 		smscDAOImpl.updateCustom(customId, customRequest, username);
 		return new ResponseEntity<>("CustomEntry with ID " + customId + " successfully updated.", HttpStatus.OK);
 	}
+
+	// Controller method to handle HTTP DELETE requests for deleting custom entries
 
 	@Operation(summary = "Delete Custom Entry", description = "Delete the custom entry with the provided ID.")
 	@ApiResponses(value = {
@@ -232,6 +269,9 @@ public class SmscController {
 		String result = smscDAOImpl.deleteCustom(customId, username);
 		return new ResponseEntity<>("Custom with ID " + customId + " successfully deleted", HttpStatus.OK);
 	}
+	
+	// Controller method to handle HTTP PUT requests for updating limit entries
+
 
 	@Operation(summary = "Update Limit", description = "Update the limit with the provided ID.")
 	@ApiResponses(value = {
@@ -252,6 +292,8 @@ public class SmscController {
 		}
 	}
 
+	// Controller method to handle HTTP DELETE requests for deleting limit entries
+
 	@Operation(summary = "Delete Limit Entry", description = "Delete the limit entry with the provided ID.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "LimitEntry Deleted Successfully."),
@@ -266,6 +308,8 @@ public class SmscController {
 		return "LimitEntry with ID " + limitId + " deleted successfully";
 	}
 
+	// Controller method to handle HTTP GET requests for listing all limit entries
+
 	@Operation(summary = "List Limit Entries", description = "Get a list of all limit entries.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "All LimitEntry Fetched Successfully."),
@@ -279,6 +323,9 @@ public class SmscController {
 		List<LimitEntry> limitEntries = smscDAOImpl.listLimit(username);
 		return limitEntries;
 	}
+	
+	// Controller method to handle HTTP PUT requests for updating group entries
+
 
 	@Operation(summary = "Update Group", description = "Update the group with the provided request.")
 	@ApiResponses(value = {
@@ -295,6 +342,8 @@ public class SmscController {
 		return ResponseEntity.ok(result);
 	}
 
+	// Controller method to handle HTTP GET requests for listing all group entries
+
 	@Operation(summary = "List Groups", description = "Get a list of all groups.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "GroupEntry Fetched Successfully."),
@@ -308,6 +357,8 @@ public class SmscController {
 		List<GroupEntry> groupEntries = smscDAOImpl.listGroup(username);
 		return ResponseEntity.ok(groupEntries);
 	}
+
+	// Controller method to handle HTTP PUT requests for updating group members
 
 	@Operation(summary = "Update Group Member", description = "Update the group member with the provided request.")
 	@ApiResponses(value = {
@@ -323,6 +374,8 @@ public class SmscController {
 		String result = smscDAOImpl.updateGroupMember(groupMemberRequest, username);
 		return ResponseEntity.ok(result);
 	}
+	
+	// Controller method to handle HTTP DELETE requests for deleting group members
 
 	@Operation(summary = "Delete Group Member", description = "Delete the group member with the provided ID.")
 	@ApiResponses(value = {
@@ -339,6 +392,9 @@ public class SmscController {
 		return ResponseEntity.ok(result);
 	}
 
+	// Controller method to handle HTTP POST requests for saving traffic schedules
+
+	
 	@Operation(summary = "Save Schedule", description = "Save the traffic schedule with the provided request.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "TrafficScheduleEntry Saved Successfully."),
@@ -352,6 +408,8 @@ public class SmscController {
 		String result = smscDAOImpl.saveSchedule(trafficScheduleRequest);
 		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
+
+	// Controller method to handle HTTP PUT requests for updating traffic schedules
 
 	@Operation(summary = "Update Schedule", description = "Update the schedule with the provided request.")
 	@ApiResponses(value = {
@@ -367,6 +425,9 @@ public class SmscController {
 		String result = smscDAOImpl.updateSchedule(trafficScheduleRequest, username);
 		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
+	
+	// Controller method to handle HTTP DELETE requests for deleting traffic schedules
+
 
 	@Operation(summary = "Delete Schedule", description = "Delete the schedule with the provided ID.")
 	@ApiResponses(value = {
@@ -383,6 +444,8 @@ public class SmscController {
 		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
 
+	// Controller method to handle HTTP POST requests for saving looping rules
+
 	@Operation(summary = "Save Looping Rule", description = "Save the looping rule with the provided request.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "SmscLooping Saved Successfully."),
@@ -395,6 +458,8 @@ public class SmscController {
 	public String saveLoopingRule(@RequestBody SmscLoopingRequest smscLoopingRequest) {
 		return smscDAOImpl.saveLoopingRule(smscLoopingRequest);
 	}
+
+	// Controller method to handle HTTP PUT requests for updating looping rules
 
 	@Operation(summary = "Update Looping Rule", description = "Update the looping rule with the provided request.")
 	@ApiResponses(value = {
@@ -409,6 +474,9 @@ public class SmscController {
 			@RequestHeader("username") String username) {
 		return smscDAOImpl.loopingRuleupdate(smscLoopingRequest, username);
 	}
+	
+	// Controller method to handle HTTP DELETE requests for deleting looping rules
+
 
 	@Operation(summary = "Delete Looping Rule", description = "Delete the looping rule with the provided ID.")
 	@ApiResponses(value = {
@@ -422,6 +490,8 @@ public class SmscController {
 	public String deleteLoopingRule(@PathVariable int smscId, @RequestHeader("username") String username) {
 		return smscDAOImpl.loopingRuledelete(smscId, username);
 	}
+
+	// Controller method to handle HTTP GET requests for listing looping rules
 
 	@Operation(summary = "List Looping Rules", description = "Get a list of all looping rules.")
 	@ApiResponses(value = {
@@ -437,6 +507,8 @@ public class SmscController {
 		return ResponseEntity.ok(loopingRules);
 	}
 
+	// Controller method to handle HTTP GET requests for listing traffic schedule entries
+
 	@Operation(summary = "List Traffic Schedule", description = "Get a list of traffic schedule entries.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "TrafficScheduleEntry List Fetched Successfully."),
@@ -450,6 +522,8 @@ public class SmscController {
 		List<TrafficScheduleEntry> trafficScheduleEntries = smscDAOImpl.listTrafficSchedule(username);
 		return ResponseEntity.ok(trafficScheduleEntries);
 	}
+     
+	// Controller method to handle HTTP GET requests for listing SMSB BSFM entries
 
 	@Operation(summary = "List SMSB BSFM Entries", description = "Get a list of SMSB BSFM entries.")
 	@ApiResponses(value = {
@@ -464,6 +538,8 @@ public class SmscController {
 		List<SmscBsfmEntry> smscBsfmEntries = smscDAOImpl.listSmscBsfm(username);
 		return ResponseEntity.ok(smscBsfmEntries);
 	}
+
+	// Controller method to handle HTTP DELETE requests for deleting groups
 
 	@Operation(summary = "Delete Group", description = "Delete a group by ID.")
 	@ApiResponses(value = {
@@ -493,6 +569,8 @@ public class SmscController {
 		return smscDAOImpl.bsfmupdate(smscBsfmEntryRequest, username);
 	}
 
+	// Controller method to handle HTTP PUT requests for updating SMS entries
+
 	@Operation(summary = "Delete an SMS entry", description = "Delete an existing SMS entry by providing its ID.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "SmscBsfmEntry Deleted Successfully."),
@@ -508,6 +586,8 @@ public class SmscController {
 		return smscDAOImpl.bsfmdelete(id, username);
 	}
 
+	// Controller method to handle HTTP GET requests for retrieving an SMS entry by ID
+
 	@Operation(summary = "Get an SMS entry by ID", description = "Retrieve an SMS entry by providing its ID.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "SmscEntry Fetched Successfully."),
@@ -522,6 +602,8 @@ public class SmscController {
 			@Parameter(description = "Username making the request", required = true) @RequestHeader("username") String username) {
 		return smscDAOImpl.getSmscEntry(id, username);
 	}
+
+	// Controller method to handle HTTP GET requests for retrieving a group member by ID
 
 	@Operation(summary = "Get a group member by ID", description = "Retrieve a group member by providing its ID.")
 	@ApiResponses(value = {
