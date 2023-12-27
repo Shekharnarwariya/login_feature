@@ -15,30 +15,13 @@ import reactor.core.publisher.Mono;
 
 @Component
 public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
-
-<<<<<<< HEAD
 	public AuthenticationFilter() {
 		super(Config.class);
 	}
 
-=======
-	  // Autowired dependencies
-	@Autowired
-	private RouteValidator validator;
-
-	@Autowired
-	private JwtUtil jwtUtil;
-	 // Default constructor for the filter factory
-	public AuthenticationFilter() {
-		super(Config.class);
-	}
-	  // ServerHttpRequest to be modified
-	ServerHttpRequest request;
-	// Method responsible for applying the authentication filter logic
->>>>>>> 7793c08b65911be7638c9d52e93eba4a2e548e04
 	@Override
 	public GatewayFilter apply(Config config) {
-		 // Check if the request needs authentication based on the RouteValidator
+		// Check if the request needs authentication based on the RouteValidator
 		return ((exchange, chain) -> {
 			RouteValidator validator = new RouteValidator();
 			if (!validator.isSecured.test(exchange.getRequest())) {
@@ -48,7 +31,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 				try {
 					// Check if the authorization header is missing
 					if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-                        // Handle unauthorized request with a message
+						// Handle unauthorized request with a message
 
 						return handleUnauthorized(exchange, "missing authorization header...!");
 
@@ -59,49 +42,32 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 					if (authHeader != null && authHeader.startsWith("Bearer ")) {
 						authHeader = authHeader.substring(7);
 					}
-<<<<<<< HEAD
+
 					JwtUtil jwtUtil = new JwtUtil();
 
 					jwtUtil.validateToken(authHeader);
 					exchange.getRequest().mutate().header("username", jwtUtil.getUserNameFromJwtToken(authHeader))
 							.build();
 
-=======
-					   // Validate the JWT token
-					jwtUtil.validateToken(authHeader);
-					  // Set "username" header in the request
-					request = exchange.getRequest().mutate()
-							.header("username", jwtUtil.getUserNameFromJwtToken(authHeader)).build();
-					 // Handle unauthorized request with an error message
->>>>>>> 7793c08b65911be7638c9d52e93eba4a2e548e04
 				} catch (Exception e) {
 					return handleUnauthorized(exchange, e.getMessage());
 				}
 			}
-<<<<<<< HEAD
 			System.out.println("url not found .." + !validator.isSecured.test(exchange.getRequest()));
 			System.out.println(exchange.getRequest().getURI());
 			return chain.filter(exchange.mutate().build());
-=======
-	         // Continue the filter chain with the modified or original request
-			return chain.filter(exchange.mutate().request(request).build());
->>>>>>> 7793c08b65911be7638c9d52e93eba4a2e548e04
 		});
 	}
+
 	// Method to handle unauthorized requests
 	private Mono<Void> handleUnauthorized(ServerWebExchange exchange, String errorMessage) {
 		exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
 		exchange.getResponse().getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-		// Set the response status code to UNAUTHORIZED
-		 // Set the content type to JSON
-		  // Create an error response message
 		String errorResponse = "{\"error\": \"Unauthorized\", \"message\": \"" + errorMessage + "\"}";
 		DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(errorResponse.getBytes(StandardCharsets.UTF_8));
-		  // Wrap the response message in a DataBuffer
-		  // Write the response message to the exchange
 		return exchange.getResponse().writeWith(Mono.just(buffer));
 	}
-    // Configuration class for the filter
+
 	public static class Config {
 
 	}
