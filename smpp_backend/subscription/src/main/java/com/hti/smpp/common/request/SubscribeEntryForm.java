@@ -5,23 +5,24 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public class SubscribeEntryForm {
-	private int id;
-	private String pageName;
-	private String sender;
-	private String message;
-	private String messageType;
+	private int id;// Unique identifier for the subscription entry
+	private String pageName;// Name of the page associated with the subscription
+	private String sender; // Sender information for the subscription
+	private String message;// Message content for the subscription
+	private String messageType;// Type of the message (e.g., text, multimedia)
 	private int smsParts; // Sms Parts
 	private int charCount; // Char Count
 	private int charLimit; // Char limit per sms
-	private String asciiList;
-	private String countryCode;
-	private String username;
-	private String password;
+	private String asciiList;//Asciilist
+	private String countryCode;// Country code associated with the subscription
+	private String username;// Username associated with the subscription
+	private String password;// Password associated with the subscription
 	@Schema(hidden = true)
-	private MultipartFile headerFile;
+	private MultipartFile headerFile;// Header file attached to the subscription
 	@Schema(hidden = true)
-	private MultipartFile footerFile;
-
+	private MultipartFile footerFile;// Footer file attached to the subscription
+  
+   // Getters and setters for each field...
 	public int getId() {
 		return id;
 	}

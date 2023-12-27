@@ -52,10 +52,11 @@ public class SubscribeServiceImpl implements SubscribeService {
 	private UserEntryRepository userRepository;
 
 	private static final Logger logger = LoggerFactory.getLogger(SubscribeServiceImpl.class);
-
+  
+  
 	@Override
 	public ResponseEntity<?> saveSubscribe(String request, MultipartFile headerFile, MultipartFile footerFile, String username) {
-
+    // Validate user authorization
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -66,7 +67,8 @@ public class SubscribeServiceImpl implements SubscribeService {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
+
+		// Initialize variables
 		SubscribeEntryForm form;
 		
 		try {
@@ -85,6 +87,7 @@ public class SubscribeServiceImpl implements SubscribeService {
 				+ form.getSender());
 		SubscribeEntry entry = new SubscribeEntry();
 		try {
+			// Process message content
 			if (form.getMessage() != null && form.getMessage().length() > 0) {
 				if (form.getMessageType().equalsIgnoreCase("7bit")) {
 					if (form.getAsciiList() != null) {
@@ -104,6 +107,7 @@ public class SubscribeServiceImpl implements SubscribeService {
 				}
 				entry.setMessageType(form.getMessageType());
 			}
+			 // Process header file
 			if (form.getHeaderFile() != null && form.getHeaderFile().getName() != null
 					&& form.getHeaderFile().getName().length() > 0) {
 				logger.info(masterId + " Header File Uploaded: " + form.getHeaderFile().getName());
@@ -129,6 +133,7 @@ public class SubscribeServiceImpl implements SubscribeService {
 				}
 				entry.setHeaderFileName(header_file_name);
 			}
+			  // Process footer file
 			if (form.getFooterFile() != null && form.getFooterFile().getName() != null
 					&& form.getFooterFile().getName().length() > 0) {
 				System.out.println(masterId + " Footer File Uploaded: " + form.getFooterFile().getName());
@@ -154,6 +159,7 @@ public class SubscribeServiceImpl implements SubscribeService {
 				}
 				entry.setFooterFileName(footer_file_name);
 			}
+			  // Set other attributes
 			entry.setUsername(form.getUsername());
 			entry.setPassword(form.getPassword());
 			entry.setPageName(form.getPageName());
@@ -168,10 +174,13 @@ public class SubscribeServiceImpl implements SubscribeService {
 					throw new InternalServerException(masterId + " Invalid Country Code: " + form.getCountryCode());
 				}
 			}
+			// Process country code
+			 // Save GroupEntryDTO
 			GroupEntryDTO groupEntry = new GroupEntryDTO();
 			groupEntry.setName(new Converters().UTF16(form.getPageName()));
 			groupEntry.setMasterId(masterId);
 			int groupId = groupRepository.save(groupEntry).getId();
+			 // Save SubscribeEntry
 			if (groupId > 0) {
 				entry.setGroupId(groupId);
 				int generatedId = subscribeEntryRepository.save(entry).getId();
@@ -195,7 +204,7 @@ public class SubscribeServiceImpl implements SubscribeService {
 		}
 		return new ResponseEntity<>(target, HttpStatus.CREATED);
 	}
-
+	 // Utility method to write InputStream to a file
 	private boolean writeToFile(String fileName, InputStream stream) throws IOException, FileNotFoundException {
 		OutputStream bos = null;
 		int bytesRead = 0;
@@ -219,7 +228,7 @@ public class SubscribeServiceImpl implements SubscribeService {
 				try {
 					bos.close();
 				} catch (Exception e) {
-					throw new InternalServerException(e.getLocalizedMessage());
+					 throw new InternalServerException(e.getLocalizedMessage());
 				}
 			}
 		}
