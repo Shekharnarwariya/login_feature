@@ -951,7 +951,7 @@ public class DataBase {
 		return sortedlist;
 	}
 
-	private JasperPrint getJasperPrint(List<DeliveryDTO> reportList, boolean paging, String username)
+	public JasperPrint getJasperPrint(List<DeliveryDTO> reportList, boolean paging, String username)
 			throws JRException {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isEmpty()) {
@@ -1009,7 +1009,8 @@ public class DataBase {
 		return print;
 	}
 
-	private List<DeliveryDTO> getReportList(CustomReportForm customReportForm, String username) throws Exception {
+	// block report
+	public List<DeliveryDTO> getReportList(CustomReportForm customReportForm, String username) throws Exception {
 		logger.info(username + " Creating Report list");
 		CustomReportDTO customReportDTO = new CustomReportDTO();
 		BeanUtils.copyProperties(customReportForm, customReportDTO);
@@ -1169,7 +1170,7 @@ public class DataBase {
 		Connection con = null;
 		Map<String, Map<Integer, String>> content_map = new HashMap<String, Map<Integer, String>>();
 		try {
-			con = entityManager.unwrap(Connection.class); 
+			con = entityManager.unwrap(Connection.class);
 			pStmt = con.prepareStatement(sql, java.sql.ResultSet.TYPE_FORWARD_ONLY,
 					java.sql.ResultSet.CONCUR_READ_ONLY);
 			pStmt.setFetchSize(Integer.MIN_VALUE);
@@ -1402,7 +1403,7 @@ public class DataBase {
 		return sortedlist;
 	}
 
-	private Workbook getWorkBook(List reportList, String username) {
+	public Workbook getWorkBook(List reportList, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isEmpty()) {
 			throw new NotFoundException("username not found username{}" + username);

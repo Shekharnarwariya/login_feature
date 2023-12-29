@@ -8,17 +8,14 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.servlet.http.HttpSession;
-
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.struts.action.ActionMessage;
-import org.apache.struts.action.ActionMessages;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.hti.smpp.common.database.DataBase;
@@ -33,7 +30,6 @@ import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.IConstants;
-import com.hti.webems.session.UserSessionObject;
 
 import jakarta.servlet.http.HttpServletResponse;
 import net.sf.jasperreports.engine.JRExporter;
@@ -51,6 +47,8 @@ public class ReportServiceImpl implements ReportService {
 
 	@Autowired
 	private UserEntryRepository userRepository;
+
+	private static final Logger logger = LoggerFactory.getLogger(ReportServiceImpl.class);
 
 	@Override
 	public List<BulkEntry> abortBatchReport(String username, CustomReportForm customReportForm) {
@@ -231,182 +229,143 @@ public class ReportServiceImpl implements ReportService {
 	@Override
 	public List<DeliveryDTO> BlockedReportView(String username, CustomReportForm customReportForm) {
 		String target = IConstants.FAILURE_KEY;
-		HttpSession session = request.getSession(false);
-		userSessionObject = (UserSessionObject) session.getAttribute(IConstants.USER_SESSION_KEY);
-		ActionMessages messages = new ActionMessages();
-		ActionMessage message = null;
-		CustomReportForm customReportForm = (CustomReportForm) actionForm;
-		try {
-			locale = (Locale) session.getAttribute(org.apache.struts.Globals.LOCALE_KEY);
-			List<DeliveryDTO> reportList = getReportList(customReportForm);
-			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(userSessionObject.getSystemId() + " ReportSize[View]:" + reportList.size());
-				JasperPrint print = null;
-				print = getJasperPrint(reportList, false);
-				session.setAttribute("blockedprint", print);
-				request.setAttribute("page", "1");
-				logger.info(userSessionObject.getSystemId() + " <-- Report Finished --> ");
-				target = IConstants.SUCCESS_KEY;
-			} else {
-				message = new ActionMessage("error.record.unavailable");
-			}
-		} catch (Exception e) {
-			logger.error(userSessionObject.getSystemId(), e.fillInStackTrace());
-			message = new ActionMessage("error.processError");
-		}
-		messages.add(ActionMessages.GLOBAL_MESSAGE, message);
-		saveMessages(request, messages);
-		return mapping.findForward(target);
-	}
 
-	@Override
-	public String BlockedReportxls(String username, CustomReportForm customReportForm, HttpServletResponse response) {
-		String target = IConstants.FAILURE_KEY;
-		HttpSession session = request.getSession(false);
-		userSessionObject = (UserSessionObject) session.getAttribute(IConstants.USER_SESSION_KEY);
-		ActionMessages messages = new ActionMessages();
-		ActionMessage message = null;
-		CustomReportForm customReportForm = (CustomReportForm) actionForm;
 		try {
-			locale = (Locale) session.getAttribute(org.apache.struts.Globals.LOCALE_KEY);
-			List<DeliveryDTO> reportList = getReportList(customReportForm);
+			List<DeliveryDTO> reportList = dataBase.getReportList(customReportForm, username);
+
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(userSessionObject.getSystemId() + " ReportSize[pdf]:" + reportList.size());
-				JasperPrint print = null;
-				print = getJasperPrint(reportList, false);
-				logger.info(userSessionObject.getSystemId() + " <-- Preparing Outputstream --> ");
-				String reportName = "blocked_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".pdf";
-				response.setContentType("text/html; charset=utf-8");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				logger.info(userSessionObject.getSystemId() + " <-- Creating PDF --> ");
-				OutputStream out = response.getOutputStream();
-				JRExporter exporter = new JRPdfExporter();
-				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-				exporter.exportReport();
-				if (out != null) {
-					try {
-						out.close();
-					} catch (IOException ioe) {
-						logger.info(userSessionObject.getSystemId() + " PDF OutPutSream Closing Error");
-					}
-				}
-				logger.info(userSessionObject.getSystemId() + " <-- pdf Report Finished --> ");
+				logger.info("{} ReportSize[View]: {}", username, reportList.size());
+				// Uncomment the following lines if needed
+				// JasperPrint print = dataBase.getJasperPrint(reportList, false, username);
+				// session.setAttribute("blockedprint", print);
+				// request.setAttribute("page", "1");
+
+				logger.info("{} <-- Report Finished -->", username);
 				target = IConstants.SUCCESS_KEY;
+				return reportList;
 			} else {
-				message = new ActionMessage("error.record.unavailable");
+				throw new InternalServerException("No data found for the report");
 			}
 		} catch (Exception e) {
-			logger.error(userSessionObject.getSystemId(), e.fillInStackTrace());
-			message = new ActionMessage("error.processError");
+			logger.error("{} Unexpected error generating report", username, e);
+			throw new InternalServerException("Unexpected error generating report" + e);
 		}
-		messages.add(ActionMessages.GLOBAL_MESSAGE, message);
-		saveMessages(request, messages);
-		return mapping.findForward(target)
 	}
 
 	@Override
 	public String BlockedReportPdf(String username, CustomReportForm customReportForm, HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
-		HttpSession session = request.getSession(false);
-		userSessionObject = (UserSessionObject) session.getAttribute(IConstants.USER_SESSION_KEY);
-		ActionMessages messages = new ActionMessages();
-		ActionMessage message = null;
-		CustomReportForm customReportForm = (CustomReportForm) actionForm;
+
 		try {
-			locale = (Locale) session.getAttribute(org.apache.struts.Globals.LOCALE_KEY);
-			List<DeliveryDTO> reportList = getReportList(customReportForm);
+			List<DeliveryDTO> reportList = dataBase.getReportList(customReportForm, username);
+
 			if (reportList != null && !reportList.isEmpty()) {
-				int total_rec = reportList.size();
-				logger.info(userSessionObject.getSystemId() + " ReportSize[xls]:" + total_rec);
-				Workbook workbook = null;
-				workbook = getWorkBook(reportList);
-				if (total_rec > 100000) {
-					logger.info(userSessionObject.getSystemId() + "<-- Creating Zip Folder --> ");
-					response.setContentType("application/zip");
-					response.setHeader("Content-Disposition", "attachment; filename=" + "blocked_"
-							+ new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".zip");
-					ZipOutputStream zos = new ZipOutputStream(response.getOutputStream()); // create a ZipOutputStream from servletOutputStream
-					String reportName = "blocked.xlsx";
-					ZipEntry entry = new ZipEntry(reportName); // create a zip entry and add it to ZipOutputStream
-					zos.putNextEntry(entry);
-					logger.info(userSessionObject.getSystemId() + "<-- Starting Zip Download --> ");
-					workbook.write(zos);
-					zos.close();
-				} else {
-					logger.info(userSessionObject.getSystemId() + " <---- Creating XLS -----> ");
-					String filename = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())
-							+ ".xlsx";
-					// response.setContentType("text/html; charset=utf-8");
-					response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\";");
-					// response.setHeader("Content-Disposition", "attachment; filename=" + filename);
-					ByteArrayOutputStream bos = new ByteArrayOutputStream();
-					workbook.write(bos);
-					logger.info(userSessionObject.getSystemId() + " <---- Reading XLS -----> ");
-					InputStream is = null;
-					OutputStream out = null;
-					try {
-						is = new ByteArrayInputStream(bos.toByteArray());
-						// byte[] buffer = new byte[8789];
-						int curByte = -1;
-						out = response.getOutputStream();
-						logger.info(userSessionObject.getSystemId() + " <---- Starting xls Download -----> ");
-						while ((curByte = is.read()) != -1) {
-							out.write(curByte);
-						}
-						out.flush();
-					} catch (Exception ex) {
-						logger.error(userSessionObject.getSystemId() + " DLR XLSReport Error ", ex.fillInStackTrace());
-						// ex.printStackTrace();
-					} finally {
-						try {
-							if (is != null) {
-								is.close();
-							}
-							if (out != null) {
-								out.close();
-							}
-						} catch (Exception ex) {
-						}
-					}
+				logger.info("{} ReportSize[pdf]: {}", username, reportList.size());
+				JasperPrint print = dataBase.getJasperPrint(reportList, false, username);
+
+				logger.info("{} <-- Preparing OutputStream -->", username);
+				String reportName = "blocked_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".pdf";
+				response.setContentType("application/pdf");
+				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
+
+				logger.info("{} <-- Creating PDF -->", username);
+				try (OutputStream out = response.getOutputStream()) {
+					JRExporter exporter = new JRPdfExporter();
+					exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
+					exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
+					exporter.exportReport();
+					logger.info("{} <-- PDF Report Finished -->", username);
+					target = IConstants.SUCCESS_KEY;
+				} catch (IOException ioe) {
+					logger.error("{} PDF OutputStream Closing Error", username, ioe);
+					throw new InternalServerException(ioe.getMessage());
 				}
-				workbook.close();
-				reportList.clear();
-				logger.info(userSessionObject.getSystemId() + "<--XLS Report Finished --> ");
-				target = IConstants.SUCCESS_KEY;
 			} else {
-				message = new ActionMessage("error.record.unavailable");
-				logger.info(userSessionObject.getSystemId() + "<-- No Records Found --> ");
+				throw new InternalServerException("No data found for the report");
 			}
 		} catch (Exception e) {
-			logger.error(userSessionObject.getSystemId(), e.fillInStackTrace());
-			message = new ActionMessage("error.processError");
+			logger.error("{} Unexpected error generating PDF report", username, e);
+			throw new InternalServerException("Unexpected error generating PDF report" + e.getMessage());
 		}
-		messages.add(ActionMessages.GLOBAL_MESSAGE, message);
-		saveMessages(request, messages);
-		return mapping.findForward(target);
+
+		return target;
+	}
+
+	@Override
+	public String BlockedReportxls(String username, CustomReportForm customReportForm, HttpServletResponse response) {
+		String target = IConstants.FAILURE_KEY;
+
+		try {
+			List<DeliveryDTO> reportList = dataBase.getReportList(customReportForm, username);
+
+			if (reportList != null && !reportList.isEmpty()) {
+				int totalRec = reportList.size();
+				logger.info("{} ReportSize[xls]: {}", username, totalRec);
+
+				Workbook workbook = dataBase.getWorkBook(reportList, username);
+
+				if (totalRec > 100000) {
+					logger.info("{} <-- Creating Zip Folder -->", username);
+					response.setContentType("application/zip");
+					String zipFileName = "blocked_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())
+							+ ".zip";
+					response.setHeader("Content-Disposition", "attachment; filename=" + zipFileName);
+
+					try (ZipOutputStream zos = new ZipOutputStream(response.getOutputStream())) {
+						String reportName = "blocked.xlsx";
+						ZipEntry entry = new ZipEntry(reportName);
+						zos.putNextEntry(entry);
+
+						logger.info("{} <-- Starting Zip Download -->", username);
+						workbook.write(zos);
+					}
+				} else {
+					logger.info("{} <---- Creating XLS ----->", username);
+					String filename = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())
+							+ ".xlsx";
+					response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\";");
+
+					try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+							InputStream is = new ByteArrayInputStream(bos.toByteArray());
+							OutputStream out = response.getOutputStream()) {
+
+						logger.info("{} <---- Starting XLS Download ----->", username);
+						workbook.write(bos);
+						is.transferTo(out);
+						out.flush();
+					}
+				}
+
+				workbook.close();
+				reportList.clear();
+				logger.info("{} <-- XLS Report Finished -->", username);
+				target = IConstants.SUCCESS_KEY;
+			} else {
+				logger.info("{} <-- No Records Found -->", username);
+				throw new InternalServerException("{} <-- No Records Found -->" + username);
+			}
+		} catch (Exception e) {
+			logger.error("{} Unexpected error generating XLS report", username, e);
+			throw new InternalServerException("Unexpected error generating XLS report" + e.getMessage());
+		}
+
+		return target;
 	}
 
 	@Override
 	public String BlockedReportDoc(String username, CustomReportForm customReportForm, HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
-		HttpSession session = request.getSession(false);
-		userSessionObject = (UserSessionObject) session.getAttribute(IConstants.USER_SESSION_KEY);
-		ActionMessages messages = new ActionMessages();
-		ActionMessage message = null;
-		CustomReportForm customReportForm = (CustomReportForm) actionForm;
 		try {
-			locale = (Locale) session.getAttribute(org.apache.struts.Globals.LOCALE_KEY);
-			List<DeliveryDTO> reportList = getReportList(customReportForm);
+			List<DeliveryDTO> reportList = dataBase.getReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(userSessionObject.getSystemId() + " ReportSize[doc]:" + reportList.size());
+				logger.info(username + " ReportSize[doc]:" + reportList.size());
 				JasperPrint print = null;
-				print = getJasperPrint(reportList, false);
-				logger.info(userSessionObject.getSystemId() + " <-- Preparing Outputstream --> ");
+				print = dataBase.getJasperPrint(reportList, false, username);
+				logger.info(username + " <-- Preparing Outputstream --> ");
 				String reportName = "blocked_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".doc";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				logger.info(userSessionObject.getSystemId() + " <-- Creating DOC --> ");
+				logger.info(username + " <-- Creating DOC --> ");
 				OutputStream out = response.getOutputStream();
 				JRExporter exporter = new JRDocxExporter();
 				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
@@ -416,21 +375,20 @@ public class ReportServiceImpl implements ReportService {
 					try {
 						out.close();
 					} catch (IOException ioe) {
-						logger.info(userSessionObject.getSystemId() + " DOC OutPutSream Closing Error");
+						logger.info(username + " DOC OutPutSream Closing Error");
 					}
 				}
-				logger.info(userSessionObject.getSystemId() + " <-- doc Report Finished --> ");
+				logger.info(username + " <-- doc Report Finished --> ");
 				target = IConstants.SUCCESS_KEY;
 			} else {
-				message = new ActionMessage("error.record.unavailable");
+				throw new InternalServerException("data not found username{}" + username);
 			}
 		} catch (Exception e) {
-			logger.error(userSessionObject.getSystemId(), e.fillInStackTrace());
-			message = new ActionMessage("error.processError");
+			logger.error(username, e.fillInStackTrace());
+			throw new InternalServerException("Error:getting error in generate doc{}" + e.getMessage());
 		}
-		messages.add(ActionMessages.GLOBAL_MESSAGE, message);
-		saveMessages(request, messages);
-		return mapping.findForward(target);
+
+		return target;
 	}
 
 }
