@@ -173,6 +173,15 @@ public class ApplicationExceptionHandler {
 				HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase()), HttpStatus.INTERNAL_SERVER_ERROR);
 
 	}
+	
+	@ExceptionHandler(NumberFormatError.class)
+	public ResponseEntity<ExceptionResponse> NumberFormatException(NumberFormatError exception) {
+		LocalDateTime current = LocalDateTime.now();
+		return new ResponseEntity<>(new ExceptionResponse(exception.getMessage(), toUtc(current),
+				HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase()), HttpStatus.BAD_REQUEST);
+
+	}
+	
 	/**
      * Converts the current local time to UTC.
      */

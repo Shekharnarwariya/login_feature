@@ -842,6 +842,14 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 				} catch (Exception e) {
 					logger.error("Unexpected Exception: " + e.getLocalizedMessage());
 					throw new InternalServerException("Unexpected Exception: " + e.getLocalizedMessage());
+				} finally {
+					try {
+						if(workbook!=null) {
+							workbook.close();
+						}
+					}catch(Exception e) {
+						throw new InternalServerException(e.getLocalizedMessage());
+					}
 				}
 
 			} catch (Exception e) {
