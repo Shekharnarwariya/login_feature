@@ -20,7 +20,7 @@ public class SpringCloudConfig {
 				// Route for TEMPLATE-SERVICE
 				.route("TEMPLATE-SERVICE",
 						r -> r.path("/templates/**")
-								.filters(f -> f.rewritePath("/templates/(?<segment>.*)", "/${segment}")
+								.filters(f -> f.rewritePath("./templates/(?<segment>.*)", "/${segment}")
 										// Apply authentication filter
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
 								.uri("lb://TEMPLATE-SERVICE:8081"))
@@ -34,7 +34,7 @@ public class SpringCloudConfig {
 				// Route for SMS-SERVICE
 				.route("SMS-SERVICE",
 						r -> r.path("/sms/**")
-								.filters(f -> f.rewritePath("/sms/(?<segment>.*)", "/${segment}")
+								.filters(f -> f.rewritePath("./sms/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
 								.uri("lb://SMS-SERVICE:8083"))
 
@@ -69,7 +69,7 @@ public class SpringCloudConfig {
 				// Route for ADDRESS-BOOK-SERVICE
 				.route("ADDRESS-BOOK-SERVICE",
 						r -> r.path("/addressbook/**")
-								.filters(f -> f.rewritePath("/addressbook/(?<segment>.*)", "/${segment}")
+								.filters(f -> f.rewritePath("./addressbook/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
 								.uri("lb://ADDRESS-BOOK-SERVICE:8088"))
 

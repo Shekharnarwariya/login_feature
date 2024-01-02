@@ -2,24 +2,29 @@ package com.hti.smpp.common.util;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.cluster.Member;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.hazelcast.core.HazelcastInstance;
+
 /**
- * Application context listener responsible for initializing properties and connecting to Hazelcast Cluster.
+ * Application context listener responsible for initializing properties and
+ * connecting to Hazelcast Cluster.
  */
 
+@Component
 public class ContextListener {
 	private static final Logger logger = LoggerFactory.getLogger(ContextListener.class);
+	//public static HazelcastInstance hazelInstance;
+	// Load properties file during class initialization
 
-	  // Load properties file during class initialization
-	
 	public static Properties property = new Properties();
 
 	static {
@@ -28,9 +33,10 @@ public class ContextListener {
 	}
 
 	/**
-     * Initialize application properties from the "ApplicationResources.properties" file.
-     */
-	
+	 * Initialize application properties from the "ApplicationResources.properties"
+	 * file.
+	 */
+
 	private static void initializeProperties() {
 		try (InputStream input = ContextListener.class.getClassLoader()
 				.getResourceAsStream("ApplicationResources.properties")) {
@@ -42,16 +48,16 @@ public class ContextListener {
 	}
 
 	/**
-     * Connect to the Hazelcast Cluster and log cluster members.
-     */
-	
+	 * Connect to the Hazelcast Cluster and log cluster members.
+	 */
+
 	private static void connectToHazelcastCluster() {
 		logger.info("Connecting to Hazelcast Cluster");
 
 		try {
 			ClientConfig config = new ClientConfig();
-			// Configure Hazelcast client as needed
-
+//			// Configure Hazelcast client as neede
+			config.getNetworkConfig().setSmartRouting(false);
 			GlobalVars.hazelInstance = HazelcastClient.newHazelcastClient(config);
 			GlobalVars.hazelInstance.getCluster().addMembershipListener(new MemberEventListener());
 
@@ -63,9 +69,9 @@ public class ContextListener {
 	}
 
 	/**
-     * Log details of all cluster members.
-     */
-	
+	 * Log details of all cluster members.
+	 */
+
 	private static void logClusterMembers() {
 		logger.info("Cluster Members:");
 		Set<Member> members = GlobalVars.hazelInstance.getCluster().getMembers();
@@ -76,11 +82,10 @@ public class ContextListener {
 			i++;
 		}
 	}
-	
+
 	/**
-     * Log details of a specific cluster member.
-     */
-	
+	 * Log details of a specific cluster member.
+	 */
 
 	private static void logMemberDetails(Member member, int memberIndex) {
 		int memberId = Integer.parseInt(member.getAttribute("member-id"));

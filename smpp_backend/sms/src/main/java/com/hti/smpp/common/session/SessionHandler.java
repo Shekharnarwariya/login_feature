@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.user.dto.UserEntry;
-import com.hti.smpp.common.util.GlobalVars;
+import com.hti.smpp.common.util.GlobalVarsSms;
 import com.hti.smpp.common.util.IConstants;
 import com.logica.smpp.Connection;
 import com.logica.smpp.Data;
@@ -48,7 +48,7 @@ public class SessionHandler implements Runnable {
 		this.systemId = systemId;
 		this.password = password;
 		logger.info(systemId + ": Session Handler Starting ");
-		GlobalVars.UserSessionHandler.put(systemId + "#" + password, this);
+		GlobalVarsSms.UserSessionHandler.put(systemId + "#" + password, this);
 		new Thread(this, "SessionHandler-" + systemId).start();
 	}
 
@@ -274,7 +274,7 @@ public class SessionHandler implements Runnable {
 				stopSession(session);
 			}
 		}
-		GlobalVars.UserSessionHandler.remove(systemId + "#" + password);
+		GlobalVarsSms.UserSessionHandler.remove(systemId + "#" + password);
 		logger.info(systemId + ": Session Handler Stopped.");
 	}
 

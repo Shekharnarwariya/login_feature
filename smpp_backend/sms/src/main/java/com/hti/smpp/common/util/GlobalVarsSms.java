@@ -23,7 +23,7 @@ import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 
 @Component
-public class GlobalVars {
+public class GlobalVarsSms {
 	public static Map<String, SessionHandler> UserSessionHandler = Collections
 			.synchronizedMap(new HashMap<String, SessionHandler>());
 

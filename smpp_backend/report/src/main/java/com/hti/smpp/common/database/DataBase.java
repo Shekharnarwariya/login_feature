@@ -1013,9 +1013,10 @@ public class DataBase {
 	public List<DeliveryDTO> getReportList(CustomReportForm customReportForm, String username) throws Exception {
 		logger.info(username + " Creating Report list");
 		CustomReportDTO customReportDTO = new CustomReportDTO();
-		BeanUtils.copyProperties(customReportForm, customReportDTO);
-		String startDate = customReportForm.getSday();
-		String endDate = customReportForm.getEday();
+//		BeanUtils.copyProperties(customReportForm, customReportDTO);
+		org.springframework.beans.BeanUtils.copyProperties(customReportForm, customReportDTO);
+		String startDate = customReportDTO.getSday();
+		String endDate = customReportDTO.getEday();
 		String report_user = customReportDTO.getClientId();
 		String destination = customReportDTO.getDestinationNumber();// "9926870493";
 																	// //customReportDTO.getDestinationNumber();

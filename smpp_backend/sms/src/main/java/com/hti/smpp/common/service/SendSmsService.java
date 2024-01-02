@@ -50,7 +50,7 @@ public class SendSmsService {
 		System.out.println("Org: " + bulkDTO.getOrigMessage());
 		try {
 			filename = bulkDTO.getSystemId() + "_" + new SimpleDateFormat("ddMMyyyyHHmmssSSS").format(new Date());
-			f = new File(IConstants.SCHEDULE_DIR + filename);
+			f = new File(IConstants.WEBSMPP_EXT_DIR + filename);
 			if (!f.exists()) {
 				fin = new FileOutputStream(f);
 				fobj = new ObjectOutputStream(fin);
@@ -74,109 +74,6 @@ public class SendSmsService {
 		}
 		return filename;
 	}
-
-//	public String sendCoverageTest(BulkSmsDTO smsDTO, String smsc) {
-//		String msgId = null;
-//		try {
-//			msgId = new Client().sendCoverageTest(smsDTO, smsc);
-//		} catch (Exception e) {
-//			// System.out.println("SendSmsService:sendSms::");
-//			e.printStackTrace();
-//		}
-//		return msgId;
-//	}
-
-//	public String sendAlert(BulkSmsDTO smsDTO) throws DBException {
-//		String msgId = null;
-//		try {
-//			msgId = new Client().sendAlert(smsDTO);
-//		} catch (Exception e) {
-//			logger.error(e.getMessage());
-//		}
-//		return msgId;
-//	}
-
-	/*
-	 *
-	 * For Re Send SMSC Developed by Sameer
-	 *
-	 */
-	//////////////////////////////////////////////////////////////////////////////////
-//	public String sendBulkSms(BulkSmsDTO bulkSmsDTO, boolean waitForApprove) throws DBException {
-//		String response = "";
-//		try {
-//			// bulkSmsDTO.setSystemId(userSessionObject.getSystemId());
-//			// bulkSmsDTO.setPassword(userSessionObject.getPassword());
-//			Client client = new Client();
-//			response = client.sendBulkMsg(bulkSmsDTO, waitForApprove);
-//		} catch (Exception e) {
-//			logger.error(bulkSmsDTO.getSystemId(), e.fillInStackTrace());
-//		}
-//		return response;
-//	}
-//
-//	public String sendBulkSms(BulkSmsDTO bulkSmsDTO, ProgressEvent progressEvent, boolean waitForApprove)
-//			throws DBException {
-//		String response = "";
-//		try {
-//			// bulkSmsDTO.setSystemId(userSessionObject.getSystemId());
-//			// bulkSmsDTO.setPassword(userSessionObject.getPassword());
-//			Client client = new Client();
-//			client.setProgressEvent(progressEvent);
-//			response = client.sendBulkMsg(bulkSmsDTO, waitForApprove);
-//		} catch (Exception e) {
-//			logger.error(bulkSmsDTO.getSystemId(), e.fillInStackTrace());
-//		}
-//		return response;
-//	}
-
-//	public String sendScheduleSms(String file) throws DBException {
-//		String toReturn = "Error In Scheduling";
-//		try {
-//			// String appName = "ScheduleAppl";
-//			// System.out.println("Schedule services...");
-//			logger.info(" Reading schedule File:-> " + file);
-//			BulkSmsDTO bulkSmsDTO = readScheduleFile(file);
-//			String mode = bulkSmsDTO.getUserMode();
-//			logger.info(file + " [" + bulkSmsDTO.getSystemId() + ":" + bulkSmsDTO.getPassword() + "] " + mode);
-//			long credits = 0;
-//			double walletAmt = 0.0;
-//			double totalWalletCost = bulkSmsDTO.getTotalWalletCost();
-//			int user_id = GlobalVars.UserMapping.get(bulkSmsDTO.getSystemId());
-//			WebMasterEntry webEntry = GlobalVars.WebmasterEntries.get(user_id);
-//			BalanceEntry balance = GlobalVars.BalanceEntries.get(user_id);
-//			if (mode.equalsIgnoreCase("credit")) {
-//				credits = balance.getCredits();
-//			} else {
-//				walletAmt = balance.getWalletAmount();
-//			}
-//			long list = (long) bulkSmsDTO.getDestinationList().size();
-//			if (mode.equalsIgnoreCase("credit")) {
-//				if (list <= credits) {
-//					logger.info(file + " [" + bulkSmsDTO.getSystemId() + "] Sufficient Credits: " + credits);
-//					String response = new Client().sendBulkMsg(bulkSmsDTO, webEntry.isBulkOnApprove());
-//					toReturn = "Scheduled Successfully" + response;
-//				} else {
-//					toReturn = "InSufficient Credits";
-//					logger.error(file + " [" + bulkSmsDTO.getSystemId() + "] Insufficient Credits: " + credits);
-//				}
-//			} else if (mode.equalsIgnoreCase("wallet")) {
-//				if (totalWalletCost <= walletAmt) {
-//					logger.info(file + " [" + bulkSmsDTO.getSystemId() + "] Sufficient Balance: " + walletAmt
-//							+ " Required:" + totalWalletCost);
-//					String response = new Client().sendBulkMsg(bulkSmsDTO, webEntry.isBulkOnApprove());
-//					toReturn = "Scheduled Successfully" + response;
-//				} else {
-//					toReturn = "InSufficient Wallet";
-//					logger.error(file + " [" + bulkSmsDTO.getSystemId() + "] Insufficient Balance: " + walletAmt
-//							+ " Required:" + totalWalletCost);
-//				}
-//			}
-//		} catch (Exception e) {
-//			logger.error(file, e.fillInStackTrace());
-//		}
-//		return toReturn;
-//	}
 
 	public String getDestination(ArrayList destinationList) {
 		String destination = "";

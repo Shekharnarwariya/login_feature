@@ -14,9 +14,12 @@ import org.slf4j.LoggerFactory;
 import com.hazelcast.cluster.Member;
 import com.hazelcast.cluster.MembershipEvent;
 import com.hazelcast.cluster.MembershipListener;
+import com.hazelcast.core.HazelcastInstance;
 
 public class MemberEventListener implements MembershipListener {
 	private Logger logger = LoggerFactory.getLogger(MemberEventListener.class);
+
+	//public static HazelcastInstance hazelInstance;
 
 	@Override
 	public void memberAdded(MembershipEvent membershipEvent) {
@@ -24,27 +27,28 @@ public class MemberEventListener implements MembershipListener {
 		checkMasterMember();
 	}
 
-	 /**
-     * This method is invoked when a new member is added to the Hazelcast cluster.
-     * It logs information about the connected member and checks for the master member.
-     *
-     * @param membershipEvent The event indicating the addition of a member.
-     */
-	
+	/**
+	 * This method is invoked when a new member is added to the Hazelcast cluster.
+	 * It logs information about the connected member and checks for the master
+	 * member.
+	 *
+	 * @param membershipEvent The event indicating the addition of a member.
+	 */
+
 	@Override
 	public void memberRemoved(MembershipEvent membershipEvent) {
 		logger.info("Member Removed: " + membershipEvent.getMember().getAddress().getHost());
 		checkMasterMember();
 	}
 
+	/**
+	 * This method is invoked when a member is removed from the Hazelcast cluster.
+	 * It logs information about the removed member and checks for the master
+	 * member.
+	 *
+	 * @param membershipEvent The event indicating the removal of a member.
+	 */
 
-    /**
-     * This method is invoked when a member is removed from the Hazelcast cluster.
-     * It logs information about the removed member and checks for the master member.
-     *
-     * @param membershipEvent The event indicating the removal of a member.
-     */
-	
 	private void checkMasterMember() {
 		System.out.println(" *********** Members *****************");
 		Set<Member> members = GlobalVars.hazelInstance.getCluster().getMembers();

@@ -17,6 +17,7 @@ public final class IConstants {
 	public static final String WEBAPP_DIR = TOMCAT_DIR + ContextListener.property.getProperty("tomcat.app.dir");
 	public static final String FORMAT_DIR = TOMCAT_DIR + ContextListener.property.getProperty("tomcat.format.dir");
 	public static final String SCHEDULE_DIR = TOMCAT_DIR + ContextListener.property.getProperty("tomcat.schedule.dir");
+	public static final String WEBSMPP_EXT_DIR = TOMCAT_DIR + "websmpp//";
 	// ------------ Prefix Settings ---------------
 	public static final int PREFIX_APPLY = Integer.parseInt(ContextListener.property.getProperty("load.prefix.apply"));
 	public static final int PREFIX_TO_APPLY = Integer

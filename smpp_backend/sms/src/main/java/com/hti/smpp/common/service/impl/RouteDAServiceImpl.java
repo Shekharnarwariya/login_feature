@@ -17,7 +17,7 @@ import com.hti.smpp.common.route.dto.RouteEntryExt;
 import com.hti.smpp.common.route.repository.RouteEntryRepository;
 import com.hti.smpp.common.service.RouteDAService;
 import com.hti.smpp.common.service.SmscDAService;
-import com.hti.smpp.common.util.GlobalVars;
+import com.hti.smpp.common.util.GlobalVarsSms;
 
 @Service
 public class RouteDAServiceImpl implements RouteDAService {
@@ -45,16 +45,16 @@ public class RouteDAServiceImpl implements RouteDAService {
 			RouteEntryExt entry = new RouteEntryExt(basic);
 			if (display) {
 				// ------ set user values -----------------
-				if (GlobalVars.UserEntries.containsKey(entry.getBasic().getUserId())) {
-					entry.setSystemId(GlobalVars.UserEntries.get(entry.getBasic().getUserId()).getSystemId());
-					entry.setMasterId(GlobalVars.UserEntries.get(entry.getBasic().getUserId()).getMasterId());
-					entry.setCurrency(GlobalVars.UserEntries.get(entry.getBasic().getUserId()).getCurrency());
-					entry.setAccountType(GlobalVars.WebmasterEntries.get(basic.getUserId()).getAccountType());
+				if (GlobalVarsSms.UserEntries.containsKey(entry.getBasic().getUserId())) {
+					entry.setSystemId(GlobalVarsSms.UserEntries.get(entry.getBasic().getUserId()).getSystemId());
+					entry.setMasterId(GlobalVarsSms.UserEntries.get(entry.getBasic().getUserId()).getMasterId());
+					entry.setCurrency(GlobalVarsSms.UserEntries.get(entry.getBasic().getUserId()).getCurrency());
+					entry.setAccountType(GlobalVarsSms.WebmasterEntries.get(basic.getUserId()).getAccountType());
 				}
 				// ------ set network values -----------------
 				// NetworkEntry network = CacheService.getNetworkEntry(entry.getNetworkId());
-				if (GlobalVars.NetworkEntries.containsKey(entry.getBasic().getNetworkId())) {
-					NetworkEntry network = GlobalVars.NetworkEntries.get(entry.getBasic().getNetworkId());
+				if (GlobalVarsSms.NetworkEntries.containsKey(entry.getBasic().getNetworkId())) {
+					NetworkEntry network = GlobalVarsSms.NetworkEntries.get(entry.getBasic().getNetworkId());
 					entry.setCountry(network.getCountry());
 					entry.setOperator(network.getOperator());
 					entry.setMcc(network.getMcc());
@@ -73,15 +73,15 @@ public class RouteDAServiceImpl implements RouteDAService {
 				}
 			}
 			if (hlr) {
-				if (GlobalVars.HlrRouteEntries.containsKey(basic.getId())) {
-					entry.setHlrRouteEntry(GlobalVars.HlrRouteEntries.get(basic.getId()));
+				if (GlobalVarsSms.HlrRouteEntries.containsKey(basic.getId())) {
+					entry.setHlrRouteEntry(GlobalVarsSms.HlrRouteEntries.get(basic.getId()));
 				} else {
 					logger.info(basic.getId() + " Hlr Entry Not Found For: " + userId);
 				}
 			}
 			if (optional) {
-				if (GlobalVars.OptionalRouteEntries.containsKey(basic.getId())) {
-					OptionalRouteEntry optEntry = GlobalVars.OptionalRouteEntries.get(basic.getId());
+				if (GlobalVarsSms.OptionalRouteEntries.containsKey(basic.getId())) {
+					OptionalRouteEntry optEntry = GlobalVarsSms.OptionalRouteEntries.get(basic.getId());
 					// OptionalRouteEntryExt optEntryExt = new OptionalRouteEntryExt(optEntry);
 					if (display) {
 						if (optEntry.getNumSmscId() == 0) {
@@ -155,7 +155,7 @@ public class RouteDAServiceImpl implements RouteDAService {
 
 	@Override
 	public double calculateRoutingCost(int userId, List<String> numbers, int msgParts) {
-		Map<String, Integer> prefix_mapping = new HashMap<String, Integer>(GlobalVars.PrefixMapping);
+		Map<String, Integer> prefix_mapping = new HashMap<String, Integer>(GlobalVarsSms.PrefixMapping);
 		double totalcost = 0;
 		Map<Integer, RouteEntryExt> routingEntries = getNetworkRouting(userId, false);
 		for (String destination : numbers) {
@@ -186,7 +186,7 @@ public class RouteDAServiceImpl implements RouteDAService {
 
 	@Override
 	public double calculateRoutingCost(int userId, Map<String, Integer> numbersParts) {
-		Map<String, Integer> prefix_mapping = new HashMap<String, Integer>(GlobalVars.PrefixMapping);
+		Map<String, Integer> prefix_mapping = new HashMap<String, Integer>(GlobalVarsSms.PrefixMapping);
 		double totalcost = 0;
 		Map<Integer, RouteEntryExt> routingEntries = getNetworkRouting(userId, false);
 		for (Map.Entry<String, Integer> entry : numbersParts.entrySet()) {

@@ -35,6 +35,7 @@
 		<module>Template</module>
 		<module>twoway</module>
 		<module>user</module>
+		<module>report</module>
 	</modules>
 	<build>
 		<plugins>

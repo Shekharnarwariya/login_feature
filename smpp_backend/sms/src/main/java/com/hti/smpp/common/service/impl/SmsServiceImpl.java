@@ -3,16 +3,19 @@ package com.hti.smpp.common.service.impl;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -89,6 +92,7 @@ import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.Body;
 import com.hti.smpp.common.util.GlobalVars;
+import com.hti.smpp.common.util.GlobalVarsSms;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.PasswordConverter;
 import com.hti.smpp.common.util.ProgressEvent;
@@ -100,6 +104,8 @@ import com.logica.smpp.pdu.SubmitSMResp;
 import com.logica.smpp.pdu.WrongDateFormatException;
 import com.logica.smpp.util.ByteBuffer;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 
@@ -145,6 +151,9 @@ public class SmsServiceImpl implements SmsService {
 	@Autowired
 	private DriverInfoRepository driverInfoRepository;
 
+	@PersistenceContext
+	private EntityManager entityManager;
+
 	public SmsResponse sendSms(SmsRequest smsRequest, String username) {
 		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
 		UserEntry userEntry = null;
@@ -167,12 +176,11 @@ public class SmsServiceImpl implements SmsService {
 		bulkSmsDTO.setClientId(userEntry.getSystemId());
 		bulkSmsDTO.setSystemId(userEntry.getSystemId());
 		bulkSmsDTO.setPassword(new PasswordConverter().convertToEntityAttribute(driverInfo.getDriver()));
-		bulkSmsDTO.setSchedule(false);
+		bulkSmsDTO.setSchedule(smsRequest.isSchedule());
 		bulkSmsDTO.setTimestart("");
-		bulkSmsDTO.setGmt("");
 		String bulkSessionId = bulkSmsDTO.getSystemId() + "_" + Long.toString(System.currentTimeMillis());
 		bulkSmsDTO.setSenderId(smsRequest.getSenderId());
-		bulkSmsDTO.setFrom("mobile");
+		bulkSmsDTO.setFrom(smsRequest.getFrom());
 		List<String> list = new ArrayList<String>();
 		String[] split = smsRequest.getDestinationNumber().split(",");
 		// VALIDATE AND PUT TO ARRAYLIST
@@ -185,6 +193,23 @@ public class SmsServiceImpl implements SmsService {
 		bulkSmsDTO.setMessageType(smsRequest.getMessageType());
 		bulkSmsDTO.setMessage(smsRequest.getMessage());
 		bulkSmsDTO.setDestinationNumber(smsRequest.getDestinationNumber());
+		bulkSmsDTO.setCharCount(smsRequest.getCharCount());
+		bulkSmsDTO.setExpiryHour(smsRequest.getExpiryHour());
+		bulkSmsDTO.setCharLimit(smsRequest.getCharLimit());
+		bulkSmsDTO.setSmsParts(smsRequest.getSmsParts());
+
+		if (smsRequest.isSchedule()) {
+			bulkSmsDTO.setTime(smsRequest.getTime());
+			bulkSmsDTO.setRepeat(smsRequest.getRepeat());
+			bulkSmsDTO.setGmt(smsRequest.getGmt());
+		}
+		if (smsRequest.getPeId() != null)
+			bulkSmsDTO.setPeId(smsRequest.getPeId());
+		if (smsRequest.getTelemarketerId() != null)
+			bulkSmsDTO.setTelemarketerId(smsRequest.getTelemarketerId());
+		if (smsRequest.getTemplateId() != null)
+			bulkSmsDTO.setTemplateId(smsRequest.getTemplateId());
+
 		double totalcost = 0, adminCost = 0;// total_defcost = 0;
 		String unicodeMsg = "";
 		bulkSmsDTO.setReqType("Single");
@@ -227,10 +252,12 @@ public class SmsServiceImpl implements SmsService {
 				bulkSmsDTO.setMessageType("SpecialChar");
 				bulkSmsDTO.setOrigMessage(UTF16(smsRequest.getMessage()));
 			}
+			String client_time = null;
+			String server_date = null;
 			logger.info(bulkSessionId + " Message Type: " + bulkSmsDTO.getMessageType() + " Parts: " + no_of_msg);
 			if (bulkSmsDTO.isSchedule()) {
 				boolean valid_sch_time = false;
-				String client_time = bulkSmsDTO.getTimestart();
+				client_time = bulkSmsDTO.getTime();
 				String client_gmt = bulkSmsDTO.getGmt();
 				SimpleDateFormat client_formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 				client_formatter.setTimeZone(TimeZone.getTimeZone(client_gmt));
@@ -246,7 +273,7 @@ public class SmsServiceImpl implements SmsService {
 						logger.error(bulkSessionId + " Scheduled Time is before Current Time");
 						throw new ScheduledTimeException(bulkSessionId + " Scheduled Time is before Current Time");
 					}
-					String server_date = schedule_time.split(" ")[0];
+					server_date = schedule_time.split(" ")[0];
 					String server_time = schedule_time.split(" ")[1];
 					bulkSmsDTO.setDate(server_date.split("-")[2] + "-" + server_date.split("-")[1] + "-"
 							+ server_date.split("-")[0]);
@@ -367,25 +394,34 @@ public class SmsServiceImpl implements SmsService {
 							String filename = service.createScheduleFile(bulkSmsDTO);
 							int generated_id = 0;
 							if (filename != null) {
+								ScheduleEntry sch = new ScheduleEntry();
+								sch.setClientGmt(bulkSmsDTO.getGmt());
+								sch.setClientTime(client_time);
+								sch.setFileName(filename);
+								sch.setRepeated(bulkSmsDTO.getRepeat());
+								sch.setScheduleType(bulkSmsDTO.getReqType());
+								sch.setServerId(IConstants.SERVER_ID);
+								sch.setServerTime(bulkSmsDTO.getTime());
+								sch.setStatus("false");
+								sch.setUsername(bulkSmsDTO.getSystemId());
+								sch.setDate(bulkSmsDTO.getDate());
+								sch.setWebId(null);
+								generated_id = scheduleEntryRepository.save(sch).getId();
 
-								generated_id = scheduleEntryRepository.save(new ScheduleEntry(bulkSmsDTO.getSystemId(),
-										bulkSmsDTO.getDate() + " " + bulkSmsDTO.getTime(), bulkSmsDTO.getGmt(),
-										bulkSmsDTO.getTimestart(), IConstants.SERVER_ID, "false", filename,
-										bulkSmsDTO.getRepeat(), bulkSmsDTO.getReqType(), null)).getId();
 								if (generated_id > 0) {
 									String today = getTodayDateFormat();
 									if (today.equalsIgnoreCase(bulkSmsDTO.getDate().trim())) {
 										Set<Integer> set = null;
-										if (GlobalVars.ScheduledBatches.containsKey(bulkSmsDTO.getTime())) {
-											set = GlobalVars.ScheduledBatches.get(bulkSmsDTO.getTime());
+										if (GlobalVarsSms.ScheduledBatches.containsKey(bulkSmsDTO.getTime())) {
+											set = GlobalVarsSms.ScheduledBatches.get(bulkSmsDTO.getTime());
 										} else {
 											set = new LinkedHashSet<Integer>();
 										}
 										set.add(generated_id);
-										GlobalVars.ScheduledBatches.put(bulkSmsDTO.getTime(), set);
+										GlobalVarsSms.ScheduledBatches.put(bulkSmsDTO.getTime(), set);
 									}
 									if (!bulkSmsDTO.getRepeat().equalsIgnoreCase("no")) {
-										GlobalVars.RepeatedSchedules.add(generated_id);
+										GlobalVarsSms.RepeatedSchedules.add(generated_id);
 									}
 									target = IConstants.SUCCESS_KEY;
 									logger.info("message scheduleSuccess.....");
@@ -487,24 +523,33 @@ public class SmsServiceImpl implements SmsService {
 							int generated_id = 0;
 							if (filename != null) {
 
-								generated_id = scheduleEntryRepository.save(new ScheduleEntry(bulkSmsDTO.getSystemId(),
-										bulkSmsDTO.getDate() + " " + bulkSmsDTO.getTime(), bulkSmsDTO.getGmt(),
-										bulkSmsDTO.getTimestart(), IConstants.SERVER_ID, "false", filename,
-										bulkSmsDTO.getRepeat(), bulkSmsDTO.getReqType(), null)).getId();
+								ScheduleEntry sch = new ScheduleEntry();
+								sch.setClientGmt(bulkSmsDTO.getGmt());
+								sch.setClientTime(client_time);
+								sch.setFileName(filename);
+								sch.setRepeated(bulkSmsDTO.getRepeat());
+								sch.setScheduleType(bulkSmsDTO.getReqType());
+								sch.setServerId(IConstants.SERVER_ID);
+								sch.setServerTime(bulkSmsDTO.getTime());
+								sch.setStatus("false");
+								sch.setUsername(bulkSmsDTO.getSystemId());
+								sch.setWebId(null);
+								sch.setDate(bulkSmsDTO.getDate());
+								generated_id = scheduleEntryRepository.save(sch).getId();
 								if (generated_id > 0) {
 									String today = getTodayDateFormat();
 									if (today.equalsIgnoreCase(bulkSmsDTO.getDate().trim())) {
 										Set<Integer> set = null;
-										if (GlobalVars.ScheduledBatches.containsKey(bulkSmsDTO.getTime())) {
-											set = GlobalVars.ScheduledBatches.get(bulkSmsDTO.getTime());
+										if (GlobalVarsSms.ScheduledBatches.containsKey(bulkSmsDTO.getTime())) {
+											set = GlobalVarsSms.ScheduledBatches.get(bulkSmsDTO.getTime());
 										} else {
 											set = new LinkedHashSet<Integer>();
 										}
 										set.add(generated_id);
-										GlobalVars.ScheduledBatches.put(bulkSmsDTO.getTime(), set);
+										GlobalVarsSms.ScheduledBatches.put(bulkSmsDTO.getTime(), set);
 									}
 									if (!bulkSmsDTO.getRepeat().equalsIgnoreCase("no")) {
-										GlobalVars.RepeatedSchedules.add(generated_id);
+										GlobalVarsSms.RepeatedSchedules.add(generated_id);
 									}
 									target = IConstants.SUCCESS_KEY;
 									logger.info("message.scheduleSuccess");
@@ -828,8 +873,8 @@ public class SmsServiceImpl implements SmsService {
 
 	private static synchronized UserSession getUserSession(String user, String pwd) {
 		UserSession userSession = null;
-		if (GlobalVars.UserSessionHandler.containsKey(user + "#" + pwd)) {
-			userSession = ((SessionHandler) GlobalVars.UserSessionHandler.get(user + "#" + pwd)).getUserSession();
+		if (GlobalVarsSms.UserSessionHandler.containsKey(user + "#" + pwd)) {
+			userSession = ((SessionHandler) GlobalVarsSms.UserSessionHandler.get(user + "#" + pwd)).getUserSession();
 		} else {
 			userSession = new SessionHandler(user, pwd).getUserSession();
 		}
@@ -1072,8 +1117,8 @@ public class SmsServiceImpl implements SmsService {
 	}
 
 	private static synchronized void putUserSession(UserSession userSession) {
-		if (GlobalVars.UserSessionHandler.containsKey(userSession.getUsername() + "#" + userSession.getPassword())) {
-			((SessionHandler) GlobalVars.UserSessionHandler
+		if (GlobalVarsSms.UserSessionHandler.containsKey(userSession.getUsername() + "#" + userSession.getPassword())) {
+			((SessionHandler) GlobalVarsSms.UserSessionHandler
 					.get(userSession.getUsername() + "#" + userSession.getPassword())).putUserSession(userSession);
 		}
 	}
@@ -1500,26 +1545,26 @@ public class SmsServiceImpl implements SmsService {
 							int generated_id = 0;
 							if (filename != null) {
 
-								generated_id = scheduleEntryRepository
-										.save(new ScheduleEntry(String.valueOf(user.getId()),
-												bulkSmsDTO.getDate() + " " + bulkSmsDTO.getTime(), bulkSmsDTO.getGmt(),
-												bulkSmsDTO.getTimestart(), IConstants.SERVER_ID, "false", filename,
-												bulkSmsDTO.getRepeat(), bulkSmsDTO.getReqType(), null))
-										.getId();
+//								generated_id = scheduleEntryRepository
+//										.save(new ScheduleEntry(String.valueOf(user.getId()),
+//												bulkSmsDTO.getDate() + " " + bulkSmsDTO.getTime(), bulkSmsDTO.getGmt(),
+//												bulkSmsDTO.getTimestart(), IConstants.SERVER_ID, "false", filename,
+//												bulkSmsDTO.getRepeat(), bulkSmsDTO.getReqType(), null))
+//										.getId();
 								if (generated_id > 0) {
 									String today = getTodayDateFormat();
 									if (today.equalsIgnoreCase(bulkSmsDTO.getDate().trim())) {
 										Set<Integer> set = null;
-										if (GlobalVars.ScheduledBatches.containsKey(bulkSmsDTO.getTime())) {
-											set = GlobalVars.ScheduledBatches.get(bulkSmsDTO.getTime());
+										if (GlobalVarsSms.ScheduledBatches.containsKey(bulkSmsDTO.getTime())) {
+											set = GlobalVarsSms.ScheduledBatches.get(bulkSmsDTO.getTime());
 										} else {
 											set = new LinkedHashSet<Integer>();
 										}
 										set.add(generated_id);
-										GlobalVars.ScheduledBatches.put(bulkSmsDTO.getTime(), set);
+										GlobalVarsSms.ScheduledBatches.put(bulkSmsDTO.getTime(), set);
 									}
 									if (!bulkSmsDTO.getRepeat().equalsIgnoreCase("no")) {
-										GlobalVars.RepeatedSchedules.add(generated_id);
+										GlobalVarsSms.RepeatedSchedules.add(generated_id);
 									}
 									target = IConstants.SUCCESS_KEY;
 									logger.info("message.scheduleSuccess");
@@ -1604,24 +1649,24 @@ public class SmsServiceImpl implements SmsService {
 							int generated_id = 0;
 							if (filename != null) {
 
-								generated_id = scheduleEntryRepository.save(new ScheduleEntry(user.getSystemId(),
-										bulkSmsDTO.getDate() + " " + bulkSmsDTO.getTime(), bulkSmsDTO.getGmt(),
-										bulkSmsDTO.getTimestart(), IConstants.SERVER_ID, "false", filename,
-										bulkSmsDTO.getRepeat(), bulkSmsDTO.getReqType(), null)).getId();
+//								generated_id = scheduleEntryRepository.save(new ScheduleEntry(user.getSystemId(),
+//										bulkSmsDTO.getDate() + " " + bulkSmsDTO.getTime(), bulkSmsDTO.getGmt(),
+//										bulkSmsDTO.getTimestart(), IConstants.SERVER_ID, "false", filename,
+//										bulkSmsDTO.getRepeat(), bulkSmsDTO.getReqType(), null)).getId();
 								if (generated_id > 0) {
 									String today = getTodayDateFormat();
 									if (today.equalsIgnoreCase(bulkSmsDTO.getDate().trim())) {
 										Set<Integer> set = null;
-										if (GlobalVars.ScheduledBatches.containsKey(bulkSmsDTO.getTime())) {
-											set = GlobalVars.ScheduledBatches.get(bulkSmsDTO.getTime());
+										if (GlobalVarsSms.ScheduledBatches.containsKey(bulkSmsDTO.getTime())) {
+											set = GlobalVarsSms.ScheduledBatches.get(bulkSmsDTO.getTime());
 										} else {
 											set = new LinkedHashSet<Integer>();
 										}
 										set.add(generated_id);
-										GlobalVars.ScheduledBatches.put(bulkSmsDTO.getTime(), set);
+										GlobalVarsSms.ScheduledBatches.put(bulkSmsDTO.getTime(), set);
 									}
 									if (!bulkSmsDTO.getRepeat().equalsIgnoreCase("no")) {
-										GlobalVars.RepeatedSchedules.add(generated_id);
+										GlobalVarsSms.RepeatedSchedules.add(generated_id);
 									}
 									target = IConstants.SUCCESS_KEY;
 									logger.info("message.scheduleSuccess");
@@ -1930,7 +1975,7 @@ public class SmsServiceImpl implements SmsService {
 					} catch (Exception ex) {
 						logger.error(user + " Error Adding To Summary Report: " + ex);
 					}
-					GlobalVars.BatchQueue.put(batch_id, new BatchObject(batch_id, user, IConstants.SERVER_ID, true));
+					GlobalVarsSms.BatchQueue.put(batch_id, new BatchObject(batch_id, user, IConstants.SERVER_ID, true));
 					logger.info(user + " Batch Added To Processing: " + entry.getId());
 				} else {
 					logger.info(user + " Entry Not Added: " + entry.toString());
@@ -2711,25 +2756,25 @@ public class SmsServiceImpl implements SmsService {
 								String filename = createScheduleFile(bulkSmsDTO);
 								int generated_id = 0;
 								if (filename != null) {
-									generated_id = scheduleEntryRepository.save(new ScheduleEntry(
-											bulkSmsDTO.getSystemId(), bulkSmsDTO.getDate() + " " + bulkSmsDTO.getTime(),
-											bulkSmsDTO.getGmt(), bulkSmsDTO.getTimestart(), IConstants.SERVER_ID,
-											"false", filename, bulkSmsDTO.getRepeat(), bulkSmsDTO.getReqType(), null))
-											.getId();
+//									generated_id = scheduleEntryRepository.save(new ScheduleEntry(
+//											bulkSmsDTO.getSystemId(), bulkSmsDTO.getDate() + " " + bulkSmsDTO.getTime(),
+//											bulkSmsDTO.getGmt(), bulkSmsDTO.getTimestart(), IConstants.SERVER_ID,
+//											"false", filename, bulkSmsDTO.getRepeat(), bulkSmsDTO.getReqType(), null))
+//											.getId();
 									if (generated_id > 0) {
 										String today = getTodayDateFormat();
 										if (today.equalsIgnoreCase(bulkSmsDTO.getDate().trim())) {
 											Set<Integer> set = null;
-											if (GlobalVars.ScheduledBatches.containsKey(bulkSmsDTO.getTime())) {
-												set = GlobalVars.ScheduledBatches.get(bulkSmsDTO.getTime());
+											if (GlobalVarsSms.ScheduledBatches.containsKey(bulkSmsDTO.getTime())) {
+												set = GlobalVarsSms.ScheduledBatches.get(bulkSmsDTO.getTime());
 											} else {
 												set = new LinkedHashSet<Integer>();
 											}
 											set.add(generated_id);
-											GlobalVars.ScheduledBatches.put(bulkSmsDTO.getTime(), set);
+											GlobalVarsSms.ScheduledBatches.put(bulkSmsDTO.getTime(), set);
 										}
 										if (!bulkSmsDTO.getRepeat().equalsIgnoreCase("no")) {
-											GlobalVars.RepeatedSchedules.add(generated_id);
+											GlobalVarsSms.RepeatedSchedules.add(generated_id);
 										}
 										target = IConstants.SUCCESS_KEY;
 										logger.info("message.scheduleSuccess");
@@ -2810,25 +2855,25 @@ public class SmsServiceImpl implements SmsService {
 								String filename = createScheduleFile(bulkSmsDTO);
 								int generated_id = 0;
 								if (filename != null) {
-									generated_id = scheduleEntryRepository.save(new ScheduleEntry(
-											bulkSmsDTO.getSystemId(), bulkSmsDTO.getDate() + " " + bulkSmsDTO.getTime(),
-											bulkSmsDTO.getGmt(), bulkSmsDTO.getTimestart(), IConstants.SERVER_ID,
-											"false", filename, bulkSmsDTO.getRepeat(), bulkSmsDTO.getReqType(), null))
-											.getId();
+//									generated_id = scheduleEntryRepository.save(new ScheduleEntry(
+//											bulkSmsDTO.getSystemId(), bulkSmsDTO.getDate() + " " + bulkSmsDTO.getTime(),
+//											bulkSmsDTO.getGmt(), bulkSmsDTO.getTimestart(), IConstants.SERVER_ID,
+//											"false", filename, bulkSmsDTO.getRepeat(), bulkSmsDTO.getReqType(), null))
+//											.getId();
 									if (generated_id > 0) {
 										String today = getTodayDateFormat();
 										if (today.equalsIgnoreCase(bulkSmsDTO.getDate().trim())) {
 											Set<Integer> set = null;
-											if (GlobalVars.ScheduledBatches.containsKey(bulkSmsDTO.getTime())) {
-												set = GlobalVars.ScheduledBatches.get(bulkSmsDTO.getTime());
+											if (GlobalVarsSms.ScheduledBatches.containsKey(bulkSmsDTO.getTime())) {
+												set = GlobalVarsSms.ScheduledBatches.get(bulkSmsDTO.getTime());
 											} else {
 												set = new LinkedHashSet<Integer>();
 											}
 											set.add(generated_id);
-											GlobalVars.ScheduledBatches.put(bulkSmsDTO.getTime(), set);
+											GlobalVarsSms.ScheduledBatches.put(bulkSmsDTO.getTime(), set);
 										}
 										if (!bulkSmsDTO.getRepeat().equalsIgnoreCase("no")) {
-											GlobalVars.RepeatedSchedules.add(generated_id);
+											GlobalVarsSms.RepeatedSchedules.add(generated_id);
 										}
 										target = IConstants.SUCCESS_KEY;
 										logger.info("message.scheduleSuccess");
@@ -3010,7 +3055,7 @@ public class SmsServiceImpl implements SmsService {
 			{
 				HexMessage += "27";
 			} else {
-				String hexv = (String) GlobalVars.hashTabOne.get(character);
+				String hexv = (String) GlobalVarsSms.hashTabOne.get(character);
 				if (hexv != null) {
 					HexMessage += hexv;
 				} else {
@@ -3108,4 +3153,129 @@ public class SmsServiceImpl implements SmsService {
 		return filename;
 	}
 
+	public String sendScheduleSms(String file, int userId) {
+		String toReturn = "Error In Scheduling";
+		try {
+			// String appName = "ScheduleAppl";
+			// System.out.println("Schedule services...");
+			logger.info(" Reading schedule File:-> " + file);
+			BulkSmsDTO bulkSmsDTO = readScheduleFile(file);
+			String mode = bulkSmsDTO.getUserMode();
+			logger.info(file + " [" + bulkSmsDTO.getSystemId() + ":" + bulkSmsDTO.getPassword() + "] " + mode);
+			long credits = 0;
+			double walletAmt = 0.0;
+			double totalWalletCost = bulkSmsDTO.getTotalWalletCost();
+			int user_id = GlobalVars.UserMapping.get(bulkSmsDTO.getSystemId());
+			WebMasterEntry webEntry = GlobalVars.WebmasterEntries.get(user_id);
+			BalanceEntry balance = GlobalVars.BalanceEntries.get(user_id);
+			if (mode.equalsIgnoreCase("credit")) {
+				credits = balance.getCredits();
+			} else {
+				walletAmt = balance.getWalletAmount();
+			}
+			long list = (long) bulkSmsDTO.getDestinationList().size();
+			if (mode.equalsIgnoreCase("credit")) {
+				if (list <= credits) {
+					logger.info(file + " [" + bulkSmsDTO.getSystemId() + "] Sufficient Credits: " + credits);
+					String response = sendBulkMsg(bulkSmsDTO, webEntry.isBulkOnApprove(), userId);
+					toReturn = "Scheduled Successfully" + response;
+				} else {
+					toReturn = "InSufficient Credits";
+					logger.error(file + " [" + bulkSmsDTO.getSystemId() + "] Insufficient Credits: " + credits);
+				}
+			} else if (mode.equalsIgnoreCase("wallet")) {
+				if (totalWalletCost <= walletAmt) {
+					logger.info(file + " [" + bulkSmsDTO.getSystemId() + "] Sufficient Balance: " + walletAmt
+							+ " Required:" + totalWalletCost);
+					String response = sendBulkMsg(bulkSmsDTO, webEntry.isBulkOnApprove(), userId);
+					toReturn = "Scheduled Successfully" + response;
+				} else {
+					toReturn = "InSufficient Wallet";
+					logger.error(file + " [" + bulkSmsDTO.getSystemId() + "] Insufficient Balance: " + walletAmt
+							+ " Required:" + totalWalletCost);
+				}
+			}
+		} catch (Exception e) {
+			logger.error(file, e.fillInStackTrace());
+		}
+		return toReturn;
+	}
+
+	public BulkSmsDTO readScheduleFile(String filename) {
+		ObjectInputStream fobj = null;
+		BulkSmsDTO bulk = null;
+		try {
+			fobj = new ObjectInputStream(new FileInputStream(IConstants.WEBSMPP_EXT_DIR + "schedule//" + filename));
+			bulk = (BulkSmsDTO) fobj.readObject();
+		} catch (Exception e) {
+			logger.error(filename, e.fillInStackTrace());
+		} finally {
+			if (fobj != null) {
+				try {
+					fobj.close();
+				} catch (IOException ex) {
+				}
+			}
+		}
+		return bulk;
+	}
+
+	@Transactional
+	public void addSchedule() {
+		String Return = "";
+		Calendar cal = Calendar.getInstance();
+		int month = cal.get(Calendar.MONTH);
+		month++;
+		int daya = cal.get(Calendar.DAY_OF_MONTH);
+		int year = cal.get(Calendar.YEAR);
+		Return += year + "-";
+		if (month < 10) {
+			Return += "0";
+		}
+		Return += month + "-";
+		if (daya < 10) {
+			Return += "0";
+		}
+		Return += daya;
+		System.out.println(Return);
+		List<ScheduleEntry> schList = scheduleEntryRepository.findByDateAndStatusOrderByIdAsc(Return, "false");
+		System.out.println(schList);
+		try {
+
+			boolean isAfter = true;
+			for (ScheduleEntry sch : schList) {
+				int id = sch.getId();
+				String time = sch.getServerTime();
+				String date = sch.getDate();
+				String repeated = sch.getRepeated();
+				try {
+					Date scheduled_time = new SimpleDateFormat("yyyy-MM-dd HHmm").parse(date + " " + time);
+					if (scheduled_time.before(new Date())) {
+						logger.info("[" + id + "] Schedule Expired: " + scheduled_time);
+						isAfter = false;
+					} else {
+						logger.info("[" + id + "] Schedule Listed: " + scheduled_time);
+						isAfter = true;
+					}
+				} catch (ParseException e) {
+					logger.error("[" + id + "]Schedule ParseError: " + date + " " + time);
+				}
+				if (isAfter) {
+					Set<Integer> set = null;
+					if (GlobalVars.ScheduledBatches.containsKey(time)) {
+						set = GlobalVars.ScheduledBatches.get(time);
+					} else {
+						set = new LinkedHashSet<Integer>();
+					}
+					set.add(id);
+					GlobalVars.ScheduledBatches.put(time, set);
+					if (!repeated.equalsIgnoreCase("no")) {
+						GlobalVars.RepeatedSchedules.add(id);
+					}
+				}
+			}
+		} catch (Exception sqle) {
+			logger.error(" ", sqle.fillInStackTrace());
+		}
+	}
 }
