@@ -10,23 +10,31 @@ import com.hti.smpp.common.util.GlobalVars;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 @EnableDiscoveryClient
 @SpringBootApplication
 @EnableScheduling
+
 public class SmsApplication {
 
+
+	private final static Logger logger = LoggerFactory.getLogger(SmsApplication.class);
 	@PostConstruct
-	public void postConstruct() {
-		System.out.println("Bean is constructed. Performing post-construction tasks.");
-	}
+    public void postConstruct() {
+        logger.info("SMS Application is about to start.");
+    }
 
-	@PreDestroy
-	public void preDestroy() {
-		GlobalVars.hazelInstance.shutdown();
-		System.out.println("Bean is about to be destroyed. Performing pre-destruction tasks.");
-	}
-
+    @PreDestroy
+    public void preDestroy() {
+        GlobalVars.hazelInstance.shutdown();
+        logger.info("SMS Application is about to stop.");
+    }
+	
 	public static void main(String[] args) {
 		SpringApplication.run(SmsApplication.class, args);
+		logger.info("SMS Application started successfully.");
+
+
 	}
 }
