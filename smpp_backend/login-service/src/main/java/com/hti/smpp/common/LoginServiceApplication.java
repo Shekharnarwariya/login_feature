@@ -2,6 +2,7 @@ package com.hti.smpp.common;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 import com.hti.smpp.common.util.GlobalVars;
@@ -11,6 +12,10 @@ import org.slf4j.LoggerFactory;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+
+/**
+ * This class is the main entry point for the Spring Boot application.
+ */ 
 
 @SpringBootApplication
 @EnableDiscoveryClient

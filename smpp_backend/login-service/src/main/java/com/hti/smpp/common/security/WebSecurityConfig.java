@@ -21,7 +21,9 @@ import com.hti.smpp.common.jwt.AuthTokenFilter;
 import com.hti.smpp.common.service.impl.UserDetailsServiceImpl;
 
 import jakarta.servlet.http.HttpServletRequest;
-
+/**
+ * Configuration class for Web Security settings.
+ */
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 @Configuration
@@ -35,16 +37,26 @@ public class WebSecurityConfig {
 
 	@Autowired
 	private AuthTokenFilter jwtAuthFilter;
-
+/**
+ * Bean method to create an instance of BCryptPasswordEncoder.
+ * @return
+ */
 	@Bean
 	public BCryptPasswordEncoder bCryptPasswordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
-
+/**
+ * An array of public URLs that are accessible without authentication.
+ */
 	private final String[] PUBLIC_URL = { "/swagger-ui/**", "/webjars/**", "/swagger-resources/**", "/v3/api-docs/**",
 			"/login/jwt", "/login/register", "/login/user/data", "login/status","/login/sendOTP",
 			"/login/forgotPassword", "/login/validateOtp", "/login/updatePassword","/login/forgotPassword" };
-
+/**
+ * Configures the security filter chain for handling HTTP security.
+ * @param http
+ * @return
+ * @throws Exception
+ */
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
@@ -67,16 +79,25 @@ public class WebSecurityConfig {
 
 		DefaultSecurityFilterChain defaultSecurityFilterChain = http.build();
 
+		
 		return defaultSecurityFilterChain;
 
 	}
-
+/**
+ * Configures and provides the AuthenticationManager bean.
+ * @param authenticationConfiguration
+ * @return
+ * @throws Exception
+ */
 	@Bean
 	public AuthenticationManager authenticationManagerBean(AuthenticationConfiguration authenticationConfiguration)
 			throws Exception {
 		return authenticationConfiguration.getAuthenticationManager();
 	}
-
+/**
+ * Configures and provides a DaoAuthenticationProvider bean
+ * @return
+ */
 	@Bean
 	public DaoAuthenticationProvider authenticationProvider() {
 		DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();

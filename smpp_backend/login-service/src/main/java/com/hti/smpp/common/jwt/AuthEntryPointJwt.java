@@ -16,12 +16,18 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+/**
+ * The AuthEntryPointJwt class is a Spring component that handles authentication entry points.
+ */
 @Component
 public class AuthEntryPointJwt implements AuthenticationEntryPoint {
 
 	private static final Logger logger = LoggerFactory.getLogger(AuthEntryPointJwt.class);
-
+/**
+ * Overrides the commence method from the AuthenticationEntryPoint interface.
+ * Handles unauthorized requests by logging the error, setting the response status and content type,
+ * and providing a JSON response with details about the unauthorized request.
+ */
 	@Override
 	public void commence(HttpServletRequest request, HttpServletResponse response,
 			AuthenticationException authException) throws IOException, ServletException {

@@ -1,5 +1,7 @@
 package com.hti.smpp.common.util;
-
+/**
+ * The {@code Constant} class contains constant values or configurations used in the application.
+ */
 public class Constant {
 
 	public static final String OTP_SUBJECT = "OTP confirmation alert for SMPP";
