@@ -104,8 +104,6 @@ import com.logica.smpp.pdu.SubmitSMResp;
 import com.logica.smpp.pdu.WrongDateFormatException;
 import com.logica.smpp.util.ByteBuffer;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 
@@ -113,6 +111,7 @@ import jakarta.transaction.Transactional;
 public class SmsServiceImpl implements SmsService {
 
 	private static final Logger logger = LoggerFactory.getLogger(SmsServiceImpl.class);
+	
 	private int commandid = 0;
 
 	private Session session = null;
@@ -150,9 +149,6 @@ public class SmsServiceImpl implements SmsService {
 
 	@Autowired
 	private DriverInfoRepository driverInfoRepository;
-
-	@PersistenceContext
-	private EntityManager entityManager;
 
 	public SmsResponse sendSms(SmsRequest smsRequest, String username) {
 		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
@@ -2115,7 +2111,7 @@ public class SmsServiceImpl implements SmsService {
 	@Transactional
 	public boolean createBulkMgmtContentTable(int batchId, List<BulkMgmtContent> bulkMgmtContentList) {
 		try {
-			String tableName = "bulk_mgmt_content_" + batchId;
+			String tableName = "batch_content_" + batchId;
 			{
 				createTable(tableName);
 				persistEntities(bulkMgmtContentList, tableName);

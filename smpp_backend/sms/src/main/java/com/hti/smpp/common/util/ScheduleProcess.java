@@ -24,7 +24,6 @@ import com.hti.smpp.common.schedule.repository.ScheduleEntryRepository;
 import com.hti.smpp.common.schedule.repository.ScheduleHistoryRepository;
 import com.hti.smpp.common.service.SendSmsService;
 import com.hti.smpp.common.service.impl.SmsServiceImpl;
-import com.hti.smpp.common.user.repository.UserEntryRepository;
 
 @Component
 public class ScheduleProcess {
@@ -34,9 +33,6 @@ public class ScheduleProcess {
 
 	@Autowired
 	private ScheduleHistoryRepository scheduleHistoryRepository;
-
-	@Autowired
-	private UserEntryRepository userEntryRepository;
 
 	@Autowired
 	private SmsServiceImpl smsServiceImpl;
