@@ -50,7 +50,7 @@ public class SendSmsService {
 		System.out.println("Org: " + bulkDTO.getOrigMessage());
 		try {
 			filename = bulkDTO.getSystemId() + "_" + new SimpleDateFormat("ddMMyyyyHHmmssSSS").format(new Date());
-			f = new File(IConstants.WEBSMPP_EXT_DIR + filename);
+			f = new File(IConstants.WEBSMPP_EXT_DIR + "schedule//" + filename);
 			if (!f.exists()) {
 				fin = new FileOutputStream(f);
 				fobj = new ObjectOutputStream(fin);

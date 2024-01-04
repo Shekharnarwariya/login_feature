@@ -1,4 +1,4 @@
-package com.hti.smpp.common.dto;
+package com.hti.smpp.common.util;
 
 import java.io.Serializable;
 

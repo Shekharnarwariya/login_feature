@@ -2,12 +2,10 @@ package com.hti.smpp.common.util;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
@@ -39,12 +37,12 @@ public class GlobalVars {
 
 	public static boolean MASTER_CLIENT = false;
 	public static boolean DB_CLUSTER = false;
-//	public static IMap<Integer, BatchObject> BatchQueue;
-//	public static IMap<Integer, BatchObject> HlrBatchQueue;
+	public static IMap<Integer, BatchObject> BatchQueue;
+	public static IMap<Integer, BatchObject> HlrBatchQueue;
 	public static IMap<Integer, GroupEntry> SmscGroupEntries;
 	public static IMap<String, String> HttpDlrParam;
-	public static Map<String, Set<Integer>> ScheduledBatches = new ConcurrentHashMap<String, Set<Integer>>();
-	public static Set<Integer> RepeatedSchedules = Collections.synchronizedSet(new HashSet<Integer>());
+//	public static Map<String, Set<Integer>> ScheduledBatches = new ConcurrentHashMap<String, Set<Integer>>();
+//	public static Set<Integer> RepeatedSchedules = Collections.synchronizedSet(new HashSet<Integer>());
 	public static Map<String, String> ActiveUsers = Collections.synchronizedMap(new HashMap<String, String>());
 	public static Map<Integer, AlertDTO> PerformanceAlerts = Collections
 			.synchronizedMap(new HashMap<Integer, AlertDTO>());

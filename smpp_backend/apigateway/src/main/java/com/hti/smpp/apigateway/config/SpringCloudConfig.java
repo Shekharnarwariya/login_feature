@@ -76,7 +76,7 @@ public class SpringCloudConfig {
 				// Route for BSFM-SERVICE
 				.route("BSFM-SERVICE",
 						r -> r.path("/bsfm/**")
-								.filters(f -> f.rewritePath("/bsfm/(?<segment>.*)", "/${segment}")
+								.filters(f -> f.rewritePath("./bsfm/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
 								.uri("lb://BSFM-SERVICE:8089"))
 
