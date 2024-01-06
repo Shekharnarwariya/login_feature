@@ -1,5 +1,7 @@
 package com.hti.smpp.common.request;
-
+/**
+ * Represents a request to update the user profile information in the application.
+ */
 public class ProfileUpdateRequest {
 
 	private String email;
@@ -17,7 +19,7 @@ public class ProfileUpdateRequest {
 	private String LastName;
 
 	private String Contact;
-
+//Getter and Setter 
 	public String getEmail() {
 		return email;
 	}

@@ -994,6 +994,14 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 				} catch (Exception e) {
 					logger.error("Unexpected exception: " + e.getLocalizedMessage());
 					throw new InternalServerException(e.getLocalizedMessage());
+				}  finally {
+					try {
+						if(workbook!=null) {
+							workbook.close();
+						}
+					}catch(Exception e) {
+						throw new InternalServerException(e.getLocalizedMessage());
+					}
 				}
 
 			} catch (Exception ex) {

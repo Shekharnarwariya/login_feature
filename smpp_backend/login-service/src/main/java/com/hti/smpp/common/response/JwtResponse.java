@@ -1,7 +1,9 @@
 package com.hti.smpp.common.response;
 
 import java.util.List;
-
+/**
+ * Represents a response containing a JWT token.
+ */
 public class JwtResponse {
 	private String token;
 	private String type = "Bearer";
@@ -15,7 +17,7 @@ public class JwtResponse {
 		this.username = username;
 		this.roles = roles;
 	}
-
+//Getter and Setter
 	public String getAccessToken() {
 		return token;
 	}

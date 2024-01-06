@@ -1,5 +1,6 @@
 package com.hti.smpp.common.schedule.dto;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -11,18 +12,43 @@ public class ScheduleHistory {
 	@Id
 	private int id;
 
+	@Column(name = "username", length = 15)
 	private String username;
+
+	@Column(name = "server_time", length = 20, nullable = false, columnDefinition = "varchar(20) DEFAULT '0'")
 	private String serverTime;
+
+	@Column(name = "schType", length = 10, columnDefinition = "varchar(10) DEFAULT 'bulk'")
 	private String schType;
+
+	@Column(name = "repeated", length = 20, columnDefinition = "varchar(20) DEFAULT 'No'")
 	private String repeated;
+
+	@Column(name = "server_id", nullable = false, columnDefinition = "int(1) DEFAULT '1'")
 	private int serverId;
+
+	@Column(name = "client_gmt", length = 12)
 	private String clientGmt;
+
+	@Column(name = "client_time", length = 20)
 	private String clientTime;
+
+	@Column(name = "msg_type", length = 12, columnDefinition = "varchar(12) DEFAULT 'SpecialChar'")
 	private String msgType;
+
+	@Column(name = "total_number", length = 10)
 	private Integer totalNumber;
+
+	@Column(name = "campaign_name", length = 30)
 	private String campaignName;
+
+	@Column(name = "remarks", length = 50)
 	private String remarks;
+
+	@Column(name = "sender_id", length = 16)
 	private String senderId;
+
+	@Column(name = "createdOn", length = 20)
 	private String createdOn;
 
 	/**

@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.cluster.Member;
-import com.hazelcast.core.HazelcastInstance;
 
 /**
  * Application context listener responsible for initializing properties and
@@ -22,7 +21,7 @@ import com.hazelcast.core.HazelcastInstance;
 @Component
 public class ContextListener {
 	private static final Logger logger = LoggerFactory.getLogger(ContextListener.class);
-	//public static HazelcastInstance hazelInstance;
+	// public static HazelcastInstance hazelInstance;
 	// Load properties file during class initialization
 
 	public static Properties property = new Properties();
@@ -60,8 +59,11 @@ public class ContextListener {
 			config.getNetworkConfig().setSmartRouting(false);
 			GlobalVars.hazelInstance = HazelcastClient.newHazelcastClient(config);
 			GlobalVars.hazelInstance.getCluster().addMembershipListener(new MemberEventListener());
-
 			logClusterMembers();
+			GlobalVars.BatchQueue = GlobalVars.hazelInstance.getMap("batch_queue");
+			GlobalVars.HlrBatchQueue = GlobalVars.hazelInstance.getMap("hlr_batch_queue");
+			GlobalVars.SmscGroupEntries = GlobalVars.hazelInstance.getMap("smsc_group");
+			GlobalVars.HttpDlrParam = GlobalVars.hazelInstance.getMap("http_dlr_param");
 		} catch (Exception e) {
 			logger.error("Error connecting to Hazelcast Cluster", e);
 			// Handle the exception appropriately

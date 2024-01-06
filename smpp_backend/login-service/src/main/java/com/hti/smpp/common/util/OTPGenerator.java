@@ -1,7 +1,9 @@
 package com.hti.smpp.common.util;
 
 import java.util.Random;
-
+/**
+ * The {@code OTPGenerator} class provides a utility method for generating One-Time Passwords (OTPs).
+ */
 public class OTPGenerator {
 	public static String generateOTP(int length) {
 		String characters = "0123456789"; // Possible characters in OTP

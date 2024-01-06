@@ -53,7 +53,9 @@ import com.hti.smpp.common.util.Constant;
 import com.hti.smpp.common.util.EmailValidator;
 import com.hti.smpp.common.util.OTPGenerator;
 import com.hti.smpp.common.util.PasswordConverter;
-
+/**
+ * Implementation of the LoginService interface for handling user authentication and authorization.
+ */
 @Service
 public class LoginServiceImpl implements LoginService {
 
@@ -104,7 +106,10 @@ public class LoginServiceImpl implements LoginService {
 	public enum UserRole {
 		ADMIN, SUPERADMIN, SYSTEM, USER
 	}
-
+/**
+ * Authenticates a user based on the provided login credentials.
+ * If authentication is successful, generates a JWT token and returns it along with user details.
+ */
 	@Override
 	public ResponseEntity<?> login(LoginRequest loginRequest) {
 		String username = loginRequest.getUsername();
@@ -144,7 +149,9 @@ public class LoginServiceImpl implements LoginService {
 			throw new InternalServerException("Internal server error" + e.getMessage());
 		}
 	}
-
+/**
+ * Retrieves and returns the profile information for the specified user.
+ */
 	@Override
 	public ResponseEntity<?> profile(String username) {
 		System.out.println("get profile method call username" + username);
@@ -174,7 +181,9 @@ public class LoginServiceImpl implements LoginService {
 			throw new NotFoundException("Error: User not found!");
 		}
 	}
-
+/**
+ * Registers a new user based on the provided signup request.
+ */
 	@Override
 	public ResponseEntity<?> registerUser(SignupRequest signUpRequest) {
 		try {
@@ -214,7 +223,11 @@ public class LoginServiceImpl implements LoginService {
 			throw new InternalServerException("Internal server error: " + e.getMessage());
 		}
 	}
-
+/**
+ * Converts a SignupRequest object to a UserEntry object.
+ * @param signUpRequest
+ * @return
+ */
 	public UserEntry ConvertRequert(SignupRequest signUpRequest) {
 		UserEntry entry = new UserEntry();
 		String strRoles = signUpRequest.getRole().toUpperCase();
@@ -261,7 +274,9 @@ public class LoginServiceImpl implements LoginService {
 		entry.setPassword(encoder.encode(signUpRequest.getPassword()));
 		return entry;
 	}
-
+/**
+ * Validates a one-time passcode (OTP) for a given user.
+ */
 	@Override
 	public ResponseEntity<?> validateOtp(String username, String otp) {
 		Optional<OTPEntry> optionalOtp = otpEntryRepository.findBySystemId(username);
@@ -286,6 +301,9 @@ public class LoginServiceImpl implements LoginService {
 			throw new NotFoundException("Error: User not found. Please check the username and try again.");
 		}
 	}
+	/**
+	 * Resets the password for a user and sends a notification email.
+	 */
 
 	@Override
 	public ResponseEntity<?> forgotPassword(String newPassword, String username) {
@@ -314,7 +332,9 @@ public class LoginServiceImpl implements LoginService {
 
 		return ResponseEntity.ok("Password Reset Successfully!");
 	}
-
+/**
+ * Sends a One-Time Password (OTP) to the user's registered email address for authentication.
+ */
 	@Override
 	public ResponseEntity<?> sendOTP(String username) {
 		System.out.println("send otp method called  username{}" + username);
@@ -361,7 +381,9 @@ public class LoginServiceImpl implements LoginService {
 			throw new InternalServerException("Error sending OTP: " + e.getMessage());
 		}
 	}
-
+/**
+ * Updates the password for the user associated with the given username.
+ */
 	@Override
 	public ResponseEntity<?> updatePassword(PasswordUpdateRequest passwordUpdateRequest, String username) {
 		System.out.println("called update password username{}" + username);
@@ -398,7 +420,9 @@ public class LoginServiceImpl implements LoginService {
 			throw new NotFoundException("Error: User Not Found!");
 		}
 	}
-
+/**
+ * Updates the user profile information for the specified username.
+ */
 	@Override
 	public ResponseEntity<?> updateUserProfile(String username, ProfileUpdateRequest profileUpdateRequest) {
 		Optional<UserEntry> optionalUser = userEntryRepository.findBySystemId(username);
@@ -416,7 +440,13 @@ public class LoginServiceImpl implements LoginService {
 			throw new NotFoundException("User not found!");
 		}
 	}
-
+/**
+ * Updates the user-related data (such as email, first name, last name, and contact) based on the
+ * provided {@link ProfileUpdateRequest}. Only non-null fields in the request will be updated.
+ * @param user
+ * @param profileUpdateRequest
+ * @param professionEntry
+ */
 	private void updateUserData(UserEntry user, ProfileUpdateRequest profileUpdateRequest,
 			ProfessionEntry professionEntry) {
 		// Use null checks to update only non-null fields

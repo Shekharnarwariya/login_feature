@@ -1,10 +1,8 @@
 package com.hti.smpp.common.addressbook.impl;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +25,7 @@ import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.user.dto.MultiUserEntry;
+import com.hti.smpp.common.user.dto.User;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.dto.WebMenuAccessEntry;
@@ -41,7 +40,8 @@ import jakarta.transaction.Transactional;
 
 @Service
 /**
- * Implementation of the GroupEntryService interface providing methods for managing contact groups.
+ * Implementation of the GroupEntryService interface providing methods for
+ * managing contact groups.
  */
 public class GroupEntryServiceImpl implements GroupEntryService {
 
@@ -67,14 +67,15 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 
 	@Autowired
 	private MultiUserEntryRepository multiUserEntryRepository;
-/**
- * Saves contact group entries based on the provided GroupEntryRequest and username.
- */
+
+	/**
+	 * Saves contact group entries based on the provided GroupEntryRequest and
+	 * username.
+	 */
 	@Override
 	public ResponseEntity<?> saveGroupEntry(GroupEntryRequest form, String username) {
-
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		UserEntry user = null;
+		Optional<User> userOptional = userRepository.getUsers(username);
+		User user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
@@ -85,7 +86,7 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 		}
 
 		String systemId = user.getSystemId();
-	
+
 		logger.info(systemId + "[" + user.getRole() + "]" + " Add Contact Group Request");
 		String target = IConstants.FAILURE_KEY;
 		GroupEntryDTO entry = null;
@@ -103,14 +104,14 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 					entry.setMasterId(systemId);
 					MultiUserEntry multiUserEntry = null;
 					try {
-						multiUserEntry = multiUserEntryRepository.findByUserId(user.getId());
+						multiUserEntry = multiUserEntryRepository.findByUserId(user.getUserId());
 					} catch (Exception e) {
 						logger.error(e.getLocalizedMessage());
 						throw new NotFoundException(e.getLocalizedMessage());
 					}
 					WebMasterEntry webEntry = null;
 					try {
-						webEntry = this.webMasterRepo.findByUserId(user.getId());
+						webEntry = this.webMasterRepo.findByUserId(user.getUserId());
 					} catch (Exception e) {
 						logger.error(e.getLocalizedMessage());
 						throw new NotFoundException(e.getLocalizedMessage());
@@ -151,9 +152,10 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 		}
 
 	}
-/**
- * Modifies contact group entries based on the provided form data and username.
- */
+
+	/**
+	 * Modifies contact group entries based on the provided form data and username.
+	 */
 	@Override
 	@Transactional
 	public ResponseEntity<?> modifyGroupEntryUpdate(GroupEntryRequest form, String username) {
@@ -212,10 +214,12 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 		logger.info(systemId + " modify Contact Group Target:" + target);
 		return new ResponseEntity<>(target, HttpStatus.CREATED);
 	}
-/**
- * Deletes group entries and associated data from repositories.
- * @param list
- */
+
+	/**
+	 * Deletes group entries and associated data from repositories.
+	 * 
+	 * @param list
+	 */
 	private void deleteGroup(List<GroupEntryDTO> list) {
 		for (GroupEntryDTO entry : list) {
 			try {
@@ -246,9 +250,10 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 			}
 		}
 	}
-/**
- * Removes contact group entries based on the provided form data and username.
- */
+
+	/**
+	 * Removes contact group entries based on the provided form data and username.
+	 */
 	@Override
 	@Transactional
 	public ResponseEntity<?> modifyGroupEntryDelete(GroupEntryRequest form, String username) {
@@ -306,12 +311,14 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 
 		return new ResponseEntity<>(target, HttpStatus.OK);
 	}
-/**
- * Retrieves a list of GroupEntryDTO objects based on the provided criteria.
- * @param masterid
- * @param groupData
- * @return
- */
+
+	/**
+	 * Retrieves a list of GroupEntryDTO objects based on the provided criteria.
+	 * 
+	 * @param masterid
+	 * @param groupData
+	 * @return
+	 */
 	private List<GroupEntryDTO> listGroupByCriteria(String masterid, boolean groupData) {
 		List<GroupEntryDTO> list = null;
 		try {
@@ -337,11 +344,13 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 
 		return list;
 	}
-/**
- * Retrieves a list of GroupEntryDTO objects based on the provided master ID.
- * @param masterid
- * @return
- */
+
+	/**
+	 * Retrieves a list of GroupEntryDTO objects based on the provided master ID.
+	 * 
+	 * @param masterid
+	 * @return
+	 */
 	private List<GroupEntryDTO> listGroupByCriteria(String masterid) {
 		List<GroupEntryDTO> list = null;
 		try {
@@ -367,12 +376,14 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 
 		return list;
 	}
-/**
- * Retrieves a list of contact groups based on the specified criteria and user roles.
- */
+
+	/**
+	 * Retrieves a list of contact groups based on the specified criteria and user
+	 * roles.
+	 */
 	@Override
 	public ResponseEntity<?> listGroup(String purpose, String groupData, String username) {
-		
+
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -383,7 +394,7 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
+
 		String target = IConstants.FAILURE_KEY;
 
 		WebMenuAccessEntry webEntry = null;
@@ -397,7 +408,7 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 		}
 
 		String systemId = user.getSystemId();
-		
+
 		logger.info(systemId + " Setup Contacts Group Request");
 		boolean proceed = true;
 		ListGroupResponse response = new ListGroupResponse();
@@ -405,7 +416,8 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 
 			if (purpose != null) {
 				if (purpose.equalsIgnoreCase("sms")) {
-					if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem") || webEntry.isMessaging()) {
+					if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")
+							|| webEntry.isMessaging()) {
 					} else {
 						logger.error(systemId + "[" + user.getRole() + "]" + " <- Invalid Request ->");
 						target = "invalidRequest";
@@ -413,7 +425,8 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 						throw new UnauthorizedException("User does not have the required roles for this operation.");
 					}
 				} else {
-					if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem") || webEntry.isAddbook()) {
+					if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")
+							|| webEntry.isAddbook()) {
 					} else {
 						logger.error(systemId + "[" + user.getRole() + "]" + " <- Invalid Request ->");
 						target = "invalidRequest";

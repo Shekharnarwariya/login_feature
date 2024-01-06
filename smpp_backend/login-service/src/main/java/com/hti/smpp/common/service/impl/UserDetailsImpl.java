@@ -13,7 +13,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hti.smpp.common.user.dto.User;
 
-
+/**
+ * Implementation of the Spring Security UserDetails interface.
+ */
 public class UserDetailsImpl implements UserDetails {
 	private static final long serialVersionUID = 1L;
 
@@ -25,7 +27,13 @@ public class UserDetailsImpl implements UserDetails {
 	private String password;
 
 	private Collection<? extends GrantedAuthority> authorities;
-
+/**
+ * Constructor to create an instance of UserDetailsImpl.
+ * @param id
+ * @param username
+ * @param password
+ * @param authorities
+ */
 	public UserDetailsImpl(int id, String username, String password,
 			Collection<? extends GrantedAuthority> authorities) {
 		this.id = id;
@@ -33,19 +41,25 @@ public class UserDetailsImpl implements UserDetails {
 		this.password = password;
 		this.authorities = authorities;
 	}
-
+/**
+ * Build a UserDetailsImpl instance based on a User entity.
+ * @param user
+ * @return
+ */
 	public static UserDetailsImpl build(User user) {
 		List<GrantedAuthority> authorities = Stream.of(user.getRole()).map(SimpleGrantedAuthority::new)
 				.collect(Collectors.toList());
 
 		return new UserDetailsImpl(user.getUserId(), user.getSystemId(), user.getPassword(), authorities);
 	}
-
+/**
+ * Returns the authorities granted to the user.
+ */
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 		return authorities;
 	}
-
+//Getter and setter
 	public int getId() {
 		return id;
 	}

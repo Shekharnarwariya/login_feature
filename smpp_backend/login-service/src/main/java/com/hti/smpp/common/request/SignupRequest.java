@@ -6,7 +6,9 @@ import com.hti.smpp.common.user.dto.ProfessionEntry;
 import com.hti.smpp.common.user.dto.RechargeEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.dto.WebMenuAccessEntry;
-
+/**
+ * Represents a request to register a new user in the application.
+ */
 public class SignupRequest {
 
 	private String username;
@@ -53,7 +55,7 @@ public class SignupRequest {
 	private ProfessionEntry professionEntry;
 	private RechargeEntry rechargeEntry;
 	private WebMenuAccessEntry webMenuAccessEntry;
-
+//Getter and Setter
 	public String getUsername() {
 		return username;
 	}

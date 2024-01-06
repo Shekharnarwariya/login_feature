@@ -9,13 +9,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.hti.smpp.common.user.dto.User;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
-
+/**
+ * Implementation of the Spring Security {@code UserDetailsService} interface.
+ */
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
 	@Autowired
 	private UserEntryRepository userEntryRepository;
-
+/**
+ * Loads a user by the provided username and constructs a UserDetails object.
+ */
 	@Override
 	@Transactional
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

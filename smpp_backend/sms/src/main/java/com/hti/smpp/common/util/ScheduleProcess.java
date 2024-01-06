@@ -24,7 +24,6 @@ import com.hti.smpp.common.schedule.repository.ScheduleEntryRepository;
 import com.hti.smpp.common.schedule.repository.ScheduleHistoryRepository;
 import com.hti.smpp.common.service.SendSmsService;
 import com.hti.smpp.common.service.impl.SmsServiceImpl;
-import com.hti.smpp.common.user.repository.UserEntryRepository;
 
 @Component
 public class ScheduleProcess {
@@ -34,9 +33,6 @@ public class ScheduleProcess {
 
 	@Autowired
 	private ScheduleHistoryRepository scheduleHistoryRepository;
-
-	@Autowired
-	private UserEntryRepository userEntryRepository;
 
 	@Autowired
 	private SmsServiceImpl smsServiceImpl;
@@ -62,20 +58,19 @@ public class ScheduleProcess {
 			} catch (Exception ex) {
 				logger.error("", ex.fillInStackTrace());
 			}
-			logger.info("Total Schedule For Today: " + GlobalVars.ScheduledBatches);
+			logger.info("Total Schedule For Today: " + GlobalVarsSms.ScheduledBatches);
 			String current_date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-
-			logger.info("***** Checking For Optional Routing Schedules ****");
 			process_day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
 		}
 		try {
 			String Return = new SimpleDateFormat("HHmm").format(new Date());
-			if (GlobalVars.ScheduledBatches.containsKey(Return)) {
-				logger.info("Today's Schedule: " + GlobalVars.ScheduledBatches);
-				Set<Integer> schedules = GlobalVars.ScheduledBatches.remove(Return);
+			if (GlobalVarsSms.ScheduledBatches.containsKey(Return)) {
+				logger.info("Today's Schedule: " + GlobalVarsSms.ScheduledBatches);
+				Set<Integer> schedules = GlobalVarsSms.ScheduledBatches.remove(Return);
 				Iterator<Integer> itr = schedules.iterator();
 				while (itr.hasNext()) {
 					int schedule_id = itr.next();
+					System.out.println(schedule_id);
 					ScheduleEntry entry = scheduleEntryRepository.findById(schedule_id).get();
 					if (entry == null) {
 						logger.error("Schedule[" + schedule_id + "]: Entry Missing");
@@ -83,8 +78,8 @@ public class ScheduleProcess {
 					}
 					String file = entry.getFileName();
 					try {
-						if (GlobalVars.RepeatedSchedules.contains(schedule_id)) {
-							GlobalVars.RepeatedSchedules.remove(schedule_id);
+						if (GlobalVarsSms.RepeatedSchedules.contains(schedule_id)) {
+							GlobalVarsSms.RepeatedSchedules.remove(schedule_id);
 							Date serverDate = null;
 							Date clientDate = null;
 							try {
@@ -104,8 +99,7 @@ public class ScheduleProcess {
 							serverCalendar.setTime(serverDate);
 							clientCalendar.setTime(clientDate);
 							String repeated = entry.getRepeated();
-							smsDTO = (BulkSmsDTO) MultiUtility
-									.readObject(IConstants.WEBSMPP_EXT_DIR + "schedule//" + file, false);
+							smsDTO = readScheduleFile(file);
 							logger.info(file + " Repeated Schedule :-> " + repeated);
 							if (repeated.equalsIgnoreCase("Daily")) {
 								serverCalendar.add(Calendar.DATE, 1);
@@ -159,8 +153,7 @@ public class ScheduleProcess {
 								entry.setServerTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
 							}
 
-							status = smsServiceImpl.sendScheduleSms(file,
-									userEntryRepository.getUsers(smsDTO.getSystemId()).get().getUserId());
+							status = smsServiceImpl.sendScheduleSms(file);
 						} catch (Exception e) {
 							if (e.getMessage() != null && e.getMessage().length() > 0) {
 								if (e.getMessage().length() > 49) {
@@ -199,8 +192,8 @@ public class ScheduleProcess {
 							schHistory.setRemarks(ext.getStatus());
 							schHistory.setRepeated(ext.getRepeated());
 							schHistory.setSchType(ext.getScheduleType());
-							schHistory.setSenderId(ext.getServerId() + "");
-							schHistory.setServerId(Integer.parseInt(ext.getSenderId()));
+							schHistory.setSenderId(ext.getSenderId());
+							schHistory.setServerId(ext.getServerId());
 							schHistory.setServerTime(ext.getServerTime());
 							schHistory.setTotalNumber(ext.getTotalNumbers());
 							schHistory.setUsername(ext.getUsername());
@@ -226,8 +219,6 @@ public class ScheduleProcess {
 	}
 
 	public static void checkScheduleFolder() {
-		// System.out.println("*******************success************************"+IConstants.SUCCESS_KEY
-		// );
 		File f = new File(IConstants.WEBSMPP_EXT_DIR + "schedule//");
 		if (f.exists()) {
 			if (f.isDirectory()) {
@@ -246,6 +237,7 @@ public class ScheduleProcess {
 		try {
 			fobj = new ObjectInputStream(new FileInputStream(IConstants.WEBSMPP_EXT_DIR + "schedule//" + filename));
 			bulk = (BulkSmsDTO) fobj.readObject();
+			System.out.println("this is bukl dto" + bulk);
 		} catch (Exception e) {
 			logger.error(filename, e.fillInStackTrace());
 		} finally {

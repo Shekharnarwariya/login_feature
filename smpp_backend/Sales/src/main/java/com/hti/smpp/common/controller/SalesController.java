@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hti.smpp.common.request.SalesEntryForm;
@@ -127,9 +128,9 @@ public class SalesController {
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
 	})
-	@GetMapping("/view-sales-entry/{id}")
+	@GetMapping("/view-sales-entry")
 	public ResponseEntity<?> viewSalesEntry(
-			@Parameter(description = "Id") @PathVariable(value = "id", required = true) int id,
+			@Parameter(description = "Id") @RequestParam(value = "id", required = true) int id,
 			@Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username) {
 		return this.salesService.viewSalesEntry(id, username);
 	}

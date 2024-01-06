@@ -14,7 +14,9 @@ import com.hti.smpp.common.service.impl.UserDetailsImpl;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-
+/**
+ *  Utility class for handling JWT (JSON Web Token) operations.
+ */
 @Component
 public class JwtUtils {
 	private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
@@ -24,7 +26,12 @@ public class JwtUtils {
 
 	@Value("${app.jwtExpirationMs}")
 	private int jwtExpirationMs;
-
+/**
+ * 
+ * Generates a JWT token based on the user's authentication details.
+ * @param authentication
+ * @return
+ */
 	public String generateJwtToken(Authentication authentication) {
 
 		UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
@@ -33,7 +40,10 @@ public class JwtUtils {
 				.setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
 				.signWith(key(), SignatureAlgorithm.HS256).compact();
 	}
-
+/**
+ * Generates a secret key for signing the JWT token.
+ * @return
+ */
 	private Key key() {
 		return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
 	}

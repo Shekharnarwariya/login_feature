@@ -1,5 +1,7 @@
 package com.hti.smpp.common.response;
-
+/**
+ * Represents a response containing user profile information.
+ */
 public class ProfileResponse {
 
 	private String userName;
@@ -23,7 +25,7 @@ public class ProfileResponse {
 	public String getCurrency() {
 		return currency;
 	}
-
+//Getter and Setter 
 	public void setCurrency(String currency) {
 		this.currency = currency;
 	}

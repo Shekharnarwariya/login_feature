@@ -10,7 +10,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.1.4</version>
+		<version>3.1.5</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.hti.websmpp</groupId>
@@ -28,14 +28,17 @@
 		<module>hlr-smsc</module>
 		<module>login-service</module>
 		<module>personalservice</module>
+		<module>report</module>
 		<module>routeservice</module>
 		<module>Sales</module>
 		<module>sms</module>
 		<module>smsc</module>
+		<module>subscription</module>
 		<module>Template</module>
 		<module>twoway</module>
 		<module>user</module>
-		<module>report</module>
+
+
 	</modules>
 	<build>
 		<plugins>
