@@ -14,9 +14,11 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -60,6 +62,7 @@ import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.ScheduledTimeException;
 import com.hti.smpp.common.exception.UnauthorizedException;
+import com.hti.smpp.common.management.dto.BulkManagementEntity;
 import com.hti.smpp.common.management.dto.BulkMgmtEntry;
 import com.hti.smpp.common.management.repository.BulkMgmtEntryRepository;
 import com.hti.smpp.common.messages.dto.BulkContentEntry;
@@ -111,7 +114,7 @@ import jakarta.transaction.Transactional;
 public class SmsServiceImpl implements SmsService {
 
 	private static final Logger logger = LoggerFactory.getLogger(SmsServiceImpl.class);
-	
+
 	private int commandid = 0;
 
 	private Session session = null;
@@ -1929,9 +1932,37 @@ public class SmsServiceImpl implements SmsService {
 					} else {
 						bulkMgmtEntry.setTotalCost(0);
 					}
-					bulkEntryRepository.save(entry);
 
-					int wait_id = bulkMgmtEntryRepository.save(bulkMgmtEntry).getId();
+					BulkManagementEntity bulkMgmt = new BulkManagementEntity();
+
+					bulkMgmt.setSystemId(entry.getSystemId());
+					bulkMgmt.setSenderId(entry.getSenderId());
+					bulkMgmt.setTotalNum(entry.getTotal());
+					bulkMgmt.setFirstNum(entry.getFirstNumber());
+					bulkMgmt.setDelay(entry.getDelay());
+					bulkMgmt.setReqType(entry.getReqType());
+					bulkMgmt.setSton(entry.getSton());
+					bulkMgmt.setSnpi(entry.getSnpi());
+					bulkMgmt.setAlert(entry.isAlert());
+					bulkMgmt.setAlertNumber(entry.getAlertNumbers());
+					bulkMgmt.setExpiryHour(entry.getExpiryHour());
+					bulkMgmt.setContent(entry.getContent());
+					bulkMgmt.setMsgType(entry.getMessageType());
+					bulkMgmt.setCampaignName(entry.getCampaignName());
+					bulkMgmt.setPeId(entry.getPeId());
+					bulkMgmt.setTemplateId(entry.getTemplateId());
+					bulkMgmt.setTelemarketerId(entry.getTelemarketerId());
+					bulkMgmt.setMsgCount(bulkMgmtEntry.getMsgCount());
+					bulkMgmt.setCost(bulkMgmtEntry.getTotalCost());
+					bulkMgmt.setUserMode(bulkMgmtEntry.getUserMode());
+					bulkMgmt.setCampaignType(bulkMgmtEntry.getCampaignType());
+					bulkMgmt.setActive(Boolean.TRUE);
+					LocalDate localDate = LocalDate.now();
+					Timestamp timestamp = Timestamp.valueOf(localDate.atStartOfDay());
+					bulkMgmt.setCreatedOn(timestamp);
+					bulkMgmt.setServerId(entry.getServerId());
+					bulkMgmt.setStatus("PENDING");
+					int wait_id = bulkMgmtEntryRepository.save(bulkMgmt).getId();
 
 					if (wait_id > 0) {
 						if (event != null) {
