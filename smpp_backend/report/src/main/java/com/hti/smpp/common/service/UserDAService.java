@@ -4,6 +4,8 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.hti.smpp.common.dto.UserEntryExt;
+
 @Service
 public interface UserDAService {
 	// public int saveUserEntry(UserEntryExt entry);
@@ -70,9 +72,8 @@ public interface UserDAService {
 ////
 ////	public Map<Integer, UserEntryExt> listUserEntryUnderMaster(String master);
 ////
-////	public Map<Integer, UserEntryExt> listUserEntryUnderSeller(int seller);
+//	public Map<Integer, UserEntryExt> listUserEntryUnderSeller(int seller);
 //
-//	public long countUsersUnderSeller(int sellerId);
 //
 //	// -------------- Recharge Entries -------------------
 //	public Map<Integer, RechargeEntry> listRecentRecharges(Integer[] userid);

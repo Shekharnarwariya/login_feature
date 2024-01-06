@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import net.sf.jasperreports.engine.JasperPrint;
 
 @RestController
 @RequestMapping("/reports")
@@ -97,4 +98,70 @@ public class ReportController {
 			HttpServletResponse response) {
 		return reportService.BlockedReportDoc(username, customReportForm, response);
 	}
+
+	@GetMapping("/campaign-report-view")
+	@Operation(summary = "View Campaign Report", description = "Generates and returns the Campaign Report for viewing")
+	public JasperPrint campaignReportview(@Parameter(description = "Username") @RequestParam String username,
+			@Parameter(description = "Custom Report Form") @RequestParam CustomReportForm customReportForm,
+			HttpServletResponse response) {
+		return reportService.CampaignReportview(username, customReportForm);
+	}
+
+	@GetMapping("/campaign-report-doc")
+	@Operation(summary = "Doc Campaign Report", description = "Generates and returns the Campaign Report DOC format")
+	public JasperPrint campaignReportdoc(@Parameter(description = "Username") @RequestParam String username,
+			@Parameter(description = "Custom Report Form") @RequestParam CustomReportForm customReportForm,
+			HttpServletResponse response) {
+		return reportService.CampaignReportDoc(username, customReportForm, response);
+	}
+
+	@GetMapping("/campaign-report-xls")
+	@Operation(summary = "Campaign Report XLS", description = "Generate Campaign report in XLS format")
+	public JasperPrint campaignReportxls(@Parameter(description = "Username") @RequestParam String username,
+			@Parameter(description = "Custom Report Form") @RequestParam CustomReportForm customReportForm,
+			HttpServletResponse response) {
+		return reportService.CampaignReportxls(username, customReportForm, response);
+	}
+
+	@GetMapping("/campaign-report-pdf")
+	@Operation(summary = "Campaign Report PDF", description = "Generate Campaign report in PDF format")
+	public JasperPrint campaignReportPdf(@Parameter(description = "Username") @RequestParam String username,
+			@Parameter(description = "Custom Report Form") @RequestParam CustomReportForm customReportForm,
+			HttpServletResponse response) {
+		return reportService.CampaignReportPdf(username, customReportForm, response);
+	}
+	@GetMapping("/content-report-pdf")
+	public List<DeliveryDTO> contentReportView(@Parameter(description = "Username") @RequestParam String username,
+			@Parameter(description = "Custom Report Form") @RequestParam CustomReportForm customReportForm) {
+		return reportService.ContentReportView(username, customReportForm);
+	}
+	
+	@GetMapping("/content-report-xls")
+	@Operation(summary = "content Report PDF", description = "Generate content report in PDF format")
+	public List<DeliveryDTO> contentReportxls(@Parameter(description = "Username") @RequestParam String username,
+			@Parameter(description = "Custom Report Form") @RequestParam CustomReportForm customReportForm,
+			HttpServletResponse response) {
+		return reportService.ContentReportxls(username, customReportForm,response);
+	}
+	
+	
+	@GetMapping("/content-report-pdf")
+	@Operation(summary = "content Report PDF", description = "Generate content report in PDF format")
+	public List<DeliveryDTO> contentReportPdf(@Parameter(description = "Username") @RequestParam String username,
+			@Parameter(description = "Custom Report Form") @RequestParam CustomReportForm customReportForm,
+			HttpServletResponse response) {
+		return reportService.ContentReportPdf(username, customReportForm,response);
+	}
+	
+	
+	@GetMapping("/content-report-Doc")
+	@Operation(summary = "content Report Doc", description = "Generate content report in Doc format")
+	public List<DeliveryDTO> contentReportDoc(@Parameter(description = "Username") @RequestParam String username,
+			@Parameter(description = "Custom Report Form") @RequestParam CustomReportForm customReportForm,
+			HttpServletResponse response) {
+		return reportService.ContentReportDoc(username, customReportForm,response);
+	}
+	
+	
+	
 }

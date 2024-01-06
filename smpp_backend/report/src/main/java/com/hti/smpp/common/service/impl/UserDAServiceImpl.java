@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.hti.smpp.common.dto.UserEntryExt;
 import com.hti.smpp.common.service.UserDAService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
@@ -307,6 +308,12 @@ public class UserDAServiceImpl implements UserDAService {
 				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 		return sortedMap;
 	}
+
+//	@Override
+//	public Map<Integer, UserEntryExt> listUserEntryUnderSeller(int seller) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
 
 	// ----------- list Entries -----------------------
 //	@Override

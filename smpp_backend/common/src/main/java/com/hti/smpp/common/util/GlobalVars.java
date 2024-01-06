@@ -84,6 +84,8 @@ public class GlobalVars {
 	public static IMap<Integer, ProfessionEntry> ProfessionEntries;
 	public static IMap<Integer, WebMasterEntry> WebmasterEntries;
 	public static IMap<Integer, DlrSettingEntry> DlrSettingEntries;
+
+	//public static IMap<Integer,bulkService> bulkService;
 	static {
 		smscTypes.add("A");
 		smscTypes.add("B");

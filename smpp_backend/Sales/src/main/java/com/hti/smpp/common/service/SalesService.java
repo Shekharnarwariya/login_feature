@@ -2,6 +2,8 @@ package com.hti.smpp.common.service;
 
 import java.util.Collection;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
 import com.hti.smpp.common.request.SalesEntryForm;
 import com.hti.smpp.common.sales.dto.SalesEntry;
 
@@ -9,7 +11,7 @@ import com.hti.smpp.common.sales.dto.SalesEntry;
  * Interface defining methods for Sales Service operations.
  */
 
-
+@Service
 public interface SalesService {
 
 	public ResponseEntity<String> save(SalesEntryForm entry, String username);
@@ -23,6 +25,8 @@ public interface SalesService {
 	public ResponseEntity<?> viewSalesEntry(int id, String username);
 	
 	public ResponseEntity<Collection<SalesEntry>> setupSalesEntry(String username);
+	
+	
 	
 	
 
