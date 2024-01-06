@@ -49,6 +49,22 @@ public class SmsRequest {
 
 	private String telemarketerId;
 
+	private String campaignName;
+
+	/**
+	 * @return the campaignName
+	 */
+	public String getCampaignName() {
+		return campaignName;
+	}
+
+	/**
+	 * @param campaignName the campaignName to set
+	 */
+	public void setCampaignName(String campaignName) {
+		this.campaignName = campaignName;
+	}
+
 	/**
 	 * @return the senderId
 	 */

@@ -209,6 +209,9 @@ public class SmsServiceImpl implements SmsService {
 		if (smsRequest.getTemplateId() != null)
 			bulkSmsDTO.setTemplateId(smsRequest.getTemplateId());
 
+		if (smsRequest.getCampaignName() != null)
+			bulkSmsDTO.setCampaignName(smsRequest.getCampaignName());
+
 		double totalcost = 0, adminCost = 0;// total_defcost = 0;
 		String unicodeMsg = "";
 		bulkSmsDTO.setReqType("Single");
