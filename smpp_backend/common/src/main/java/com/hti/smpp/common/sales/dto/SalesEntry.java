@@ -1,5 +1,7 @@
 package com.hti.smpp.common.sales.dto;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -24,8 +26,8 @@ public class SalesEntry implements Comparable<SalesEntry> {
 	private String number;
 	@Column(name = "reporting")
 	private String reporting;
-	@Column(name = "createdon", insertable = false, updatable = false, nullable = false)
-	private String createdOn;
+	@Column(name = "createdon", insertable = true, updatable = true, nullable = true)
+	private String createdOn ;
 	@Column(name = "remarks")
 	private String remarks;
 	@Column(name = "password")

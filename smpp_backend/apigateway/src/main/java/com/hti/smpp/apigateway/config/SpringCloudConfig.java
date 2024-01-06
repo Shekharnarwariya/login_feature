@@ -62,7 +62,7 @@ public class SpringCloudConfig {
 				// Route for SALES-SERVICE
 				.route("SALES-SERVICE",
 						r -> r.path("/sales/**")
-								.filters(f -> f.rewritePath("/sales/(?<segment>.*)", "/${segment}")
+								.filters(f -> f.rewritePath("./sales/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
 								.uri("lb://SALES-SERVICE:8087"))
 
