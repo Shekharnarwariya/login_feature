@@ -25,7 +25,7 @@ import com.hti.smpp.common.email.EmailSender;
 import com.hti.smpp.common.exception.AuthenticationExceptionFailed;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.InvalidOtpException;
-import com.hti.smpp.common.exception.InvalidPasswordException;
+import com.hti.smpp.common.exception.InvalidPropertyException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.jwt.JwtUtils;
 import com.hti.smpp.common.request.LoginRequest;
@@ -414,7 +414,7 @@ public class LoginServiceImpl implements LoginService {
 				}
 				return ResponseEntity.ok("Password Updated Successfully!");
 			} else {
-				throw new InvalidPasswordException("Error: Invalid old password");
+				throw new InvalidPropertyException("Error: Invalid old password");
 			}
 		} else {
 			throw new NotFoundException("Error: User Not Found!");

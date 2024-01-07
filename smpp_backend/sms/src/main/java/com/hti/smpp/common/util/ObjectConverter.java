@@ -12,6 +12,7 @@ public class ObjectConverter {
 		try {
 			bulkRequest = new ObjectMapper().readValue(request, BulkRequest.class);
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new JsonProcessingError("error:getting error in json parrsing " + e.getMessage());
 		}
 		return bulkRequest;

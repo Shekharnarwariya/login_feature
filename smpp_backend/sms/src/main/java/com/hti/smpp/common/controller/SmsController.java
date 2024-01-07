@@ -73,7 +73,7 @@ public class SmsController {
 			@ApiResponse(responseCode = "200", description = "Bulk Custom SMS sent successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SmsResponse.class))),
 			@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	@PostMapping(value = "/sendbulk/custome", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PostMapping(value = "/sendbulk/custom", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<BulkResponse> sendBulkCustome(
 			@RequestParam("destinationNumberFile") MultipartFile destinationNumberFile,
 			@RequestHeader("username") String username,

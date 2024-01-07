@@ -48,10 +48,10 @@ public class ApplicationExceptionHandler {
 
 	}
 	/**
-     * Handles InvalidPasswordException, returns a response with status BAD_GATEWAY.
+     * Handles InvalidPropertyException, returns a response with status BAD_GATEWAY.
      */
-	@ExceptionHandler(InvalidPasswordException.class)
-	public ResponseEntity<?> InvalidPasswordException(InvalidPasswordException exception) {
+	@ExceptionHandler(InvalidPropertyException.class)
+	public ResponseEntity<?> InvalidPropertyException(InvalidPropertyException exception) {
 		LocalDateTime current = LocalDateTime.now();
 		return new ResponseEntity<>(new ExceptionResponse(exception.getMessage(), toUtc(current),
 				HttpStatus.BAD_GATEWAY.value(), HttpStatus.BAD_GATEWAY.getReasonPhrase()), HttpStatus.BAD_GATEWAY);

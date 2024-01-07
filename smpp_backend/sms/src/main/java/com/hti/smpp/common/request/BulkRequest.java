@@ -2,58 +2,22 @@ package com.hti.smpp.common.request;
 
 public class BulkRequest {
 	private String senderId;
-	private String ston;
-	private String snpi;
-	private String dton;
-	private String dnpi;
 	private String message;
-	private String esmClass;
-	private String header;
-	private String dcsValue;
 	private String from;
-	private String syear;
-	private String sday;
-	private String smonth;
-	private String hours;
-	private String minutes;
-	private String time;
-	private String date;
-	private String greet;
-	private String asciiList;
-	private String temp;
-	private String smscName;
 	private String gmt = "";
-	private String[] smscList;
-	private String[] numberlist;
 	private String smscount;
-	private String reqType = "bulk";
-	private boolean customContent;
-	private String totalSmsParDay;
-	// private int processedFigure;
-	private String totalNumbers;
-	private String uploadedNumbers;
-	// private String schType;
 	private String timestart;
 	private String destinationNumber;
-	private String clientId;
-	private int[] id;
-	private String[] user;
 	private double delay;
 	private String repeat;
-	// private int fileid;
-	private int batchId;
-	private String fileName;
-	private boolean isSchedule;
-	private boolean isAlert;
+	private boolean schedule;
+	private boolean alert;
 	private boolean allowDuplicate;
-	// ------------ Modified on 27-Feb-2016 ---------------
-	private String origMessage; // For summary
 	private String messageType; // Encoding
 	private int smsParts; // Sms Parts
 	private int charCount; // Char Count
 	private int charLimit; // Char limit per sms
 	private String exclude; // excluded numbers from uploaded file
-	private String status;
 	private long expiryHour;
 	private boolean tracking;
 	private String[] weblink; // for tracking sms
@@ -63,451 +27,340 @@ public class BulkRequest {
 	private String templateId;
 	private String telemarketerId;
 
+	/**
+	 * @return the senderId
+	 */
 	public String getSenderId() {
 		return senderId;
 	}
 
+	/**
+	 * @param senderId the senderId to set
+	 */
 	public void setSenderId(String senderId) {
 		this.senderId = senderId;
 	}
 
-	public String getSton() {
-		return ston;
-	}
-
-	public void setSton(String ston) {
-		this.ston = ston;
-	}
-
-	public String getSnpi() {
-		return snpi;
-	}
-
-	public void setSnpi(String snpi) {
-		this.snpi = snpi;
-	}
-
-	public String getDton() {
-		return dton;
-	}
-
-	public void setDton(String dton) {
-		this.dton = dton;
-	}
-
-	public String getDnpi() {
-		return dnpi;
-	}
-
-	public void setDnpi(String dnpi) {
-		this.dnpi = dnpi;
-	}
-
+	/**
+	 * @return the message
+	 */
 	public String getMessage() {
 		return message;
 	}
 
+	/**
+	 * @param message the message to set
+	 */
 	public void setMessage(String message) {
 		this.message = message;
 	}
 
-	public String getEsmClass() {
-		return esmClass;
-	}
-
-	public void setEsmClass(String esmClass) {
-		this.esmClass = esmClass;
-	}
-
-	public String getHeader() {
-		return header;
-	}
-
-	public void setHeader(String header) {
-		this.header = header;
-	}
-
-	public String getDcsValue() {
-		return dcsValue;
-	}
-
-	public void setDcsValue(String dcsValue) {
-		this.dcsValue = dcsValue;
-	}
-
+	/**
+	 * @return the from
+	 */
 	public String getFrom() {
 		return from;
 	}
 
+	/**
+	 * @param from the from to set
+	 */
 	public void setFrom(String from) {
 		this.from = from;
 	}
 
-	public String getSyear() {
-		return syear;
-	}
-
-	public void setSyear(String syear) {
-		this.syear = syear;
-	}
-
-	public String getSday() {
-		return sday;
-	}
-
-	public void setSday(String sday) {
-		this.sday = sday;
-	}
-
-	public String getSmonth() {
-		return smonth;
-	}
-
-	public void setSmonth(String smonth) {
-		this.smonth = smonth;
-	}
-
-	public String getHours() {
-		return hours;
-	}
-
-	public void setHours(String hours) {
-		this.hours = hours;
-	}
-
-	public String getMinutes() {
-		return minutes;
-	}
-
-	public void setMinutes(String minutes) {
-		this.minutes = minutes;
-	}
-
-	public String getTime() {
-		return time;
-	}
-
-	public void setTime(String time) {
-		this.time = time;
-	}
-
-	public String getDate() {
-		return date;
-	}
-
-	public void setDate(String date) {
-		this.date = date;
-	}
-
-	public String getGreet() {
-		return greet;
-	}
-
-	public void setGreet(String greet) {
-		this.greet = greet;
-	}
-
-	public String getAsciiList() {
-		return asciiList;
-	}
-
-	public void setAsciiList(String asciiList) {
-		this.asciiList = asciiList;
-	}
-
-	public String getTemp() {
-		return temp;
-	}
-
-	public void setTemp(String temp) {
-		this.temp = temp;
-	}
-
-	public String getSmscName() {
-		return smscName;
-	}
-
-	public void setSmscName(String smscName) {
-		this.smscName = smscName;
-	}
-
+	/**
+	 * @return the gmt
+	 */
 	public String getGmt() {
 		return gmt;
 	}
 
+	/**
+	 * @param gmt the gmt to set
+	 */
 	public void setGmt(String gmt) {
 		this.gmt = gmt;
 	}
 
-	public String[] getSmscList() {
-		return smscList;
-	}
-
-	public void setSmscList(String[] smscList) {
-		this.smscList = smscList;
-	}
-
-	public String[] getNumberlist() {
-		return numberlist;
-	}
-
-	public void setNumberlist(String[] numberlist) {
-		this.numberlist = numberlist;
-	}
-
+	/**
+	 * @return the smscount
+	 */
 	public String getSmscount() {
 		return smscount;
 	}
 
+	/**
+	 * @param smscount the smscount to set
+	 */
 	public void setSmscount(String smscount) {
 		this.smscount = smscount;
 	}
 
-	public String getReqType() {
-		return reqType;
-	}
-
-	public void setReqType(String reqType) {
-		this.reqType = reqType;
-	}
-
-	public boolean isCustomContent() {
-		return customContent;
-	}
-
-	public void setCustomContent(boolean customContent) {
-		this.customContent = customContent;
-	}
-
-	public String getTotalSmsParDay() {
-		return totalSmsParDay;
-	}
-
-	public void setTotalSmsParDay(String totalSmsParDay) {
-		this.totalSmsParDay = totalSmsParDay;
-	}
-
-	public String getTotalNumbers() {
-		return totalNumbers;
-	}
-
-	public void setTotalNumbers(String totalNumbers) {
-		this.totalNumbers = totalNumbers;
-	}
-
-	public String getUploadedNumbers() {
-		return uploadedNumbers;
-	}
-
-	public void setUploadedNumbers(String uploadedNumbers) {
-		this.uploadedNumbers = uploadedNumbers;
-	}
-
+	/**
+	 * @return the timestart
+	 */
 	public String getTimestart() {
 		return timestart;
 	}
 
+	/**
+	 * @param timestart the timestart to set
+	 */
 	public void setTimestart(String timestart) {
 		this.timestart = timestart;
 	}
 
+	/**
+	 * @return the destinationNumber
+	 */
 	public String getDestinationNumber() {
 		return destinationNumber;
 	}
 
+	/**
+	 * @param destinationNumber the destinationNumber to set
+	 */
 	public void setDestinationNumber(String destinationNumber) {
 		this.destinationNumber = destinationNumber;
 	}
 
-	public String getClientId() {
-		return clientId;
-	}
-
-	public void setClientId(String clientId) {
-		this.clientId = clientId;
-	}
-
-	public int[] getId() {
-		return id;
-	}
-
-	public void setId(int[] id) {
-		this.id = id;
-	}
-
-	public String[] getUser() {
-		return user;
-	}
-
-	public void setUser(String[] user) {
-		this.user = user;
-	}
-
+	/**
+	 * @return the delay
+	 */
 	public double getDelay() {
 		return delay;
 	}
 
+	/**
+	 * @param delay the delay to set
+	 */
 	public void setDelay(double delay) {
 		this.delay = delay;
 	}
 
+	/**
+	 * @return the repeat
+	 */
 	public String getRepeat() {
 		return repeat;
 	}
 
+	/**
+	 * @param repeat the repeat to set
+	 */
 	public void setRepeat(String repeat) {
 		this.repeat = repeat;
 	}
 
-	public int getBatchId() {
-		return batchId;
-	}
-
-	public void setBatchId(int batchId) {
-		this.batchId = batchId;
-	}
-
-	public String getFileName() {
-		return fileName;
-	}
-
-	public void setFileName(String fileName) {
-		this.fileName = fileName;
-	}
-
+	/**
+	 * @return the schedule
+	 */
 	public boolean isSchedule() {
-		return isSchedule;
+		return schedule;
 	}
 
-	public void setSchedule(boolean isSchedule) {
-		this.isSchedule = isSchedule;
+	/**
+	 * @param schedule the schedule to set
+	 */
+	public void setSchedule(boolean schedule) {
+		this.schedule = schedule;
 	}
 
+	/**
+	 * @return the alert
+	 */
 	public boolean isAlert() {
-		return isAlert;
+		return alert;
 	}
 
-	public void setAlert(boolean isAlert) {
-		this.isAlert = isAlert;
+	/**
+	 * @param alert the alert to set
+	 */
+	public void setAlert(boolean alert) {
+		this.alert = alert;
 	}
 
+	/**
+	 * @return the allowDuplicate
+	 */
 	public boolean isAllowDuplicate() {
 		return allowDuplicate;
 	}
 
+	/**
+	 * @param allowDuplicate the allowDuplicate to set
+	 */
 	public void setAllowDuplicate(boolean allowDuplicate) {
 		this.allowDuplicate = allowDuplicate;
 	}
 
-	public String getOrigMessage() {
-		return origMessage;
-	}
-
-	public void setOrigMessage(String origMessage) {
-		this.origMessage = origMessage;
-	}
-
+	/**
+	 * @return the messageType
+	 */
 	public String getMessageType() {
 		return messageType;
 	}
 
+	/**
+	 * @param messageType the messageType to set
+	 */
 	public void setMessageType(String messageType) {
 		this.messageType = messageType;
 	}
 
+	/**
+	 * @return the smsParts
+	 */
 	public int getSmsParts() {
 		return smsParts;
 	}
 
+	/**
+	 * @param smsParts the smsParts to set
+	 */
 	public void setSmsParts(int smsParts) {
 		this.smsParts = smsParts;
 	}
 
+	/**
+	 * @return the charCount
+	 */
 	public int getCharCount() {
 		return charCount;
 	}
 
+	/**
+	 * @param charCount the charCount to set
+	 */
 	public void setCharCount(int charCount) {
 		this.charCount = charCount;
 	}
 
+	/**
+	 * @return the charLimit
+	 */
 	public int getCharLimit() {
 		return charLimit;
 	}
 
+	/**
+	 * @param charLimit the charLimit to set
+	 */
 	public void setCharLimit(int charLimit) {
 		this.charLimit = charLimit;
 	}
 
+	/**
+	 * @return the exclude
+	 */
 	public String getExclude() {
 		return exclude;
 	}
 
+	/**
+	 * @param exclude the exclude to set
+	 */
 	public void setExclude(String exclude) {
 		this.exclude = exclude;
 	}
 
-	public String getStatus() {
-		return status;
-	}
-
-	public void setStatus(String status) {
-		this.status = status;
-	}
-
+	/**
+	 * @return the expiryHour
+	 */
 	public long getExpiryHour() {
 		return expiryHour;
 	}
 
+	/**
+	 * @param expiryHour the expiryHour to set
+	 */
 	public void setExpiryHour(long expiryHour) {
 		this.expiryHour = expiryHour;
 	}
 
+	/**
+	 * @return the tracking
+	 */
 	public boolean isTracking() {
 		return tracking;
 	}
 
+	/**
+	 * @param tracking the tracking to set
+	 */
 	public void setTracking(boolean tracking) {
 		this.tracking = tracking;
 	}
 
+	/**
+	 * @return the weblink
+	 */
 	public String[] getWeblink() {
 		return weblink;
 	}
 
+	/**
+	 * @param weblink the weblink to set
+	 */
 	public void setWeblink(String[] weblink) {
 		this.weblink = weblink;
 	}
 
+	/**
+	 * @return the campaignName
+	 */
 	public String getCampaignName() {
 		return campaignName;
 	}
 
+	/**
+	 * @param campaignName the campaignName to set
+	 */
 	public void setCampaignName(String campaignName) {
 		this.campaignName = campaignName;
 	}
 
+	/**
+	 * @return the peId
+	 */
 	public String getPeId() {
 		return peId;
 	}
 
+	/**
+	 * @param peId the peId to set
+	 */
 	public void setPeId(String peId) {
 		this.peId = peId;
 	}
 
+	/**
+	 * @return the templateId
+	 */
 	public String getTemplateId() {
 		return templateId;
 	}
 
+	/**
+	 * @param templateId the templateId to set
+	 */
 	public void setTemplateId(String templateId) {
 		this.templateId = templateId;
 	}
 
+	/**
+	 * @return the telemarketerId
+	 */
 	public String getTelemarketerId() {
 		return telemarketerId;
 	}
 
+	/**
+	 * @param telemarketerId the telemarketerId to set
+	 */
 	public void setTelemarketerId(String telemarketerId) {
 		this.telemarketerId = telemarketerId;
 	}
+
 }
