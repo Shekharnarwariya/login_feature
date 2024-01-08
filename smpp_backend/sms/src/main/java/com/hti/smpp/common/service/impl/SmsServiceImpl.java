@@ -3,13 +3,10 @@ package com.hti.smpp.common.service.impl;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.net.URL;
@@ -2794,9 +2791,10 @@ public class SmsServiceImpl implements SmsService {
 							// String applicationName = request.getContextPath();
 							bulkSmsDTO.setMsgCount(totalMsg);
 							bulkSmsDTO.setTotalCost(totalcost);
+							SendSmsService service = new SendSmsService();
 							if (bulkSmsDTO.isSchedule()) {
 								bulkSmsDTO.setTotalWalletCost(totalcost);
-								String filename = createScheduleFile(bulkSmsDTO);
+								String filename = service.createScheduleFile(bulkSmsDTO);
 								int generated_id = 0;
 								if (filename != null) {
 									ScheduleEntry sch = new ScheduleEntry();
@@ -2924,9 +2922,10 @@ public class SmsServiceImpl implements SmsService {
 						if (amount) {
 							long deductCredits = totalMsg;
 							// String applicationName = request.getContextPath();
+							SendSmsService service = new SendSmsService();
 							bulkSmsDTO.setMsgCount(deductCredits);
 							if (bulkSmsDTO.isSchedule()) {
-								String filename = createScheduleFile(bulkSmsDTO);
+								String filename = service.createScheduleFile(bulkSmsDTO);
 								int generated_id = 0;
 								if (filename != null) {
 									ScheduleEntry sch = new ScheduleEntry();
@@ -3243,48 +3242,14 @@ public class SmsServiceImpl implements SmsService {
 		return result_map;
 	}
 
-	public String createScheduleFile(BulkSmsDTO bulkDTO) {
-		String filename = null;
-		File f = null;
-		FileOutputStream fin = null;
-		ObjectOutputStream fobj = null;
-		bulkDTO.setCampaignType("Scheduled");
-		System.out.println("Org: " + bulkDTO.getOrigMessage());
-		try {
-			filename = bulkDTO.getSystemId() + "_" + new SimpleDateFormat("ddMMyyyyHHmmssSSS").format(new Date());
-			f = new File(IConstants.SCHEDULE_DIR + filename);
-			if (!f.exists()) {
-				fin = new FileOutputStream(f);
-				fobj = new ObjectOutputStream(fin);
-				fobj.writeObject(bulkDTO);
-				logger.info(bulkDTO.getSystemId() + ":" + f.getName() + " Schedule Created");
-			} else {
-				filename = null;
-				logger.error(bulkDTO.getSystemId() + ":" + f.getName() + " Schedule Exist");
-			}
-
-		} catch (IOException e) {
-			filename = null;
-			logger.error(bulkDTO.getSystemId(), e.fillInStackTrace());
-		} finally {
-			if (fobj != null) {
-				try {
-					fobj.close();
-				} catch (IOException ex) {
-					fobj = null;
-				}
-			}
-		}
-		return filename;
-	}
-
 	public String sendScheduleSms(String file) {
 		String toReturn = "Error In Scheduling";
 		try {
 			// String appName = "ScheduleAppl";
 			// System.out.println("Schedule services...");
 			logger.info(" Reading schedule File:-> " + file);
-			BulkSmsDTO bulkSmsDTO = readScheduleFile(file);
+			SendSmsService service = new SendSmsService();
+			BulkSmsDTO bulkSmsDTO = service.readScheduleFile(file);
 			int user_id = userEntryRepository.getUsers(bulkSmsDTO.getSystemId()).get().getUserId();
 			String mode = bulkSmsDTO.getUserMode();
 			logger.info(file + " [" + bulkSmsDTO.getSystemId() + ":" + bulkSmsDTO.getPassword() + "] " + mode);
@@ -3324,25 +3289,6 @@ public class SmsServiceImpl implements SmsService {
 			logger.error(file, e.fillInStackTrace());
 		}
 		return toReturn;
-	}
-
-	public BulkSmsDTO readScheduleFile(String filename) {
-		ObjectInputStream fobj = null;
-		BulkSmsDTO bulk = null;
-		try {
-			fobj = new ObjectInputStream(new FileInputStream(IConstants.WEBSMPP_EXT_DIR + "schedule//" + filename));
-			bulk = (BulkSmsDTO) fobj.readObject();
-		} catch (Exception e) {
-			logger.error(filename, e.fillInStackTrace());
-		} finally {
-			if (fobj != null) {
-				try {
-					fobj.close();
-				} catch (IOException ex) {
-				}
-			}
-		}
-		return bulk;
 	}
 
 	@Transactional
