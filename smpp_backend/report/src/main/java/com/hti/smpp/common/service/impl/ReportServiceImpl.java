@@ -17,6 +17,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.database.DataBase;
 import com.hti.smpp.common.exception.InternalServerException;
@@ -40,6 +41,7 @@ import net.sf.jasperreports.engine.export.JRXlsExporterParameter;
 import net.sf.jasperreports.engine.export.ooxml.JRDocxExporter;
 import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
 
+@Service
 public class ReportServiceImpl implements ReportService {
 
 	@Autowired

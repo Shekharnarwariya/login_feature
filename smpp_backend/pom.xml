@@ -20,6 +20,7 @@
 	<name>smpp_backend</name>
 	<description>Demo project for Spring Boot</description>
 	<modules>
+
 		<module>addressbook</module>
 		<module>apigateway</module>
 		<module>bsfm</module>

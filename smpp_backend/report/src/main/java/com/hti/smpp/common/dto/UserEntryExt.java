@@ -8,8 +8,10 @@ import com.hti.smpp.common.user.dto.RechargeEntry;
 import com.hti.smpp.common.user.dto.SessionEntry;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
+
 /**
- * The UserEntryExt class represents an extended user entry with additional information.
+ * The UserEntryExt class represents an extended user entry with additional
+ * information.
  */
 public class UserEntryExt {
 	private UserEntry userEntry;
@@ -21,7 +23,7 @@ public class UserEntryExt {
 	private SessionEntry sessionEntry;
 	private BindErrorEntry bindErrorEntry;
 	private String walletAmount;
-	
+
 //Getter and Setter
 	public UserEntryExt(UserEntry userEntry) {
 		this.userEntry = userEntry;
@@ -114,5 +116,5 @@ public class UserEntryExt {
 		super();
 		// TODO Auto-generated constructor stub
 	}
-	
+
 }

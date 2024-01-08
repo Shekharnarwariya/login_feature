@@ -9,14 +9,14 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
-import com.hti.smpp.common.dto.UserEntryExt;
 import com.hti.smpp.common.service.UserDAService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.util.GlobalVars;
 
-
+@Service
 public class UserDAServiceImpl implements UserDAService {
 
 	private Logger logger = LoggerFactory.getLogger(UserDAServiceImpl.class);
@@ -327,7 +327,7 @@ public class UserDAServiceImpl implements UserDAService {
 //		return map;
 //	}
 
-	//@Override
+	// @Override
 //	public Map<Integer, UserEntryExt> listUserEntries(Set<String> roles) {
 //		logger.debug("listUserEntries(" + roles + ")");
 //		Map<Integer, UserEntryExt> map = new LinkedHashMap<Integer, UserEntryExt>();
