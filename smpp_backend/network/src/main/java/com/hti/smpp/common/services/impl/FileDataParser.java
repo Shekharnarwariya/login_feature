@@ -11,14 +11,12 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.hti.smpp.common.dto.MccMncDTO;
 import com.hti.smpp.common.exception.InternalServerException;
 
 
-@Component
 public class FileDataParser {
 	
     private String cell = null;
@@ -34,6 +32,7 @@ public class FileDataParser {
                 workbook = new XSSFWorkbook(list_file.getInputStream());
             } else {
                 workbook = new HSSFWorkbook(list_file.getInputStream());
+                System.out.println("in workbook");
             }
         	int numberOfSheets = workbook.getNumberOfSheets();
         	for (int i = 0; i < numberOfSheets; i++) {
@@ -144,6 +143,9 @@ public class FileDataParser {
         }
         
         System.out.println("Network Update List Size ::" + list.size());
+        if(list.isEmpty()) {
+        	throw new InternalServerException("Unable to process file!");
+        }
         return list;
         
     }

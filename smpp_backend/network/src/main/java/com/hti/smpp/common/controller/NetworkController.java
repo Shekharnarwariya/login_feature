@@ -50,8 +50,8 @@ public class NetworkController {
 			@ApiResponse(responseCode = "502", description = "Bad Gateway. Unable to Process Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	@PostMapping(name = "/addNewMccMnc", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<String> addNewMccMnc(@Parameter(description = "Contact Entry request", content = @Content(schema = @Schema(implementation = MccMncForm.class))) @RequestParam(name = "formMccMnc",required = true) String formMccMnc, @RequestPart(name = "listFile", required = true) MultipartFile file, @RequestHeader(name = "username", required = true) String username){
+	@PostMapping(value= "/addNewMccMnc", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<String> addNewMccMnc(@Parameter(description = "Network Entry request", content = @Content(schema = @Schema(implementation = MccMncForm.class))) @RequestParam(name = "formMccMnc",required = false) String formMccMnc, @RequestPart(name = "listFile",required = false) MultipartFile file, @RequestHeader(name = "username", required = true) String username){
 		return this.networkService.addNewMccMnc(formMccMnc, file, username);
 	}
 	
@@ -103,7 +103,7 @@ public class NetworkController {
 		return this.networkService.download(ccReq, mccReq, mncReq, checkCountryReq, checkMccReq, checkMncReq, username);
 	}
 	
-	@Operation(summary = "Get Networkmap", description = "Retrieve the NetworkMap From All NetworkEntry")
+	@Operation(summary = "Get Networkmap", description = "Retrieve the NetworkMap Of Country And CC From All NetworkEntry")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Networkmap retrieved successfully."),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
@@ -122,9 +122,9 @@ public class NetworkController {
 			@ApiResponse(responseCode = "502", description = "Bad Gateway. Unable to Process Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	@PutMapping(name = "/uploadUpdateMccMnc", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<?> uploadUpdateMccMnc(@RequestParam(name = "mccMncForm",required = true) String mccMncForm, @RequestPart(name = "listFile", required = true) MultipartFile file, @RequestHeader(name = "username", required = true) String username){
-		return this.networkService.uploadUpdateMccMnc(mccMncForm, file, username);
+	@PutMapping(value = "/uploadUpdateMccMnc", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<?> uploadUpdateMccMnc(@RequestPart(name = "listFile", required = true) MultipartFile file, @RequestHeader(name = "username", required = true) String username){
+		return this.networkService.uploadUpdateMccMnc(file, username);
 	}
 	
 	@Operation(summary = "FindOption MncMccTokens", description = "To retrieve MncMcctokens")

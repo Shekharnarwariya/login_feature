@@ -2,6 +2,7 @@ package com.hti.smpp.common;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 import com.hti.smpp.common.util.GlobalVars;
 
@@ -12,6 +13,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 
 @SpringBootApplication
+@EnableDiscoveryClient
 public class NetworkApplication {
 
     private final static Logger logger = LoggerFactory.getLogger(NetworkApplication.class);
