@@ -1,47 +1,27 @@
 package com.hti.smpp.common.request;
 
-public class BulkContactUploadForm {
-	private int id;
+public class BulkContactRequest {
 	private String senderId;
-	private String ston;
-	private String snpi;
 	private String destinationNumber;
-	private String dton;
-	private String dnpi;
 	private String message;
-	private String esmClass;
-	private String header;
-	private String dcsValue;
 	private String from;
-	private String syear;
-	private String sday;
-	private String smonth;
-	private String hours;
-	private String minutes;
 	private String time;
 	private String date;
-	private String greet;
 	private String temp;
 	private int hideBulk;
 	private String complete;
 	private String schedTime;
 	private String schedDate;
-	// private boolean boolvalue;
-	// private int processedFigure;
 	private String[] numberlist;
 	private String totalNumbers;
 	private String uploadedNumbers;
 	private String noOfMessage;
-	private String[] grouplist;
-	private String asciiList;
 	private String fileName;
-	// private String schType = "contact";
 	private String reCheck = "no";
 	private String reqType = "contact";
 	private boolean customContent;
 	private String gmt = "";
 	private String smscount;
-	// private String addGroup;
 	private int groupId;
 	private String masterId;
 	private double delay;
@@ -55,7 +35,6 @@ public class BulkContactUploadForm {
 	private int smsParts; // Sms Parts
 	private int charCount; // Char Count
 	private int charLimit; // Char limit per sms
-	private String username;
 	private long expiryHour;
 	private String campaignName;
 	private boolean tracking;
@@ -65,20 +44,6 @@ public class BulkContactUploadForm {
 	private String peId;
 	private String templateId;
 	private String telemarketerId;
-
-	/**
-	 * @return the id
-	 */
-	public int getId() {
-		return id;
-	}
-
-	/**
-	 * @param id the id to set
-	 */
-	public void setId(int id) {
-		this.id = id;
-	}
 
 	/**
 	 * @return the senderId
@@ -92,34 +57,6 @@ public class BulkContactUploadForm {
 	 */
 	public void setSenderId(String senderId) {
 		this.senderId = senderId;
-	}
-
-	/**
-	 * @return the ston
-	 */
-	public String getSton() {
-		return ston;
-	}
-
-	/**
-	 * @param ston the ston to set
-	 */
-	public void setSton(String ston) {
-		this.ston = ston;
-	}
-
-	/**
-	 * @return the snpi
-	 */
-	public String getSnpi() {
-		return snpi;
-	}
-
-	/**
-	 * @param snpi the snpi to set
-	 */
-	public void setSnpi(String snpi) {
-		this.snpi = snpi;
 	}
 
 	/**
@@ -137,34 +74,6 @@ public class BulkContactUploadForm {
 	}
 
 	/**
-	 * @return the dton
-	 */
-	public String getDton() {
-		return dton;
-	}
-
-	/**
-	 * @param dton the dton to set
-	 */
-	public void setDton(String dton) {
-		this.dton = dton;
-	}
-
-	/**
-	 * @return the dnpi
-	 */
-	public String getDnpi() {
-		return dnpi;
-	}
-
-	/**
-	 * @param dnpi the dnpi to set
-	 */
-	public void setDnpi(String dnpi) {
-		this.dnpi = dnpi;
-	}
-
-	/**
 	 * @return the message
 	 */
 	public String getMessage() {
@@ -179,48 +88,6 @@ public class BulkContactUploadForm {
 	}
 
 	/**
-	 * @return the esmClass
-	 */
-	public String getEsmClass() {
-		return esmClass;
-	}
-
-	/**
-	 * @param esmClass the esmClass to set
-	 */
-	public void setEsmClass(String esmClass) {
-		this.esmClass = esmClass;
-	}
-
-	/**
-	 * @return the header
-	 */
-	public String getHeader() {
-		return header;
-	}
-
-	/**
-	 * @param header the header to set
-	 */
-	public void setHeader(String header) {
-		this.header = header;
-	}
-
-	/**
-	 * @return the dcsValue
-	 */
-	public String getDcsValue() {
-		return dcsValue;
-	}
-
-	/**
-	 * @param dcsValue the dcsValue to set
-	 */
-	public void setDcsValue(String dcsValue) {
-		this.dcsValue = dcsValue;
-	}
-
-	/**
 	 * @return the from
 	 */
 	public String getFrom() {
@@ -232,76 +99,6 @@ public class BulkContactUploadForm {
 	 */
 	public void setFrom(String from) {
 		this.from = from;
-	}
-
-	/**
-	 * @return the syear
-	 */
-	public String getSyear() {
-		return syear;
-	}
-
-	/**
-	 * @param syear the syear to set
-	 */
-	public void setSyear(String syear) {
-		this.syear = syear;
-	}
-
-	/**
-	 * @return the sday
-	 */
-	public String getSday() {
-		return sday;
-	}
-
-	/**
-	 * @param sday the sday to set
-	 */
-	public void setSday(String sday) {
-		this.sday = sday;
-	}
-
-	/**
-	 * @return the smonth
-	 */
-	public String getSmonth() {
-		return smonth;
-	}
-
-	/**
-	 * @param smonth the smonth to set
-	 */
-	public void setSmonth(String smonth) {
-		this.smonth = smonth;
-	}
-
-	/**
-	 * @return the hours
-	 */
-	public String getHours() {
-		return hours;
-	}
-
-	/**
-	 * @param hours the hours to set
-	 */
-	public void setHours(String hours) {
-		this.hours = hours;
-	}
-
-	/**
-	 * @return the minutes
-	 */
-	public String getMinutes() {
-		return minutes;
-	}
-
-	/**
-	 * @param minutes the minutes to set
-	 */
-	public void setMinutes(String minutes) {
-		this.minutes = minutes;
 	}
 
 	/**
@@ -330,20 +127,6 @@ public class BulkContactUploadForm {
 	 */
 	public void setDate(String date) {
 		this.date = date;
-	}
-
-	/**
-	 * @return the greet
-	 */
-	public String getGreet() {
-		return greet;
-	}
-
-	/**
-	 * @param greet the greet to set
-	 */
-	public void setGreet(String greet) {
-		this.greet = greet;
 	}
 
 	/**
@@ -470,34 +253,6 @@ public class BulkContactUploadForm {
 	 */
 	public void setNoOfMessage(String noOfMessage) {
 		this.noOfMessage = noOfMessage;
-	}
-
-	/**
-	 * @return the grouplist
-	 */
-	public String[] getGrouplist() {
-		return grouplist;
-	}
-
-	/**
-	 * @param grouplist the grouplist to set
-	 */
-	public void setGrouplist(String[] grouplist) {
-		this.grouplist = grouplist;
-	}
-
-	/**
-	 * @return the asciiList
-	 */
-	public String getAsciiList() {
-		return asciiList;
-	}
-
-	/**
-	 * @param asciiList the asciiList to set
-	 */
-	public void setAsciiList(String asciiList) {
-		this.asciiList = asciiList;
 	}
 
 	/**
@@ -750,20 +505,6 @@ public class BulkContactUploadForm {
 	 */
 	public void setCharLimit(int charLimit) {
 		this.charLimit = charLimit;
-	}
-
-	/**
-	 * @return the username
-	 */
-	public String getUsername() {
-		return username;
-	}
-
-	/**
-	 * @param username the username to set
-	 */
-	public void setUsername(String username) {
-		this.username = username;
 	}
 
 	/**

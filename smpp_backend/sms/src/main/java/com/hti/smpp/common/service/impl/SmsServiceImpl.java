@@ -71,7 +71,7 @@ import com.hti.smpp.common.messages.dto.QueueBackupExt;
 import com.hti.smpp.common.messages.dto.SummaryReport;
 import com.hti.smpp.common.messages.repository.BulkEntryRepository;
 import com.hti.smpp.common.messages.repository.SummaryReportRepository;
-import com.hti.smpp.common.request.BulkContactUploadForm;
+import com.hti.smpp.common.request.BulkContactRequest;
 import com.hti.smpp.common.request.BulkRequest;
 import com.hti.smpp.common.request.SmsRequest;
 import com.hti.smpp.common.response.BulkResponse;
@@ -3061,7 +3061,7 @@ public class SmsServiceImpl implements SmsService {
 	}
 
 	@Override
-	public ResponseEntity<?> sendSmsByContacts(BulkContactUploadForm bulkContactUploadForm, String username,
+	public ResponseEntity<?> sendSmsByContacts(BulkContactRequest bulkContactRequest, String username,
 			MultipartFile destinationNumberFile) {
 		BulkResponse bulkResponse = new BulkResponse();
 		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
@@ -3081,8 +3081,9 @@ public class SmsServiceImpl implements SmsService {
 			driverInfo = OptionalDriverInfo.get();
 		} else
 			throw new NotFoundException("drive info  not found with the provided username.");
-		if (bulkContactUploadForm.isTracking()) {
-			return tracking(mapping, actionForm, request, response);
+		if (bulkContactRequest.isTracking()) {
+			/// return tracking(mapping, actionForm, request, response);
+			return null;
 		} else {
 			String target = IConstants.FAILURE_KEY;
 			String unicodeMsg = "";
@@ -3096,7 +3097,7 @@ public class SmsServiceImpl implements SmsService {
 				logger.info(bulkSessionId + "<-- Contact Upload Request -->");
 			}
 			try {
-				BeanUtils.copyProperties(bulkSmsDTO, bulkContactUploadForm);
+				BeanUtils.copyProperties(bulkSmsDTO, bulkContactRequest);
 				bulkSmsDTO.setClientId(systemId);
 				bulkSmsDTO.setSystemId(systemId);
 				bulkSmsDTO.setPassword(driverInfo.getDriver());
@@ -3123,17 +3124,17 @@ public class SmsServiceImpl implements SmsService {
 				}
 				double totalcost = 0;
 				int no_of_msg = bulkSmsDTO.getSmsParts();
-				if (bulkContactUploadForm.getMessageType().equalsIgnoreCase("Unicode")) {
-					bulkSmsDTO.setMessage(UTF16(bulkContactUploadForm.getMessage()));
-					bulkSmsDTO.setOrigMessage(UTF16(bulkContactUploadForm.getMessage()));
+				if (bulkContactRequest.getMessageType().equalsIgnoreCase("Unicode")) {
+					bulkSmsDTO.setMessage(UTF16(bulkContactRequest.getMessage()));
+					bulkSmsDTO.setOrigMessage(UTF16(bulkContactRequest.getMessage()));
 					bulkSmsDTO.setDistinct("yes");
 				} else {
-					String sp_msg = bulkContactUploadForm.getMessage();
+					String sp_msg = bulkContactRequest.getMessage();
 					String hexValue = getHexValue(sp_msg);
 					unicodeMsg = SmsConverter.getContent(hexValue.toCharArray());
 					bulkSmsDTO.setMessage(unicodeMsg);
 					bulkSmsDTO.setMessageType("SpecialChar");
-					bulkSmsDTO.setOrigMessage(UTF16(bulkContactUploadForm.getMessage()));
+					bulkSmsDTO.setOrigMessage(UTF16(bulkContactRequest.getMessage()));
 				}
 				logger.info(bulkSessionId + " Message Type: " + bulkSmsDTO.getMessageType() + " Parts: " + no_of_msg);
 				if (bulkSmsDTO.isSchedule()) {

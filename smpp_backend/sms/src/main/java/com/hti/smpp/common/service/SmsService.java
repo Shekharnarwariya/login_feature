@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.hti.smpp.common.request.BulkContactUploadForm;
+import com.hti.smpp.common.request.BulkContactRequest;
 import com.hti.smpp.common.request.BulkRequest;
 import com.hti.smpp.common.request.SmsRequest;
 import com.hti.smpp.common.response.BulkResponse;
@@ -23,6 +23,6 @@ public interface SmsService {
 	public BulkResponse sendBulkCustome(BulkRequest bulkRequest, String username, MultipartFile destinationNumberFile,
 			HttpSession session);
 
-	public ResponseEntity<?> sendSmsByContacts(BulkContactUploadForm bulkContactUploadForm, String username,
+	public ResponseEntity<?> sendSmsByContacts(BulkContactRequest bulkContactRequest, String username,
 			MultipartFile destinationNumberFile);
 }
