@@ -90,9 +90,16 @@ public class SpringCloudConfig {
 				// Route for BSFM-SERVICE
 				.route("SUBSCRIPTION-SERVICE",
 						r -> r.path("/subscription/**")
-								.filters(f -> f.rewritePath("/subscription/(?<segment>.*)", "/${segment}")
+								.filters(f -> f.rewritePath("./subscription/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
-								.uri("lb://SUBSCRIPTION-SERVICE:8090"))
+								.uri("lb://SUBSCRIPTION-SERVICE:8091"))
+
+				// Route for DLT-SERVICE
+				.route("DLT-SERVICE",
+						r -> r.path("/dlt/**")
+								.filters(f -> f.rewritePath("./dlt/(?<segment>.*)", "/${segment}")
+										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
+								.uri("lb://DLT-SERVICE:8092"))
 
 				.build(); // Build the routes
 	}
