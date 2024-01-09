@@ -1,6 +1,6 @@
 package com.hti.smpp.common.response;
 
-import com.hti.smpp.common.dto.BulkListInfo;
+import com.hti.smpp.common.messages.dto.BulkListInfo;
 
 public class BulkResponse {
 	private BulkListInfo BulkListInfo;

@@ -1,4 +1,4 @@
-package com.hti.smpp.common.dto;
+package com.hti.smpp.common.messages.dto;
 
 import java.util.Map;
 

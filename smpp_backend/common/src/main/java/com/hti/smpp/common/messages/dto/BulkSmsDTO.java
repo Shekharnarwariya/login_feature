@@ -2,13 +2,18 @@
 package com.hti.smpp.common.messages.dto;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.springframework.stereotype.Component;
 
-import lombok.Data;
+import com.hti.smpp.common.util.MultiUtility;
 
 @Component
 public class BulkSmsDTO implements Serializable {
@@ -908,5 +913,97 @@ public class BulkSmsDTO implements Serializable {
 				+ ", campaignName=" + campaignName + ", campaignType=" + campaignType + ", peId=" + peId
 				+ ", templateId=" + templateId + ", telemarketerId=" + telemarketerId + "]";
 	}
-
+	public List<String> getDestinationList2(BulkListInfo listInfo) {
+		// Generate ArrayList
+		List<String> noList = new ArrayList<String>();
+		System.out.println("Count :" + getTotalNumbers());
+		// System.out.println("numberlist :"+numberlist.length);
+		String uploadedNumbers = getUploadedNumbers();
+		Set<String> excludeSet = new HashSet<String>();
+		if (getExclude() != null && getExclude().length() > 0) {
+			String seperator = ",";
+			if (getExclude().contains(",")) {
+				seperator = ",";
+			} else {
+				seperator = "\n";
+			}
+			StringTokenizer tokens = new StringTokenizer(getExclude(), seperator);
+			while (tokens.hasMoreTokens()) {
+				String next = tokens.nextToken();
+				if (next != null && next.length() > 0) {
+					next = next.replaceAll("\\s+", ""); // Replace all the spaces in the String with empty character.
+					try {
+						long num = Long.parseLong(next);
+						excludeSet.add(String.valueOf(num));
+					} catch (NumberFormatException ne) {
+						System.out.println("Invalid Exclude Number Found: " + next);
+					}
+				}
+			}
+		}
+		try {
+			String savedExcludeNumbers = MultiUtility.readExcludeNumbers(username);
+			if (savedExcludeNumbers != null) {
+				for (String excluded : savedExcludeNumbers.split("\n")) {
+					try {
+						long num = Long.parseLong(excluded);
+						excludeSet.add(String.valueOf(num));
+					} catch (NumberFormatException ne) {
+						System.out.println(username + " Invalid Exclude Number Found: " + excluded);
+					}
+				}
+			}
+		} catch (Exception ex) {
+			System.out.println(username + " " + ex);
+		}
+		if (!excludeSet.isEmpty()) {
+			try {
+			MultiUtility.writeExcludeNumbers(username, String.join("\n", excludeSet));
+			} catch (Exception ex) {
+				System.out.println(username + " " + ex);
+			}
+		}
+		int validCount = 0;
+		int invalidCount = 0;
+		int total = Integer.valueOf((getTotalNumbers()).trim());
+		StringTokenizer stoken = new StringTokenizer(uploadedNumbers, "\n");
+		int tok = stoken.countTokens();
+		String destinationNumber = null;
+		listInfo.setTotal(total);
+		for (int i = 0; i < total; i++) {
+			destinationNumber = stoken.nextToken();
+			destinationNumber = destinationNumber.trim();
+			if (destinationNumber == null || destinationNumber.equalsIgnoreCase("")
+					|| destinationNumber.length() == 0) {
+				invalidCount++;
+			} else {
+				if (destinationNumber.startsWith("+")) {
+					destinationNumber = destinationNumber.substring(1, destinationNumber.length());
+				}
+				try {
+					long value = Long.parseLong(destinationNumber);
+					if (!excludeSet.contains(String.valueOf(value))) {
+						noList.add(String.valueOf(value));
+						validCount++;
+					}
+				} catch (NumberFormatException nfe) {
+					System.out.println("Invalid Destination Number => " + destinationNumber);
+					// Add to invalid destination Count
+					invalidCount++;
+				}
+			}
+		}
+		Set<String> hashSet = new HashSet<String>(noList);
+		destinationList = new ArrayList<String>(hashSet);
+		Collections.sort(destinationList);
+		listInfo.setValidCount(validCount);
+		listInfo.setInvalidCount(invalidCount);
+		// System.out.println("successfully return from get destination no list()");
+		int dup = total - destinationList.size() - invalidCount;
+		// System.out.println("duplicate===="+dup);
+		listInfo.setDuplicate(dup);
+		// System.out.println("invalidCount : " + invalidCount);
+		// System.out.println("Destination No list size is :" + destinationList.size());
+		return destinationList;
+	}
 }
