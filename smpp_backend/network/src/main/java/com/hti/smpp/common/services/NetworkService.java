@@ -18,6 +18,6 @@ public interface NetworkService {
 	public ResponseEntity<List<MccMncDTO>> search(String ccReq, String mccReq, String mncReq, String checkCountryReq, String checkMccReq, String checkMncReq, String username);
 	public ResponseEntity<byte[]> download(String ccReq, String mccReq, String mncReq, String checkCountryReq, String checkMccReq, String checkMncReq, String username);
 	public ResponseEntity<?> editMccMnc(String username);
-	public ResponseEntity<?> uploadUpdateMccMnc(String mccMncForm, MultipartFile file, String username);
+	public ResponseEntity<?> uploadUpdateMccMnc(MultipartFile file, String username);
 	public ResponseEntity<MncMccTokens> findOption(String countryName, String mccParam, String username); 
 }

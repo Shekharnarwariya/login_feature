@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import org.springframework.stereotype.Component;
-
 import com.hti.smpp.common.dto.MccMncDTO;
 import com.hti.smpp.common.exception.InternalServerException;
 
@@ -21,7 +19,7 @@ import jxl.write.WritableSheet;
 import jxl.write.WritableWorkbook;
 import jxl.write.WriteException;
 
-@Component
+
 public class FileContentGenerator {
 	
 	WritableFont courier = new WritableFont(WritableFont.COURIER, 12, WritableFont.BOLD);
@@ -69,7 +67,13 @@ public class FileContentGenerator {
                 sheet.addCell(new Label(2, rowNum, mccMncDTO.getOperator(), timesformat));
                 sheet.addCell(new Label(3, rowNum, mccMncDTO.getMcc(), timesformat));
                 sheet.addCell(new Label(4, rowNum, mccMncDTO.getMnc(), timesformat));
-                sheet.addCell(new Label(5, rowNum, mccMncDTO.getPrefix(), timesformat));
+                
+                String value = mccMncDTO.getPrefix();
+                if(value.length()>32767) {
+                	value = value.substring(0, 32767);
+                }
+                sheet.addCell(new Label(5, rowNum, value, timesformat));
+                
                 sheet.addCell(new Label(6, rowNum, mccMncDTO.getId() + "", timesformat));
                 rowNum = rowNum + 1;
                 
@@ -77,6 +81,7 @@ public class FileContentGenerator {
             workbook.write();
             return true;
         } catch (IOException | WriteException ex) {
+        	ex.printStackTrace();
             System.err.println(ex.getLocalizedMessage());
             return false;
         } finally {
