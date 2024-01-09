@@ -26,7 +26,7 @@ public class SendSmsService {
 		ObjectInputStream fobj = null;
 		BulkSmsDTO bulk = null;
 		try {
-			fobj = new ObjectInputStream(new FileInputStream(IConstants.SCHEDULE_DIR + filename));
+			fobj = new ObjectInputStream(new FileInputStream(IConstants.WEBSMPP_EXT_DIR + "schedule//" + filename));
 			bulk = (BulkSmsDTO) fobj.readObject();
 		} catch (Exception e) {
 			logger.error(filename, e.fillInStackTrace());

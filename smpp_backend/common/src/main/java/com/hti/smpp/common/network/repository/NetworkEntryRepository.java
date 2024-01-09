@@ -23,12 +23,12 @@ public interface NetworkEntryRepository extends JpaRepository<NetworkEntry, Inte
     @Query("DELETE FROM NetworkEntry n WHERE n.id IN :ids")
     void deleteByIdIn(@Param("ids") List<Integer> ids);
 	
-	@Query("SELECT n FROM NetworkEntry n WHERE n.cc LIKE %:cc% AND n.mcc LIKE %:mcc% AND n.mnc LIKE %:mnc% ORDER BY n.cc")
-    List<NetworkEntry> findByCcAndMccAndMnc(@Param("cc") String cc, @Param("mcc") String mcc, @Param("mnc") String mnc);
+//	@Query("SELECT n FROM NetworkEntry n WHERE n.cc LIKE %:cc% AND n.mcc LIKE %:mcc% AND n.mnc LIKE %:mnc% ORDER BY n.cc")
+//    List<NetworkEntry> findByCcAndMccAndMnc(@Param("cc") String cc, @Param("mcc") String mcc, @Param("mnc") String mnc);
 	
-	@Query("SELECT DISTINCT n.mcc FROM NetworkEntry n WHERE n.cc LIKE %:cc%")
-    List<String> findDistinctMCCByCc(String cc);
-	
+//	@Query("SELECT DISTINCT n.mcc FROM NetworkEntry n WHERE n.cc LIKE %:cc%")
+//    List<String> findDistinctMCCByCc(String cc);
+//	
 	@Query("SELECT DISTINCT n.mnc, n.operator FROM NetworkEntry n WHERE n.mnc LIKE %:MCC%")
 	List<Object[]> findDistinctMNCAndOperatorByMCCLike(String MCC);
 
