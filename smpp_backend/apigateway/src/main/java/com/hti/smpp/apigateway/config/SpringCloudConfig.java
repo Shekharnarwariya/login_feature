@@ -93,8 +93,8 @@ public class SpringCloudConfig {
 								.filters(f -> f.rewritePath("./subscription/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
 								.uri("lb://SUBSCRIPTION-SERVICE:8090"))
-				
-				//Route for NETWORK-SERVICE
+
+				// Route for NETWORK-SERVICE
 				.route("NETWORK-SERVICE",
 						r -> r.path("/network/**")
 								.filters(f -> f.rewritePath("./network/(?<segment>.*)", "/${segment}")
@@ -107,6 +107,13 @@ public class SpringCloudConfig {
 								.filters(f -> f.rewritePath("./dlt/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
 								.uri("lb://DLT-SERVICE:8092"))
+
+				// Route for NETWORK-SERVICE
+				.route("NETWORK-SERVICE",
+						r -> r.path("/network/**")
+								.filters(f -> f.rewritePath("./network/(?<segment>.*)", "/${segment}")
+										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
+								.uri("lb://NETWORK-SERVICE:8093"))
 
 				.build(); // Build the routes
 	}
