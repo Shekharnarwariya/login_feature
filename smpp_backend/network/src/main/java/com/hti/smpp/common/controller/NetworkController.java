@@ -45,7 +45,7 @@ public class NetworkController {
 	
 	@Operation(summary = "Add New MccMnc", description = "Save a new mcc mnc")
 	@ApiResponses(value = {
-			@ApiResponse(responseCode = "201", description = "Network Entry Saved Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "201", description = "Network Entry Saved Successfully."),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "502", description = "Bad Gateway. Unable to Process Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
@@ -57,7 +57,7 @@ public class NetworkController {
 	
 	@Operation(summary = "Update MccMnc", description = "Update existing mcc mnc")
 	@ApiResponses(value = {
-			@ApiResponse(responseCode = "201", description = "Network Entry Updated Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "201", description = "Network Entry Updated Successfully."),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "502", description = "Bad Gateway. Unable to Process Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
@@ -69,7 +69,7 @@ public class NetworkController {
 	
 	@Operation(summary = "Delete MccMnc", description = "Delete existing mcc mnc by id")
 	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Network Entry Deleted Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "200", description = "Network Entry Deleted Successfully."),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "502", description = "Bad Gateway. Unable to Process Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),

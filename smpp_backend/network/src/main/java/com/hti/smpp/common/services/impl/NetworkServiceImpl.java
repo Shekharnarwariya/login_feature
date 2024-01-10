@@ -73,7 +73,7 @@ public class NetworkServiceImpl implements NetworkService {
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -87,7 +87,7 @@ public class NetworkServiceImpl implements NetworkService {
 		String checkInsertion = "";
 		int id = 0, count = 0;
 		Iterator<MccMncDTO> iterator = null;
-
+		String response = "";
 		try {
 
 			if (formMccMnc != null) {
@@ -142,13 +142,14 @@ public class NetworkServiceImpl implements NetworkService {
 					logger.info("message: DBUploadSuccess");
 					// request.setAttribute("param_value", count + "");
 					logger.info("param_value", count + "");
-					return new ResponseEntity<String>("Network Entry Saved Successful!", HttpStatus.CREATED);
+					response = "Network Entry Saved Successful! Total record inserted: " + count;
 				} else {
 					remained = totalRecord - count;
 					target = IConstants.FAILURE_KEY;
 					logger.error("message: DBEntryFailure");
 					// request.setAttribute("param_value", remained + "");
 					logger.info("param_value", remained + "");
+					throw new InternalServerException("DBEntry Failure. Remaining: " + remained);
 				}
 			}
 			if (replaceList.size() > 0) {
@@ -161,45 +162,45 @@ public class NetworkServiceImpl implements NetworkService {
 				logger.error("list", replaceList);
 				// request.setAttribute("totalRecords", replaceList.size() + "");
 				logger.error("totalRecords", replaceList.size() + "");
-				throw new InternalServerException("Duplicate Entry Found!");
+				response = "Duplicate Entry Found! Total No. Of Duplicate Record: " + replaceList.size();
 			}
 			MultiUtility.changeFlag(Constants.NETWORK_FLAG_FILE, "707");
 		} catch (Exception e) {
-			logger.info("Error");
+			logger.error("Error: " + e.getLocalizedMessage());
 			throw new InternalServerException(e.getMessage());
 		}
-		return new ResponseEntity<>(target, HttpStatus.CREATED);
+		return new ResponseEntity<>(response, HttpStatus.CREATED);
 	}
 
 	private int checkDuplicateMccMnc(MccMncDTO mccMncDTO) {
 		int id = 0;
 		String mcc = mccMncDTO.getMcc();
 		List<String> mncList = extractMncList(mccMncDTO.getMnc());
-boolean flag = false;
-		
+		boolean flag = false;
+
 		List<NetworkEntry> l = this.networkEntryRepo.findByMcc(mcc);
 
-		for(NetworkEntry ne : l) {
+		for (NetworkEntry ne : l) {
 			String mnc = ne.getMnc();
-			if(mnc.contains(",")) {
+			if (mnc.contains(",")) {
 				String[] mncArray = mnc.split(",");
-				for(String m : mncArray) {
-					if(mncList.contains(m)) {
+				for (String m : mncArray) {
+					if (mncList.contains(m)) {
 						flag = true;
 						break;
 					}
 				}
-			}else {
-				if(mncList.contains(mnc)) {
+			} else {
+				if (mncList.contains(mnc)) {
 					flag = true;
 				}
 			}
-			if(flag) {
+			if (flag) {
 				id = ne.getId();
 				break;
 			}
 		}
-		
+
 		return id;
 	}
 
@@ -256,13 +257,13 @@ boolean flag = false;
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-
+		String response = "";
 		String target = null;
 		MccMncUpdateDTO updateDTO = new MccMncUpdateDTO();
 		MccMncDTO mncDTO = null;
@@ -295,6 +296,7 @@ boolean flag = false;
 				// request.setAttribute("param_value", count + "");
 				logger.info("param_value", count + "");
 				target = IConstants.SUCCESS_KEY;
+				response = "Update Successful. Total Updated Records: " + count;
 				MultiUtility.changeFlag(Constants.NETWORK_FLAG_FILE, "707");
 			} else {
 				logger.error("error: record unavailable");
@@ -305,7 +307,7 @@ boolean flag = false;
 		} catch (NotFoundException e) {
 			logger.error("error: processError");
 			target = IConstants.FAILURE_KEY;
-			logger.error("Exception:ReplaceMccMncAction(1)::" + e);
+			logger.error("Exception:ReplaceMccMnc:" + e);
 			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error("error: processError");
@@ -313,23 +315,28 @@ boolean flag = false;
 			logger.error("Exception:ReplaceMccMncAction(1)::" + e);
 			throw new InternalServerException(e.getLocalizedMessage());
 		}
-		return new ResponseEntity<String>(target, HttpStatus.CREATED);
+		return new ResponseEntity<String>(response, HttpStatus.CREATED);
 	}
 
 	public int updateMccMnc(ArrayList<MccMncDTO> list) {
 		int count = 0;
 		NetworkEntry entry = null;
 		for (MccMncDTO data : list) {
-			entry = new NetworkEntry();
-			entry.setCc(Integer.parseInt(data.getCc()));
-			entry.setCountry(data.getCountry());
-			entry.setOperator(data.getOperator());
-			entry.setMcc(data.getMcc());
-			entry.setMnc(data.getMnc());
-			entry.setPrefix(data.getPrefix());
-			entry.setId(data.getId());
-			this.networkEntryRepo.save(entry);
-			count++;
+			boolean isPresent = this.networkEntryRepo.existsById(data.getId());
+			if(isPresent) {
+				entry = new NetworkEntry();
+				entry.setCc(Integer.parseInt(data.getCc()));
+				entry.setCountry(data.getCountry());
+				entry.setOperator(data.getOperator());
+				entry.setMcc(data.getMcc());
+				entry.setMnc(data.getMnc());
+				entry.setPrefix(data.getPrefix());
+				entry.setId(data.getId());
+				this.networkEntryRepo.save(entry);
+				count++;
+			}else {
+				throw new NotFoundException("Network Entry not found with id: "+data.getId());
+			}
 		}
 		return count;
 	}
@@ -342,7 +349,7 @@ boolean flag = false;
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -351,11 +358,13 @@ boolean flag = false;
 
 		int count = ids.size();
 		String target = null;
+		String response = "";
 		try {
 			if (!ids.isEmpty()) {
 				this.networkEntryRepo.deleteByIdIn(ids);
 				logger.info("Deleted Records: " + count);
 				target = IConstants.SUCCESS_KEY;
+				response = "Deleted Successfully! Deleted Records: " + count;
 				MultiUtility.changeFlag(Constants.NETWORK_FLAG_FILE, "707");
 			} else {
 				logger.error("error: record unavailable");
@@ -369,7 +378,7 @@ boolean flag = false;
 			throw new InternalServerException(ex.getLocalizedMessage());
 		}
 
-		return new ResponseEntity<String>(target, HttpStatus.OK);
+		return new ResponseEntity<String>(response, HttpStatus.OK);
 	}
 
 	@Override
@@ -380,7 +389,7 @@ boolean flag = false;
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -464,7 +473,7 @@ boolean flag = false;
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -560,7 +569,7 @@ boolean flag = false;
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -601,13 +610,13 @@ boolean flag = false;
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-
+		String response = "";
 		String target = null;
 		int count = 0;
 		try {
@@ -620,12 +629,14 @@ boolean flag = false;
 					logger.info("message.DBUpdateSuccess");
 					// request.setAttribute("param_value", count + "");
 					logger.info("param_value", count + "");
+					response = "Update Successful! Total Updated Records: " + count;
 				} else {
 					int remained = tempList.size() - count;
 					target = IConstants.FAILURE_KEY;
 					logger.error("message.DBUpdateFailure");
 					// request.setAttribute("param_value", remained + "");
 					logger.error("param_value", remained + "");
+					response = "Update Failure With Remaining Records: " + remained;
 				}
 				MultiUtility.changeFlag(Constants.NETWORK_FLAG_FILE, "707");
 			} else {
@@ -642,7 +653,7 @@ boolean flag = false;
 			target = IConstants.FAILURE_KEY;
 			throw new InternalServerException(e.getLocalizedMessage());
 		}
-		return new ResponseEntity<>(target, HttpStatus.CREATED);
+		return new ResponseEntity<>(response, HttpStatus.CREATED);
 	}
 
 	public List<String> getMNCList(String MCC) {
@@ -675,7 +686,7 @@ boolean flag = false;
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
