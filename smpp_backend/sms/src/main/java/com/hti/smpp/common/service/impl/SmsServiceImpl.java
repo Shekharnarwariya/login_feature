@@ -2069,6 +2069,7 @@ public class SmsServiceImpl implements SmsService {
 			logger.info("Final Web Links: " + web_links_list);
 			Map<String, String> campaign_mapping = getCampaignId(systemId, bulkSmsDTO.getSenderId(),
 					IConstants.GATEWAY_NAME, web_links_list, String.join(",", destinationList), campaign_name);
+			System.out.println("campaign mapping " + campaign_mapping);
 			String web_link_hex_param = null;
 			if (bulkSmsDTO.getMessageType().equalsIgnoreCase("Unicode")) {
 				web_link_hex_param = "005B007700650062005F006C0069006E006B005F0074007200610063006B0069006E0067005F00750072006C005D"
@@ -2077,6 +2078,7 @@ public class SmsServiceImpl implements SmsService {
 				web_link_hex_param = SevenBitChar.getHexValue(
 						"91,119,101,98,95,108,105,110,107,95,116,114,97,99,107,105,110,103,95,117,114,108,93,");
 				web_link_hex_param = SmsConverter.getContent(web_link_hex_param.toCharArray());
+				System.out.println("web_link_hex_param" + web_link_hex_param);
 			}
 			// logger.info("web_link_hex_param: " + web_link_hex_param);
 			int number_serial = 1;
@@ -2092,6 +2094,7 @@ public class SmsServiceImpl implements SmsService {
 									UTF16(appending_url).toLowerCase());
 						} else {
 							msg_content = msg_content.replaceFirst(web_link_hex_param, appending_url);
+							System.out.println("msg content" + msg_content);
 						}
 					}
 				}
@@ -2198,7 +2201,7 @@ public class SmsServiceImpl implements SmsService {
 								sch.setRepeated(bulkSmsDTO.getRepeat());
 								sch.setScheduleType(bulkSmsDTO.getReqType());
 								sch.setWebId(null);
-								scheduleEntryRepository.save(sch);
+								generated_id = scheduleEntryRepository.save(sch).getId();
 
 								if (generated_id > 0) {
 									String today = Validation.getTodayDateFormat();
@@ -2328,7 +2331,7 @@ public class SmsServiceImpl implements SmsService {
 								sch.setRepeated(bulkSmsDTO.getRepeat());
 								sch.setScheduleType(bulkSmsDTO.getReqType());
 								sch.setWebId(null);
-								scheduleEntryRepository.save(sch);
+								generated_id = scheduleEntryRepository.save(sch).getId();
 								if (generated_id > 0) {
 									String today = Validation.getTodayDateFormat();
 									if (today.equalsIgnoreCase(bulkSmsDTO.getDate().trim())) {
@@ -2941,7 +2944,18 @@ public class SmsServiceImpl implements SmsService {
 					+ destinationNumberFile.getName() + ">");
 		}
 		BulkListInfo listInfo = new BulkListInfo();
-
+		if (bulkRequest.getMessageType().equalsIgnoreCase("Unicode")) {
+			bulkSmsDTO.setMessage(UTF16(bulkRequest.getMessage()));
+			bulkSmsDTO.setOrigMessage(UTF16(bulkRequest.getMessage()));
+			bulkSmsDTO.setDistinct("yes");
+		} else {
+			String sp_msg = bulkRequest.getMessage();
+			String hexValue = getHexValue(sp_msg);
+			unicodeMsg = SmsConverter.getContent(hexValue.toCharArray());
+			bulkSmsDTO.setMessage(unicodeMsg);
+			bulkSmsDTO.setMessageType("SpecialChar");
+			bulkSmsDTO.setOrigMessage(UTF16(bulkRequest.getMessage()));
+		}
 		String exclude = bulkSmsDTO.getExclude();
 		Set<String> excludeSet = new HashSet<String>();
 		if (exclude != null && exclude.length() > 0) {
@@ -3288,14 +3302,16 @@ public class SmsServiceImpl implements SmsService {
 					Map<String, String> campaign_mapping = getCampaignId(String.valueOf(user.getSystemId()),
 							bulkSmsDTO.getSenderId(), "GWYM2", web_links_list, String.join(",", entry_map.keySet()),
 							campaign_name);
+					System.out.println("this is campaign mapping " + campaign_mapping);
 					String web_link_hex_param = null;
 					if (bulkSmsDTO.getMessageType().equalsIgnoreCase("Unicode")) {
 						web_link_hex_param = "005B007700650062005F006C0069006E006B005F0074007200610063006B0069006E0067005F00750072006C005D"
 								.toLowerCase();
 					} else {
-						web_link_hex_param = getHexValue(
+						web_link_hex_param = SevenBitChar.getHexValue(
 								"91,119,101,98,95,108,105,110,107,95,116,114,97,99,107,105,110,103,95,117,114,108,93,");
 						web_link_hex_param = SmsConverter.getContent(web_link_hex_param.toCharArray());
+						System.out.println("web_link_hex_param" + web_link_hex_param);
 					}
 					int number_serial = 1;
 					for (Map.Entry<String, List<String>> map_entry : entry_map.entrySet()) {
@@ -3331,6 +3347,7 @@ public class SmsServiceImpl implements SmsService {
 										String appending_url = "http://1l.ae/"
 												+ campaign_mapping.get(web_links_list.get(i)) + "/r=" + number_serial;
 										msg = msg.replaceFirst(web_link_hex_param, appending_url);
+										System.out.println("this is final replace value " + msg);
 									}
 								}
 								// System.out.println(destNumber + " " + msg);
