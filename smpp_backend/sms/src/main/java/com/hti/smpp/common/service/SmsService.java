@@ -23,6 +23,5 @@ public interface SmsService {
 	public BulkResponse sendBulkCustome(BulkRequest bulkRequest, String username, MultipartFile destinationNumberFile,
 			HttpSession session);
 
-	public ResponseEntity<?> sendSmsByContacts(BulkContactRequest bulkContactRequest, String username,
-			MultipartFile destinationNumberFile);
+	public ResponseEntity<?> sendSmsByContacts(BulkContactRequest bulkContactRequest, String username);
 }

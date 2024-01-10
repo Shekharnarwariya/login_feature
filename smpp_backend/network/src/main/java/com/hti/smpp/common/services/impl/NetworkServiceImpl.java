@@ -51,11 +51,6 @@ public class NetworkServiceImpl implements NetworkService {
 
 	private final Logger logger = LoggerFactory.getLogger(NetworkServiceImpl.class);
 
-//	@Autowired
-//	private FileDataParser fileDataParser;
-
-//	@Autowired
-//	private FileContentGenerator contentGenerator;
 
 	@Autowired
 	private NetworkEntryRepository networkEntryRepo;

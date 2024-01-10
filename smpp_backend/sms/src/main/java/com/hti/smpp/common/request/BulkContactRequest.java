@@ -1,36 +1,21 @@
 package com.hti.smpp.common.request;
 
+import java.util.List;
+
 public class BulkContactRequest {
 	private String senderId;
 	private String destinationNumber;
 	private String message;
 	private String from;
-	private String time;
-	private String date;
-	private String temp;
-	private int hideBulk;
-	private String complete;
-	private String schedTime;
-	private String schedDate;
-	private String[] numberlist;
-	private String totalNumbers;
 	private String uploadedNumbers;
-	private String noOfMessage;
-	private String fileName;
-	private String reCheck = "no";
-	private String reqType = "contact";
-	private boolean customContent;
+	private String totalContact;
 	private String gmt = "";
 	private String smscount;
-	private int groupId;
-	private String masterId;
 	private double delay;
 	private String repeat;
-	private boolean isAlert;
-	private boolean isSchedule;
+	private boolean alert;
+	private boolean schedule;
 	private String timestart;
-	// ------------ Modified on 27-Feb-2016 ---------------
-	private String origMessage; // For summary
 	private String messageType; // Encoding
 	private int smsParts; // Sms Parts
 	private int charCount; // Char Count
@@ -102,132 +87,6 @@ public class BulkContactRequest {
 	}
 
 	/**
-	 * @return the time
-	 */
-	public String getTime() {
-		return time;
-	}
-
-	/**
-	 * @param time the time to set
-	 */
-	public void setTime(String time) {
-		this.time = time;
-	}
-
-	/**
-	 * @return the date
-	 */
-	public String getDate() {
-		return date;
-	}
-
-	/**
-	 * @param date the date to set
-	 */
-	public void setDate(String date) {
-		this.date = date;
-	}
-
-	/**
-	 * @return the temp
-	 */
-	public String getTemp() {
-		return temp;
-	}
-
-	/**
-	 * @param temp the temp to set
-	 */
-	public void setTemp(String temp) {
-		this.temp = temp;
-	}
-
-	/**
-	 * @return the hideBulk
-	 */
-	public int getHideBulk() {
-		return hideBulk;
-	}
-
-	/**
-	 * @param hideBulk the hideBulk to set
-	 */
-	public void setHideBulk(int hideBulk) {
-		this.hideBulk = hideBulk;
-	}
-
-	/**
-	 * @return the complete
-	 */
-	public String getComplete() {
-		return complete;
-	}
-
-	/**
-	 * @param complete the complete to set
-	 */
-	public void setComplete(String complete) {
-		this.complete = complete;
-	}
-
-	/**
-	 * @return the schedTime
-	 */
-	public String getSchedTime() {
-		return schedTime;
-	}
-
-	/**
-	 * @param schedTime the schedTime to set
-	 */
-	public void setSchedTime(String schedTime) {
-		this.schedTime = schedTime;
-	}
-
-	/**
-	 * @return the schedDate
-	 */
-	public String getSchedDate() {
-		return schedDate;
-	}
-
-	/**
-	 * @param schedDate the schedDate to set
-	 */
-	public void setSchedDate(String schedDate) {
-		this.schedDate = schedDate;
-	}
-
-	/**
-	 * @return the numberlist
-	 */
-	public String[] getNumberlist() {
-		return numberlist;
-	}
-
-	/**
-	 * @param numberlist the numberlist to set
-	 */
-	public void setNumberlist(String[] numberlist) {
-		this.numberlist = numberlist;
-	}
-
-	/**
-	 * @return the totalNumbers
-	 */
-	public String getTotalNumbers() {
-		return totalNumbers;
-	}
-
-	/**
-	 * @param totalNumbers the totalNumbers to set
-	 */
-	public void setTotalNumbers(String totalNumbers) {
-		this.totalNumbers = totalNumbers;
-	}
-
-	/**
 	 * @return the uploadedNumbers
 	 */
 	public String getUploadedNumbers() {
@@ -242,73 +101,17 @@ public class BulkContactRequest {
 	}
 
 	/**
-	 * @return the noOfMessage
+	 * @return the totalContact
 	 */
-	public String getNoOfMessage() {
-		return noOfMessage;
+	public String isTotalContact() {
+		return totalContact;
 	}
 
 	/**
-	 * @param noOfMessage the noOfMessage to set
+	 * @param totalContact the totalContact to set
 	 */
-	public void setNoOfMessage(String noOfMessage) {
-		this.noOfMessage = noOfMessage;
-	}
-
-	/**
-	 * @return the fileName
-	 */
-	public String getFileName() {
-		return fileName;
-	}
-
-	/**
-	 * @param fileName the fileName to set
-	 */
-	public void setFileName(String fileName) {
-		this.fileName = fileName;
-	}
-
-	/**
-	 * @return the reCheck
-	 */
-	public String getReCheck() {
-		return reCheck;
-	}
-
-	/**
-	 * @param reCheck the reCheck to set
-	 */
-	public void setReCheck(String reCheck) {
-		this.reCheck = reCheck;
-	}
-
-	/**
-	 * @return the reqType
-	 */
-	public String getReqType() {
-		return reqType;
-	}
-
-	/**
-	 * @param reqType the reqType to set
-	 */
-	public void setReqType(String reqType) {
-		this.reqType = reqType;
-	}
-
-	/**
-	 * @return the customContent
-	 */
-	public boolean isCustomContent() {
-		return customContent;
-	}
-
-	/**
-	 * @param customContent the customContent to set
-	 */
-	public void setCustomContent(boolean customContent) {
-		this.customContent = customContent;
+	public void setTotalContact(String customContent) {
+		this.totalContact = customContent;
 	}
 
 	/**
@@ -340,34 +143,6 @@ public class BulkContactRequest {
 	}
 
 	/**
-	 * @return the groupId
-	 */
-	public int getGroupId() {
-		return groupId;
-	}
-
-	/**
-	 * @param groupId the groupId to set
-	 */
-	public void setGroupId(int groupId) {
-		this.groupId = groupId;
-	}
-
-	/**
-	 * @return the masterId
-	 */
-	public String getMasterId() {
-		return masterId;
-	}
-
-	/**
-	 * @param masterId the masterId to set
-	 */
-	public void setMasterId(String masterId) {
-		this.masterId = masterId;
-	}
-
-	/**
 	 * @return the delay
 	 */
 	public double getDelay() {
@@ -396,31 +171,31 @@ public class BulkContactRequest {
 	}
 
 	/**
-	 * @return the isAlert
+	 * @return the alert
 	 */
 	public boolean isAlert() {
-		return isAlert;
+		return alert;
 	}
 
 	/**
-	 * @param isAlert the isAlert to set
+	 * @param alert the alert to set
 	 */
-	public void setAlert(boolean isAlert) {
-		this.isAlert = isAlert;
+	public void setAlert(boolean alert) {
+		this.alert = alert;
 	}
 
 	/**
-	 * @return the isSchedule
+	 * @return the schedule
 	 */
 	public boolean isSchedule() {
-		return isSchedule;
+		return schedule;
 	}
 
 	/**
-	 * @param isSchedule the isSchedule to set
+	 * @param schedule the schedule to set
 	 */
-	public void setSchedule(boolean isSchedule) {
-		this.isSchedule = isSchedule;
+	public void setSchedule(boolean schedule) {
+		this.schedule = schedule;
 	}
 
 	/**
@@ -435,20 +210,6 @@ public class BulkContactRequest {
 	 */
 	public void setTimestart(String timestart) {
 		this.timestart = timestart;
-	}
-
-	/**
-	 * @return the origMessage
-	 */
-	public String getOrigMessage() {
-		return origMessage;
-	}
-
-	/**
-	 * @param origMessage the origMessage to set
-	 */
-	public void setOrigMessage(String origMessage) {
-		this.origMessage = origMessage;
 	}
 
 	/**

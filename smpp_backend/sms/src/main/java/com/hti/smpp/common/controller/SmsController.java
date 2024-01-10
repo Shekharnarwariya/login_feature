@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.hti.smpp.common.exception.ExceptionResponse;
+import com.hti.smpp.common.request.BulkContactRequest;
 import com.hti.smpp.common.request.SmsRequest;
 import com.hti.smpp.common.response.BulkResponse;
 import com.hti.smpp.common.response.SmsResponse;
@@ -81,6 +82,19 @@ public class SmsController {
 		BulkResponse bulkResponse = smsService.sendBulkCustome(ObjectConverter.jsonMapper(bulkRequest), username,
 				destinationNumberFile, session);
 		return ResponseEntity.ok(bulkResponse);
+	}
+
+	@Operation(summary = "Send Bulk Contacts SMS", description = "This endpoint allows users to send bulk Contacts SMS messages.", tags = {
+			"SMS" })
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Bulk Contacts SMS sent successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SmsResponse.class))),
+			@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
+
+	@PostMapping("/sendByContacts")
+	public ResponseEntity<?> sendSmsByContacts(@RequestBody BulkContactRequest bulkContactRequest,
+			@RequestHeader("username") String username) {
+		return smsService.sendSmsByContacts(bulkContactRequest, username);
 	}
 
 }
