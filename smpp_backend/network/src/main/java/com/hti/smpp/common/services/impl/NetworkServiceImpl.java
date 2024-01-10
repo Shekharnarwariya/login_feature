@@ -35,6 +35,7 @@ import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.network.repository.NetworkEntryRepository;
 import com.hti.smpp.common.request.MccMncForm;
 import com.hti.smpp.common.request.MccMncUpdateForm;
+import com.hti.smpp.common.response.AddResponse;
 import com.hti.smpp.common.response.MncMccTokens;
 import com.hti.smpp.common.services.NetworkService;
 import com.hti.smpp.common.user.dto.UserEntry;
@@ -60,9 +61,17 @@ public class NetworkServiceImpl implements NetworkService {
 
 	@Value("${file.dir}")
 	private String filePath;
-
+	
+	/**
+     * Adds a new network entry to the network.
+     *
+     * @param formMccMnc JSON-formatted MccMncForm data
+     * @param file       Optional file in .xls format to be associated with the entry
+     * @param username   Username of the user making the request
+     * @return ResponseEntity containing the result of the operation
+     */
 	@Override
-	public ResponseEntity<String> addNewMccMnc(String formMccMnc, MultipartFile file, String username) {
+	public ResponseEntity<?> addNewMccMnc(String formMccMnc, MultipartFile file, String username) {
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
@@ -83,6 +92,7 @@ public class NetworkServiceImpl implements NetworkService {
 		int id = 0, count = 0;
 		Iterator<MccMncDTO> iterator = null;
 		String response = "";
+		AddResponse addResponse = new AddResponse();
 		try {
 
 			if (formMccMnc != null) {
@@ -138,33 +148,41 @@ public class NetworkServiceImpl implements NetworkService {
 					// request.setAttribute("param_value", count + "");
 					logger.info("param_value", count + "");
 					response = "Network Entry Saved Successful! Total record inserted: " + count;
+					addResponse.setResponseMessage(response);
+					addResponse.setTotalRecords(count);
 				} else {
 					remained = totalRecord - count;
 					target = IConstants.FAILURE_KEY;
 					logger.error("message: DBEntryFailure");
 					// request.setAttribute("param_value", remained + "");
 					logger.info("param_value", remained + "");
-					throw new InternalServerException("DBEntry Failure. Remaining: " + remained);
+					addResponse.setTotalRecords(remained);
+					addResponse.setResponseMessage("DBEntry Failure. Remaining: " + remained);;
+					return new ResponseEntity<>(addResponse, HttpStatus.INTERNAL_SERVER_ERROR);
 				}
 			}
 			if (replaceList.size() > 0) {
 				target = "replace";
-				String param_message = "Total Inserted Records : " + count;
+				response = "Duplicate Entry Found! Total No. Of Duplicate Record: " + replaceList.size();
+				String param_message = "Total Records : " + count+"."+response;
 				logger.error("error: record duplicate");
 				// request.setAttribute("param_message", param_message);
 				logger.error("param_message", param_message);
+				addResponse.setResponseMessage(param_message);
 				// request.setAttribute("list", replaceList);
 				logger.error("list", replaceList);
+				addResponse.setList(replaceList);
 				// request.setAttribute("totalRecords", replaceList.size() + "");
 				logger.error("totalRecords", replaceList.size() + "");
-				response = "Duplicate Entry Found! Total No. Of Duplicate Record: " + replaceList.size();
+				addResponse.setTotalRecords(replaceList.size());
+				return new ResponseEntity<>(addResponse,HttpStatus.CONFLICT);
 			}
 			MultiUtility.changeFlag(Constants.NETWORK_FLAG_FILE, "707");
 		} catch (Exception e) {
 			logger.error("Error: " + e.getLocalizedMessage());
 			throw new InternalServerException(e.getMessage());
 		}
-		return new ResponseEntity<>(response, HttpStatus.CREATED);
+		return new ResponseEntity<>(addResponse, HttpStatus.CREATED);
 	}
 
 	private int checkDuplicateMccMnc(MccMncDTO mccMncDTO) {
@@ -244,7 +262,15 @@ public class NetworkServiceImpl implements NetworkService {
 		}
 		return count;
 	}
-
+	
+	
+	/**
+     * Updates an existing network entry in the network.
+     *
+     * @param form     JSON-formatted MccMncUpdateForm data
+     * @param username Username of the user making the request
+     * @return ResponseEntity containing the result of the operation
+     */
 	@Override
 	public ResponseEntity<String> replace(MccMncUpdateForm form, String username) {
 
@@ -335,7 +361,14 @@ public class NetworkServiceImpl implements NetworkService {
 		}
 		return count;
 	}
-
+	
+	/**
+     * Deletes network entries by their IDs.
+     *
+     * @param ids      List of IDs of the entries to be deleted
+     * @param username Username of the user making the request
+     * @return ResponseEntity containing the result of the operation
+     */
 	@Override
 	@Transactional
 	public ResponseEntity<String> delete(List<Integer> ids, String username) {
@@ -375,7 +408,20 @@ public class NetworkServiceImpl implements NetworkService {
 
 		return new ResponseEntity<String>(response, HttpStatus.OK);
 	}
-
+	
+	
+	/**
+     * Searches for network entries based on specified parameters.
+     *
+     * @param ccReq          Country Code parameter
+     * @param mccReq         MCC (Mobile Country Code) parameter
+     * @param mncReq         MNC (Mobile Network Code) parameter
+     * @param checkCountryReq Check Country parameter
+     * @param checkMccReq     Check MCC parameter
+     * @param checkMncReq     Check MNC parameter
+     * @param username       Username of the user making the request
+     * @return ResponseEntity containing a list of MccMncDTO objects
+     */
 	@Override
 	public ResponseEntity<List<MccMncDTO>> search(String ccReq, String mccReq, String mncReq, String checkCountryReq,
 			String checkMccReq, String checkMncReq, String username) {
@@ -459,7 +505,20 @@ public class NetworkServiceImpl implements NetworkService {
 
 		return list;
 	}
-
+	
+	
+	/**
+     * Downloads a file based on specified parameters.
+     *
+     * @param ccReq          Country Code parameter
+     * @param mccReq         MCC (Mobile Country Code) parameter
+     * @param mncReq         MNC (Mobile Network Code) parameter
+     * @param checkCountryReq Check Country parameter
+     * @param checkMccReq     Check MCC parameter
+     * @param checkMncReq     Check MNC parameter
+     * @param username       Username of the user making the request
+     * @return ResponseEntity containing the file data
+     */
 	@Override
 	public ResponseEntity<byte[]> download(String ccReq, String mccReq, String mncReq, String checkCountryReq,
 			String checkMccReq, String checkMncReq, String username) {
@@ -556,7 +615,13 @@ public class NetworkServiceImpl implements NetworkService {
 		}
 		return networkList;
 	}
-
+	
+	/**
+     * Retrieves the NetworkMap of Country and CC from all NetworkEntry.
+     *
+     * @param username Username of the user making the request
+     * @return ResponseEntity containing the result of the operation
+     */
 	@Override
 	public ResponseEntity<?> editMccMnc(String username) {
 
@@ -597,7 +662,15 @@ public class NetworkServiceImpl implements NetworkService {
 		}
 
 	}
-
+	
+	
+	/**
+     * Updates existing network entries by uploading a file.
+     *
+     * @param file     File containing the updated data
+     * @param username Username of the user making the request
+     * @return ResponseEntity containing the result of the operation
+     */
 	@Override
 	public ResponseEntity<?> uploadUpdateMccMnc(MultipartFile file, String username) {
 
@@ -673,7 +746,16 @@ public class NetworkServiceImpl implements NetworkService {
 
 		return mncList;
 	}
-
+	
+	
+	/**
+     * Retrieves MncMccTokens based on specified parameters.
+     *
+     * @param countryName Name of the country
+     * @param mccParam    MCC (Mobile Country Code) parameter
+     * @param username    Username of the user making the request
+     * @return ResponseEntity containing MncMccTokens
+     */
 	@Override
 	public ResponseEntity<MncMccTokens> findOption(String countryName, String mccParam, String username) {
 
@@ -714,6 +796,7 @@ public class NetworkServiceImpl implements NetworkService {
 				mncMccTokens.setMncTokens(mncTokens);
 			}
 		} catch (Exception e) {
+			logger.error(e.toString());
 			throw new InternalServerException(e.getLocalizedMessage());
 		}
 		return ResponseEntity.ok(mncMccTokens);

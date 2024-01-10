@@ -17,18 +17,18 @@ public class DiscoveryserverApplication {
 
 	@PostConstruct
 	public void postConstruct() {
-		logger.info(" Apigateway Application is about to start.");
+		logger.info(" Discoveryserver Application is about to start.");
 	}
 
 	@PreDestroy
 	public void preDestroy() {
 
-		logger.info(" Apigateway Application is about to stop.");
+		logger.info(" Discoveryserver Application is about to stop.");
 	}
 
 	public static void main(String[] args) {
 		SpringApplication.run(DiscoveryserverApplication.class, args);
-		logger.info("Apigateway Application started successfully.");
+		logger.info("Discoveryserver Application started successfully.");
 	}
 
 }

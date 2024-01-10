@@ -10,14 +10,32 @@ import com.hti.smpp.common.request.MccMncForm;
 import com.hti.smpp.common.request.MccMncUpdateForm;
 import com.hti.smpp.common.response.MncMccTokens;
 
+/**
+ * Service interface for managing SMPP Network entries.
+ */
 public interface NetworkService {
 	
-	public ResponseEntity<String> addNewMccMnc(String formMccMnc, MultipartFile file, String username);
+	//Adds a new network entry i.e., single or multiple.
+	public ResponseEntity<?> addNewMccMnc(String formMccMnc, MultipartFile file, String username);
+	
+	//Update an existing Network entry
 	public ResponseEntity<String> replace(MccMncUpdateForm form, String username);
+	
+	//Delete an existing network entry by ID
 	public ResponseEntity<String> delete(List<Integer> ids, String username);
+	
+    //Retrieve a list of NetworkEntry based on specified parameters	
 	public ResponseEntity<List<MccMncDTO>> search(String ccReq, String mccReq, String mncReq, String checkCountryReq, String checkMccReq, String checkMncReq, String username);
+	
+	//Download mccmnc_database.xls File based on specified parameters
 	public ResponseEntity<byte[]> download(String ccReq, String mccReq, String mncReq, String checkCountryReq, String checkMccReq, String checkMncReq, String username);
+	
+	//Retrieve the NetworkMap Of Country And CC From All NetworkEntry
 	public ResponseEntity<?> editMccMnc(String username);
+	
+	//Update an existing network entry by uploading a file
 	public ResponseEntity<?> uploadUpdateMccMnc(MultipartFile file, String username);
+	
+	// Retrieve MncMccTokens based on specified parameters
 	public ResponseEntity<MncMccTokens> findOption(String countryName, String mccParam, String username); 
 }
