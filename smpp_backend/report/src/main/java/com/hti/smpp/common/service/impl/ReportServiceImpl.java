@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
@@ -30,6 +31,7 @@ import com.hti.smpp.common.service.ReportService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.IConstants;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -50,10 +52,12 @@ public class ReportServiceImpl implements ReportService {
 	@Autowired
 	private UserEntryRepository userRepository;
 
+	
+	Locale locale =null;
 	private static final Logger logger = LoggerFactory.getLogger(ReportServiceImpl.class);
 
 	@Override
-	public List<BulkEntry> abortBatchReport(String username, CustomReportForm customReportForm) {
+	public List<BulkEntry> abortBatchReport(String username, CustomReportForm customReportForm,String lang) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
@@ -66,6 +70,8 @@ public class ReportServiceImpl implements ReportService {
 		String target = IConstants.SUCCESS_KEY;
 
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); 
+			
 			List<BulkEntry> reportList = dataBase.getReportList(customReportForm, user.getId());
 
 			if (!reportList.isEmpty()) {
@@ -84,7 +90,7 @@ public class ReportServiceImpl implements ReportService {
 	}
 
 	@Override
-	public Map<String, List<DeliveryDTO>> BalanceReportView(String username, CustomReportForm customReportForm) {
+	public Map<String, List<DeliveryDTO>> BalanceReportView(String username, CustomReportForm customReportForm,String lang) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
@@ -96,6 +102,8 @@ public class ReportServiceImpl implements ReportService {
 		}
 
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			Map<String, List<DeliveryDTO>> reportList = dataBase.getBalanceReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
@@ -112,10 +120,12 @@ public class ReportServiceImpl implements ReportService {
 	}
 
 	@Override
-	public String BalanceReportxls(String username, CustomReportForm customReportForm, HttpServletResponse response) {
+	public String BalanceReportxls(String username, CustomReportForm customReportForm, HttpServletResponse response,String lang) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			Map<String, List<DeliveryDTO>> reportList = dataBase.getReportListFile(username, customReportForm);
 			if (!reportList.isEmpty()) {
 				// log.info("Report Size: {}", reportList.size());
@@ -153,9 +163,11 @@ public class ReportServiceImpl implements ReportService {
 	}
 
 	@Override
-	public String balanceReportPdf(String username, CustomReportForm customReportForm, HttpServletResponse response) {
+	public String balanceReportPdf(String username, CustomReportForm customReportForm, HttpServletResponse response,String lang) {
 		String target = IConstants.FAILURE_KEY;
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			Map<String, List<DeliveryDTO>> reportList = dataBase.getReportListFile(username, customReportForm);
 
 			if (!reportList.isEmpty()) {
@@ -192,9 +204,11 @@ public class ReportServiceImpl implements ReportService {
 	}
 
 	@Override
-	public String BalanceReportDoc(String username, CustomReportForm customReportForm, HttpServletResponse response) {
+	public String BalanceReportDoc(String username, CustomReportForm customReportForm, HttpServletResponse response,String lang) {
 		String target = IConstants.FAILURE_KEY;
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			Map<String, List<DeliveryDTO>> reportList = dataBase.getReportListFile(username, customReportForm);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
@@ -229,10 +243,12 @@ public class ReportServiceImpl implements ReportService {
 	}
 
 	@Override
-	public List<DeliveryDTO> BlockedReportView(String username, CustomReportForm customReportForm) {
+	public List<DeliveryDTO> BlockedReportView(String username, CustomReportForm customReportForm,String lang) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			List<DeliveryDTO> reportList = dataBase.getReportList(customReportForm, username);
 
 			if (reportList != null && !reportList.isEmpty()) {
@@ -255,10 +271,12 @@ public class ReportServiceImpl implements ReportService {
 	}
 
 	@Override
-	public String BlockedReportPdf(String username, CustomReportForm customReportForm, HttpServletResponse response) {
+	public String BlockedReportPdf(String username, CustomReportForm customReportForm, HttpServletResponse response,String lang) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			List<DeliveryDTO> reportList = dataBase.getReportList(customReportForm, username);
 
 			if (reportList != null && !reportList.isEmpty()) {
@@ -294,10 +312,12 @@ public class ReportServiceImpl implements ReportService {
 	}
 
 	@Override
-	public String BlockedReportxls(String username, CustomReportForm customReportForm, HttpServletResponse response) {
+	public String BlockedReportxls(String username, CustomReportForm customReportForm, HttpServletResponse response,String lang) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			List<DeliveryDTO> reportList = dataBase.getReportList(customReportForm, username);
 
 			if (reportList != null && !reportList.isEmpty()) {
@@ -355,9 +375,11 @@ public class ReportServiceImpl implements ReportService {
 	}
 
 	@Override
-	public String BlockedReportDoc(String username, CustomReportForm customReportForm, HttpServletResponse response) {
+	public String BlockedReportDoc(String username, CustomReportForm customReportForm, HttpServletResponse response,String lang) {
 		String target = IConstants.FAILURE_KEY;
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			List<DeliveryDTO> reportList = dataBase.getReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(username + " ReportSize[doc]:" + reportList.size());
@@ -394,7 +416,7 @@ public class ReportServiceImpl implements ReportService {
 	}
 
 	@Override
-	public JasperPrint CampaignReportview(String username, CustomReportForm customReportForm) {
+	public JasperPrint CampaignReportview(String username, CustomReportForm customReportForm,String lang) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
@@ -403,6 +425,8 @@ public class ReportServiceImpl implements ReportService {
 			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			JasperPrint reportList = dataBase.getCampaignReportList(customReportForm, username, false);
 			if (reportList != null) {
 				target = IConstants.SUCCESS_KEY;
@@ -422,7 +446,7 @@ public class ReportServiceImpl implements ReportService {
 
 	@Override
 	public JasperPrint CampaignReportxls(String username, CustomReportForm customReportForm,
-			HttpServletResponse response) {
+			HttpServletResponse response,String lang) {
 		JasperPrint reportList = null;
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -432,6 +456,8 @@ public class ReportServiceImpl implements ReportService {
 			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			reportList = dataBase.getCampaignReportList(customReportForm, username, false);
 			if (reportList != null) {
 				System.out.println("<-- Preparing Outputstream --> ");
@@ -469,7 +495,7 @@ public class ReportServiceImpl implements ReportService {
 
 	@Override
 	public JasperPrint CampaignReportPdf(String username, CustomReportForm customReportForm,
-			HttpServletResponse response) {
+			HttpServletResponse response,String lang) {
 		JasperPrint reportList = null;
 
 		String target = IConstants.FAILURE_KEY;
@@ -480,6 +506,8 @@ public class ReportServiceImpl implements ReportService {
 			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			JasperPrint print = dataBase.getCampaignReportList(customReportForm, username, false);
 
 			if (print != null) {
@@ -515,7 +543,7 @@ public class ReportServiceImpl implements ReportService {
 
 	@Override
 	public JasperPrint CampaignReportDoc(String username, CustomReportForm customReportForm,
-			HttpServletResponse response) {
+			HttpServletResponse response,String lang) {
 		JasperPrint reportList = null;
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -526,6 +554,8 @@ public class ReportServiceImpl implements ReportService {
 		}
 
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			JasperPrint print = dataBase.getCampaignReportList(customReportForm, username, false);
 
 			if (print != null) {
@@ -559,7 +589,7 @@ public class ReportServiceImpl implements ReportService {
 	}
 
 	@Override
-	public List<DeliveryDTO> ContentReportView(String username, CustomReportForm customReportForm) {
+	public List<DeliveryDTO> ContentReportView(String username, CustomReportForm customReportForm,String lang) {
 		String target = IConstants.FAILURE_KEY;
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -570,6 +600,8 @@ public class ReportServiceImpl implements ReportService {
 		}
 
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			List<DeliveryDTO> reportList = dataBase.getContentReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(user.getSystemId() + " ReportSize[View]:" + reportList.size());
@@ -583,16 +615,16 @@ public class ReportServiceImpl implements ReportService {
 				throw new InternalServerException("No data found for the report");
 
 			}
-		} catch (Exception e) {
-			logger.error(user.getSystemId(), e.fillInStackTrace());
-			return null;
+		} catch (Exception ex) {
+			target = IConstants.FAILURE_KEY;
+			throw new InternalServerException("Error getting error in abort batch report: " + ex.getMessage());
 		}
 
 	}
 
 	@Override
-	public List<DeliveryDTO> ContentReportxls(String username, CustomReportForm customReportForm,
-			HttpServletResponse response) {
+	public String ContentReportxls(String username, CustomReportForm customReportForm,
+			HttpServletResponse response,String lang) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
@@ -601,6 +633,8 @@ public class ReportServiceImpl implements ReportService {
 			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			List<DeliveryDTO> reportList = dataBase.getReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(user.getSystemId() + " ReportSize[doc]:" + reportList.size());
@@ -631,12 +665,12 @@ public class ReportServiceImpl implements ReportService {
 		} catch (Exception e) {
 			logger.error(user.getSystemId(), e.fillInStackTrace());
 		}
-		return null;
+		return target;
 	}
 
 	@Override
-	public List<DeliveryDTO> ContentReportPdf(String username, CustomReportForm customReportForm,
-			HttpServletResponse response) {
+	public String ContentReportPdf(String username, CustomReportForm customReportForm,
+			HttpServletResponse response,String lang) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
@@ -645,6 +679,8 @@ public class ReportServiceImpl implements ReportService {
 			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			List<DeliveryDTO> reportList = dataBase.getReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(user.getSystemId() + " ReportSize[pdf]:" + reportList.size());
@@ -675,12 +711,12 @@ public class ReportServiceImpl implements ReportService {
 		} catch (Exception e) {
 			logger.error(user.getSystemId(), e.fillInStackTrace());
 		}
-		return null;
+		return target;
 	}
 
 	@Override
-	public List<DeliveryDTO> ContentReportDoc(String username, CustomReportForm customReportForm,
-			HttpServletResponse response) {
+	public String ContentReportDoc(String username, CustomReportForm customReportForm,
+			HttpServletResponse response,String lang) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
@@ -689,6 +725,8 @@ public class ReportServiceImpl implements ReportService {
 			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			List<DeliveryDTO> reportList = dataBase.getContentReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				int total_rec = reportList.size();
@@ -759,7 +797,7 @@ public class ReportServiceImpl implements ReportService {
 			// message = new ActionMessage("error.processError");
 		}
 
-		return null;
+		return target;
 	}
 
 }

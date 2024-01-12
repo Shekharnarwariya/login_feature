@@ -49,6 +49,7 @@ import com.hti.smpp.common.user.dto.UserSessionObject;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 
@@ -82,10 +83,12 @@ public class CustomizedReportServicesImpl implements CustomizedReportServices {
 	
 	
 	String reportUser = null;
+	Locale locale =null;
+	
 	
 	String groupby = "country";
 	@Override
-	public List<DeliveryDTO> CustomizedReportView(String username, CustomReportForm customReportForm) {
+	public List<DeliveryDTO> CustomizedReportView(String username, CustomReportForm customReportForm,String lang) {
 		final String template_file = IConstants.FORMAT_DIR + "report//dlrReport.jrxml";
 		final String template_sender_file = IConstants.FORMAT_DIR + "report//dlrReportSender.jrxml";
 		final String template_content_file = IConstants.FORMAT_DIR + "report//dlrContentReport.jrxml";
@@ -95,15 +98,16 @@ public class CustomizedReportServicesImpl implements CustomizedReportServices {
 		boolean isSummary = false;
 		String reportUser = null;
 		
+		
 		String groupby = "country";
 		boolean isContent;
 		// UserSessionObject userSessionObject = null;
 		Logger logger = LoggerFactory.getLogger(CustomizedReportServicesImpl.class);
 		String to_gmt;
 		String from_gmt;
-		Locale locale = null;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-
+		
+		
 		UserEntry user = userOptional
 				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
 
@@ -113,6 +117,8 @@ public class CustomizedReportServicesImpl implements CustomizedReportServices {
 
 		String target = IConstants.SUCCESS_KEY;
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+				
 			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(user.getSystemId() + " ReportSize[View]:" + reportList.size());
@@ -136,11 +142,13 @@ public class CustomizedReportServicesImpl implements CustomizedReportServices {
 			// message = new ActionMessage("error.processError");
 		}
 		return null;
+		
 	}
 
 	@Override
-	public List<DeliveryDTO> CustomizedReportdoc(String username, CustomReportForm customReportForm,
-			HttpServletResponse response) {
+	public String CustomizedReportdoc(String username, CustomReportForm customReportForm,
+			HttpServletResponse response,String lang) {
+	
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
@@ -149,11 +157,16 @@ public class CustomizedReportServicesImpl implements CustomizedReportServices {
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
+				
 
+		String target = IConstants.SUCCESS_KEY;
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
+			 
 			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
-				String target = IConstants.SUCCESS_KEY;
+				//String target = IConstants.SUCCESS_KEY;
 				logger.info(user.getSystemId() + " ReportSize[doc]:" + reportList.size());
 				JasperPrint print = null;
 				if (isSummary) {
@@ -186,12 +199,15 @@ public class CustomizedReportServicesImpl implements CustomizedReportServices {
 		} catch (Exception e) {
 			logger.error(user.getSystemId(), e.fillInStackTrace());
 		}
-		return null ;
+		return target ;
 	}
 
 	@Override
-	public List<DeliveryDTO> CustomizedReportxls(String username, CustomReportForm customReportForm,
-			HttpServletResponse response) {
+	public String  CustomizedReportxls(String username, CustomReportForm customReportForm,
+			HttpServletResponse response,String lang) {
+		
+
+		String target = IConstants.SUCCESS_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
@@ -203,6 +219,9 @@ public class CustomizedReportServicesImpl implements CustomizedReportServices {
 		
 		
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
+			
 			List<DeliveryDTO> reportList =  dataBase.getCustomizedReportList(customReportForm,username);
 			if (reportList != null && !reportList.isEmpty()) {
 				int total_rec = reportList.size();
@@ -310,12 +329,15 @@ public class CustomizedReportServicesImpl implements CustomizedReportServices {
 		} catch (Exception e) {
 			logger.error(user.getSystemId(), e.fillInStackTrace());
 		}
-		return null;
+		return target;
 	}
 
 	@Override
-	public List<DeliveryDTO> CustomizedReportpdf(String username, CustomReportForm customReportForm,
-			HttpServletResponse response) {
+	public String CustomizedReportpdf(String username, CustomReportForm customReportForm,
+			HttpServletResponse response,String lang) {
+
+		String target = IConstants.SUCCESS_KEY;
+		
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
@@ -328,6 +350,8 @@ public class CustomizedReportServicesImpl implements CustomizedReportServices {
 		
 		
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm,username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(username + " ReportSize[pdf]:" + reportList.size());
@@ -364,8 +388,10 @@ public class CustomizedReportServicesImpl implements CustomizedReportServices {
 		
 		}
 		
-		return null;
+		return target;
 	}
+
+
 
 
 }

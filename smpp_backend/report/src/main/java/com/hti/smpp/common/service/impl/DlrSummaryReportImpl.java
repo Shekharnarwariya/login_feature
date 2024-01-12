@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -19,11 +20,13 @@ import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.request.CustomReportForm;
 import com.hti.smpp.common.response.DeliveryDTO;
 import com.hti.smpp.common.sales.repository.SalesRepository;
-import com.hti.smpp.common.service.DlrSummaryReport;
+
+import com.hti.smpp.common.service.DlrSummaryReportService;
 import com.hti.smpp.common.service.UserDAService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.IConstants;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -36,7 +39,7 @@ import net.sf.jasperreports.engine.export.ooxml.JRDocxExporter;
 import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
 
 @Service
-public class DlrSummaryReportImpl implements DlrSummaryReport {
+public class DlrSummaryReportImpl implements DlrSummaryReportService {
 
 	private static final Logger logger = LoggerFactory.getLogger(DlrSummaryReportImpl.class);
 
@@ -51,9 +54,11 @@ public class DlrSummaryReportImpl implements DlrSummaryReport {
 
 	@Autowired
 	private UserDAService userService;
+	
+	Locale locale=null;
 
 	@Override
-	public List<DeliveryDTO> DlrSummaryReportview(String username, CustomReportForm customReportForm) {
+	public List<DeliveryDTO> DlrSummaryReportview(String username, CustomReportForm customReportForm,String lang) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
@@ -66,6 +71,8 @@ public class DlrSummaryReportImpl implements DlrSummaryReport {
 		String target = IConstants.SUCCESS_KEY;
 
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			List<DeliveryDTO> reportList = dataBase.getDlrReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(user + " ReportSize[View]:" + reportList.size());
@@ -86,8 +93,8 @@ public class DlrSummaryReportImpl implements DlrSummaryReport {
 	}
 
 	@Override
-	public List<DeliveryDTO> DlrSummaryReportdoc(String username, CustomReportForm customReportForm,
-			HttpServletResponse response) {
+	public String DlrSummaryReportdoc(String username, CustomReportForm customReportForm,
+			HttpServletResponse response,String lang) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
@@ -100,6 +107,8 @@ public class DlrSummaryReportImpl implements DlrSummaryReport {
 		String target = IConstants.SUCCESS_KEY;
 
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			List<DeliveryDTO> reportList = dataBase.getDlrReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(username + " ReportSize[doc]:" + reportList.size());
@@ -135,11 +144,13 @@ public class DlrSummaryReportImpl implements DlrSummaryReport {
 	}
 
 	@Override
-	public List<DeliveryDTO> DlrSummaryReportdpdf(String username, CustomReportForm customReportForm,
-			HttpServletResponse response) {
+	public String DlrSummaryReportdpdf(String username, CustomReportForm customReportForm,
+			HttpServletResponse response,String lang) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			List<DeliveryDTO> reportList = dataBase.getDlrReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(username + " ReportSize[pdf]:" + reportList.size());
@@ -171,12 +182,12 @@ public class DlrSummaryReportImpl implements DlrSummaryReport {
 		} catch (Exception e) {
 			logger.error(username, e.fillInStackTrace());
 		}
-		return null;
+		return target;
 	}
 
 	@Override
-	public List<DeliveryDTO> DlrSummaryReportdxls(String username, CustomReportForm customReportForm,
-			HttpServletResponse response) {
+	public String DlrSummaryReportdxls(String username, CustomReportForm customReportForm,
+			HttpServletResponse response,String lang) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
@@ -189,6 +200,8 @@ public class DlrSummaryReportImpl implements DlrSummaryReport {
 		String target = IConstants.SUCCESS_KEY;
 
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			List<DeliveryDTO> reportList = dataBase.getDlrReportList(customReportForm,username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(username + " ReportSize[xls]:" + reportList.size());
@@ -222,7 +235,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReport {
 			logger.error(username, e.fillInStackTrace());
 //		message = new ActionMessage("error.processError");
 		}
-		return null;
+		return target;
 	}
 
 }

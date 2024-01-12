@@ -13,16 +13,16 @@ import jakarta.servlet.http.HttpServletResponse;
 @Service
 public interface CustomizedReportServices {
 ///////////////////// CustomizedReport////////////////////////
-	public List<DeliveryDTO> CustomizedReportView(String username, CustomReportForm customReportForm);
+	public List<DeliveryDTO> CustomizedReportView(String username, CustomReportForm customReportForm,String lang);
 
-	public List<DeliveryDTO> CustomizedReportdoc(String username, CustomReportForm customReportForm,
-			HttpServletResponse response);
+	public String CustomizedReportdoc(String username, CustomReportForm customReportForm,
+			HttpServletResponse response,String lang);
 
-	public List<DeliveryDTO> CustomizedReportxls(String username, CustomReportForm customReportForm,
-			HttpServletResponse response);
+	public String CustomizedReportxls(String username, CustomReportForm customReportForm,
+			HttpServletResponse response,String lang);
 
-	public List<DeliveryDTO> CustomizedReportpdf(String username, CustomReportForm customReportForm,
-			HttpServletResponse response);
+	public String CustomizedReportpdf(String username, CustomReportForm customReportForm,
+			HttpServletResponse response,String lang);
 	
 //	public List<UserEntryExt> CustomizedReportDetails(String username, CustomReportForm customReportForm,
 //			HttpServletResponse response);

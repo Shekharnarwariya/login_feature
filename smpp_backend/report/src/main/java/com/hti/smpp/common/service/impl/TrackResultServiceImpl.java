@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -23,6 +24,7 @@ import com.hti.smpp.common.dto.SmscInDTO;
 import com.hti.smpp.common.request.CustomReportForm;
 import com.hti.smpp.common.response.TrackResultResponse;
 import com.hti.smpp.common.service.TrackResultService;
+import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.IConstants;
 
 @Service
@@ -34,9 +36,11 @@ public class TrackResultServiceImpl implements TrackResultService {
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
 	}
+	Locale locale =null;
+	
 
 	@Override
-	public TrackResultResponse TrackResultReport(String username, CustomReportForm customReportForm) {
+	public TrackResultResponse TrackResultReport(String username, CustomReportForm customReportForm,String lang) {
 		TrackResultResponse trackResultResponse = new TrackResultResponse();
 		String target = IConstants.SUCCESS_KEY;
 		String req_msgid = "-", req_user = "-", req_time = "-", req_dest = "-", req_sender = "-", req_status = "-",
@@ -47,6 +51,8 @@ public class TrackResultServiceImpl implements TrackResultService {
 		String misSQL = "";
 		boolean and = false;
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			if (customReportForm.getMessageId() != null && customReportForm.getMessageId().length() > 0) {
 				if (customReportForm.getMessageId().contains(",")) {
 					String messageid = "";

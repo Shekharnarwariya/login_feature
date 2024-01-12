@@ -34,6 +34,8 @@ public class UserDAServiceImpl implements UserDAService {
 		logger.info("ProfessionEntries: " + GlobalVars.ProfessionEntries.size());
 		logger.info("WebmasterEntries: " + GlobalVars.WebmasterEntries.size());
 		logger.info("DlrSettingEntries: " + GlobalVars.DlrSettingEntries.size());
+		
+		
 	}
 
 //	@Override
@@ -212,15 +214,15 @@ public class UserDAServiceImpl implements UserDAService {
 //		}
 //	}
 //
-//	@Override
-//	public UserEntry getUserEntry(int userid) {
-//		logger.debug("getUserEntry(" + userid + ")");
-//		if (GlobalVars.UserEntries.containsKey(userid)) {
-//			return GlobalVars.UserEntries.get(userid);
-//		} else {
-//			return null;
-//		}
-//	}
+	
+	public UserEntry getUserEntry(int userid) {
+		logger.debug("getUserEntry(" + userid + ")");
+		if (GlobalVars.UserEntries.containsKey(userid)) {
+			return GlobalVars.UserEntries.get(userid);
+		} else {
+			return null;
+		}
+	}
 //
 //	@Override
 //	public UserEntry getUserEntry(String systemid) {
@@ -309,11 +311,7 @@ public class UserDAServiceImpl implements UserDAService {
 		return sortedMap;
 	}
 
-//	@Override
-//	public Map<Integer, UserEntryExt> listUserEntryUnderSeller(int seller) {
-//		// TODO Auto-generated method stub
-//		return null;
-//	}
+
 
 	// ----------- list Entries -----------------------
 //	@Override

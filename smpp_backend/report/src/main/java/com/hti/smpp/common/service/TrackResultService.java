@@ -8,5 +8,5 @@ import com.hti.smpp.common.response.TrackResultResponse;
 @Service
 public interface TrackResultService {
 
-	public TrackResultResponse TrackResultReport(String username, CustomReportForm customReportForm);
+	public TrackResultResponse TrackResultReport(String username, CustomReportForm customReportForm,String lang);
 }

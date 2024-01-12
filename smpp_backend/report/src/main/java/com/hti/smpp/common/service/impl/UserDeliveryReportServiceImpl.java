@@ -34,6 +34,7 @@ import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.request.CustomReportForm;
 import com.hti.smpp.common.response.DeliveryDTO;
 import com.hti.smpp.common.service.UserDeliveryReportService;
+import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 
@@ -67,13 +68,15 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
 	}
+	
 
 	@Override
-	public List<DeliveryDTO> UserDeliveryReportView(String username, CustomReportForm customReportForm) {
+	public List<DeliveryDTO> UserDeliveryReportView(String username, CustomReportForm customReportForm,String lang) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
-
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			List<DeliveryDTO> reportList = getReportList(customReportForm);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
@@ -91,10 +94,12 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 
 	@Override
 	public String UserDeliveryReportxls(String username, CustomReportForm customReportForm,
-			HttpServletResponse response) {
+			HttpServletResponse response,String lang) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			List<DeliveryDTO> reportList = getReportList(customReportForm);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
@@ -134,10 +139,12 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 
 	@Override
 	public String UserDeliveryReportPdf(String username, CustomReportForm customReportForm,
-			HttpServletResponse response) {
+			HttpServletResponse response,String lang) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			List<DeliveryDTO> reportList = getReportList(customReportForm);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
@@ -174,10 +181,12 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 
 	@Override
 	public String UserDeliveryReportDoc(String username, CustomReportForm customReportForm,
-			HttpServletResponse response) {
+			HttpServletResponse response,String lang) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
+			locale = Customlocale.getLocaleByLanguage(lang); ;
+			
 			List<DeliveryDTO> reportList = getReportList(customReportForm);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
