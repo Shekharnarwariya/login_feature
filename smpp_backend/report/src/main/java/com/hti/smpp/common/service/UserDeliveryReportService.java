@@ -12,11 +12,16 @@ import jakarta.servlet.http.HttpServletResponse;
 @Service
 public interface UserDeliveryReportService {
 
-	public List<DeliveryDTO> UserDeliveryReportView(String username, CustomReportForm customReportForm);
+	public List<DeliveryDTO> UserDeliveryReportView(String username, CustomReportForm customReportForm,String lang);
 
-	public String UserDeliveryReportxls(String username, CustomReportForm customReportForm, HttpServletResponse response);
+	public String UserDeliveryReportxls(String username, CustomReportForm customReportForm, HttpServletResponse response,String lang);
 
-	public String UserDeliveryReportPdf(String username, CustomReportForm customReportForm, HttpServletResponse response);
+	public String UserDeliveryReportPdf(String username, CustomReportForm customReportForm, HttpServletResponse response,String lang);
 
-	public String UserDeliveryReportDoc(String username, CustomReportForm customReportForm, HttpServletResponse response);
+	public String UserDeliveryReportDoc(String username, CustomReportForm customReportForm, HttpServletResponse response,String lang);
+	
+	///////////////////////////DownloadAPI//////////////////
+	
+	
+	
 }

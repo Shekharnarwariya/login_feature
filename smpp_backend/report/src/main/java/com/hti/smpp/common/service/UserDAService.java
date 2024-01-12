@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.dto.UserEntryExt;
+import com.hti.smpp.common.user.dto.UserEntry;
 
 @Service
 public interface UserDAService {
@@ -99,6 +100,8 @@ public interface UserDAService {
 //	public void updateOTPEntry(OTPEntry entry);
 //
 //	public OTPEntry getOTPEntry(String systemId);
+
+	public UserEntry getUserEntry(int userId);
 
 	// ------ user limit --------
 //	public UserLimitEntry getLimitEntry(int userId);
