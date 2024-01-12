@@ -1,7 +1,5 @@
 package com.hti.smpp.common.request;
 
-import java.util.List;
-
 public class BulkContactRequest {
 	private String senderId;
 	private String destinationNumber;
@@ -29,6 +27,22 @@ public class BulkContactRequest {
 	private String peId;
 	private String templateId;
 	private String telemarketerId;
+
+	private int groupId;
+
+	/**
+	 * @return the groupId
+	 */
+	public int getGroupId() {
+		return groupId;
+	}
+
+	/**
+	 * @param groupId the groupId to set
+	 */
+	public void setGroupId(int groupId) {
+		this.groupId = groupId;
+	}
 
 	/**
 	 * @return the senderId

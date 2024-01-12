@@ -10,6 +10,7 @@ import java.io.Writer;
 import java.math.BigInteger;
 
 import org.springframework.stereotype.Component;
+
 @Component
 public class SmsConverter {
 
@@ -585,4 +586,46 @@ public class SmsConverter {
 		}
 		return msg;
 	}
+
+	/*
+	 * It is a just part(piece of code) of above functionality(method),
+	 */
+	public static String uniHexToCharMsg(String msg) {
+		if (msg == null || msg.length() == 0) {
+			msg = "0020";
+		}
+		boolean reqNULL = false;
+		byte[] charsByt, var;
+		int x = 0;
+		try {
+			if (msg.substring(0, 2).compareTo("00") == 0) {
+				reqNULL = true;
+			}
+			charsByt = new BigInteger(msg, 16).toByteArray();
+			if (charsByt[0] == '\0') {
+				var = new byte[charsByt.length - 1];
+				for (int q = 1; q < charsByt.length; q++) {
+					var[q - 1] = charsByt[q];
+				}
+				charsByt = var;
+			}
+			if (reqNULL) {
+				var = new byte[charsByt.length + 1];
+				x = 0;
+				var[0] = '\0';
+				reqNULL = false;
+			} else {
+				var = new byte[charsByt.length];
+				x = -1;
+			}
+			for (int l = 0; l < charsByt.length; l++) {
+				var[++x] = charsByt[l];
+			}
+			msg = new String(var, "UTF-16");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return msg;
+	}
+	
 }

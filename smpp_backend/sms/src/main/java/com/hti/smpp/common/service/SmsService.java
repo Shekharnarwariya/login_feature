@@ -24,4 +24,6 @@ public interface SmsService {
 			HttpSession session);
 
 	public ResponseEntity<?> sendSmsByContacts(BulkContactRequest bulkContactRequest, String username);
+
+	public ResponseEntity<?> sendSmsGroupData(BulkContactRequest bulkContactRequest, String username);
 }
