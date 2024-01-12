@@ -10,13 +10,15 @@ import com.hti.smpp.common.contacts.dto.GroupDataEntry;
 
 @Repository
 public interface GroupDataEntryRepository extends JpaRepository<GroupDataEntry, Integer> {
-	
+
 	public List<GroupDataEntry> findByGroupIdAndProfessionInAndCompanyInAndAreaInAndGenderInAndNumberInAndAgeBetween(
-	        int groupId, List<String> profession, List<String> company, List<String> area,
-	        List<String> gender, List<Long> number, int minAge, int maxAge);
-	
+			int groupId, List<String> profession, List<String> company, List<String> area, List<String> gender,
+			List<Long> number, int minAge, int maxAge);
+
 	public List<GroupDataEntry> findByGroupId(int groupId);
-	
+
 	public long countByGroupId(int groupId);
+
+	public List<GroupDataEntry> findByNumberInAndGroupId(Long[] numbers, Integer groupId);
 
 }

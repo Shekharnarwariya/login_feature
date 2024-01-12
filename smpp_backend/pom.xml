@@ -26,6 +26,7 @@
 		<module>bsfm</module>
 		<module>common</module>
 		<module>discoveryserver</module>
+		<module>dlt</module>
 		<module>hlr-smsc</module>
 		<module>login-service</module>
 		<module>personalservice</module>

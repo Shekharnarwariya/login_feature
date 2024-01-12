@@ -17,7 +17,7 @@ public class DltTemplEntry {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id", length = 15)
 	private int id;
-	@Column(name = "template")
+	@Column(name = "template", columnDefinition = "VARCHAR(5000)")
 	private String template;
 	@Column(name = "temp_id", length = 20)
 	private String templateId;

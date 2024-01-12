@@ -1,6 +1,5 @@
 package com.hti.smpp.common.services.impl;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,6 +35,7 @@ import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.network.repository.NetworkEntryRepository;
 import com.hti.smpp.common.request.MccMncForm;
 import com.hti.smpp.common.request.MccMncUpdateForm;
+import com.hti.smpp.common.response.AddResponse;
 import com.hti.smpp.common.response.MncMccTokens;
 import com.hti.smpp.common.services.NetworkService;
 import com.hti.smpp.common.user.dto.UserEntry;
@@ -52,45 +52,38 @@ public class NetworkServiceImpl implements NetworkService {
 
 	private final Logger logger = LoggerFactory.getLogger(NetworkServiceImpl.class);
 
-	@Autowired
-	private FileDataParser fileDataParser;
-
-	@Autowired
-	private FileContentGenerator contentGenerator;
 
 	@Autowired
 	private NetworkEntryRepository networkEntryRepo;
-	
+
 	@Autowired
 	private UserEntryRepository userRepository;
 
 	@Value("${file.dir}")
 	private String filePath;
-
+	
+	/**
+     * Adds a new network entry to the network.
+     *
+     * @param formMccMnc JSON-formatted MccMncForm data
+     * @param file       Optional file in .xls format to be associated with the entry
+     * @param username   Username of the user making the request
+     * @return ResponseEntity containing the result of the operation
+     */
 	@Override
-	public ResponseEntity<String> addNewMccMnc(String formMccMnc, MultipartFile file, String username) {
-		
+	public ResponseEntity<?> addNewMccMnc(String formMccMnc, MultipartFile file, String username) {
+
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
-		MccMncForm form;
-		try {
-			ObjectMapper objectMapper = new ObjectMapper();
-			form = objectMapper.readValue(formMccMnc, MccMncForm.class);
-			form.setListfile(file);
-		} catch (JsonProcessingException e) {
-			throw new JsonProcessingError("JsonProccessingError: " + e.getLocalizedMessage());
-		} catch (Exception ex) {
-			throw new InternalServerException("Error: " + ex.getLocalizedMessage());
-		}
+
 		String target = null;
 		MccMncDTO mccMncDTO = new MccMncDTO();
 		ArrayList<MccMncDTO> mccmncList = new ArrayList<>();
@@ -98,21 +91,40 @@ public class NetworkServiceImpl implements NetworkService {
 		String checkInsertion = "";
 		int id = 0, count = 0;
 		Iterator<MccMncDTO> iterator = null;
+		String response = "";
+		AddResponse addResponse = new AddResponse();
 		try {
-			BeanUtils.copyProperties(form, mccMncDTO);
-			mccMncDTO.setListfile(form.getListfile());
-			checkInsertion = mccMncDTO.getCheckMcc();
-			if (checkInsertion.equalsIgnoreCase("single")) {
-				id = checkDuplicateMccMnc(mccMncDTO);
-				if (id == 0) {
-					mccmncList.add(mccMncDTO);
-				} else {
-					mccMncDTO.setId(id);
-					replaceList.add(mccMncDTO);
+
+			if (formMccMnc != null) {
+
+				MccMncForm form;
+				try {
+					ObjectMapper objectMapper = new ObjectMapper();
+					form = objectMapper.readValue(formMccMnc, MccMncForm.class);
+				} catch (JsonProcessingException e) {
+					throw new JsonProcessingError("JsonProccessingError: " + e.getLocalizedMessage());
+				} catch (Exception ex) {
+					throw new InternalServerException("Error: " + ex.getLocalizedMessage());
 				}
+
+				BeanUtils.copyProperties(form, mccMncDTO);
+				checkInsertion = mccMncDTO.getCheckMcc();
+				if (checkInsertion.equalsIgnoreCase("single")) {
+					id = checkDuplicateMccMnc(mccMncDTO);
+					if (id == 0) {
+						mccmncList.add(mccMncDTO);
+					} else {
+						mccMncDTO.setId(id);
+						replaceList.add(mccMncDTO);
+					}
+				} else {
+					throw new InternalServerException("Check Mcc not selected to single");
+				}
+
 			} else {
 				MccMncDTO mccMncDTOC = null;
-				ArrayList<MccMncDTO> tempList = fileDataParser.getMccMncList(mccMncDTO.getListfile());
+				FileDataParser fileDataParser = new FileDataParser();
+				ArrayList<MccMncDTO> tempList = fileDataParser.getMccMncList(file);
 				System.out.println("TempList Size: " + tempList.size());
 				iterator = tempList.iterator();
 				while (iterator.hasNext()) {
@@ -127,58 +139,93 @@ public class NetworkServiceImpl implements NetworkService {
 				}
 			}
 			if (mccmncList.size() > 0) {
-				int totalRecord = mccmncList.size();
-				int remained = 0;
+				Integer totalRecord = mccmncList.size();
+				Integer remained = 0;
 				count = insertMccMnc(mccmncList);
 				if (count == totalRecord) {
 					target = IConstants.SUCCESS_KEY;
 					logger.info("message: DBUploadSuccess");
 					// request.setAttribute("param_value", count + "");
 					logger.info("param_value", count + "");
+					response = "Network Entry Saved Successful! Total record inserted: " + count;
+					addResponse.setResponseMessage(response);
+					addResponse.setTotalRecords(count);
 				} else {
 					remained = totalRecord - count;
 					target = IConstants.FAILURE_KEY;
 					logger.error("message: DBEntryFailure");
 					// request.setAttribute("param_value", remained + "");
 					logger.info("param_value", remained + "");
+					addResponse.setTotalRecords(remained);
+					addResponse.setResponseMessage("DBEntry Failure. Remaining: " + remained);;
+					return new ResponseEntity<>(addResponse, HttpStatus.INTERNAL_SERVER_ERROR);
 				}
 			}
 			if (replaceList.size() > 0) {
 				target = "replace";
-				String param_message = "Total Inserted Records : " + count;
+				response = "Duplicate Entry Found! Total No. Of Duplicate Record: " + replaceList.size();
+				String param_message = "Total Records : " + count+"."+response;
 				logger.error("error: record duplicate");
 				// request.setAttribute("param_message", param_message);
 				logger.error("param_message", param_message);
+				addResponse.setResponseMessage(param_message);
 				// request.setAttribute("list", replaceList);
 				logger.error("list", replaceList);
+				addResponse.setList(replaceList);
 				// request.setAttribute("totalRecords", replaceList.size() + "");
 				logger.error("totalRecords", replaceList.size() + "");
+				addResponse.setTotalRecords(replaceList.size());
+				return new ResponseEntity<>(addResponse,HttpStatus.CONFLICT);
 			}
 			MultiUtility.changeFlag(Constants.NETWORK_FLAG_FILE, "707");
 		} catch (Exception e) {
-			throw new InternalServerException(e.getLocalizedMessage());
+			logger.error("Error: " + e.getLocalizedMessage());
+			throw new InternalServerException(e.getMessage());
 		}
-		return new ResponseEntity<>(target, HttpStatus.CREATED);
+		return new ResponseEntity<>(addResponse, HttpStatus.CREATED);
 	}
 
-	private Integer checkDuplicateMccMnc(MccMncDTO mccMncDTO) {
+	private int checkDuplicateMccMnc(MccMncDTO mccMncDTO) {
+		int id = 0;
 		String mcc = mccMncDTO.getMcc();
-		List<Integer> mncList = extractMncList(mccMncDTO.getMnc());
+		List<String> mncList = extractMncList(mccMncDTO.getMnc());
+		boolean flag = false;
 
-		List<Integer> duplicateIds = this.networkEntryRepo.checkDuplicateMccMnc(mcc, mncList);
+		List<NetworkEntry> l = this.networkEntryRepo.findByMcc(mcc);
 
-		return duplicateIds.isEmpty() ? 0 : duplicateIds.get(0);
+		for (NetworkEntry ne : l) {
+			String mnc = ne.getMnc();
+			if (mnc.contains(",")) {
+				String[] mncArray = mnc.split(",");
+				for (String m : mncArray) {
+					if (mncList.contains(m)) {
+						flag = true;
+						break;
+					}
+				}
+			} else {
+				if (mncList.contains(mnc)) {
+					flag = true;
+				}
+			}
+			if (flag) {
+				id = ne.getId();
+				break;
+			}
+		}
+
+		return id;
 	}
 
-	private List<Integer> extractMncList(String mnc) {
-		List<Integer> mncList = new ArrayList<>();
+	private List<String> extractMncList(String mnc) {
+		List<String> mncList = new ArrayList<>();
 
 		if (mnc.contains(",")) {
 			String[] mncArray = mnc.split(",");
 			for (String mncValue : mncArray) {
 				try {
-					int intMnc = Integer.parseInt(mncValue.trim());
-					mncList.add(intMnc);
+//					Integer intMnc = Integer.parseInt(mncValue.trim());
+					mncList.add(mncValue);
 				} catch (NumberFormatException e) {
 					logger.error(e.toString());
 					throw new NumberFormatError(e.getLocalizedMessage());
@@ -189,8 +236,8 @@ public class NetworkServiceImpl implements NetworkService {
 			}
 		} else {
 			try {
-				int intMnc = Integer.parseInt(mnc.trim());
-				mncList.add(intMnc);
+//				Integer intMnc = Integer.parseInt(mnc.trim());
+				mncList.add(mnc);
 			} catch (NumberFormatException e) {
 				logger.error(e.toString());
 				throw new NumberFormatError(e.getLocalizedMessage());
@@ -203,32 +250,41 @@ public class NetworkServiceImpl implements NetworkService {
 		return mncList;
 	}
 
-	private int insertMccMnc(ArrayList<MccMncDTO> list) {
+	private Integer insertMccMnc(ArrayList<MccMncDTO> list) {
 		NetworkEntry networkEntry = null;
-		int count = 0;
+		Integer count = 0;
 		for (MccMncDTO data : list) {
-			new NetworkEntry(data.getCountry(), data.getOperator(), data.getMcc().trim(), data.getMnc().trim(),
-					Integer.parseInt(data.getCc()), data.getPrefix().trim());
+
+			networkEntry = new NetworkEntry(data.getCountry(), data.getOperator(), data.getMcc().trim(),
+					data.getMnc().trim(), Integer.parseInt(data.getCc()), data.getPrefix().trim());
 			this.networkEntryRepo.save(networkEntry);
 			count++;
 		}
 		return count;
 	}
-
+	
+	
+	/**
+     * Updates an existing network entry in the network.
+     *
+     * @param form     JSON-formatted MccMncUpdateForm data
+     * @param username Username of the user making the request
+     * @return ResponseEntity containing the result of the operation
+     */
 	@Override
 	public ResponseEntity<String> replace(MccMncUpdateForm form, String username) {
-		
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+
+		Optional<UserEntry> userOptional = this.userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
+		String response = "";
 		String target = null;
 		MccMncUpdateDTO updateDTO = new MccMncUpdateDTO();
 		MccMncDTO mncDTO = null;
@@ -261,6 +317,7 @@ public class NetworkServiceImpl implements NetworkService {
 				// request.setAttribute("param_value", count + "");
 				logger.info("param_value", count + "");
 				target = IConstants.SUCCESS_KEY;
+				response = "Update Successful. Total Updated Records: " + count;
 				MultiUtility.changeFlag(Constants.NETWORK_FLAG_FILE, "707");
 			} else {
 				logger.error("error: record unavailable");
@@ -271,7 +328,7 @@ public class NetworkServiceImpl implements NetworkService {
 		} catch (NotFoundException e) {
 			logger.error("error: processError");
 			target = IConstants.FAILURE_KEY;
-			logger.error("Exception:ReplaceMccMncAction(1)::" + e);
+			logger.error("Exception:ReplaceMccMnc:" + e);
 			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error("error: processError");
@@ -279,50 +336,63 @@ public class NetworkServiceImpl implements NetworkService {
 			logger.error("Exception:ReplaceMccMncAction(1)::" + e);
 			throw new InternalServerException(e.getLocalizedMessage());
 		}
-		return new ResponseEntity<String>(target, HttpStatus.CREATED);
+		return new ResponseEntity<String>(response, HttpStatus.CREATED);
 	}
 
 	public int updateMccMnc(ArrayList<MccMncDTO> list) {
 		int count = 0;
 		NetworkEntry entry = null;
 		for (MccMncDTO data : list) {
-			entry = this.networkEntryRepo.findById(data.getId())
-					.orElseThrow(() -> new NotFoundException("Network entry not found!"));
-			entry.setCc(Integer.parseInt(data.getCc()));
-			entry.setCountry(data.getCountry());
-			entry.setOperator(data.getOperator());
-			entry.setMcc(data.getMcc());
-			entry.setMnc(data.getMnc());
-			entry.setPrefix(data.getPrefix());
-			entry.setId(data.getId());
-			this.networkEntryRepo.save(entry);
-			count++;
+			boolean isPresent = this.networkEntryRepo.existsById(data.getId());
+			if(isPresent) {
+				entry = new NetworkEntry();
+				entry.setCc(Integer.parseInt(data.getCc()));
+				entry.setCountry(data.getCountry());
+				entry.setOperator(data.getOperator());
+				entry.setMcc(data.getMcc());
+				entry.setMnc(data.getMnc());
+				entry.setPrefix(data.getPrefix());
+				entry.setId(data.getId());
+				this.networkEntryRepo.save(entry);
+				count++;
+			}else {
+				throw new NotFoundException("Network Entry not found with id: "+data.getId());
+			}
 		}
 		return count;
 	}
-
+	
+	/**
+     * Deletes network entries by their IDs.
+     *
+     * @param ids      List of IDs of the entries to be deleted
+     * @param username Username of the user making the request
+     * @return ResponseEntity containing the result of the operation
+     */
 	@Override
 	@Transactional
 	public ResponseEntity<String> delete(List<Integer> ids, String username) {
-		
+
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
+
 		int count = ids.size();
 		String target = null;
+		String response = "";
 		try {
 			if (!ids.isEmpty()) {
 				this.networkEntryRepo.deleteByIdIn(ids);
 				logger.info("Deleted Records: " + count);
 				target = IConstants.SUCCESS_KEY;
+				response = "Deleted Successfully! Deleted Records: " + count;
 				MultiUtility.changeFlag(Constants.NETWORK_FLAG_FILE, "707");
 			} else {
 				logger.error("error: record unavailable");
@@ -336,23 +406,37 @@ public class NetworkServiceImpl implements NetworkService {
 			throw new InternalServerException(ex.getLocalizedMessage());
 		}
 
-		return new ResponseEntity<String>(target, HttpStatus.OK);
+		return new ResponseEntity<String>(response, HttpStatus.OK);
 	}
-
+	
+	
+	/**
+     * Searches for network entries based on specified parameters.
+     *
+     * @param ccReq          Country Code parameter
+     * @param mccReq         MCC (Mobile Country Code) parameter
+     * @param mncReq         MNC (Mobile Network Code) parameter
+     * @param checkCountryReq Check Country parameter
+     * @param checkMccReq     Check MCC parameter
+     * @param checkMncReq     Check MNC parameter
+     * @param username       Username of the user making the request
+     * @return ResponseEntity containing a list of MccMncDTO objects
+     */
 	@Override
-	public ResponseEntity<List<MccMncDTO>> search(String ccReq, String mccReq, String mncReq, String checkCountryReq, String checkMccReq, String checkMncReq, String username) {
-		
+	public ResponseEntity<List<MccMncDTO>> search(String ccReq, String mccReq, String mncReq, String checkCountryReq,
+			String checkMccReq, String checkMncReq, String username) {
+
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
+
 		String target = null;
 		String checkCountry = "", checkMcc = "", checkMnc = "";
 		String cc = "%", mcc = "%", mnc = "%";
@@ -421,21 +505,35 @@ public class NetworkServiceImpl implements NetworkService {
 
 		return list;
 	}
-
+	
+	
+	/**
+     * Downloads a file based on specified parameters.
+     *
+     * @param ccReq          Country Code parameter
+     * @param mccReq         MCC (Mobile Country Code) parameter
+     * @param mncReq         MNC (Mobile Network Code) parameter
+     * @param checkCountryReq Check Country parameter
+     * @param checkMccReq     Check MCC parameter
+     * @param checkMncReq     Check MNC parameter
+     * @param username       Username of the user making the request
+     * @return ResponseEntity containing the file data
+     */
 	@Override
-	public ResponseEntity<byte[]> download(String ccReq, String mccReq, String mncReq, String checkCountryReq, String checkMccReq, String checkMncReq, String username) {
-		
+	public ResponseEntity<byte[]> download(String ccReq, String mccReq, String mncReq, String checkCountryReq,
+			String checkMccReq, String checkMncReq, String username) {
+
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
+
 		String target = null;
 		String checkCountry = "", checkMcc = "", checkMnc = "";
 		String cc = "%", mcc = "%", mnc = "%";
@@ -468,7 +566,8 @@ public class NetworkServiceImpl implements NetworkService {
 				fileName = "mccmnc_database_" + cc + ".xls";
 			}
 			String file = this.filePath + fileName;
-			this.contentGenerator.createMccMncContent(list, file);
+			FileContentGenerator contentGenerator = new FileContentGenerator();
+			contentGenerator.createMccMncContent(list, file);
 			logger.info("<---- Preparing for Download ---> ");
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
@@ -482,12 +581,12 @@ public class NetworkServiceImpl implements NetworkService {
 			}
 
 			// Delete the file after download
-			boolean deleted = new File(file).delete();
-			if (deleted) {
-				logger.info("Deleted File => " + file);
-			} else {
-				logger.error("Unable to Delete File => " + file);
-			}
+//			boolean deleted = new File(file).delete();
+//			if (deleted) {
+//				logger.info("Deleted File => " + file);
+//			} else {
+//				logger.error("Unable to Delete File => " + file);
+//			}
 
 			return ResponseEntity.ok().headers(headers).body(fileBytes);
 
@@ -516,21 +615,27 @@ public class NetworkServiceImpl implements NetworkService {
 		}
 		return networkList;
 	}
-
+	
+	/**
+     * Retrieves the NetworkMap of Country and CC from all NetworkEntry.
+     *
+     * @param username Username of the user making the request
+     * @return ResponseEntity containing the result of the operation
+     */
 	@Override
 	public ResponseEntity<?> editMccMnc(String username) {
-		
+
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
+
 		String target = null;
 		Map<String, String> networkmap = new HashMap<>();
 		try {
@@ -540,75 +645,73 @@ public class NetworkServiceImpl implements NetworkService {
 				networkmap.put(network.getCountry(), network.getCc());
 			}
 			if (!networkmap.isEmpty()) {
-                target = IConstants.SUCCESS_KEY;
-                return ResponseEntity.ok(networkmap);
-            } else {
-                logger.error("error: record unavailable");
-                target = IConstants.FAILURE_KEY;
-                throw new NotFoundException("No record found in network map!");
-            }
+				target = IConstants.SUCCESS_KEY;
+				return ResponseEntity.ok(networkmap);
+			} else {
+				logger.error("error: record unavailable");
+				target = IConstants.FAILURE_KEY;
+				throw new NotFoundException("No record found in network map!");
+			}
 		} catch (NotFoundException e) {
 			logger.error(e.toString());
 			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
 			target = IConstants.FAILURE_KEY;
-			logger.error(target,e.toString());
+			logger.error(target, e.toString());
 			throw new InternalServerException(e.getLocalizedMessage());
 		}
-		
-	}
 
+	}
+	
+	
+	/**
+     * Updates existing network entries by uploading a file.
+     *
+     * @param file     File containing the updated data
+     * @param username Username of the user making the request
+     * @return ResponseEntity containing the result of the operation
+     */
 	@Override
-	public ResponseEntity<?> uploadUpdateMccMnc(String formMccMnc, MultipartFile file, String username) {
-		
+	public ResponseEntity<?> uploadUpdateMccMnc(MultipartFile file, String username) {
+
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
-		MccMncForm mccMncForm;
-		try {
-			ObjectMapper objectMapper = new ObjectMapper();
-			mccMncForm = objectMapper.readValue(formMccMnc, MccMncForm.class);
-			mccMncForm.setListfile(file);
-		} catch (JsonProcessingException e) {
-			throw new JsonProcessingError("JsonProccessingError: " + e.getLocalizedMessage());
-		} catch (Exception ex) {
-			throw new InternalServerException("Error: " + ex.getLocalizedMessage());
-		}
+		String response = "";
 		String target = null;
 		int count = 0;
-		MccMncDTO mccMncDTO = new MccMncDTO();
 		try {
-			BeanUtils.copyProperties(mccMncForm, mccMncDTO);
-			mccMncDTO.setListfile(mccMncForm.getListfile());
-			ArrayList<MccMncDTO> tempList = this.fileDataParser.getMccMncList(mccMncDTO.getListfile());
+			FileDataParser fileDataParser = new FileDataParser();
+			ArrayList<MccMncDTO> tempList = fileDataParser.getMccMncList(file);
 			if (tempList.size() > 0) {
 				count = updateMccMnc(tempList);
 				if (tempList.size() == count) {
 					target = IConstants.SUCCESS_KEY;
 					logger.info("message.DBUpdateSuccess");
-					//request.setAttribute("param_value", count + "");
+					// request.setAttribute("param_value", count + "");
 					logger.info("param_value", count + "");
+					response = "Update Successful! Total Updated Records: " + count;
 				} else {
 					int remained = tempList.size() - count;
 					target = IConstants.FAILURE_KEY;
 					logger.error("message.DBUpdateFailure");
-					//request.setAttribute("param_value", remained + "");
+					// request.setAttribute("param_value", remained + "");
 					logger.error("param_value", remained + "");
+					response = "Update Failure With Remaining Records: " + remained;
 				}
 				MultiUtility.changeFlag(Constants.NETWORK_FLAG_FILE, "707");
 			} else {
 				target = IConstants.FAILURE_KEY;
 				logger.error(target, "Error fetching data or list is empty!");
 				throw new NotFoundException("No data found in MccMncDTO list!");
-			}	
+			}
 		} catch (NotFoundException e) {
 			logger.error(e.toString());
 			target = IConstants.FAILURE_KEY;
@@ -618,74 +721,84 @@ public class NetworkServiceImpl implements NetworkService {
 			target = IConstants.FAILURE_KEY;
 			throw new InternalServerException(e.getLocalizedMessage());
 		}
-		return new ResponseEntity<>(target, HttpStatus.CREATED);
+		return new ResponseEntity<>(response, HttpStatus.CREATED);
+	}
+
+	public List<String> getMNCList(String MCC) {
+		List<String> mncList = new ArrayList<>();
+
+		try {
+			List<Object[]> results = this.networkEntryRepo.findDistinctMNCAndOperatorByMCCLike(MCC);
+
+			for (Object[] result : results) {
+				String MNC = (String) result[0];
+				String operator = (String) result[1];
+
+				if (MNC != null && !MNC.isEmpty()) {
+					MNC = operator + "#" + MNC;
+					mncList.add(MNC);
+				}
+			}
+
+		} catch (Exception ex) {
+			throw new InternalServerException(ex.getLocalizedMessage());
+		}
+
+		return mncList;
 	}
 	
-	public List<String> getMNCList(String MCC) {
-        List<String> mncList = new ArrayList<>();
-
-        try {
-            List<Object[]> results = this.networkEntryRepo.findDistinctMNCAndOperatorByMCCLike(MCC);
-
-            for (Object[] result : results) {
-                String MNC = (String) result[0];
-                String operator = (String) result[1];
-
-                if (MNC != null && !MNC.isEmpty()) {
-                    MNC = operator + "#" + MNC;
-                    mncList.add(MNC);
-                }
-            }
-
-        } catch (Exception ex) {
-            throw new InternalServerException(ex.getLocalizedMessage());
-        }
-
-        return mncList;
-    }
-
+	
+	/**
+     * Retrieves MncMccTokens based on specified parameters.
+     *
+     * @param countryName Name of the country
+     * @param mccParam    MCC (Mobile Country Code) parameter
+     * @param username    Username of the user making the request
+     * @return ResponseEntity containing MncMccTokens
+     */
 	@Override
 	public ResponseEntity<MncMccTokens> findOption(String countryName, String mccParam, String username) {
-        
+
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		
+
 		String mcc = "", mccTokens = "";
-        String mnc = "", mncTokens = "";
-        Iterator<String> iterator = null;
-        MncMccTokens mncMccTokens = new MncMccTokens();
-        try {
-        	if (!(countryName.equals("NA"))) {
-        		List<String> mccList = this.networkEntryRepo.findDistinctMCCByCc(countryName);
-        		iterator = mccList.iterator();
-                while (iterator.hasNext()) {
-                    mcc = (String) iterator.next();
-                    mccTokens += mcc + ";";
-                }
-                mccTokens = mccTokens.substring(0, mccTokens.length() - 1);
-                mncMccTokens.setMccTokens(mccTokens);
-        	}
-        	if (!(mccParam.equals("NA"))) {
-                List<String> mncList = getMNCList(mccParam);
-                iterator = mncList.iterator();
-                while (iterator.hasNext()) {
-                    mnc = (String) iterator.next();
-                    mncTokens += mnc + ";";
-                }
-                mncTokens = mncTokens.substring(0, mncTokens.length() - 1);
-                mncMccTokens.setMncTokens(mncTokens);
-            }
-        } catch (Exception e) {
-        	throw new InternalServerException(e.getLocalizedMessage());
-        }
+		String mnc = "", mncTokens = "";
+		Iterator<String> iterator = null;
+		MncMccTokens mncMccTokens = new MncMccTokens();
+		try {
+			if (!(countryName.equals("NA"))) {
+				List<String> mccList = this.networkEntryRepo.findDistinctMCCByCc(countryName);
+				iterator = mccList.iterator();
+				while (iterator.hasNext()) {
+					mcc = (String) iterator.next();
+					mccTokens += mcc + ";";
+				}
+				mccTokens = mccTokens.substring(0, mccTokens.length() - 1);
+				mncMccTokens.setMccTokens(mccTokens);
+			}
+			if (!(mccParam.equals("NA"))) {
+				List<String> mncList = getMNCList(mccParam);
+				iterator = mncList.iterator();
+				while (iterator.hasNext()) {
+					mnc = (String) iterator.next();
+					mncTokens += mnc + ";";
+				}
+				mncTokens = mncTokens.substring(0, mncTokens.length() - 1);
+				mncMccTokens.setMncTokens(mncTokens);
+			}
+		} catch (Exception e) {
+			logger.error(e.toString());
+			throw new InternalServerException(e.getLocalizedMessage());
+		}
 		return ResponseEntity.ok(mncMccTokens);
 	}
 

@@ -6,7 +6,7 @@ import com.hti.smpp.common.request.BulkRequest;
 
 public class ObjectConverter {
 
-	public static BulkRequest jsonMapper(String request) {
+	public static BulkRequest jsonMapperBulkRequest(String request) {
 
 		BulkRequest bulkRequest = null;
 		try {
@@ -17,4 +17,5 @@ public class ObjectConverter {
 		}
 		return bulkRequest;
 	}
+
 }
