@@ -3,6 +3,7 @@ package com.hti.smpp.common.services.impl;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -12,10 +13,11 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -23,10 +25,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.hti.smpp.common.config.dto.DltEntry;
 import com.hti.smpp.common.config.dto.DltTemplEntry;
 import com.hti.smpp.common.config.repository.DltEntryRepository;
 import com.hti.smpp.common.config.repository.DltTemplEntryRepository;
+
+import com.hti.smpp.common.exception.DataAccessError;
+import com.hti.smpp.common.exception.InternalServerException;
 
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
@@ -61,16 +67,12 @@ public class DltServiceImpl implements DltService {
 	
 	/**
 	 * Saves a DLT entry with the provided information.
-	 *
-	 * @param entry    The DltRequest containing information for the DLT entry.
-	 * @param username The username of the user performing the operation.
 	 * @return A ResponseEntity with the operation result (SUCCESS_KEY or FAILURE_KEY).
 	 */
 	
 	@Override
-	public ResponseEntity<?> saveDltEntry(DltRequest entry, String username) {
-
-		// Retrieve user information based on the provided username
+	public ResponseEntity<?> saveDltEntry(DltRequest dltEntry, String username) {
+		// Retrieve user information based on the provided name
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry userEntry = null;
 		if (userOptional.isPresent()) {
@@ -81,87 +83,89 @@ public class DltServiceImpl implements DltService {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-
-		// Check if the user is present and has the required roles
-
-	
-
-		 // Default target value
+		
 		String target = IConstants.FAILURE_KEY;
 
 		// Log the request details
-		logger.info(
-				userEntry.getSystemId() + "[" + userEntry.getRole() + "] Add DltEntry Request: " + entry.getSender());
-	
+		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Add DltEntry Request: " + dltEntry.getSender());
+		
 		try {
-
 			 // Create a new DltEntry instance
-			DltEntry dlt = new DltEntry();
-
-
+			DltEntry dltObj = new DltEntry();
 			 // Set DltEntry properties from the provided DltRequest
-			dlt.setUsername(entry.getUsername());
-			dlt.setSender(entry.getSender());
-			dlt.setPeId(entry.getPeId());
-			dlt.setTelemarketerId(entry.getTelemarketerId());
-			
+			dltObj.setUsername(dltEntry.getUsername());
+			dltObj.setSender(dltEntry.getSender());
+			dltObj.setPeId(dltEntry.getPeId());
+			dltObj.setTelemarketerId(dltEntry.getTelemarketerId());			
 			 // Call the saveDltEntry method to handle DltEntry saving
-
-			saveDltEntry(dlt);
-			logger.info(" DltEntry Added:" + entry);
+			DltEntry dlt =  saveDltEntry(dltObj);			
+			DltResponse dltResponse= new DltResponse();		
+			dltResponse.setId(dlt.getId());
+			dltResponse.setPeId(dlt.getPeId());
+			dltResponse.setUsername(dlt.getUsername());
+			dltResponse.setSender(dlt.getSender());
+			dltResponse.setTelemarketerId(dlt.getTelemarketerId());	
+			logger.info(" DltEntry Added:" + dltEntry);
 			// Log success and update target
 			target = IConstants.SUCCESS_KEY;
-			logger.info("message.operation.success");
+			logger.info("Dlt Entry Added Successfully");
+
 			 // Trigger a flag change for DLT processing
 			MultiUtility.changeFlag(Constants.DLT_FLAG_FILE, "707");
-
-		} catch (Exception e) {
-			logger.error(userEntry.getSystemId(), e.fillInStackTrace());
-			logger.error("Process Error: " + e.getMessage() + "[" + e.getCause() + "]", false);
-		}
-		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Add DltEntry Target: " + target);
-
-		return new ResponseEntity<>(target, HttpStatus.CREATED);
-
+			
+           return new ResponseEntity<>(dltResponse, HttpStatus.CREATED);
+           
+		}catch (Exception e) {
+    		logger.error("Error Occured While Processing");
+			 throw new InternalServerException(e.getMessage());
+			
+		}	
+		
 	}
 
 	/**
 	 * Saves a DLT entry to the repository, handling null or empty values appropriately.
-	 *
-	 * @param entry The DltEntry instance to be saved.
 	 * @throws Exception If an error occurs during the save operation.
 	 */
 	
-	public void saveDltEntry(DltEntry entry) throws Exception {
-		if (entry.getUsername() != null && entry.getUsername().length() > 0) {
-		} else {
-			entry.setUsername(null);
+	public DltEntry saveDltEntry(DltEntry entry)  {
+		try {
+			if (entry.getUsername() != null && entry.getUsername().length() > 0) {
+			} else {
+				entry.setUsername(null);
+			}
+			if (entry.getSender() != null && entry.getSender().length() > 0) {
+			} else {
+				entry.setSender(null);
+			}
+			if (entry.getPeId() != null && entry.getPeId().length() > 0) {
+			} else {
+				entry.setPeId(null);
+			}
+			if (entry.getTelemarketerId() != null && entry.getTelemarketerId().length() > 0) {
+			} else {
+				entry.setTelemarketerId(null);
+			}
+			 // Save the DltEntry to the repository
+			return this.dltRepo.save(entry);
+		    		
+		}catch (DataIntegrityViolationException e) {
+			logger.error("DataIntegrity Violation Exception error Occurred");
+          throw new InternalServerException("Duplicate Entry Found in DataBase");    
+       } catch (ConstraintViolationException e) {
+          throw new InternalServerException("Duplicate Entry Found in DB");
+       } catch (Exception e) {	
+			 logger.error("An error occurred while saving DltEntry to the repository", e);
+		  throw new InternalServerException("Can Not Add Duplicate Entry.");		 
 		}
-		if (entry.getSender() != null && entry.getSender().length() > 0) {
-		} else {
-			entry.setSender(null);
-		}
-		if (entry.getPeId() != null && entry.getPeId().length() > 0) {
-		} else {
-			entry.setPeId(null);
-		}
-		if (entry.getTelemarketerId() != null && entry.getTelemarketerId().length() > 0) {
-		} else {
-			entry.setTelemarketerId(null);
-		}
-		 // Save the DltEntry to the repository
-		this.dltRepo.save(entry);
+		
+
 	}
 
 	
 	/**
 	 * Adds DLT templates either from an uploaded file or from a provided JSON entry.
-	 * Handles different formats: XLS and direct form entry.
-	 *
-	 * @param entryForm JSON entry representing DltTempRequest (for direct entry).
-	 * @param file      Uploaded file containing DLT templates (Excel format).
 	 * @param username  The username of the user performing the operation.
-	 * @return A ResponseEntity with the operation result (SUCCESS_KEY or FAILURE_KEY).
 	 */
 	
 	@Override
@@ -186,13 +190,8 @@ public class DltServiceImpl implements DltService {
 		 // Log user details and additional information
 		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "]");
 		
-
-
 		DltTempRequest form;
-
-		try {
-			System.out.println(file);
-
+		try {	
 			 // List to store DltTemplEntry instances for saving
 			List<DltTemplEntry> list = new ArrayList<DltTemplEntry>();
 			 // Check if the file is provided and has a name
@@ -206,7 +205,6 @@ public class DltServiceImpl implements DltService {
 					 // Determine the workbook type based on the file extension (XLS or XLSX)
 
 					if (file.getOriginalFilename().indexOf(".xlsx") > 0) {
-						System.out.println("165");
 						workbook = new XSSFWorkbook(file.getInputStream());
 					} else {
 						workbook = new HSSFWorkbook(file.getInputStream());
@@ -289,31 +287,42 @@ public class DltServiceImpl implements DltService {
 							list.add(new DltTemplEntry(peId, templateId, encoded_content));
 						}
 					}
-				} catch (Exception ex) {
-					logger.info(userEntry.getSystemId(), ex.fillInStackTrace());
+				} catch (DataAccessError ex) {
+						
+					throw new DataAccessError("Storing Data was Unsuccessful");
 				} finally {
 					// Close the workbook after processing
 					if (workbook != null) {
 						try {
 							workbook.close();
 						} catch (Exception e) {
+							throw new InternalServerException("Cannot Process your Request");
 						}
 					}
 				}
 			} else {
 				 // Process JSON entry if the file is not provided
-				ObjectMapper objectMapper = new ObjectMapper();
-				form = objectMapper.readValue(entryForm, DltTempRequest.class);
-//				form.setTemplateFile(file);
+				try {
+					ObjectMapper objectMapper = new ObjectMapper();
+					form = objectMapper.readValue(entryForm, DltTempRequest.class);
+				} catch (MismatchedInputException e) {
+					logger.error("An error occurred while processing DltEntry.");
+					throw new InternalServerException("Error Occurred In Processing json Data");
+				}
+				
 				// Log Dlt Template Request details
 				logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Add Dlt Template Request: "
 						+ form.getTemplateId());
-				
+
 				 // Check if necessary fields are not null, then proceed to add the template to the list
 				if (form.getTemplateId() != null && form.getTemplate() != null && form.getPeId() != null) {
-					System.out.println( form.getTemplateId() +  form.getTemplate() + form.getPeId() );
+//					System.out.println( form.getTemplateId() +  form.getTemplate() + form.getPeId() );
 					DltTemplEntry entry = new DltTemplEntry();
-					BeanUtils.copyProperties(form, entry);
+					
+					entry.setPeId(form.getPeId());
+					entry.setTemplate(form.getTemplate());
+					entry.setTemplateId(form.getTemplateId());
+						
 					String template = entry.getTemplate();
 					if (template != null && template.length() > 0) {
 						if (template.contains("�")) {
@@ -327,37 +336,38 @@ public class DltServiceImpl implements DltService {
 			}
 			if (list.isEmpty()) {
 				logger.info("<--- Dlt Templates empty --> ");
-				logger.error("error.record.unavailable");
+				throw new NotFoundException("No Entries to Add");
 			} else {
 				logger.info(" Dlt Template entries:" + list.size());
 				int counter = saveDltTemplate(list);
 				logger.info(" Dlt Template Inserted: " + counter);
 				target = IConstants.SUCCESS_KEY;
-				logger.info("message.operation.success");
+				logger.info("Data Added to List Successfully");
 				if (counter > 0) {
 					MultiUtility.changeFlag(Constants.DLT_FLAG_FILE, "707");
 				}
 			}
-		} catch (Exception ex) {
-			logger.error(userEntry.getSystemId(), ex.fillInStackTrace());
-			logger.error("error.processError");
+		}catch (DataAccessError ex) {	
+			throw new DataAccessError("Storing Data was Unsuccessful");
+		}catch (ConstraintViolationException ex) {
+			logger.info("" + ex.getCause());
+			throw new ConstraintViolationException(ex.getMessage(), ex.getSQLException(), "Duplicate Entry");
+		}catch (Exception ex) {
+			throw new InternalServerException("Cannot Add Duplicate Entry");
 		}
 		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Add Dlt Template Target: " + target);
-
-		return new ResponseEntity<>(target, HttpStatus.CREATED);
-
+		
+			return new ResponseEntity<>("Entry Added Successfully", HttpStatus.CREATED);
 	}
 
 	/**
 	 * Saves a list of DltTemplEntry instances to the database.
-	 *
-	 * @param list The list of DltTemplEntry instances to be saved.
-	 * @return The number of entries successfully saved to the database.
 	 * @throws Exception If an error occurs during the saving process.
 	 */
 	
-	public int saveDltTemplate(List<DltTemplEntry> list) throws Exception {
-		System.out.println(list);
+	public int saveDltTemplate(List<DltTemplEntry> list) {
+		
+
 		 // Counter to track the number of successfully saved entries
 		int counter = 0;
 		 // Iterate through the list and attempt to save each entry to the database
@@ -365,10 +375,11 @@ public class DltServiceImpl implements DltService {
 			try {
 				  // Save the entry to the database
 				dlttempRepo.save(entry);
-				// Increment the counter for successful saves
-				counter++;
-			} catch (org.hibernate.exception.ConstraintViolationException ex) {
-				logger.info("" + ex.getCause());
+
+				counter++;			
+			} catch (ConstraintViolationException ex) {
+				throw new ConstraintViolationException("Requested Method was Unsuccessfull", ex.getSQLException(), "Duplicate Entry");
+
 			}
 		}
 		// Return the total number of successfully saved entries
@@ -378,14 +389,13 @@ public class DltServiceImpl implements DltService {
 	
 	/**
 	 * Retrieves a list of DltEntry instances based on the provided username.
-	 *
-	 * @param username The username for which to retrieve DltEntry instances.
 	 * @return A ResponseEntity containing a list of DltResponse instances.
 	 */
 	
 	@Override
 	public ResponseEntity<List<DltResponse>> listDltEntry(String username) {
-		// TODO Auto-generated method stub
+
+	
 		String target = IConstants.FAILURE_KEY;
 
 		// Retrieve user information based on the provided username
@@ -400,10 +410,11 @@ public class DltServiceImpl implements DltService {
 		} else {
 			throw new NotFoundException("User not found with the provided username.");
 		}
-		// TODO Auto-generated method stub
 
 		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] list DltEntry Request");
-		// Retrieve the list of DltEntry instances
+
+		try {
+
 		List<DltEntry> list = savelistDltEntry();
 		
 		List<DltResponse> responseList= new ArrayList<DltResponse>();
@@ -423,37 +434,46 @@ public class DltServiceImpl implements DltService {
 		if (list != null && !list.isEmpty()) {
 			logger.info(" DltEntry List: " + list.size());
 			target = IConstants.SUCCESS_KEY;
-		} else {
-			logger.error("error.record.unavailable");
-		}
-		// Return the ResponseEntity containing the list of DltResponse instances
-		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] list DltEntry Target: " + target);
+			logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] list DltEntry Target: " + target);
 
-		return new ResponseEntity<>(responseList, HttpStatus.OK);
+			return new ResponseEntity<>(responseList, HttpStatus.OK);
+		} else {
+			logger.error("No data is Avaliable in the template list");
+			throw new NotFoundException("Template List Is Empty");
+		}
+
+		
+		} catch (Exception e) {
+			throw new InternalServerException("Cannot Process your Request");
+		}
+		
+		
+
 	}
 
 	/**
 	 * Retrieves a list of all DltEntry instances from the database.
-	 *
 	 * @return A list of DltEntry instances.
 	 */
 	public List<DltEntry> savelistDltEntry() {
-		List<DltEntry> list = dltRepo.findAll();
+		List<DltEntry> list =null;
+		try {
+		 list = dltRepo.findAll();		
+		} catch (Exception e) {
+			throw new NotFoundException("List is Empty");
+		}
 		return list;
 	}
 
 	
 	/**
 	 * Retrieves a list of DltTemplEntry instances based on the provided username.
-	 *
-	 * @param username The username for which to retrieve DltTemplEntry instances.
 	 * @return A ResponseEntity containing a list of DltTempResponse instances.
 	 */
 	
 	@Override
 	public ResponseEntity<List<DltTempResponse>> listDltTemplate(String username) {
 		
-
 		String target = IConstants.FAILURE_KEY;
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -468,39 +488,43 @@ public class DltServiceImpl implements DltService {
 		}
 
 		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] list Dlt Template Request");
-		List<DltTemplEntry> list = listDltTemplate();
+			
 		// Convert DltTemplEntry instances to DltTempResponse instances
        List<DltTempResponse> responseList= new ArrayList<DltTempResponse>();
 		
-		list.forEach(l -> {
-			DltTempResponse response = new DltTempResponse();
+		try {
+			List<DltTemplEntry> list = listDltTemplate();
+			list.forEach(l -> {
+				DltTempResponse response = new DltTempResponse();				
+				response.setId(l.getId());
+				response.setPeId(l.getPeId());
+				response.setTemplate(l.getTemplate());
+				response.setTemplateId(l.getTemplateId());
+				
+				responseList.add(response);
+			});
 			
-			response.setId(l.getId());
-			response.setPeId(l.getPeId());
-			response.setTemplate(l.getTemplate());
-			response.setTemplateId(l.getTemplateId());
 			
-			responseList.add(response);
-		});
-		
-		
-		if (list != null && !list.isEmpty()) {
-			logger.info(" Dlt Template List: " + list.size());
-			target = IConstants.SUCCESS_KEY;
-		} else {
-			logger.error("error.record.unavailable");
+			if (list != null && !list.isEmpty()) {
+				logger.info(" Dlt Template List: " + list.size());
+				target = IConstants.SUCCESS_KEY;
+				logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] list Dlt Template Target: " + target);
+				return new ResponseEntity<>(responseList, HttpStatus.OK);
+			} else {
+				logger.error("No Record Avaliable");
+				throw new NotFoundException("No Record Avaliable");
+			}
+			
+		} catch (Exception e) {
+			throw new InternalServerException("List Template Is Empty");
 		}
+		
 
-		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] list Dlt Template Target: " + target);
-		// Return the ResponseEntity containing the list of DltTempResponse instances
-		return new ResponseEntity<>(responseList, HttpStatus.OK);
 	}
 
 	
 	/**
 	 * Converts a Unicode hexadecimal string to a human-readable string message.
-	 *
-	 * @param msg The Unicode hexadecimal string.
 	 * @return The human-readable string message.
 	 */
 	
@@ -545,7 +569,6 @@ public class DltServiceImpl implements DltService {
 	
 	/**
 	 * Retrieves a list of DltTemplEntry instances from the repository and decodes template content.
-	 *
 	 * @return List of DltTemplEntry instances with decoded template content.
 	 */
 	
@@ -569,17 +592,15 @@ public class DltServiceImpl implements DltService {
 	
 	/**
 	 * Updates a DltEntry instance in the repository based on the provided DltRequest.
-	 *
-	 * @param entry    The DltRequest containing updated information.
-	 * @param username The username of the user performing the operation.
 	 * @return A ResponseEntity indicating the success or failure of the operation.
 	 */
 	
 	@Override
-	public ResponseEntity<?> updateDltEntry(DltRequest entry, String username) {
+
+	public ResponseEntity<?> updateDltEntry(DltRequest dltEntry, String username) {
+
 		
 		String target = IConstants.FAILURE_KEY;
-
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry userEntry = null;
 		if (userOptional.isPresent()) {
@@ -591,70 +612,63 @@ public class DltServiceImpl implements DltService {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 
-//		DltEntryForm entryForm = (DltEntryForm) actionForm;
 		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Update DltEntry Request: "
-				+ entry.getSender());
+				+ dltEntry.getSender());
 		try {
-			DltEntry dlt = new DltEntry();
-//			BeanUtils.copyProperties(entry, dlt);
-			
-			dlt.setId(entry.getId());
-			dlt.setUsername(entry.getUsername());
-			dlt.setSender(entry.getSender());
-			dlt.setPeId(entry.getPeId());
-			dlt.setTelemarketerId(entry.getTelemarketerId());
-			
-			
+
+			DltEntry dlt = new DltEntry();	
+			dlt.setId(dltEntry.getId());
+			dlt.setUsername(dltEntry.getUsername());
+			dlt.setSender(dltEntry.getSender());
+			dlt.setPeId(dltEntry.getPeId());
+			dlt.setTelemarketerId(dltEntry.getTelemarketerId());
+					
+
 			updateDltEntry(dlt);
 			target = IConstants.SUCCESS_KEY;
 			logger.info("message.operation.success");
 			MultiUtility.changeFlag(Constants.DLT_FLAG_FILE, "707");
+			logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Update DltEntry Target: " + target);
+			return new ResponseEntity<>("Entry Updated Successfully", HttpStatus.OK);
 
 		} catch (Exception e) {
-			logger.error(userEntry.getSystemId(), e.fillInStackTrace());
-			logger.error("Process Error: " + e.getMessage() + "[" + e.getCause() + "]", false);
-		}
-		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Update DltEntry Target: " + target);
-
-		return new ResponseEntity<>(target, HttpStatus.ACCEPTED);
-
+			throw new InternalServerException(e.getMessage());
+		}	
+			
 	}
 
 	/**
 	 * Updates a DltEntry instance in the repository.
-	 *
-	 * @param entry The DltEntry instance to be updated.
 	 * @throws Exception If an error occurs during the update operation.
 	 */
 	
-	public void updateDltEntry(DltEntry entry) throws Exception {
-		if (entry.getUsername() != null && entry.getUsername().length() > 0) {
-		} else {
-			entry.setUsername(null);
+	public void updateDltEntry(DltEntry dltEntry)  {
+		
+		try {
+			if (dltEntry.getUsername() != null && dltEntry.getUsername().length() > 0) {
+			} else {
+				dltEntry.setUsername(null);
+			}
+			if (dltEntry.getSender() != null && dltEntry.getSender().length() > 0) {
+			} else {
+				dltEntry.setSender(null);
+			}
+			if (dltEntry.getTelemarketerId() != null && dltEntry.getTelemarketerId().length() > 0) {
+			} else {
+				dltEntry.setTelemarketerId(null);
+			}
+			dltRepo.save(dltEntry);
+		} catch (Exception e) {
+			throw new InternalServerException("Entry Not Found In DataBase");
+
 		}
-		if (entry.getSender() != null && entry.getSender().length() > 0) {
-		} else {
-			entry.setSender(null);
-		}
-		if (entry.getTelemarketerId() != null && entry.getTelemarketerId().length() > 0) {
-		} else {
-			entry.setTelemarketerId(null);
-		}
-		/*
-		 * if (entry.getContent() != null && entry.getContent().trim().length() > 0) {
-		 * String encoded_content = Converter.getUTF8toHexDig(entry.getContent()); if
-		 * (encoded_content.length() > 0) { entry.setContent(encoded_content); } else {
-		 * entry.setContent(null); } } else { entry.setContent(null); }
-		 */
-		dltRepo.save(entry);
+		
 	}
 
 	
-	
 	@Override
-	public ResponseEntity<?> updateDltTemplate(DltTempRequest entry, String username) {
+	public ResponseEntity<?> updateDltTemplate(DltTempRequest dltTemplate, String username) {
 		
-		 // Initialize the target status to indicate failure
 		String target = IConstants.FAILURE_KEY;
 
 		// Retrieve the user information based on the provided username
@@ -670,59 +684,111 @@ public class DltServiceImpl implements DltService {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 
-//		DltTemplForm entryForm = (DltTemplForm) actionForm;
-		  // Log information about the update Dlt Template request
 		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Update Dlt Template Request: "
-				+ entry.getTemplateId());
+				+ dltTemplate.getTemplateId());
 		try {
 			DltTemplEntry dlt = new DltTemplEntry();
-			// Perform the update operation on the Dlt Template
-			BeanUtils.copyProperties(entry, dlt);
+		
+			dlt.setId(dltTemplate.getId());
+			dlt.setPeId(dltTemplate.getPeId());
+			dlt.setTemplate(dltTemplate.getTemplate());
+			dlt.setTemplateId(dltTemplate.getTemplateId());
+			
 			updateDltTemplate(dlt);
 			 // Update the target status to indicate success
 			target = IConstants.SUCCESS_KEY;
 			logger.error("message.operation.success");
 			MultiUtility.changeFlag(Constants.DLT_FLAG_FILE, "707");
+			logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Update Dlt Template Target: " + target);
+			
+			return new ResponseEntity<>("Template Updated Successfully", HttpStatus.OK);
 
 		} catch (Exception e) {
-			logger.error(userEntry.getSystemId(), e.fillInStackTrace());
-			logger.error("Process Error: " + e.getMessage() + "[" + e.getCause() + "]", false);
+			throw new InternalServerException(e.getMessage());
 		}
-		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Update Dlt Template Target: " + target);
-
-		// Return the ResponseEntity with the target status and HTTP status code indicating acceptance
-		return new ResponseEntity<>(target, HttpStatus.ACCEPTED);
 	}
 
 	
 	/**
 	 * Update the Dlt Template entry with the provided content, ensuring proper encoding.
-	 * 
-	 * @param entry The DltTemplEntry containing the template content to be updated
 	 * @throws Exception If an error occurs during the update operation
 	 */
 	
-	public void updateDltTemplate(DltTemplEntry entry) throws Exception {
+	public void updateDltTemplate(DltTemplEntry dltTemplate) {
 		// Extract the template content from the entry
-		if (entry.getTemplate() != null && entry.getTemplate().trim().length() > 0) {
-			String encoded_content = new Converters().UTF16(entry.getTemplate());
-			if (encoded_content.length() > 0) {
-				entry.setTemplate(encoded_content);
+		try {
+			if (dltTemplate.getTemplate() != null && dltTemplate.getTemplate().trim().length() > 0) {
+				String encoded_content = new Converters().UTF16(dltTemplate.getTemplate());
+				if (encoded_content.length() > 0) {
+					dltTemplate.setTemplate(encoded_content);
+				} else {
+					dltTemplate.setTemplate(null);
+				}
+
 			} else {
-				entry.setTemplate(null);
+				dltTemplate.setTemplate(null);
 			}
-		} else {
-			entry.setTemplate(null);
+			 // Save the updated Dlt Template entry
+			dlttempRepo.save(dltTemplate);
+		} catch (Exception e) {
+			throw new InternalServerException("Template Entry Not Found.");
 		}
-		 // Save the updated Dlt Template entry
-		dlttempRepo.save(entry);
+		
 	}
 
 	
 	@Override
-	public ResponseEntity<?> deleteDltEntry(DltRequest entry, String username) {
+	public ResponseEntity<?> deleteDltEntry(int id, String username) {
 		
-		 // Initialize the target status to indicate failure
+		String target = IConstants.FAILURE_KEY;
+		 // Retrieve the user information based on the provided username
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry userEntry = null;
+		if (userOptional.isPresent()) {
+			userEntry = userOptional.get();
+			 // Check if the user has the required authorization roles; otherwise, throw an UnauthorizedException
+			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+
+
+		try {
+			
+			 if (!dltRepo.existsById(id)) {
+		            // Return a ResponseEntity indicating that the provided DltEntry ID is not present
+				 throw new NotFoundException("User Not Found with given Id");
+		        }
+			 			 
+			deleteDltEntry(id);
+			 // Update the target status to indicate success
+			target = IConstants.SUCCESS_KEY;
+			logger.info("message.operation.success");
+			MultiUtility.changeFlag(Constants.DLT_FLAG_FILE, "707");
+
+		} catch (Exception ex) {
+			
+			throw new NotFoundException(ex.getLocalizedMessage());
+		}		
+			return new ResponseEntity<>("Entry Deleted Successfully", HttpStatus.OK);
+	}
+
+	/**
+	 * Delete the provided DltEntry from the repository.
+	 */
+	
+	public void deleteDltEntry(int id) {
+		dltRepo.deleteById(id);	
+
+	}
+
+	
+	@Override
+
+	public ResponseEntity<?> deleteDltTemplate(int id, String username) {
+	
 		String target = IConstants.FAILURE_KEY;
 
 		 // Retrieve the user information based on the provided username
@@ -738,91 +804,17 @@ public class DltServiceImpl implements DltService {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 
-
-
-		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Remove DltEntry Request: "
-				+ entry.getSender());
 		try {
-			 // Create a new DltEntry and copy properties from the provided entry
-			DltEntry dlt = new DltEntry();
-//			BeanUtils.copyProperties(entry, dlt);
-			dlt.setId(entry.getId());
-			dlt.setUsername(entry.getUsername());
-			dlt.setSender(entry.getSender());
-			dlt.setPeId(entry.getPeId());
-			dlt.setTelemarketerId(entry.getTelemarketerId());
-			// Perform the delete operation on the DltEntry
+
 			
-			 if (!dltRepo.existsById(entry.getId())) {
+			 if (!dlttempRepo.existsById(id)) {
 		            // Return a ResponseEntity indicating that the provided DltEntry ID is not present
-		            return new ResponseEntity<>("User with ID " + entry.getId() + " not found.", HttpStatus.NOT_FOUND);
+				 throw new NotFoundException("Template not found with given id");
 		        }
 			 
 			 
-			deleteDltEntry(dlt);
-			 // Update the target status to indicate success
-			target = IConstants.SUCCESS_KEY;
-			logger.info("message.operation.success");
-			MultiUtility.changeFlag(Constants.DLT_FLAG_FILE, "707");
+			deleteDltTemplate(id);
 
-		} catch (Exception ex) {
-			logger.error(userEntry.getSystemId(), ex.fillInStackTrace());
-			logger.error("error.processError");
-		}
-		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Remove DltEntry Target: " + target);
-		
-		 // Return a ResponseEntity with a success message and HTTP status code indicating OK
-		
-		return new ResponseEntity<>("Deleted Successfully",HttpStatus.OK);
-
-	}
-
-	/**
-	 * Delete the provided DltEntry from the repository.
-	 * 
-	 * @param entry The DltEntry to be deleted
-	 */
-	
-	public void deleteDltEntry(DltEntry entry) {
-		dltRepo.delete(entry);
-		
-	}
-
-	@Override
-	public ResponseEntity<?> deleteDltTemplate(DltTempRequest entry, String username) {
-	
-
-		String target = IConstants.FAILURE_KEY;
-
-
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		UserEntry userEntry = null;
-		if (userOptional.isPresent()) {
-			userEntry = userOptional.get();
-			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
-			}
-		} else {
-			throw new NotFoundException("User not found with the provided username.");
-		}
-
-		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Remove Dlt Template Request: "
-				+ entry.getTemplateId());
-		try {
-
-			 // Create a new DltTemplEntry and copy properties from the provided entry
-			
-			DltTemplEntry dlt = new DltTemplEntry();
-			BeanUtils.copyProperties(entry, dlt);
-			 // Perform the delete operation on the Dlt Template
-			
-			 if (!dlttempRepo.existsById(entry.getId())) {
-		            // Return a ResponseEntity indicating that the provided DltEntry ID is not present
-		            return new ResponseEntity<>("Template with ID " + entry.getId() + " not found.", HttpStatus.NOT_FOUND);
-		        }
-			 
-			 
-			deleteDltTemplate(dlt);
 			 // Update the target status to indicate success
 			target = IConstants.SUCCESS_KEY;
 			// Log a success message
@@ -830,34 +822,27 @@ public class DltServiceImpl implements DltService {
 			MultiUtility.changeFlag(Constants.DLT_FLAG_FILE, "707");
 
 		} catch (Exception ex) {
-			logger.error(userEntry.getSystemId(), ex.fillInStackTrace());
-			logger.error("error.processError");
+			throw new NotFoundException(ex.getLocalizedMessage());
 		}
 		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Remove Dlt Template Target: " + target);
 		
-		return new ResponseEntity<>("Deleted Successfully",HttpStatus.OK);
 
+
+			return new ResponseEntity<>("Template Deleted Successfully", HttpStatus.OK);
 	}
 
 	
 	/**
 	 * Delete the provided DltTemplEntry from the repository.
-	 * 
-	 * @param entry The DltTemplEntry to be deleted
 	 */
 	
-	public void deleteDltTemplate(DltTemplEntry entry) {
-		dlttempRepo.delete(entry);
+	public void deleteDltTemplate(int id) {
+		dlttempRepo.deleteById(id);
 	}
 
 	
 	/**
 	 * Retrieve the DltEntry information based on the provided ID.
-	 * 
-	 * @param id       The ID of the DltEntry to be retrieved
-	 * @param username The username associated with the request
-	 * @return A DltResponse containing the DltEntry information
-	 * @throws NotFoundException If the DltEntry with the provided ID is not found
 	 * @throws UnauthorizedException If the user does not have the required roles for this operation
 	 */
 	
@@ -879,12 +864,6 @@ public class DltServiceImpl implements DltService {
 	
 		}
 
-//		UserSessionObject userSessionObject = (UserSessionObject) SessionHelper.getSessionObject(request,
-//				IConstants.USER_SESSION_KEY);
-//		String systemid = userSessionObject.getSystemId();
-//		String role = userSessionObject.getRole();
-//		DltEntryForm entryForm = (DltEntryForm) actionForm;
-
 		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] View DltEntry Request:" + id);
 
 		try {
@@ -905,31 +884,20 @@ public class DltServiceImpl implements DltService {
 		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] View DltEntry Target:" + target);
 
 		return responseEntry;
-		} catch (NotFoundException ex) {
+		} catch (NoSuchElementException ex) {
 		    // NotFoundException: Rethrow the exception or handle it as needed
-		    throw ex;
+		    throw new NotFoundException("Entry Not Found");
 		} catch (Exception e) {
 		    // Handle other exceptions
-		    logger.error("An error occurred while processing DltEntry.", e);
+//		    logger.error("An error occurred while processing DltEntry.", e);
 		    // Optionally throw a custom exception or return an error response
-		    throw new NotFoundException("Entry Not Found");
+		    throw new InternalServerException(e.getMessage());
 		}
-		
-//		if(responseEntry!=null) {
-//			return responseEntry;
-//		}else {
-//			throw new NotFoundException("User not found with the provided ID.");
-//		}
-		
-//		return entry;
 	}
 
 	
 	/**
 	 * Retrieve the DltEntry based on the provided ID.
-	 * 
-	 * @param id The ID of the DltEntry to be retrieved
-	 * @return The DltEntry with the provided ID
 	 * @throws NotFoundException If the DltEntry with the provided ID is not found
 	 */
 	
@@ -937,26 +905,12 @@ public class DltServiceImpl implements DltService {
 		DltEntry entry = dltRepo.findById(id).get();
 		// Return the retrieved DltEntry
 		return entry;
-//		Optional<DltEntry> optionalEntry = dltRepo.findById(id);
-//
-//	    DltEntry entry = null;
-//	    if (optionalEntry.isPresent()) {
-//	        entry = optionalEntry.get();
-//	    }
-//
-//	    return entry;
 	}
 
 	@Override
 	public DltTempResponse getDltTemplate(int id, String username) {
-		// TODO Auto-generated method stub
 
 		String target = IConstants.FAILURE_KEY;
-//		UserSessionObject userSessionObject = (UserSessionObject) SessionHelper.getSessionObject(request,
-//				IConstants.USER_SESSION_KEY);
-//		String systemid = userSessionObject.getSystemId();
-//		String role = userSessionObject.getRole();
-//		DltTemplForm entryForm = (DltTemplForm) actionForm;
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry userEntry = null;
@@ -984,25 +938,24 @@ public class DltServiceImpl implements DltService {
 
 		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] View Dlt Template Target:" + target);
 
-//		return entry;
+
 		 return responseList;
-		} catch (NotFoundException ex) {
-		    // NotFoundException: Rethrow the exception or handle it as needed
-		    throw ex;
+		} catch (NoSuchElementException ex) {
+		    throw new NotFoundException("Template Not Found");
 		} catch (Exception e) {
-		    // Handle other exceptions
-		    logger.error("An error occurred while processing Dlt Template.", e);
-		    // Optionally throw a custom exception or return an error response
-		    throw new NotFoundException("Entry Not Found");
-		    
+//			logger.error("An error occurred while processing DltEntry.", e);
+		    throw new InternalServerException(e.getMessage());
 		}
 	}
 
 	/**
 	 * Retrieve the DltTemplEntry based on the provided ID, and decode the template content.
+<<<<<<< HEAD
+=======
 	 * 
 	 * @param id The ID of the DltTemplEntry to be retrieved
 	 * @return The DltTemplEntry with the provided ID, including decoded template content
+>>>>>>> cd27d60790e2a4985d7ce65281ccd5e33f4b9ee3
 	 * @throws NotFoundException If the DltTemplEntry with the provided ID is not found
 	 */
 	
@@ -1027,8 +980,6 @@ public class DltServiceImpl implements DltService {
 	
 	/**
 	 * Convert Unicode hexadecimal string to a UTF-16 encoded string.
-	 * 
-	 * @param msg The Unicode hexadecimal string to be converted
 	 * @return The UTF-16 encoded string resulting from the conversion
 	 */
 	
@@ -1073,11 +1024,5 @@ public class DltServiceImpl implements DltService {
 		// Return the resulting UTF-16 encoded string
 		return msg;
 	}
-
-//	@Override
-//	public ResponseEntity<?> saveDltTemplate(DltTempRequest entry, String username) {
-//		
-//		return null;
-//	}
 
 }

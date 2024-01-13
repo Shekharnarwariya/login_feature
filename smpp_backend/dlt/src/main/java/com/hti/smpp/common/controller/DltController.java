@@ -3,7 +3,6 @@ package com.hti.smpp.common.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -74,7 +73,9 @@ public class DltController {
 	@PostMapping(value = "/addDltTemplate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<?> addDltTemplate(@Valid @RequestParam(value = "entry" , required = false) String entry,
 			@RequestPart(value = "file", required = false) MultipartFile file, @RequestHeader("username") String username) {
+		
 		return this.dltService.addDltTemplate(entry, file, username);
+		
 	}
 
 	
@@ -147,10 +148,11 @@ public class DltController {
 	@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 	@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 	@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	@DeleteMapping("/deleteDlt")
-	public ResponseEntity<?> deleteDltEntry(@RequestBody DltRequest entry, @RequestHeader("username") String username) {
 
-		return	this.dltService.deleteDltEntry(entry, username);
+	@DeleteMapping("/deleteDlt/{id}")
+	public ResponseEntity<?> deleteDltEntry(@PathVariable Integer id, @RequestHeader("username") String username) {
+
+		return	this.dltService.deleteDltEntry(id, username);
 		
 //		return new ResponseEntity<>("Deleted Successfully",HttpStatus.OK);
 	}
@@ -165,10 +167,12 @@ public class DltController {
 	@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 	@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 	@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	@DeleteMapping("/deleteDltTemp")
-	public ResponseEntity<?> deleteDltTemplate(@RequestBody DltTempRequest entry, @RequestHeader("username") String username) {
 
-		return this.dltService.deleteDltTemplate(entry, username);
+	@DeleteMapping("/deleteDltTemp/{id}")
+	public ResponseEntity<?> deleteDltTemplate(@PathVariable Integer id, @RequestHeader("username") String username) {
+
+		return this.dltService.deleteDltTemplate(id, username);
+
 //		return new ResponseEntity<>("Deleted Successfully",HttpStatus.OK);
 		
 	}

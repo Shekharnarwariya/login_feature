@@ -41,10 +41,12 @@ public interface DltService {
 	public ResponseEntity<?> updateDltTemplate(DltTempRequest entry , String username);
 
 	// Method to delete a DLT entry
-	public ResponseEntity<?> deleteDltEntry(DltRequest entry , String username);
+
+	public ResponseEntity<?> deleteDltEntry(int id , String username);
 	
 	  // Method to delete a DLT template
-	public ResponseEntity<?> deleteDltTemplate(DltTempRequest entry , String username);
+	public ResponseEntity<?> deleteDltTemplate(int id , String username);
+
 
 	 // Method to get a single DLT entry by ID
 	public DltResponse getDltEntry(int id , String username);
