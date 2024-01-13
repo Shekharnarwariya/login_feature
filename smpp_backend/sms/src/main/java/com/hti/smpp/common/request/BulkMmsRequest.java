@@ -1,33 +1,66 @@
 package com.hti.smpp.common.request;
 
-public class BulkUploadForm {
+import java.util.Arrays;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+
+public class BulkMmsRequest {
+
+	@NotBlank(message = "Sender ID cannot be blank")
 	private String senderId;
+
+	@NotBlank(message = "Message cannot be blank")
 	private String message;
+
+	@NotBlank(message = "From field cannot be blank")
 	private String from;
-	private String gmt = "";
-	private String smscount;
-	private String timestart;
-	private String destinationNumber;
-	private String repeat;
-	private boolean isSchedule;
-	private boolean isAlert;
-	private boolean allowDuplicate;
-	// ------------ Modified on 27-Feb-2016 ---------------
+
+	@NotBlank(message = "Message type cannot be blank")
 	private String messageType; // Encoding
+
+	@Min(value = 1, message = "SMS parts must be at least 1")
 	private int smsParts; // Sms Parts
+
+	@Min(value = 0, message = "Character count must be at least 0")
 	private int charCount; // Char Count
+
+	@Min(value = 1, message = "Character limit must be at least 1")
 	private int charLimit; // Char limit per sms
+
+	private String gmt = "";
+
+	@NotBlank(message = "sms count cannot be blank")
+	private String smscount;
+
+	private String timestart;
+
+	private String destinationNumber;
+
+	private String repeat;
+
+	private boolean schedule;
+
+	private boolean alert;
+
+	private boolean allowDuplicate;
+
 	private String exclude; // excluded numbers from uploaded file
+
 	private long expiryHour;
-	private boolean tracking;
-	private String[] weblink; // for tracking sms
+
 	private String campaignName;
+
 	// ------ optional parameters for submit_sm ------
 	private String peId;
+
 	private String templateId;
+
 	private String telemarketerId;
+
 	// -------- mms optional param -------
 	private String caption;
+
 	private String mmsType; // audio/video/vcard/image
 
 	/**
@@ -143,31 +176,31 @@ public class BulkUploadForm {
 	}
 
 	/**
-	 * @return the isSchedule
+	 * @return the schedule
 	 */
 	public boolean isSchedule() {
-		return isSchedule;
+		return schedule;
 	}
 
 	/**
-	 * @param isSchedule the isSchedule to set
+	 * @param schedule the schedule to set
 	 */
-	public void setSchedule(boolean isSchedule) {
-		this.isSchedule = isSchedule;
+	public void setSchedule(boolean schedule) {
+		this.schedule = schedule;
 	}
 
 	/**
-	 * @return the isAlert
+	 * @return the alert
 	 */
 	public boolean isAlert() {
-		return isAlert;
+		return alert;
 	}
 
 	/**
-	 * @param isAlert the isAlert to set
+	 * @param alert the alert to set
 	 */
-	public void setAlert(boolean isAlert) {
-		this.isAlert = isAlert;
+	public void setAlert(boolean alert) {
+		this.alert = alert;
 	}
 
 	/**
@@ -266,34 +299,6 @@ public class BulkUploadForm {
 	 */
 	public void setExpiryHour(long expiryHour) {
 		this.expiryHour = expiryHour;
-	}
-
-	/**
-	 * @return the tracking
-	 */
-	public boolean isTracking() {
-		return tracking;
-	}
-
-	/**
-	 * @param tracking the tracking to set
-	 */
-	public void setTracking(boolean tracking) {
-		this.tracking = tracking;
-	}
-
-	/**
-	 * @return the weblink
-	 */
-	public String[] getWeblink() {
-		return weblink;
-	}
-
-	/**
-	 * @param weblink the weblink to set
-	 */
-	public void setWeblink(String[] weblink) {
-		this.weblink = weblink;
 	}
 
 	/**

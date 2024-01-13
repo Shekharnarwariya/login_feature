@@ -1,30 +1,65 @@
 package com.hti.smpp.common.request;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+
 public class BulkRequest {
+
+	@NotBlank(message = "Sender ID cannot be blank")
 	private String senderId;
+
+	@NotBlank(message = "Message cannot be blank")
 	private String message;
+
+	@NotBlank(message = "From field cannot be blank")
 	private String from;
-	private String gmt = "";
-	private String smscount;
-	private String timestart;
-	private String destinationNumber;
-	private double delay;
-	private String repeat;
-	private boolean schedule;
-	private boolean alert;
-	private boolean allowDuplicate;
+
+	@NotBlank(message = "Message type cannot be blank")
 	private String messageType; // Encoding
+
+	@Min(value = 1, message = "SMS parts must be at least 1")
 	private int smsParts; // Sms Parts
+
+	@Min(value = 0, message = "Character count must be at least 0")
 	private int charCount; // Char Count
+
+	@Min(value = 1, message = "Character limit must be at least 1")
 	private int charLimit; // Char limit per sms
+
+	private String gmt = "";
+
+	@NotBlank(message = "sms count cannot be blank")
+	private String smscount;
+
+	private String timestart;
+
+	private String destinationNumber;
+
+	private double delay;
+
+	private String repeat;
+
+	private boolean schedule;
+
+	private boolean alert;
+
+	private boolean allowDuplicate;
+
 	private String exclude; // excluded numbers from uploaded file
+
 	private long expiryHour;
+
 	private boolean tracking;
+
 	private String[] weblink; // for tracking sms
+
 	private String campaignName;
+
 	// ------ optional parameters for submit_sm ------
 	private String peId;
+
 	private String templateId;
+
 	private String telemarketerId;
 
 	/**

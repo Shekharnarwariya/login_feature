@@ -229,8 +229,8 @@ public class RouteDAServiceImpl implements RouteDAService {
 		Map<String, Integer> prefix_mapping = new HashMap<String, Integer>(GlobalVarsSms.PrefixMapping);
 		double totalcost = 0;
 		Map<Integer, Double> costEntries = new HashMap<Integer, Double>();
-		Predicate<Integer, RouteEntry> p = new PredicateBuilderImpl().getEntryObject().get("userId").equal(userId);
-		for (RouteEntry basic : GlobalVars.BasicRouteEntries.values(p)) {
+		List<RouteEntry> listOfRoute = routeEntryRepository.findByUserId(userId);
+		for (RouteEntry basic : listOfRoute) {
 			if (mmsRouteEntryRepository.existsById(basic.getId())) {
 				costEntries.put(basic.getNetworkId(), mmsRouteEntryRepository.findById(basic.getId()).get().getCost());
 			}
