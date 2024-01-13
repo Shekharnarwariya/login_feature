@@ -2,8 +2,10 @@ package com.hti.smpp.common.user.dto;
 
 import java.io.Serializable;
 
-import jakarta.persistence.Column;
+import com.hti.smpp.common.util.PasswordConverter;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -87,7 +89,7 @@ public class WebMasterEntry implements Serializable {
 	@Column(name = "route_margin")
 	private String routeMargin;
 	@Column(name = "prov_code", updatable = false)
-	// @Convert(converter = PasswordConverter.class)
+	@Convert(converter = PasswordConverter.class)
 	private String provCode;
 	@Column(name = "sender_mgmt")
 	private boolean senderMgmt;
@@ -117,6 +119,14 @@ public class WebMasterEntry implements Serializable {
 	private boolean displayErrCode;
 	@Column(name = "bulk_on_approve")
 	private boolean bulkOnApprove;
+	@Column(name = "sender_act_alert_number")
+	private String senderActAlertNumber;
+	@Column(name = "sender_act_alert_email")
+	private String senderActAlertEmail;
+	@Column(name = "batch_alert_number")
+	private String batchAlertNumber;
+	@Column(name = "resp_id_display")
+	private boolean displayRespId;
 	@Transient
 	private String executiveName;
 
@@ -531,8 +541,59 @@ public class WebMasterEntry implements Serializable {
 		this.bulkOnApprove = bulkOnApprove;
 	}
 
-	public String toString() {
-		return "web: userId=" + userId + ",Executiveid=" + executiveId + ",MinimumBalAlert=" + minFlag + ",MISReport="
-				+ misReport + ",WebAccess=" + webAccess;
+	public String getSenderActAlertNumber() {
+		return senderActAlertNumber;
 	}
+
+	public void setSenderActAlertNumber(String senderActAlertNumber) {
+		this.senderActAlertNumber = senderActAlertNumber;
+	}
+
+	public String getSenderActAlertEmail() {
+		return senderActAlertEmail;
+	}
+
+	public void setSenderActAlertEmail(String senderActAlertEmail) {
+		this.senderActAlertEmail = senderActAlertEmail;
+	}
+
+	public String getBatchAlertNumber() {
+		return batchAlertNumber;
+	}
+
+	public void setBatchAlertNumber(String batchAlertNumber) {
+		this.batchAlertNumber = batchAlertNumber;
+	}
+
+	public boolean isDisplayRespId() {
+		return displayRespId;
+	}
+
+	public void setDisplayRespId(boolean displayRespId) {
+		this.displayRespId = displayRespId;
+	}
+
+	@Override
+	public String toString() {
+		return "WebMasterEntry [userId=" + userId + ", executiveId=" + executiveId + ", email=" + email + ", minFlag="
+				+ minFlag + ", minBalance=" + minBalance + ", minBalEmail=" + minBalEmail + ", smsAlert=" + smsAlert
+				+ ", minBalMobile=" + minBalMobile + ", access=" + access + ", misReport=" + misReport
+				+ ", mobileDBAccess=" + mobileDBAccess + ", webAccess=" + webAccess + ", salesAlert=" + salesAlert
+				+ ", hidden=" + hidden + ", dlrReport=" + dlrReport + ", dlrEmail=" + dlrEmail + ", coverageEmail="
+				+ coverageEmail + ", coverageReport=" + coverageReport + ", invoiceEmail=" + invoiceEmail
+				+ ", download=" + download + ", hideNum=" + hideNum + ", displayCost=" + displayCost + ", senderId="
+				+ senderId + ", senderRestrictTo=" + senderRestrictTo + ", accountType=" + accountType + ", gmt=" + gmt
+				+ ", otpLogin=" + otpLogin + ", otpNumber=" + otpNumber + ", otpEmail=" + otpEmail + ", prefixApply="
+				+ prefixApply + ", prefixToApply=" + prefixToApply + ", numberLength=" + numberLength
+				+ ", optionalParam=" + optionalParam + ", autoCopyRouting=" + autoCopyRouting + ", routeMargin="
+				+ routeMargin + ", provCode=" + provCode + ", senderMgmt=" + senderMgmt + ", senderAct=" + senderAct
+				+ ", bulkMgmt=" + bulkMgmt + ", bulkAct=" + bulkAct + ", confirmSubmit=" + confirmSubmit
+				+ ", hideContent=" + hideContent + ", secondaryMaster=" + secondaryMaster + ", apiAccess=" + apiAccess
+				+ ", emailOnLogin=" + emailOnLogin + ", otpSender=" + otpSender + ", apiKeyOnly=" + apiKeyOnly
+				+ ", multiUserAccess=" + multiUserAccess + ", displayErrCode=" + displayErrCode + ", bulkOnApprove="
+				+ bulkOnApprove + ", senderActAlertNumber=" + senderActAlertNumber + ", senderActAlertEmail="
+				+ senderActAlertEmail + ", batchAlertNumber=" + batchAlertNumber + ", displayRespId=" + displayRespId
+				+ "]";
+	}
+
 }

@@ -10,13 +10,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import com.hazelcast.query.Predicate;
+import com.hazelcast.query.impl.PredicateBuilderImpl;
 import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.route.dto.OptionalRouteEntry;
 import com.hti.smpp.common.route.dto.RouteEntry;
 import com.hti.smpp.common.route.dto.RouteEntryExt;
+import com.hti.smpp.common.route.repository.MmsRouteEntryRepository;
 import com.hti.smpp.common.route.repository.RouteEntryRepository;
 import com.hti.smpp.common.service.RouteDAService;
 import com.hti.smpp.common.service.SmscDAService;
+import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.GlobalVarsSms;
 
 @Service
@@ -26,6 +30,9 @@ public class RouteDAServiceImpl implements RouteDAService {
 
 	@Autowired
 	private RouteEntryRepository routeEntryRepository;
+
+	@Autowired
+	private MmsRouteEntryRepository mmsRouteEntryRepository;
 
 	@Override
 	public Map<Integer, RouteEntryExt> listRouteEntries(int userId, boolean hlr, boolean optional, boolean display) {
@@ -209,6 +216,39 @@ public class RouteDAServiceImpl implements RouteDAService {
 			double cost = 0;
 			if (route != null) {
 				cost = route.getBasic().getCost();
+			}
+			totalcost = totalcost + (cost * msgParts);
+			// System.out.println("Number: " + destination + " cost: " + cost + " total:" +
+			// totalcost + " route: " + route);
+		}
+		return totalcost;
+	}
+
+	@Override
+	public double calculateMmsRoutingCost(int userId, List<String> numbers, int msgParts) {
+		Map<String, Integer> prefix_mapping = new HashMap<String, Integer>(GlobalVarsSms.PrefixMapping);
+		double totalcost = 0;
+		Map<Integer, Double> costEntries = new HashMap<Integer, Double>();
+		Predicate<Integer, RouteEntry> p = new PredicateBuilderImpl().getEntryObject().get("userId").equal(userId);
+		for (RouteEntry basic : GlobalVars.BasicRouteEntries.values(p)) {
+			if (mmsRouteEntryRepository.existsById(basic.getId())) {
+				costEntries.put(basic.getNetworkId(), mmsRouteEntryRepository.findById(basic.getId()).get().getCost());
+			}
+		}
+		for (String destination : numbers) {
+			int networkId = 0;
+			int length = destination.length();
+			for (int i = length; i >= 1; i--) {
+				if (prefix_mapping.containsKey(destination.substring(0, i))) {
+					networkId = prefix_mapping.get(destination.substring(0, i));
+					break;
+				}
+			}
+			double cost = 0;
+			if (costEntries.containsKey(networkId)) {
+				cost = costEntries.get(networkId);
+			} else {
+				cost = costEntries.get(0); // get default routing
 			}
 			totalcost = totalcost + (cost * msgParts);
 			// System.out.println("Number: " + destination + " cost: " + cost + " total:" +

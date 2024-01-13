@@ -18,4 +18,7 @@ public interface RouteDAService {
 	public double calculateRoutingCost(int userId, List<String> numbers, int msgParts);
 
 	public double calculateRoutingCost(int userId, Map<String, Integer> numbersParts);
+
+	public double calculateMmsRoutingCost(int userId, List<String> numbers, int msgParts);
+
 }

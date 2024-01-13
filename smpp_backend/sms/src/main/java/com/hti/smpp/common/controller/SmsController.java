@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.hti.smpp.common.exception.ExceptionResponse;
 import com.hti.smpp.common.request.BulkContactRequest;
+import com.hti.smpp.common.request.BulkUploadForm;
 import com.hti.smpp.common.request.SmsRequest;
 import com.hti.smpp.common.response.BulkResponse;
 import com.hti.smpp.common.response.SmsResponse;
@@ -108,4 +109,11 @@ public class SmsController {
 		return smsService.sendSmsGroupData(bulkContactRequest, username);
 	}
 
+	@Operation(summary = "Send SMS/MMS with file upload", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "multipart/form-data")))
+	@PostMapping("/sendSmsMms")
+	public ResponseEntity<?> sendSmsMms(@RequestParam BulkUploadForm bulkUploadForm,
+			@RequestHeader("username") String username, HttpSession session,
+			@RequestPart("destinationNumberFile") List<MultipartFile> destinationNumberFile) {
+		return smsService.sendSmsMms(bulkUploadForm, username, session, destinationNumberFile);
+	}
 }

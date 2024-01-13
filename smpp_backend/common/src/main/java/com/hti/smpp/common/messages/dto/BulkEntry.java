@@ -59,6 +59,10 @@ public class BulkEntry implements Serializable {
 	private String templateId;
 	@Column(name = "telemarketerId", updatable = false)
 	private String telemarketerId;
+	@Column(name = "mms_type", updatable = false)
+	private String mmsType;
+	@Column(name = "caption", updatable = false)
+	private String caption;
 	@Transient
 	private long processed; // count of processed numbers
 	@Transient
@@ -269,6 +273,22 @@ public class BulkEntry implements Serializable {
 
 	public void setTelemarketerId(String telemarketerId) {
 		this.telemarketerId = telemarketerId;
+	}
+
+	public String getMmsType() {
+		return mmsType;
+	}
+
+	public void setMmsType(String mmsType) {
+		this.mmsType = mmsType;
+	}
+
+	public String getCaption() {
+		return caption;
+	}
+
+	public void setCaption(String caption) {
+		this.caption = caption;
 	}
 
 	@Override
