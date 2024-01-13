@@ -14,6 +14,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -37,6 +40,8 @@ import com.hti.smpp.common.request.MccMncForm;
 import com.hti.smpp.common.request.MccMncUpdateForm;
 import com.hti.smpp.common.response.AddResponse;
 import com.hti.smpp.common.response.MncMccTokens;
+import com.hti.smpp.common.response.PaginationResponse;
+import com.hti.smpp.common.response.SearchResponse;
 import com.hti.smpp.common.services.NetworkService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
@@ -118,24 +123,29 @@ public class NetworkServiceImpl implements NetworkService {
 						replaceList.add(mccMncDTO);
 					}
 				} else {
+					logger.error("Check MCC not selected to single");
 					throw new InternalServerException("Check Mcc not selected to single");
 				}
 
 			} else {
-				MccMncDTO mccMncDTOC = null;
-				FileDataParser fileDataParser = new FileDataParser();
-				ArrayList<MccMncDTO> tempList = fileDataParser.getMccMncList(file);
-				System.out.println("TempList Size: " + tempList.size());
-				iterator = tempList.iterator();
-				while (iterator.hasNext()) {
-					mccMncDTOC = (MccMncDTO) iterator.next();
-					id = checkDuplicateMccMnc(mccMncDTOC);
-					if (id == 0) {
-						mccmncList.add(mccMncDTOC);
-					} else {
-						mccMncDTOC.setId(id);
-						replaceList.add(mccMncDTOC);
+				if(!file.isEmpty()) {
+					MccMncDTO mccMncDTOC = null;
+					FileDataParser fileDataParser = new FileDataParser();
+					ArrayList<MccMncDTO> tempList = fileDataParser.getMccMncList(file);
+					System.out.println("TempList Size: " + tempList.size());
+					iterator = tempList.iterator();
+					while (iterator.hasNext()) {
+						mccMncDTOC = (MccMncDTO) iterator.next();
+						id = checkDuplicateMccMnc(mccMncDTOC);
+						if (id == 0) {
+							mccmncList.add(mccMncDTOC);
+						} else {
+							mccMncDTOC.setId(id);
+							replaceList.add(mccMncDTOC);
+						}
 					}
+				}else {
+					throw new InternalServerException("Please Select A File!");
 				}
 			}
 			if (mccmncList.size() > 0) {
@@ -144,18 +154,18 @@ public class NetworkServiceImpl implements NetworkService {
 				count = insertMccMnc(mccmncList);
 				if (count == totalRecord) {
 					target = IConstants.SUCCESS_KEY;
-					logger.info("message: DBUploadSuccess");
+					logger.info("NetworkENtry Saved in DB Successful!");
 					// request.setAttribute("param_value", count + "");
-					logger.info("param_value", count + "");
+					logger.info("Total Inserted Records: ", count + "");
 					response = "Network Entry Saved Successful! Total record inserted: " + count;
 					addResponse.setResponseMessage(response);
 					addResponse.setTotalRecords(count);
 				} else {
 					remained = totalRecord - count;
 					target = IConstants.FAILURE_KEY;
-					logger.error("message: DBEntryFailure");
+					logger.error("DBEntryFailure. Internal Server Error!");
 					// request.setAttribute("param_value", remained + "");
-					logger.info("param_value", remained + "");
+					logger.info("Remaining Records: ", remained + "");
 					addResponse.setTotalRecords(remained);
 					addResponse.setResponseMessage("DBEntry Failure. Remaining: " + remained);;
 					return new ResponseEntity<>(addResponse, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -165,15 +175,15 @@ public class NetworkServiceImpl implements NetworkService {
 				target = "replace";
 				response = "Duplicate Entry Found! Total No. Of Duplicate Record: " + replaceList.size();
 				String param_message = "Total Records : " + count+"."+response;
-				logger.error("error: record duplicate");
+				logger.error(response);
 				// request.setAttribute("param_message", param_message);
-				logger.error("param_message", param_message);
+				logger.error("Message", param_message);
 				addResponse.setResponseMessage(param_message);
 				// request.setAttribute("list", replaceList);
-				logger.error("list", replaceList);
+				logger.error("replace list", replaceList);
 				addResponse.setList(replaceList);
 				// request.setAttribute("totalRecords", replaceList.size() + "");
-				logger.error("totalRecords", replaceList.size() + "");
+				logger.error("Total Records", replaceList.size() + "");
 				addResponse.setTotalRecords(replaceList.size());
 				return new ResponseEntity<>(addResponse,HttpStatus.CONFLICT);
 			}
@@ -313,9 +323,9 @@ public class NetworkServiceImpl implements NetworkService {
 					list.add(mncDTO);
 				}
 				int count = updateMccMnc(list);
-				logger.info("message: DBUpdateSuccess");
+				logger.info("Message: Updated Successfully!");
 				// request.setAttribute("param_value", count + "");
-				logger.info("param_value", count + "");
+				logger.info("Total Update Records: ", count);
 				target = IConstants.SUCCESS_KEY;
 				response = "Update Successful. Total Updated Records: " + count;
 				MultiUtility.changeFlag(Constants.NETWORK_FLAG_FILE, "707");
@@ -326,7 +336,7 @@ public class NetworkServiceImpl implements NetworkService {
 			}
 
 		} catch (NotFoundException e) {
-			logger.error("error: processError");
+			logger.error("Not Found Exception");
 			target = IConstants.FAILURE_KEY;
 			logger.error("Exception:ReplaceMccMnc:" + e);
 			throw new NotFoundException(e.getLocalizedMessage());
@@ -356,6 +366,7 @@ public class NetworkServiceImpl implements NetworkService {
 				this.networkEntryRepo.save(entry);
 				count++;
 			}else {
+				logger.error("Network Entry not found with id: "+data.getId());
 				throw new NotFoundException("Network Entry not found with id: "+data.getId());
 			}
 		}
@@ -395,13 +406,14 @@ public class NetworkServiceImpl implements NetworkService {
 				response = "Deleted Successfully! Deleted Records: " + count;
 				MultiUtility.changeFlag(Constants.NETWORK_FLAG_FILE, "707");
 			} else {
-				logger.error("error: record unavailable");
+				logger.error("Error: No Record Found To Delete!");
+				response = "No Record Found To Delete!";
 				target = IConstants.FAILURE_KEY;
 			}
 
 		} catch (Exception ex) {
 			count = 0;
-			logger.error("Exception in deleteMccMnc()", ex);
+			logger.error("Exception", ex);
 			target = IConstants.FAILURE_KEY;
 			throw new InternalServerException(ex.getLocalizedMessage());
 		}
@@ -423,8 +435,8 @@ public class NetworkServiceImpl implements NetworkService {
      * @return ResponseEntity containing a list of MccMncDTO objects
      */
 	@Override
-	public ResponseEntity<List<MccMncDTO>> search(String ccReq, String mccReq, String mncReq, String checkCountryReq,
-			String checkMccReq, String checkMncReq, String username) {
+	public ResponseEntity<SearchResponse> search(String ccReq, String mccReq, String mncReq, String checkCountryReq,
+			String checkMccReq, String checkMncReq, String username, Pageable pageable) {
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
@@ -440,7 +452,9 @@ public class NetworkServiceImpl implements NetworkService {
 		String target = null;
 		String checkCountry = "", checkMcc = "", checkMnc = "";
 		String cc = "%", mcc = "%", mnc = "%";
-		ArrayList<MccMncDTO> list = null;
+		
+		List<MccMncDTO> list = new ArrayList<>();
+		SearchResponse searchResponse = new SearchResponse();
 		try {
 			checkCountry = checkCountryReq;
 			checkMcc = checkMccReq;
@@ -464,7 +478,31 @@ public class NetworkServiceImpl implements NetworkService {
 				}
 			}
 
-			list = editMccMnc(cc, mcc, mnc);
+			
+			Page<NetworkEntry> resultPage = this.networkEntryRepo.findByPaginated(cc, mcc, mnc, pageable);
+			PaginationResponse response = new PaginationResponse(resultPage.getNumber(),resultPage.getSize(),resultPage.getTotalPages(),resultPage.getTotalElements(),resultPage.isLast(),resultPage.isFirst());
+			try {
+				List<NetworkEntry> networks = resultPage.getContent();
+
+				for (NetworkEntry network : networks) {
+					MccMncDTO mccMncDTO = new MccMncDTO();
+					mccMncDTO.setId(network.getId());
+					mccMncDTO.setCc(Integer.toString(network.getCc()));
+					mccMncDTO.setCountry(network.getCountry());
+					mccMncDTO.setOperator(network.getOperator());
+					mccMncDTO.setMcc(network.getMcc());
+					mccMncDTO.setMnc(network.getMnc());
+					mccMncDTO.setPrefix(network.getPrefix());
+					list.add(mccMncDTO);
+				}
+			} catch (Exception ex) {
+				logger.error(ex.toString());
+				throw new InternalServerException(ex.getLocalizedMessage());
+			}
+			
+			searchResponse.setPagiResponse(response);
+			searchResponse.setResponseList(list);
+			
 
 		} catch (Exception e) {
 			target = IConstants.FAILURE_KEY;
@@ -472,13 +510,39 @@ public class NetworkServiceImpl implements NetworkService {
 			throw new InternalServerException(e.getLocalizedMessage());
 		}
 		if (list.isEmpty()) {
+			logger.error("No records found!");
 			throw new NotFoundException("MccMnc data not found! List is empty!");
 		} else {
 			logger.info("Total records found: " + list.size());
 			target = IConstants.SUCCESS_KEY;
-			return ResponseEntity.ok(list);
+			return ResponseEntity.ok(searchResponse);
+		}
+		
+	}
+	
+	private ArrayList<MccMncDTO> getPaginatedResult(String cc, String mcc, String mnc, Pageable pageable) {
+		ArrayList<MccMncDTO> list = new ArrayList<>();
+		Page<NetworkEntry> resultPage = this.networkEntryRepo.findByPaginated(cc, mcc, mnc, pageable);
+		try {
+			List<NetworkEntry> networks = resultPage.getContent();
+
+			for (NetworkEntry network : networks) {
+				MccMncDTO mccMncDTO = new MccMncDTO();
+				mccMncDTO.setId(network.getId());
+				mccMncDTO.setCc(Integer.toString(network.getCc()));
+				mccMncDTO.setCountry(network.getCountry());
+				mccMncDTO.setOperator(network.getOperator());
+				mccMncDTO.setMcc(network.getMcc());
+				mccMncDTO.setMnc(network.getMnc());
+				mccMncDTO.setPrefix(network.getPrefix());
+				list.add(mccMncDTO);
+			}
+		} catch (Exception ex) {
+			logger.error(ex.toString());
+			throw new InternalServerException(ex.getLocalizedMessage());
 		}
 
+		return list;
 	}
 
 	private ArrayList<MccMncDTO> editMccMnc(String cc, String mcc, String mnc) {
@@ -646,9 +710,10 @@ public class NetworkServiceImpl implements NetworkService {
 			}
 			if (!networkmap.isEmpty()) {
 				target = IConstants.SUCCESS_KEY;
+				System.out.println(networkmap.size());
 				return ResponseEntity.ok(networkmap);
 			} else {
-				logger.error("error: record unavailable");
+				logger.error("No record found in network map!");
 				target = IConstants.FAILURE_KEY;
 				throw new NotFoundException("No record found in network map!");
 			}
@@ -694,16 +759,12 @@ public class NetworkServiceImpl implements NetworkService {
 				count = updateMccMnc(tempList);
 				if (tempList.size() == count) {
 					target = IConstants.SUCCESS_KEY;
-					logger.info("message.DBUpdateSuccess");
-					// request.setAttribute("param_value", count + "");
-					logger.info("param_value", count + "");
+					logger.info("Update Successful! Total Updated Records: " + count);
 					response = "Update Successful! Total Updated Records: " + count;
 				} else {
 					int remained = tempList.size() - count;
 					target = IConstants.FAILURE_KEY;
-					logger.error("message.DBUpdateFailure");
-					// request.setAttribute("param_value", remained + "");
-					logger.error("param_value", remained + "");
+					logger.error("Update Failure With Remaining Records: " + remained);
 					response = "Update Failure With Remaining Records: " + remained;
 				}
 				MultiUtility.changeFlag(Constants.NETWORK_FLAG_FILE, "707");
@@ -800,6 +861,83 @@ public class NetworkServiceImpl implements NetworkService {
 			throw new InternalServerException(e.getLocalizedMessage());
 		}
 		return ResponseEntity.ok(mncMccTokens);
+	}
+
+	@Override
+	public ResponseEntity<?> findMcc(String cc, String username) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
+		try {
+			if(cc!=null && !(cc.equals("NA"))) {
+				List<String> getCC = this.networkEntryRepo.findDistinctMCCByCc(cc);
+				if(getCC.isEmpty()) {
+					throw new NotFoundException("No Mcc Entry Found!");
+				}else {
+					return ResponseEntity.ok(getCC);
+				}
+			}else {
+				throw new InternalServerException("Unable to fetch MCC! CC is NA!");
+			}
+		} catch (NotFoundException e) {
+			throw new NotFoundException(e.getMessage());
+		} catch (Exception e) {
+			throw new InternalServerException(e.getMessage());
+		}
+
+		
+	}
+
+	@Override
+	public ResponseEntity<?> findMnc(String mcc, String username) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		
+		try {
+			List<String> mncList = new ArrayList<>();
+			
+			if(mcc!=null && !(mcc.equals("NA"))) {
+				List<Object[]> results = this.networkEntryRepo.findDistinctMNCAndOperatorByMCCLike(mcc);
+
+				for (Object[] result : results) {
+					String MNC = (String) result[0];
+
+					if (MNC != null && !MNC.isEmpty()) {
+						mncList.add(MNC);
+					}
+				}
+				
+				if(mncList.isEmpty()) {
+					throw new NotFoundException("MNC list is empty! No Data Found!");
+				}else {
+					return ResponseEntity.ok(mncList);
+				}
+				
+			}else {
+				throw new InternalServerException("Unable to fetch MNC! MCC is NA!");
+			}
+		} catch (NotFoundException e) {
+			throw new NotFoundException(e.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new InternalServerException(e.getLocalizedMessage());
+		}
+		
 	}
 
 }

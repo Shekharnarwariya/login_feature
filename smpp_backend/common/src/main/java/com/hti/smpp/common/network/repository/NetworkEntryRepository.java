@@ -2,6 +2,8 @@ package com.hti.smpp.common.network.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -27,6 +29,9 @@ public interface NetworkEntryRepository extends JpaRepository<NetworkEntry, Inte
 	
 	@Query(value="SELECT * FROM network n WHERE n.cc LIKE :cc AND n.mcc LIKE :mcc AND n.mnc LIKE :mnc ORDER BY n.cc", nativeQuery = true)
     List<NetworkEntry> findByCcAndMccAndMnc(@Param("cc") String cc, @Param("mcc") String mcc, @Param("mnc") String mnc);
+	
+	@Query(value="SELECT * FROM network n WHERE n.cc LIKE :cc AND n.mcc LIKE :mcc AND n.mnc LIKE :mnc ORDER BY n.cc", nativeQuery = true)
+    Page<NetworkEntry> findByPaginated(@Param("cc") String cc, @Param("mcc") String mcc, @Param("mnc") String mnc, Pageable pageable);
 	
 	@Query("SELECT DISTINCT n.mcc FROM NetworkEntry n WHERE n.cc LIKE :cc")
     List<String> findDistinctMCCByCc(String cc);
