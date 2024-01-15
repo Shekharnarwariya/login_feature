@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.hti.smpp.common.exception.ExceptionResponse;
+import com.hti.smpp.common.request.BulkAutoScheduleRequest;
 import com.hti.smpp.common.request.BulkContactRequest;
 import com.hti.smpp.common.request.SmsRequest;
 import com.hti.smpp.common.response.BulkResponse;
@@ -162,4 +163,19 @@ public class SmsController {
 		return smsService.sendSmsMms(ObjectConverter.jsonMapperBulkMmsRequest(jsonBulkMmsRequest), username, session,
 				destinationNumberFile);
 	}
+
+	@Operation(summary = "Send SMS to a Group of Contacts", description = "This API endpoint allows you to send SMS to a group of contacts specified in a file.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "SMS sent successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SmsResponse.class))),
+			@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
+	@PostMapping(value = "/auto-schedule", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<?> autoSchedule(
+			@RequestPart(name = "destinationNumberFile", required = true) MultipartFile destinationNumberFile,
+			@RequestHeader("username") String username,
+			@RequestParam(name = "bulkAutoScheduleRequest") String bulkAutoScheduleRequest) {
+		return smsService.autoSchedule(destinationNumberFile, username,
+				ObjectConverter.jsonMapperBulkAutoScheduleRequest(bulkAutoScheduleRequest));
+	}
+
 }

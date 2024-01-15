@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.impl.PredicateBuilderImpl;
@@ -49,6 +50,7 @@ import com.hti.smpp.common.util.IConstants;
 
 import jakarta.servlet.http.HttpServletResponse;
 
+@Service
 public class SubmissionReportServiceImpl implements SubmissionReportService {
 	
 	Logger logger = LoggerFactory.getLogger(SubmissionReportServiceImpl.class);

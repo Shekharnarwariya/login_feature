@@ -93,6 +93,10 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 	@Autowired
 	private WebMasterEntryRepository webMasterEntryRepository;
 
+	public Connection getConnection() throws SQLException {
+		return dataSource.getConnection();
+	}
+
 	private String template_file = IConstants.FORMAT_DIR + "report//BatchReport.jrxml";
 	Logger logger = LoggerFactory.getLogger(SummaryReportServiceImpl.class);
 	Locale locale = null;
@@ -117,11 +121,12 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
+			System.out.println("run 120 in summary report view");
 			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry);
 
 			if (reportList != null && !reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
-				JasperPrint print = getJasperPrint(reportList, false);
+				//JasperPrint print = getJasperPrint(reportList, false);
 				// session.setAttribute("batchprint", print);
 				// request.setAttribute("page", "1");
 			} else {
@@ -244,7 +249,7 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 		}
 		return target;
 	}
-	
+
 	@Override
 	public String SummaryReportdoc(String username, CustomReportForm customReportForm, HttpServletResponse response,
 			String lang) {
@@ -287,8 +292,8 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 			} else {
 				target = IConstants.FAILURE_KEY;
 				throw new NotFoundException("user summary report not found with username {}" + username);
-				
-				//message = new ActionMessage("error.record.unavailable");
+
+				// message = new ActionMessage("error.record.unavailable");
 			}
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getMessage());
@@ -297,7 +302,6 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 		}
 		return target;
 	}
-	
 
 	private JasperPrint getJasperPrint(List reportList, boolean paging) throws Exception {
 		System.out.println("<-- Creating Design ---> ");
@@ -386,6 +390,7 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 
 	private List<BatchDTO> getSummaryReportList(CustomReportForm customReportForm, String username,
 			WebMasterEntry webMasterEntry) throws SQLException {
+		System.out.println("call get summary report list 390 ");
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
 				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
@@ -519,7 +524,7 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 		Statement pStmt = null;
 		ResultSet rs = null;
 		try {
-			// con = LogDBConnection.openConnection();
+			con = getConnection();
 			pStmt = con.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY);
 			pStmt.setFetchSize(Integer.MIN_VALUE);
 			rs = pStmt.executeQuery(sql);
@@ -534,7 +539,7 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 				} catch (Exception ex) {
 				}
 				report = new BatchDTO(rs.getString("username"), rs.getString("sender"), time[0], time[1], cost, content,
-						rs.getInt("msgcount"), rs.getInt("numbercount"), rs.getString("reqtype").toUpperCase());
+						rs.getInt("msgcount"), rs.getInt("numbercount"), rs.getString("reqtype"));
 				reportList.add(report);
 			}
 		} finally {
@@ -617,7 +622,5 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 			throw new InternalServerException("Error: getting error in delivery report with username {}");
 		}
 	}
-
-	
 
 }

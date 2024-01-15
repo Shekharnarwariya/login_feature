@@ -34,6 +34,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -74,13 +75,18 @@ import com.hti.smpp.common.messages.dto.QueueBackupExt;
 import com.hti.smpp.common.messages.dto.SummaryReport;
 import com.hti.smpp.common.messages.repository.BulkEntryRepository;
 import com.hti.smpp.common.messages.repository.SummaryReportRepository;
+import com.hti.smpp.common.request.BulkAutoScheduleRequest;
 import com.hti.smpp.common.request.BulkContactRequest;
-import com.hti.smpp.common.request.BulkRequest;
+import com.hti.smpp.common.request.BulkEntryForm;
 import com.hti.smpp.common.request.BulkMmsRequest;
+import com.hti.smpp.common.request.BulkRequest;
+import com.hti.smpp.common.request.BulkUpdateRequest;
 import com.hti.smpp.common.request.SmsRequest;
+import com.hti.smpp.common.response.BulkProccessResponse;
 import com.hti.smpp.common.response.BulkResponse;
 import com.hti.smpp.common.response.SmsResponse;
 import com.hti.smpp.common.schedule.dto.ScheduleEntry;
+import com.hti.smpp.common.schedule.dto.ScheduleEntryExt;
 import com.hti.smpp.common.schedule.repository.ScheduleEntryRepository;
 import com.hti.smpp.common.service.RouteDAService;
 import com.hti.smpp.common.service.SendSmsService;
@@ -114,6 +120,8 @@ import com.logica.smpp.pdu.SubmitSMResp;
 import com.logica.smpp.pdu.WrongDateFormatException;
 import com.logica.smpp.util.ByteBuffer;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 
@@ -162,6 +170,9 @@ public class SmsServiceImpl implements SmsService {
 
 	@Autowired
 	private GroupDataEntryRepository groupDataEntryRepository;
+
+	@Autowired
+	private EntityManager entityManager;
 
 	public SmsResponse sendSms(SmsRequest smsRequest, String username) {
 		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
@@ -5892,6 +5903,368 @@ public class SmsServiceImpl implements SmsService {
 		return ResponseEntity.ok(bulkResponse);
 	}
 
+	@Override
+	public ResponseEntity<?> autoSchedule(MultipartFile destinationNumberFile, String username,
+			BulkAutoScheduleRequest bulkAutoScheduleRequest) {
+		BulkResponse bulkResponse = new BulkResponse();
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		DriverInfo driverInfo = null;
+		Optional<DriverInfo> OptionalDriverInfo = driverInfoRepository.findById(user.getId());
+		if (OptionalDriverInfo.isPresent()) {
+			driverInfo = OptionalDriverInfo.get();
+		} else
+			throw new NotFoundException("drive info  not found with the provided username.");
+
+		Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findBySystemId(user.getSystemId());
+
+		BalanceEntry balanceEntry = null;
+
+		if (balanceOptional.isPresent()) {
+
+			balanceEntry = balanceOptional.get();
+		}
+		List<ScheduleEntryExt> scheduleList = new ArrayList<ScheduleEntryExt>();
+		String target = IConstants.FAILURE_KEY;
+		String systemId = user.getSystemId();
+		logger.info(systemId + " Auto Schedule Request: " + destinationNumberFile);
+		String bulkSessionId = systemId + "_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
+		String uploaded_file = destinationNumberFile.getOriginalFilename();
+		if ((uploaded_file.lastIndexOf(".xls") > -1) || (uploaded_file.lastIndexOf(".xlsx") > -1)) {
+			List<String[]> param_list = new ArrayList<String[]>();
+			Workbook workbook = null;
+			try {
+				InputStream inputStream = destinationNumberFile.getInputStream();
+				if (uploaded_file.endsWith(".xlsx")) {
+					workbook = new XSSFWorkbook(inputStream);
+				} else {
+					workbook = new HSSFWorkbook(inputStream);
+				}
+				Sheet firstSheet = workbook.getSheetAt(0);
+				logger.info(bulkSessionId + " Total Rows: " + firstSheet.getPhysicalNumberOfRows());
+				Iterator<org.apache.poi.ss.usermodel.Row> iterator = firstSheet.iterator();
+				int column_count = 0;
+				while (iterator.hasNext()) {
+					org.apache.poi.ss.usermodel.Row nextRow = iterator.next();
+					if (nextRow.getRowNum() == 0) {
+						column_count = nextRow.getPhysicalNumberOfCells();
+						logger.info(bulkSessionId + " Total Columns: " + column_count);
+						if (column_count < 5) {
+							logger.error(
+									bulkSessionId + " Invalid Format: Column Count must be greater then or equal to 5");
+							break;
+						}
+					} else {
+						Iterator<Cell> cellIterator = nextRow.cellIterator();
+						String cell_value = null;
+						String params[] = new String[column_count];
+						while (cellIterator.hasNext()) {
+							Cell cell = cellIterator.next();
+							cell_value = new DataFormatter().formatCellValue(cell);
+							if (cell.getColumnIndex() < column_count) {
+								params[cell.getColumnIndex()] = cell_value;
+							} else {
+								logger.info(bulkSessionId + " Invalid Column[" + cell.getColumnIndex() + "] -> "
+										+ cell_value);
+							}
+						}
+						param_list.add(params);
+					}
+				}
+			} catch (Exception ex) {
+				logger.info(bulkSessionId, ex.fillInStackTrace());
+			} finally {
+				try {
+					workbook.close();
+				} catch (Exception e) {
+				}
+			}
+			if (!param_list.isEmpty()) {
+				try {
+					// BulkSmsDTO bulkSmsDTO = null;
+					String msgType = bulkAutoScheduleRequest.getMessageType();
+					String msg_content = null;
+					if (msgType.equalsIgnoreCase("7bit")) {
+						String sp_msg = bulkAutoScheduleRequest.getMessage();
+						msg_content = SmsConverter.getContent(sp_msg.toCharArray());
+						msgType = "SpecialChar";
+					} else {
+						msg_content = bulkAutoScheduleRequest.getMessage();
+					}
+					int entry_number = 1;
+					for (String[] entry : param_list) {
+						System.out.println(bulkSessionId + " Starting Process For Entry: " + entry_number);
+						if (entry[0] != null && entry[0].length() == 6) {
+							if (entry[1] != null && entry[1].length() == 4
+									&& Integer.parseInt(entry[1]) >= Calendar.getInstance().get(Calendar.YEAR)) {
+								if (entry[2] != null && Integer.parseInt(entry[2]) > 0
+										&& Integer.parseInt(entry[2]) <= 12) {
+									if (entry[3] != null && Integer.parseInt(entry[3]) > 0
+											&& Integer.parseInt(entry[3]) <= 31) {
+										if (entry[4] != null && entry[4].length() == 5) {
+											if (entry[5] != null && entry[5].length() > 0) {
+												String number = entry[5];
+												if (number.startsWith("+")) {
+													number = number.substring(1, number.length());
+												}
+												number = number.replaceAll("\\s+", ""); // Replace all the spaces in the
+																						// String with empty character.
+												try {
+													Long.parseLong(number);
+												} catch (NumberFormatException nfe) {
+													logger.info(bulkSessionId + " Invalid Mobile[" + number
+															+ "] Entry: " + entry_number);
+													continue;
+												}
+												String YYYY = entry[1];
+												String MM = entry[2];
+												String dd = entry[3];
+												if (MM.length() == 1) {
+													MM = "0" + MM;
+												}
+												if (dd.length() == 1) {
+													dd = "0" + dd;
+												}
+												BulkSmsDTO bulkSmsDTO = new BulkSmsDTO();
+												// -------- proceed for time calculation -----------
+												// Calendar calendar = Calendar.getInstance();
+												String client_time = dd + "-" + MM + "-" + YYYY + " " + entry[4]
+														+ ":00";
+												String client_gmt = "GMT" + entry[0];
+												System.out.println(
+														"client_time: " + client_time + " client_gmt: " + client_gmt);
+												SimpleDateFormat client_formatter = new SimpleDateFormat(
+														"dd-MM-yyyy HH:mm:ss");
+												client_formatter.setTimeZone(TimeZone.getTimeZone(client_gmt));
+												SimpleDateFormat local_formatter = new SimpleDateFormat(
+														"dd-MM-yyyy HH:mm:ss");
+												String schedule_time = null;
+												try {
+													schedule_time = local_formatter
+															.format(client_formatter.parse(client_time));
+													System.out
+															.println(bulkSessionId + " server_time: " + schedule_time);
+													if (local_formatter.parse(schedule_time).before(new Date())) {
+														logger.info(entry_number + " Scheduled Time[" + schedule_time
+																+ "] Before Current Time. Skipped");
+														continue;
+
+													}
+													String server_date = schedule_time.split(" ")[0];
+													String server_time = schedule_time.split(" ")[1];
+													bulkSmsDTO.setDate(
+															server_date.split("-")[2] + "-" + server_date.split("-")[1]
+																	+ "-" + server_date.split("-")[0]);
+													bulkSmsDTO.setTime(
+															server_time.split(":")[0] + "" + server_time.split(":")[1]);
+												} catch (Exception e) {
+													logger.error(bulkSessionId, e);
+													continue;
+												}
+												bulkSmsDTO.setTimestart(client_time);
+												bulkSmsDTO.setGmt(client_gmt);
+												// ----------------Proceed for other values ---------------------
+												// System.out.println("Message: " + msg_content);
+												String msg = new String(msg_content);
+												int param_number = 1;
+												for (int i = 6; i < entry.length; i++) {
+													String param_value = entry[i];
+													// System.out.println("entry[" + i + "]: " + param_value);
+													if (msgType.equalsIgnoreCase("Unicode")) {
+														String encoded_value = UTF16(param_value).toLowerCase();
+														String encoded_param = UTF16("param" + param_number)
+																.toLowerCase();
+														if (encoded_param != null) {
+															try {
+																msg = msg.replaceAll(encoded_param,
+																		Matcher.quoteReplacement(encoded_value));
+															} catch (Exception ex) {
+																// System.out.println(ex + " ==> " + destNumber + ": " +
+																// entry);
+																System.out.println(ex + ": " + encoded_param + " ==> "
+																		+ encoded_value);
+															}
+														}
+													} else {
+														String asciilist = "";
+														for (int h = 0; h < param_value.length(); h++) {
+															int asciiNum = param_value.charAt(h);
+															asciilist += asciiNum + ",";
+														}
+														String hex_param = SevenBitChar.getHexValue(asciilist);
+														param_value = SmsConverter.getContent(hex_param.toCharArray());
+														msg = msg.replaceAll("param" + param_number,
+																Matcher.quoteReplacement(param_value));
+													}
+													// System.out.println("Converted: " + msg);
+													param_number++;
+												}
+												List<String> destination_list = new ArrayList<String>();
+												destination_list.add(number);
+												if (bulkAutoScheduleRequest.isTracking()) {
+													// --------- for tracking -------------------
+													String campaign_name = bulkAutoScheduleRequest.getCampaignName();
+													System.out.println("Received Web Links: "
+															+ bulkAutoScheduleRequest.getWeblink().length);
+													List<String> web_links_list = new ArrayList<String>();
+													for (String link : bulkAutoScheduleRequest.getWeblink()) {
+														if (link != null && link.length() > 0) {
+															web_links_list.add(link);
+														}
+													}
+													System.out.println("Final Web Links: " + web_links_list);
+													Map<String, String> campaign_mapping = getCampaignId(systemId,
+															bulkAutoScheduleRequest.getSenderId(),
+															IConstants.GATEWAY_NAME, web_links_list,
+															String.join(",", destination_list), campaign_name);
+													for (int i = 0; i < web_links_list.size(); i++) {
+														if (campaign_mapping.containsKey(web_links_list.get(i))) {
+															String appending_url = "http://1l.ae/"
+																	+ campaign_mapping.get(web_links_list.get(i))
+																	+ "/r=1";
+															String web_link_hex_param = null;
+															if (msgType.equalsIgnoreCase("Unicode")) {
+																web_link_hex_param = "005B007700650062005F006C0069006E006B005F0074007200610063006B0069006E0067005F00750072006C005D"
+																		.toLowerCase();
+																msg = msg.replaceFirst(web_link_hex_param,
+																		UTF16(appending_url).toLowerCase());
+															} else {
+																web_link_hex_param = SevenBitChar.getHexValue(
+																		"91,119,101,98,95,108,105,110,107,95,116,114,97,99,107,105,110,103,95,117,114,108,93,");
+																web_link_hex_param = SmsConverter
+																		.getContent(web_link_hex_param.toCharArray());
+																msg = msg.replaceFirst(web_link_hex_param,
+																		appending_url);
+															}
+														}
+													}
+												}
+												bulkSmsDTO.setFrom(bulkAutoScheduleRequest.getFrom());
+												bulkSmsDTO.setSenderId(bulkAutoScheduleRequest.getSenderId());
+												bulkSmsDTO.setMessageType(msgType);
+												bulkSmsDTO.setDestinationList(destination_list);
+												bulkSmsDTO.setMessage(msg);
+												bulkSmsDTO.setOrigMessage(UTF16(bulkAutoScheduleRequest.getMessage()));
+												bulkSmsDTO.setRepeat("No");
+												bulkSmsDTO.setReqType("bulk");
+												bulkSmsDTO.setClientId(systemId);
+												bulkSmsDTO.setSystemId(systemId);
+												bulkSmsDTO.setPassword(new PasswordConverter()
+														.convertToEntityAttribute(driverInfo.getDriver()));
+												if (balanceEntry.getWalletFlag().equalsIgnoreCase("No")) {
+													bulkSmsDTO.setUserMode("credit");
+												} else {
+													bulkSmsDTO.setUserMode("wallet");
+												}
+												// ------- create schedule for this entry ------------------
+												System.out
+														.println(bulkSessionId + " Creating Schedule: " + entry_number);
+												String filename = new SendSmsService().createScheduleFile(bulkSmsDTO);
+												int generated_id = 0;
+												ScheduleEntry scheduleEntry = null;
+												if (filename != null) {
+													scheduleEntry = new ScheduleEntry();
+													scheduleEntry.setClientGmt(bulkSmsDTO.getGmt());
+													scheduleEntry.setClientTime(bulkSmsDTO.getTimestart());
+													scheduleEntry.setServerId(IConstants.SERVER_ID);
+													scheduleEntry.setDate(bulkSmsDTO.getDate());
+													scheduleEntry.setServerTime(bulkSmsDTO.getTime());
+													scheduleEntry.setUsername(systemId);
+													scheduleEntry.setFileName(filename);
+													scheduleEntry.setStatus("false");
+													scheduleEntry.setRepeated(bulkSmsDTO.getRepeat());
+													scheduleEntry.setScheduleType(bulkSmsDTO.getReqType());
+													scheduleEntry.setWebId(null);
+													generated_id = scheduleEntryRepository.save(scheduleEntry).getId();
+													if (generated_id > 0) {
+														scheduleEntry.setId(generated_id);
+														ScheduleEntryExt ext = new ScheduleEntryExt(scheduleEntry);
+														ext.setMessageType(bulkSmsDTO.getMessageType());
+														ext.setTotalNumbers(bulkSmsDTO.getDestinationList().size());
+														ext.setSenderId(bulkSmsDTO.getSenderId());
+														ext.setCustomContent(bulkSmsDTO.isCustomContent());
+														ext.setCampaign(bulkSmsDTO.getCampaignName());
+														scheduleList.add(ext);
+														String today = Validation.getTodayDateFormat();
+														if (today.equalsIgnoreCase(bulkSmsDTO.getDate().trim())) {
+															Set<Integer> set = null;
+															if (GlobalVarsSms.ScheduledBatches
+																	.containsKey(bulkSmsDTO.getTime())) {
+																set = GlobalVarsSms.ScheduledBatches
+																		.get(bulkSmsDTO.getTime());
+															} else {
+																set = new LinkedHashSet<Integer>();
+															}
+															set.add(generated_id);
+															GlobalVarsSms.ScheduledBatches.put(bulkSmsDTO.getTime(),
+																	set);
+														}
+													} else {
+														// Scheduling Error
+														logger.error(entry_number + "<--  Scheduling Error --> ");
+														// message = new ActionMessage("error.scheduleError");
+													}
+												} else {
+													logger.error(
+															entry_number + "<--  Scheduling File Creation Error --> ");
+													// message = new ActionMessage("error.scheduleError");
+												}
+												// -------- end create schedule ----------------------------
+											} else {
+												logger.info(bulkSessionId + " Invalid Mobile[" + entry[5] + "] Entry: "
+														+ entry_number);
+											}
+										} else {
+											logger.info(bulkSessionId + " Invalid Time[" + entry[4] + "] Entry: "
+													+ entry_number);
+										}
+									} else {
+										logger.info(bulkSessionId + " Invalid Day[" + entry[3] + "] Entry: "
+												+ entry_number);
+									}
+								} else {
+									logger.info(
+											bulkSessionId + " Invalid Month[" + entry[2] + "] Entry: " + entry_number);
+								}
+							} else {
+								logger.info(bulkSessionId + " Invalid Year[" + entry[1] + "] Entry: " + entry_number);
+							}
+						} else {
+							logger.info(bulkSessionId + " Invalid Gmt[" + entry[0] + "] Entry: " + entry_number);
+						}
+						entry_number++;
+					}
+					if (!scheduleList.isEmpty()) {
+						target = IConstants.SUCCESS_KEY;
+						logger.info(bulkSessionId + " Total Schedule Created: " + scheduleList.size());
+						// message = new ActionMessage("message.scheduleSuccess");
+
+					} else {
+						logger.info(bulkSessionId + "<-- No Valid Entry Found --> ");
+						// message = new ActionMessage("error.novalidNumber");
+					}
+				} catch (Exception e) {
+					logger.error(bulkSessionId, e);
+					// message = new ActionMessage("error.processError");
+				}
+			} else {
+				logger.info(bulkSessionId + "<-- No Valid Entry Found --> ");
+				// message = new ActionMessage("error.novalidNumber");
+			}
+		} else {
+			// message = new ActionMessage("error.fileFormat");
+		}
+		return ResponseEntity.ok(scheduleList);
+	}
+
 	public String sendBulkMms(BulkSmsDTO bulkSmsDTO, ProgressEvent progressEvent, String mmsType, String caption,
 			WebMasterEntry webEntry) {
 		String response = "";
@@ -6381,5 +6754,237 @@ public class SmsServiceImpl implements SmsService {
 		} catch (Exception sqle) {
 			logger.error(" ", sqle.fillInStackTrace());
 		}
+	}
+
+//================================edit=================================
+	@Override
+	public ResponseEntity<?> editBulk(String username, BulkEntryForm bulkForm) {
+		BulkProccessResponse bulkProccessResponse = new BulkProccessResponse();
+		String target = IConstants.FAILURE_KEY;
+		int batchId = bulkForm.getId();
+		logger.info("Edit Request For BatchId: " + batchId);
+		try {
+			BatchObject batch = GlobalVars.BatchQueue.get(batchId);
+			if (batch != null && batch.isActive()) {
+				logger.info("Deactivating BatchId: " + batchId);
+				batch.setActive(false);
+				GlobalVars.BatchQueue.replace(batchId, batch);
+			}
+
+			if (batch != null) {
+				Optional<BulkEntry> bulkOptional = bulkEntryRepository.findById(batchId);
+				if (!bulkOptional.isPresent()) {
+					throw new NotFoundException("bulk entity not foud with id " + batchId);
+				}
+				BulkEntry entry = bulkOptional.get();
+
+				if (entry != null) {
+					String message = SmsConverter.uniHexToCharMsg(entry.getContent());
+					String from = "Name";
+
+					if (entry.getSton() == 1 && entry.getSnpi() == 1) {
+						from = "Mobile";
+					}
+
+					String sender = entry.getSenderId();
+
+					bulkProccessResponse.setBatchId(entry.getId() + "");
+					bulkProccessResponse.setDelay(entry.getDelay() + "");
+					bulkProccessResponse.setExpiry(entry.getExpiryHour() + "");
+					bulkProccessResponse.setFrom(from);
+					bulkProccessResponse.setSender(sender);
+					bulkProccessResponse.setMessage(message);
+					bulkProccessResponse.setReqType(entry.getReqType());
+					target = IConstants.SUCCESS_KEY;
+
+					logger.info("BatchId " + batchId + " edited successfully.");
+				} else {
+					logger.error("BatchId " + batchId + " not found in bulkEntryRepository.");
+					throw new NotFoundException("BatchId " + batchId + " not found in bulkEntryRepository.");
+				}
+			} else {
+				logger.error("BatchId " + batchId + " not found in BatchQueue.");
+				throw new NotFoundException("BatchId " + batchId + " not found in BatchQueue.");
+			}
+		} catch (NotFoundException e) {
+			throw new NotFoundException(e.getMessage());
+		} catch (Exception ex) {
+			logger.error("Error editing BatchId: " + batchId, ex);
+			throw new InternalServerException("Error editing BatchId: " + batchId);
+		}
+
+		return ResponseEntity.ok(bulkProccessResponse);
+	}
+
+	@Override
+	public ResponseEntity<?> pauseBulk(String username, BulkEntryForm bulkForm) {
+		int batchId = bulkForm.getId();
+		String target = IConstants.FAILURE_KEY;
+
+		try {
+			logger.info("Pause Request For BatchId: " + batchId);
+			BatchObject batch = GlobalVars.BatchQueue.get(batchId);
+
+			if (batch != null) {
+				batch.setActive(false);
+				GlobalVars.BatchQueue.replace(batchId, batch);
+				logger.info("Batch Paused: " + batchId);
+				logger.info("Paused batch successfully.");
+				target = "abort";
+			} else {
+				logger.warn("Batch Not Found: " + batchId);
+				throw new NotFoundException("Batch Not Found: " + batchId);
+			}
+		} catch (NotFoundException ex) {
+			logger.error("Error pausing batch: Batch Not Found", ex);
+			throw ex;
+		} catch (Exception ex) {
+			logger.error("Error pausing batch: " + batchId, ex);
+			throw new InternalServerException("Error pausing batch: " + batchId);
+		}
+
+		return ResponseEntity.ok(target);
+	}
+
+	@Override
+	public ResponseEntity<?> abortBulk(String username, BulkEntryForm bulkForm) {
+		int batchId = bulkForm.getId();
+		String target = IConstants.FAILURE_KEY;
+
+		try {
+			logger.info("Abort Request For BatchId: " + batchId);
+			BatchObject batch = GlobalVars.BatchQueue.remove(batchId);
+
+			if (batch != null) {
+				logger.info("Batch Removed: " + batchId);
+				logger.info("Batch aborted successfully.");
+				target = "abort";
+			} else {
+				logger.warn("Batch Not Found: " + batchId);
+				throw new NotFoundException("Batch Not Found: " + batchId);
+			}
+
+			logger.info("Abort Request target: " + target);
+		} catch (NotFoundException ex) {
+			logger.error("Error aborting batch: Batch Not Found", ex);
+			throw ex;
+		} catch (Exception ex) {
+			logger.error("Error aborting batch: " + batchId, ex);
+			throw new InternalServerException("Error aborting batch: " + batchId);
+		}
+
+		return ResponseEntity.ok(target);
+	}
+
+	@Override
+	public ResponseEntity<?> resumeBulk(String username, BulkEntryForm bulkForm) {
+		int batchId = bulkForm.getId();
+		String target = IConstants.FAILURE_KEY;
+
+		try {
+			logger.info("Resume Request For BatchId: " + batchId);
+			BatchObject batch = GlobalVars.BatchQueue.get(batchId);
+
+			if (batch != null) {
+				batch.setActive(true);
+				GlobalVars.BatchQueue.replace(batchId, batch);
+				logger.info("Batch Resumed: " + batchId);
+				logger.info("Batch resumed successfully.");
+				target = "resume";
+			} else {
+				logger.warn("Batch Not Found: " + batchId);
+				throw new NotFoundException("Batch Not Found: " + batchId);
+			}
+
+			logger.info("Resume Request target: " + target);
+		} catch (NotFoundException ex) {
+			logger.error("Error resuming batch: Batch Not Found", ex);
+			throw ex;
+		} catch (Exception ex) {
+			logger.error("Error resuming batch: " + batchId, ex);
+			throw new InternalServerException("Error resuming batch: " + batchId);
+		}
+
+		return ResponseEntity.ok(target);
+	}
+
+	@Override
+	public ResponseEntity<?> sendModifiedBulk(String username, BulkUpdateRequest bulkUpdateRequest) {
+		String target = IConstants.SUCCESS_KEY;
+
+		int id = bulkUpdateRequest.getId();
+		try {
+			BulkEntry queueBackup = bulkEntryRepository.findById(id).get();
+			logger.info("Modified FileId: " + id + " Expiry:" + bulkUpdateRequest.getExpiryHour() + " Delay:"
+					+ bulkUpdateRequest.getDelay());
+			queueBackup.setDelay(bulkUpdateRequest.getDelay());
+			int ston = 5;
+			int snpi = 0;
+			if (bulkUpdateRequest.getFrom().compareToIgnoreCase("Mobile") == 0) {
+				ston = 1;
+				snpi = 1;
+			}
+			queueBackup.setSton(ston);
+			queueBackup.setSnpi(snpi);
+			queueBackup.setSenderId(bulkUpdateRequest.getSenderId());
+			queueBackup.setReqType(bulkUpdateRequest.getReqType());
+			queueBackup.setExpiryHour(bulkUpdateRequest.getExpiryHour());
+			queueBackup.setContent(bulkUpdateRequest.getMessage());
+			String unicodeMsg = null;
+			// int no_of_msg = smsForm.getSmsParts();
+			if (bulkUpdateRequest.getMessageType().equalsIgnoreCase("Unicode")) {
+				queueBackup.setMessageType("Unicode");
+				unicodeMsg = bulkUpdateRequest.getMessage();
+			} else {
+				String sp_msg = bulkUpdateRequest.getMessage();
+				unicodeMsg = SmsConverter.getContent(sp_msg.toCharArray());
+				unicodeMsg = UTF16(unicodeMsg);
+				queueBackup.setMessageType("SpecialChar");
+			}
+			bulkEntryRepository.save(queueBackup);
+			List<BulkContentEntry> list = listContent(id);
+			for (BulkContentEntry entry : list) {
+				entry.setContent(unicodeMsg);
+				entry.setFlag("F");
+			}
+			// GlobalVars.bulkService.updateContent(id, list);
+			BatchObject batch = GlobalVars.BatchQueue.get(id);
+			if (!batch.isActive()) {
+				batch.setActive(true);
+			}
+			GlobalVars.BatchQueue.replace(id, batch);
+		} catch (Exception ex) {
+			target = IConstants.FAILURE_KEY;
+			logger.error("FileId: " + id, ex.fillInStackTrace());
+		}
+		if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY)) {
+			// message = new ActionMessage("message.batchSuccess");
+		} else {
+			// message = new ActionMessage("error.processError");
+		}
+
+		return null;// mapping.findForward(target);
+	}
+
+	private List<BulkContentEntry> listContent(int id) {
+
+		String queryString = "SELECT id, destination, content, flag FROM batch_content_" + id;
+		Query nativeQuery = entityManager.createNativeQuery(queryString);
+
+		List<Object[]> resultList = nativeQuery.getResultList();
+
+		List<BulkContentEntry> bulkContentEntries = new ArrayList<>();
+
+		for (Object[] result : resultList) {
+			BulkContentEntry bulkContentEntry = new BulkContentEntry();
+			bulkContentEntry.setId((int) result[0]);
+			bulkContentEntry.setDestination((long) result[1]);
+			bulkContentEntry.setContent((String) result[2]);
+			bulkContentEntry.setFlag((String) String.valueOf(result[3]));
+
+			bulkContentEntries.add(bulkContentEntry);
+		}
+		return bulkContentEntries;
+
 	}
 }

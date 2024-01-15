@@ -323,7 +323,7 @@ public class ReportController {
 	}
 
 	@Operation(summary = "Get Customized Report View")
-	@GetMapping("/customized-report-view")
+	@PostMapping("/customized-report-view")
 	public ResponseEntity<List<DeliveryDTO>> getCustomizedReportView(@RequestParam String username,
 			@RequestBody CustomReportForm customReportForm, @RequestParam String lang) {
 		List<DeliveryDTO> result = customizedReportService.CustomizedReportView(username, customReportForm, lang);
@@ -561,12 +561,13 @@ public class ReportController {
 
 	////////////////////
 
-	@GetMapping("/summary-report-view")
+	@PostMapping("/summary-report-view")
 	@Operation(summary = "Generate Summary Report in View format", description = "This endpoint generates a Summary Report in View format.")
 	public ResponseEntity<List<BatchDTO>> generateSummaryReportView(
 			@Parameter(description = "Username") @RequestParam String username,
-			@Parameter(description = "Custom Report Form") @RequestParam CustomReportForm customReportForm,
+			@RequestBody CustomReportForm customReportForm,
 			@Parameter(description = "Language of the report") @RequestParam String lang) {
+		System.out.println("run 570 in controller");
 		List<BatchDTO> reportList = summaryReportService.SummaryReportview(username, customReportForm, lang);
 		return ResponseEntity.ok(reportList);
 	}

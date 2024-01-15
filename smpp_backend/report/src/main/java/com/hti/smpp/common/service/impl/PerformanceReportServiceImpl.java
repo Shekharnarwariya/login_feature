@@ -25,6 +25,7 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.PredicateBuilder.EntryObject;
@@ -62,6 +63,7 @@ import net.sf.jasperreports.engine.export.ooxml.JRDocxExporter;
 import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
 import net.sf.jasperreports.engine.xml.JRXmlLoader;
 
+@Service
 public class PerformanceReportServiceImpl implements PerformanceReportService {
 
 	private Logger logger = LoggerFactory.getLogger(PerformanceReportServiceImpl.class);
@@ -122,10 +124,10 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
-		
+
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList = getReportList(customReportForm,username);
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
 				JasperPrint print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
@@ -173,10 +175,10 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
-		
+
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList = getReportList(customReportForm,username);
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
 				JasperPrint print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
@@ -208,7 +210,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 			throw new InternalServerException("Error: getting error in performance report with username {}" + username);
 		}
 		return target;
-		}
+	}
 
 	@Override
 	public String PerformanceReportDoc(String username, CustomReportForm customReportForm, String lang,
@@ -220,10 +222,10 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
-		
+
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList = getReportList(customReportForm,username);
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
 				JasperPrint print = getJasperPrint(reportList, false, customReportForm.getGroupBy());

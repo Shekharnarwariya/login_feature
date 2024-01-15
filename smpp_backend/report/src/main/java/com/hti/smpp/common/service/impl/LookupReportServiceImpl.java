@@ -39,6 +39,7 @@ import org.apache.poi.xssf.usermodel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.database.DataBase;
 import com.hti.smpp.common.exception.InternalServerException;
@@ -74,6 +75,7 @@ import net.sf.jasperreports.engine.fill.JRSwapFileVirtualizer;
 import net.sf.jasperreports.engine.util.JRSwapFile;
 import net.sf.jasperreports.engine.xml.JRXmlLoader;
 
+@Service
 public class LookupReportServiceImpl implements LookupReportService {
 	private static final Logger logger = LoggerFactory.getLogger(LookupReportServiceImpl.class);
 
@@ -270,7 +272,7 @@ public class LookupReportServiceImpl implements LookupReportService {
 		try {
 
 			locale = Customlocale.getLocaleByLanguage(lang);
-			List<LookupReport> reportList = getLookupReport(customReportForm, user.getRole(),username);
+			List<LookupReport> reportList = getLookupReport(customReportForm, user.getRole(), username);
 			if (reportList != null && !reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
 				JasperPrint print = getJasperPrint(reportList, false);
@@ -301,79 +303,75 @@ public class LookupReportServiceImpl implements LookupReportService {
 		}
 		return target;
 	}
+
 	@Override
 	public String LookupReportRecheck(String username, CustomReportForm customReportForm, String lang,
 			HttpServletResponse response) {
-			String target = IConstants.FAILURE_KEY;
-			String sql = "select * from lookup_result where status='ACCEPTD' ";
-			
-			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		String target = IConstants.FAILURE_KEY;
+		String sql = "select * from lookup_result where status='ACCEPTD' ";
 
-			UserEntry user = userOptional
-					.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+		UserEntry user = userOptional
+				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+
+		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			throw new UnauthorizedException("User does not have the required roles for this operation.");
+		}
+		try {
+
+			String batchid = null;
+			if (customReportForm.getCheck_A() != null) // batch_id specified
+			{
+				if (!customReportForm.getMessageId().equals("%")) {
+					batchid = customReportForm.getMessageId();
+				}
 			}
-			try {
-				
-				String batchid = null;
-				if (customReportForm.getCheck_A() != null) // batch_id specified
-				{
-					if (!customReportForm.getMessageId().equals("%")) {
-						batchid = customReportForm.getMessageId();
+			if (batchid != null) {
+				sql += "and batch_id = '" + batchid + "' ";
+			} else {
+
+				// String role = SessionHelper.getClientRole(request);
+				String role = user.getRole();
+				if (role.equalsIgnoreCase("superadmin") || role.equalsIgnoreCase("system")) {
+					if (customReportForm.getCheck_B() != null) // username specified
+					{
+						if (!customReportForm.getClientId().equalsIgnoreCase("%")) {
+							sql += "and username='" + customReportForm.getClientId() + "' ";
+						}
 					}
-				}
-				if (batchid != null) {
-					sql += "and batch_id = '" + batchid + "' ";
 				} else {
-					
-				//	String role = SessionHelper.getClientRole(request);
-					String role= user.getRole();
-					if (role.equalsIgnoreCase("superadmin") || role.equalsIgnoreCase("system")) {
-						if (customReportForm.getCheck_B() != null) // username specified
-						{
-							if (!customReportForm.getClientId().equalsIgnoreCase("%")) {
-								sql += "and username='" + customReportForm.getClientId() + "' ";
-							}
-						}
-					} else {
-						sql += "and username='" + customReportForm.getClientId() + "' ";
-					}
-					if (customReportForm.getSday() != null && customReportForm.getEday() != null) {
-						if (customReportForm.getSday().equalsIgnoreCase(customReportForm.getEday())) {
-							sql += "and DATE(createtime) = '" + customReportForm.getSday() + "'";
-						} else {
-							sql += "and DATE(createtime) between '" + customReportForm.getSday() + "' and '"
-									+ customReportForm.getEday() + "'";
-						}
-					} else {
-						if (batchid == null) {
-							sql += "and DATE(createtime) ='" + new SimpleDateFormat("yyyy-MM-dd").format(new Date(0)) + "'";
-						}
-					}
+					sql += "and username='" + customReportForm.getClientId() + "' ";
 				}
-				System.out.println("SQL: " + sql);
-				int count = new LookupServiceInvoker().reCheckStatus(sql);
-				System.out.println("Recheck Lookup Size: " + count);
-				if (count > 0) {
-					System.out.println("message.recheckSuccess");
-					target = "recheck";
+				if (customReportForm.getSday() != null && customReportForm.getEday() != null) {
+					if (customReportForm.getSday().equalsIgnoreCase(customReportForm.getEday())) {
+						sql += "and DATE(createtime) = '" + customReportForm.getSday() + "'";
+					} else {
+						sql += "and DATE(createtime) between '" + customReportForm.getSday() + "' and '"
+								+ customReportForm.getEday() + "'";
+					}
 				} else {
-					System.out.println("error.record.unavailable");
+					if (batchid == null) {
+						sql += "and DATE(createtime) ='" + new SimpleDateFormat("yyyy-MM-dd").format(new Date(0)) + "'";
+					}
 				}
-			} catch (Exception ex) {
-				throw new InternalServerException("error.processError");
-			
 			}
+			System.out.println("SQL: " + sql);
+			int count = new LookupServiceInvoker().reCheckStatus(sql);
+			System.out.println("Recheck Lookup Size: " + count);
+			if (count > 0) {
+				System.out.println("message.recheckSuccess");
+				target = "recheck";
+			} else {
+				System.out.println("error.record.unavailable");
+			}
+		} catch (Exception ex) {
+			throw new InternalServerException("error.processError");
+
+		}
 
 		return target;
 	}
-
-		
-	
-	
-	
 
 	private org.apache.poi.ss.usermodel.Workbook getWorkBook(List reportList) {
 		System.out.println("<-- Creating WorkBook --> ");
@@ -621,7 +619,5 @@ public class LookupReportServiceImpl implements LookupReportService {
 		list = new LookupServiceInvoker().getLookupReport(params);
 		return list;
 	}
-
-
 
 }

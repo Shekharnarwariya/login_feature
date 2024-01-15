@@ -5,9 +5,12 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.hti.smpp.common.request.BulkAutoScheduleRequest;
 import com.hti.smpp.common.request.BulkContactRequest;
-import com.hti.smpp.common.request.BulkRequest;
+import com.hti.smpp.common.request.BulkEntryForm;
 import com.hti.smpp.common.request.BulkMmsRequest;
+import com.hti.smpp.common.request.BulkRequest;
+import com.hti.smpp.common.request.BulkUpdateRequest;
 import com.hti.smpp.common.request.SmsRequest;
 import com.hti.smpp.common.response.BulkResponse;
 import com.hti.smpp.common.response.SmsResponse;
@@ -30,4 +33,18 @@ public interface SmsService {
 
 	public ResponseEntity<?> sendSmsMms(BulkMmsRequest bulkMmsRequest, String username, HttpSession session,
 			List<MultipartFile> destinationNumberFile);
+
+	public ResponseEntity<?> autoSchedule(MultipartFile destinationNumberFile, String username,
+			BulkAutoScheduleRequest bulkAutoScheduleRequest);
+
+	public ResponseEntity<?> editBulk(String username, BulkEntryForm bulkEntryForm);
+
+	public ResponseEntity<?> pauseBulk(String username, BulkEntryForm bulkEntryForm);
+
+	public ResponseEntity<?> abortBulk(String username, BulkEntryForm bulkEntryForm);
+
+	public ResponseEntity<?> resumeBulk(String username, BulkEntryForm bulkEntryForm);
+
+	public ResponseEntity<?> sendModifiedBulk(String username,BulkUpdateRequest bulkUpdateRequest);
+
 }

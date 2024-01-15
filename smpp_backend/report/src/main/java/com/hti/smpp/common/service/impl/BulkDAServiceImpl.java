@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.messages.dto.BulkContentEntry;
 import com.hti.smpp.common.messages.dto.BulkEntry;
@@ -13,7 +14,7 @@ import com.hti.smpp.common.service.BulkDAService;
 import com.hti.smpp.common.util.GlobalVars;
 
 
-
+@Service
 public class BulkDAServiceImpl implements BulkDAService {
 	//private BulkDAO bulkDAO;
 	private Logger logger = LoggerFactory.getLogger(BulkDAServiceImpl.class);
