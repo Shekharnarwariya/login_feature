@@ -18,9 +18,9 @@ public class BulkEntryForm {
 	private long firstNumber;
 	private String content;
 	private String campaignName;
-	private long processed; // count of processed numbers
-	private long pending; // count of processed numbers
-	private boolean active; // status
+	private long processed; 
+	private long pending; 
+	private boolean active; 
 
 	public int getId() {
 		return id;

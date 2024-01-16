@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -15,8 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.hti.smpp.common.exception.ExceptionResponse;
-import com.hti.smpp.common.request.BulkAutoScheduleRequest;
 import com.hti.smpp.common.request.BulkContactRequest;
+import com.hti.smpp.common.request.BulkUpdateRequest;
 import com.hti.smpp.common.request.SmsRequest;
 import com.hti.smpp.common.response.BulkResponse;
 import com.hti.smpp.common.response.SmsResponse;
@@ -25,6 +26,7 @@ import com.hti.smpp.common.util.ObjectConverter;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -176,6 +178,47 @@ public class SmsController {
 			@RequestParam(name = "bulkAutoScheduleRequest") String bulkAutoScheduleRequest) {
 		return smsService.autoSchedule(destinationNumberFile, username,
 				ObjectConverter.jsonMapperBulkAutoScheduleRequest(bulkAutoScheduleRequest));
+	}
+
+	@GetMapping("/edit")
+	@Operation(summary = "Edit Bulk Entry", description = "Edit bulk entry for the specified username.")
+	@ApiResponse(responseCode = "200", description = "Bulk entry edited successfully")
+	public ResponseEntity<?> editBulk(@RequestHeader("username") String username,
+			@RequestParam(name = "batch_Id") int batchId) {
+		return smsService.editBulk(username, batchId);
+	}
+
+	@GetMapping("/pause")
+	@Operation(summary = "Pause Bulk Entry", description = "Pause bulk entry for the specified username.")
+	@ApiResponse(responseCode = "200", description = "Bulk entry paused successfully")
+	public ResponseEntity<?> pauseBulk(@RequestHeader("username") String username,
+			@RequestParam(name = "batch_Id") int batchId) {
+		return smsService.pauseBulk(username, batchId);
+	}
+
+	@GetMapping("/abort")
+	@Operation(summary = "Abort Bulk Entry", description = "Abort bulk entry for the specified username.")
+	@ApiResponse(responseCode = "200", description = "Bulk entry aborted successfully")
+	public ResponseEntity<?> abortBulk(@RequestHeader("username") String username,
+			@RequestParam(name = "batch_Id") int batchId) {
+		return smsService.abortBulk(username, batchId);
+	}
+
+	@GetMapping("/resume")
+	@Operation(summary = "Resume Bulk Entry", description = "Resume bulk entry for the specified username.")
+	@ApiResponse(responseCode = "200", description = "Bulk entry resumed successfully")
+	public ResponseEntity<?> resumeBulk(@RequestHeader("username") String username,
+			@RequestParam(name = "batch_Id") int batchId) {
+		return smsService.resumeBulk(username, batchId);
+	}
+
+	@PostMapping("/sendModified")
+	@Operation(summary = "Send Modified Bulk Entry", description = "Send modified bulk entry for the specified username.")
+	@ApiResponse(responseCode = "200", description = "Modified bulk entry sent successfully")
+	public ResponseEntity<?> sendModifiedBulk(
+			@Parameter(description = "Username of the owner of the bulk entry") @RequestHeader("username") String username,
+			@RequestBody BulkUpdateRequest bulkUpdateRequest) {
+		return smsService.sendModifiedBulk(username, bulkUpdateRequest);
 	}
 
 }

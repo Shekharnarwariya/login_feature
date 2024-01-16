@@ -37,14 +37,14 @@ public interface SmsService {
 	public ResponseEntity<?> autoSchedule(MultipartFile destinationNumberFile, String username,
 			BulkAutoScheduleRequest bulkAutoScheduleRequest);
 
-	public ResponseEntity<?> editBulk(String username, BulkEntryForm bulkEntryForm);
+	public ResponseEntity<?> editBulk(String username, int batchId);
 
-	public ResponseEntity<?> pauseBulk(String username, BulkEntryForm bulkEntryForm);
+	public ResponseEntity<?> pauseBulk(String username, int batchId);
 
-	public ResponseEntity<?> abortBulk(String username, BulkEntryForm bulkEntryForm);
+	public ResponseEntity<?> abortBulk(String username, int batchId);
 
-	public ResponseEntity<?> resumeBulk(String username, BulkEntryForm bulkEntryForm);
+	public ResponseEntity<?> resumeBulk(String username, int batchId);
 
-	public ResponseEntity<?> sendModifiedBulk(String username,BulkUpdateRequest bulkUpdateRequest);
+	public ResponseEntity<?> sendModifiedBulk(String username, BulkUpdateRequest bulkUpdateRequest);
 
 }

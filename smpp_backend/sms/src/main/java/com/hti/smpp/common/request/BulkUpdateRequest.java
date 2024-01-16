@@ -20,7 +20,6 @@ public class BulkUpdateRequest {
 	@NotBlank(message = "Message type cannot be blank")
 	private String messageType; // Encoding
 
-
 	private double delay;
 
 	private long expiryHour;

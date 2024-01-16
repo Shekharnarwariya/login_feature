@@ -56,7 +56,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.hti.smpp.common.contacts.dto.GroupDataEntry;
 import com.hti.smpp.common.contacts.repository.GroupDataEntryRepository;
-import com.hti.smpp.common.dto.BulkMgmtContent;
 import com.hti.smpp.common.dto.SearchCriteria;
 import com.hti.smpp.common.exception.InsufficientBalanceException;
 import com.hti.smpp.common.exception.InternalServerException;
@@ -2791,9 +2790,9 @@ public class SmsServiceImpl implements SmsService {
 		int upload_percent = 0;
 		try {
 
-			List<BulkMgmtContent> bulkMgmtContentList = new ArrayList<>();
+			List<BulkContentEntry> bulkMgmtContentList = new ArrayList<>();
 			for (BulkContentEntry entry : list) {
-				BulkMgmtContent content = new BulkMgmtContent();
+				BulkContentEntry content = new BulkContentEntry();
 				content.setDestination(entry.getDestination());
 				content.setContent(entry.getContent());
 				content.setFlag(entry.getFlag());
@@ -2812,9 +2811,9 @@ public class SmsServiceImpl implements SmsService {
 		int insertCounter = 0;
 		System.out.println("this is new batch id......" + batch_id);
 		try {
-			List<BulkMgmtContent> bulkMgmtContentList = new ArrayList<>();
+			List<BulkContentEntry> bulkMgmtContentList = new ArrayList<>();
 			for (BulkContentEntry entry : list) {
-				BulkMgmtContent content = new BulkMgmtContent();
+				BulkContentEntry content = new BulkContentEntry();
 				content.setDestination(entry.getDestination());
 				content.setContent(entry.getContent());
 				content.setFlag(entry.getFlag());
@@ -2857,7 +2856,7 @@ public class SmsServiceImpl implements SmsService {
 	}
 
 	@Transactional
-	public boolean createBulkMgmtContentTable(int batchId, List<BulkMgmtContent> bulkMgmtContentList) {
+	public boolean createBulkMgmtContentTable(int batchId, List<BulkContentEntry> bulkMgmtContentList) {
 		try {
 			String tableName = "batch_content_" + batchId;
 			{
@@ -2877,8 +2876,8 @@ public class SmsServiceImpl implements SmsService {
 
 	}
 
-	private void persistEntities(List<BulkMgmtContent> bulkMgmtContentList, String tableName) {
-		for (BulkMgmtContent content : bulkMgmtContentList) {
+	private void persistEntities(List<BulkContentEntry> bulkMgmtContentList, String tableName) {
+		for (BulkContentEntry content : bulkMgmtContentList) {
 			jdbcTemplate.update("CALL InsertDataIntoTable(?, ?, ?, ?)", content.getDestination(), content.getContent(),
 					content.getFlag(), tableName);
 		}
@@ -6210,57 +6209,72 @@ public class SmsServiceImpl implements SmsService {
 													} else {
 														// Scheduling Error
 														logger.error(entry_number + "<--  Scheduling Error --> ");
-														// message = new ActionMessage("error.scheduleError");
+														throw new ScheduledTimeException(
+																entry_number + "<--  Scheduling Error --> ");
 													}
 												} else {
 													logger.error(
 															entry_number + "<--  Scheduling File Creation Error --> ");
-													// message = new ActionMessage("error.scheduleError");
+													throw new ScheduledTimeException(
+															entry_number + "<--  Scheduling File Creation Error --> ");
 												}
 												// -------- end create schedule ----------------------------
 											} else {
-												logger.info(bulkSessionId + " Invalid Mobile[" + entry[5] + "] Entry: "
+												logger.error(bulkSessionId + " Invalid Mobile[" + entry[5] + "] Entry: "
 														+ entry_number);
+												throw new InternalServerException(bulkSessionId + " Invalid Mobile["
+														+ entry[5] + "] Entry: " + entry_number);
 											}
 										} else {
-											logger.info(bulkSessionId + " Invalid Time[" + entry[4] + "] Entry: "
+											logger.error(bulkSessionId + " Invalid Time[" + entry[4] + "] Entry: "
 													+ entry_number);
+											throw new InternalServerException(bulkSessionId + " Invalid Time["
+													+ entry[4] + "] Entry: " + entry_number);
 										}
 									} else {
-										logger.info(bulkSessionId + " Invalid Day[" + entry[3] + "] Entry: "
+										logger.error(bulkSessionId + " Invalid Day[" + entry[3] + "] Entry: "
 												+ entry_number);
+										throw new InternalServerException(bulkSessionId + " Invalid Day[" + entry[3]
+												+ "] Entry: " + entry_number);
 									}
 								} else {
-									logger.info(
+									logger.error(
+											bulkSessionId + " Invalid Month[" + entry[2] + "] Entry: " + entry_number);
+									throw new InternalServerException(
 											bulkSessionId + " Invalid Month[" + entry[2] + "] Entry: " + entry_number);
 								}
 							} else {
-								logger.info(bulkSessionId + " Invalid Year[" + entry[1] + "] Entry: " + entry_number);
+								logger.error(bulkSessionId + " Invalid Year[" + entry[1] + "] Entry: " + entry_number);
+								throw new InternalServerException(
+										bulkSessionId + " Invalid Year[" + entry[1] + "] Entry: " + entry_number);
 							}
 						} else {
-							logger.info(bulkSessionId + " Invalid Gmt[" + entry[0] + "] Entry: " + entry_number);
+							logger.error(bulkSessionId + " Invalid Gmt[" + entry[0] + "] Entry: " + entry_number);
+							throw new InternalServerException(
+									bulkSessionId + " Invalid Gmt[" + entry[0] + "] Entry: " + entry_number);
 						}
 						entry_number++;
 					}
 					if (!scheduleList.isEmpty()) {
 						target = IConstants.SUCCESS_KEY;
 						logger.info(bulkSessionId + " Total Schedule Created: " + scheduleList.size());
-						// message = new ActionMessage("message.scheduleSuccess");
 
 					} else {
 						logger.info(bulkSessionId + "<-- No Valid Entry Found --> ");
-						// message = new ActionMessage("error.novalidNumber");
+						throw new InternalServerException(bulkSessionId + "<-- No Valid Entry Found --> ");
 					}
+				} catch (ScheduledTimeException e) {
+					logger.error(bulkSessionId, e);
+					throw new ScheduledTimeException(e.getMessage());
 				} catch (Exception e) {
 					logger.error(bulkSessionId, e);
-					// message = new ActionMessage("error.processError");
+					throw new InternalServerException(e.getMessage());
 				}
 			} else {
-				logger.info(bulkSessionId + "<-- No Valid Entry Found --> ");
-				// message = new ActionMessage("error.novalidNumber");
+				logger.error(bulkSessionId + "<-- No Valid Entry Found --> ");
 			}
 		} else {
-			// message = new ActionMessage("error.fileFormat");
+			throw new InternalServerException("please put valid file format...");
 		}
 		return ResponseEntity.ok(scheduleList);
 	}
@@ -6758,10 +6772,9 @@ public class SmsServiceImpl implements SmsService {
 
 //================================edit=================================
 	@Override
-	public ResponseEntity<?> editBulk(String username, BulkEntryForm bulkForm) {
+	public ResponseEntity<?> editBulk(String username, int batchId) {
 		BulkProccessResponse bulkProccessResponse = new BulkProccessResponse();
 		String target = IConstants.FAILURE_KEY;
-		int batchId = bulkForm.getId();
 		logger.info("Edit Request For BatchId: " + batchId);
 		try {
 			BatchObject batch = GlobalVars.BatchQueue.get(batchId);
@@ -6817,8 +6830,7 @@ public class SmsServiceImpl implements SmsService {
 	}
 
 	@Override
-	public ResponseEntity<?> pauseBulk(String username, BulkEntryForm bulkForm) {
-		int batchId = bulkForm.getId();
+	public ResponseEntity<?> pauseBulk(String username, int batchId) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
@@ -6830,7 +6842,7 @@ public class SmsServiceImpl implements SmsService {
 				GlobalVars.BatchQueue.replace(batchId, batch);
 				logger.info("Batch Paused: " + batchId);
 				logger.info("Paused batch successfully.");
-				target = "abort";
+				target = "Paused";
 			} else {
 				logger.warn("Batch Not Found: " + batchId);
 				throw new NotFoundException("Batch Not Found: " + batchId);
@@ -6847,8 +6859,7 @@ public class SmsServiceImpl implements SmsService {
 	}
 
 	@Override
-	public ResponseEntity<?> abortBulk(String username, BulkEntryForm bulkForm) {
-		int batchId = bulkForm.getId();
+	public ResponseEntity<?> abortBulk(String username, int batchId) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
@@ -6877,8 +6888,7 @@ public class SmsServiceImpl implements SmsService {
 	}
 
 	@Override
-	public ResponseEntity<?> resumeBulk(String username, BulkEntryForm bulkForm) {
-		int batchId = bulkForm.getId();
+	public ResponseEntity<?> resumeBulk(String username, int batchId) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
@@ -6947,7 +6957,7 @@ public class SmsServiceImpl implements SmsService {
 				entry.setContent(unicodeMsg);
 				entry.setFlag("F");
 			}
-			// GlobalVars.bulkService.updateContent(id, list);
+			UpdateContent(list, "batch_content_" + id);
 			BatchObject batch = GlobalVars.BatchQueue.get(id);
 			if (!batch.isActive()) {
 				batch.setActive(true);
@@ -6958,12 +6968,12 @@ public class SmsServiceImpl implements SmsService {
 			logger.error("FileId: " + id, ex.fillInStackTrace());
 		}
 		if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY)) {
-			// message = new ActionMessage("message.batchSuccess");
+			logger.info("message.batchSuccess");
 		} else {
-			// message = new ActionMessage("error.processError");
+			throw new InternalServerException("Error: in side batch procecc");
 		}
 
-		return null;// mapping.findForward(target);
+		return ResponseEntity.ok(target);
 	}
 
 	private List<BulkContentEntry> listContent(int id) {
@@ -6986,5 +6996,12 @@ public class SmsServiceImpl implements SmsService {
 		}
 		return bulkContentEntries;
 
+	}
+
+	private void UpdateContent(List<BulkContentEntry> bulkMgmtContentList, String tableName) {
+		for (BulkContentEntry content : bulkMgmtContentList) {
+			jdbcTemplate.update("CALL UpdateDataIntoTable(?, ?,?,?, ?)", content.getDestination(), content.getContent(),
+					content.getFlag(), content.getId(), tableName);
+		}
 	}
 }
