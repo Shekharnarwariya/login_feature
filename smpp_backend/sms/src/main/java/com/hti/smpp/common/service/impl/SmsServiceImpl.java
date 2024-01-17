@@ -7228,4 +7228,70 @@ public class SmsServiceImpl implements SmsService {
 		}
 	}
 
+	@Override
+	public ResponseEntity<?> abortSchedule(String username, int schedule_Id) {
+
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		String master = user.getSystemId();
+		String role = user.getRole();
+		logger.info(master + "[" + role + "] " + "Schedule Abort Request For: " + schedule_Id);
+		String target = IConstants.FAILURE_KEY;
+		boolean deleted = false;
+		File file = null;
+		boolean proceed = true;
+
+		if (!scheduleEntryRepository.existsById(schedule_Id)) {
+			throw new ScheduledTimeException("schedule not found with the provided schedule Id" + schedule_Id);
+		}
+		try {
+			ScheduleEntry schedule = scheduleEntryRepository.findById(schedule_Id).get();
+			if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
+			} else {
+				if (!schedule.getUsername().equalsIgnoreCase(master)) {
+					target = "invalidRequest";
+					proceed = false;
+					logger.error(
+							master + "[" + role + "] Not Authourized To Abort Schedule Of " + schedule.getUsername());
+				}
+			}
+			if (proceed) {
+				String filename = schedule.getFileName();
+				file = new File(IConstants.WEBSMPP_EXT_DIR + "schedule//" + filename);
+				if (file.exists()) {
+					System.out.println(" Deleting Scheduled File -> " + file.getName());
+					if (file.delete()) {
+						System.out.println(" Scheduled File Deleted -> " + file.getName());
+						deleted = true;
+					}
+				} else {
+					throw new ScheduledTimeException("Error: schedule Removal Failure ");
+				}
+				scheduleEntryRepository.deleteById(schedule_Id);
+				String schedule_time = schedule.getServerTime().split(" ")[1];
+				System.out.println("Schedule[" + schedule_Id + "] Time: " + schedule_time);
+				if (GlobalVarsSms.ScheduledBatches.containsKey(schedule_time)) {
+					Set<Integer> set = GlobalVarsSms.ScheduledBatches.get(schedule_time);
+					System.out.println("Time: " + schedule_time + " Schedules: " + set);
+					if (set.contains(schedule_Id)) {
+						set.remove(schedule_Id);
+					}
+				}
+				System.out.println("Today's Schedules:" + GlobalVarsSms.ScheduledBatches);
+			}
+		} catch (Exception ioex) {
+			throw new InternalServerException(ioex.getMessage());
+		}
+		logger.info(master + "[" + role + "] " + "Schedule Abort [" + schedule_Id + "] Target: " + target);
+		return ResponseEntity.ok(target);
+	}
+
 }

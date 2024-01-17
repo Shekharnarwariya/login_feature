@@ -7,7 +7,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.hti.smpp.common.request.BulkAutoScheduleRequest;
 import com.hti.smpp.common.request.BulkContactRequest;
-import com.hti.smpp.common.request.BulkEntryForm;
 import com.hti.smpp.common.request.BulkMmsRequest;
 import com.hti.smpp.common.request.BulkRequest;
 import com.hti.smpp.common.request.BulkUpdateRequest;
@@ -50,4 +49,6 @@ public interface SmsService {
 	public ResponseEntity<?> listBulk(String username);
 
 	public ResponseEntity<?> listSchedule(String username);
+
+	public ResponseEntity<?> abortSchedule(String username, int schedule_Id);
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -196,7 +197,7 @@ public class SmsController {
 		return smsService.pauseBulk(username, batchId);
 	}
 
-	@GetMapping("/abort")
+	@DeleteMapping("/abort")
 	@Operation(summary = "Abort Bulk Entry", description = "Abort bulk entry for the specified username.")
 	@ApiResponse(responseCode = "200", description = "Bulk entry aborted successfully")
 	public ResponseEntity<?> abortBulk(@RequestHeader("username") String username,
@@ -228,11 +229,35 @@ public class SmsController {
 		return smsService.listBulk(username);
 	}
 
+	/**
+	 * List modified bulk entries for the specified user.
+	 *
+	 * @param username The username for whom the list of modified bulk entries is to
+	 *                 be retrieved.
+	 * @return A ResponseEntity with the list of modified bulk entries and
+	 *         appropriate status.
+	 */
 	@GetMapping("/listSchedule")
 	@Operation(summary = "List Modified Bulk Entries", description = "Retrieve the list of modified bulk entries for the specified username. This API endpoint returns the schedule information associated with the provided username.")
 	@ApiResponse(responseCode = "200", description = "Successfully retrieved the list of modified bulk entries.")
-	public ResponseEntity<?> listSchedule(@RequestHeader("username") String username) {
+	public ResponseEntity<?> listSchedule(@RequestHeader(name = "username", required = true) String username) {
 		return smsService.listSchedule(username);
+	}
+
+	/**
+	 * Abort a schedule for a specified user and schedule ID.
+	 *
+	 * @param username   The username of the user for whom the schedule needs to be
+	 *                   aborted.
+	 * @param scheduleId The ID of the schedule to be aborted.
+	 * @return A ResponseEntity with appropriate status and message.
+	 */
+	@DeleteMapping("/abort/schedule")
+	@Operation(summary = "Abort Schedule", description = "Abort the schedule for the specified username and schedule ID. This API endpoint allows users to cancel a scheduled task by providing the username and schedule ID.")
+	@ApiResponse(responseCode = "200", description = "Successfully aborted the schedule.")
+	public ResponseEntity<?> abortSchedule(@RequestParam(name = "username", required = true) String username,
+			@RequestParam(name = "scheduleId", required = true) int scheduleId) {
+		return smsService.abortSchedule(username, scheduleId);
 	}
 
 }
