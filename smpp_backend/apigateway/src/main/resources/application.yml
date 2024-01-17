@@ -5,6 +5,7 @@ spring:
   application:
     name: API-GATEWAY-SERVICE
 
+
 eureka:
   instance:
     hostname: API-GATEWAY-SERVICE
