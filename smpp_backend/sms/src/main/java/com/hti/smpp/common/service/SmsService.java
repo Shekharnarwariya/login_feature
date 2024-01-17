@@ -47,4 +47,7 @@ public interface SmsService {
 
 	public ResponseEntity<?> sendModifiedBulk(String username, BulkUpdateRequest bulkUpdateRequest);
 
+	public ResponseEntity<?> listBulk(String username);
+
+	public ResponseEntity<?> listSchedule(String username);
 }

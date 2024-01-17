@@ -221,4 +221,18 @@ public class SmsController {
 		return smsService.sendModifiedBulk(username, bulkUpdateRequest);
 	}
 
+	@GetMapping("/list")
+	@Operation(summary = "List Modified Bulk Entries", description = "Retrieve the list of modified bulk entries for the specified username.")
+	@ApiResponse(responseCode = "200", description = "Successfully retrieved the list of modified bulk entries.")
+	public ResponseEntity<?> listBulk(@RequestHeader("username") String username) {
+		return smsService.listBulk(username);
+	}
+
+	@GetMapping("/listSchedule")
+	@Operation(summary = "List Modified Bulk Entries", description = "Retrieve the list of modified bulk entries for the specified username. This API endpoint returns the schedule information associated with the provided username.")
+	@ApiResponse(responseCode = "200", description = "Successfully retrieved the list of modified bulk entries.")
+	public ResponseEntity<?> listSchedule(@RequestHeader("username") String username) {
+		return smsService.listSchedule(username);
+	}
+
 }

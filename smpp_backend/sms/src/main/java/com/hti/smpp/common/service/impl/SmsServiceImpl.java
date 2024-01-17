@@ -3,12 +3,16 @@ package com.hti.smpp.common.service.impl;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLConnection;
 import java.sql.Timestamp;
@@ -19,6 +23,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -54,6 +59,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.hazelcast.query.Predicate;
+import com.hazelcast.query.Predicates;
 import com.hti.smpp.common.contacts.dto.GroupDataEntry;
 import com.hti.smpp.common.contacts.repository.GroupDataEntryRepository;
 import com.hti.smpp.common.dto.SearchCriteria;
@@ -76,7 +83,6 @@ import com.hti.smpp.common.messages.repository.BulkEntryRepository;
 import com.hti.smpp.common.messages.repository.SummaryReportRepository;
 import com.hti.smpp.common.request.BulkAutoScheduleRequest;
 import com.hti.smpp.common.request.BulkContactRequest;
-import com.hti.smpp.common.request.BulkEntryForm;
 import com.hti.smpp.common.request.BulkMmsRequest;
 import com.hti.smpp.common.request.BulkRequest;
 import com.hti.smpp.common.request.BulkUpdateRequest;
@@ -96,10 +102,12 @@ import com.hti.smpp.common.user.dto.BalanceEntry;
 import com.hti.smpp.common.user.dto.DriverInfo;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
+import com.hti.smpp.common.user.dto.WebMenuAccessEntry;
 import com.hti.smpp.common.user.repository.BalanceEntryRepository;
 import com.hti.smpp.common.user.repository.DriverInfoRepository;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
+import com.hti.smpp.common.user.repository.WebMenuAccessEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.BatchObject;
 import com.hti.smpp.common.util.Body;
@@ -172,6 +180,9 @@ public class SmsServiceImpl implements SmsService {
 
 	@Autowired
 	private EntityManager entityManager;
+
+	@Autowired
+	private WebMenuAccessEntryRepository webMenuAccessEntryRepository;
 
 	public SmsResponse sendSms(SmsRequest smsRequest, String username) {
 		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
@@ -6773,6 +6784,16 @@ public class SmsServiceImpl implements SmsService {
 //================================edit=================================
 	@Override
 	public ResponseEntity<?> editBulk(String username, int batchId) {
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 		BulkProccessResponse bulkProccessResponse = new BulkProccessResponse();
 		String target = IConstants.FAILURE_KEY;
 		logger.info("Edit Request For BatchId: " + batchId);
@@ -6833,6 +6854,16 @@ public class SmsServiceImpl implements SmsService {
 	public ResponseEntity<?> pauseBulk(String username, int batchId) {
 		String target = IConstants.FAILURE_KEY;
 
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 		try {
 			logger.info("Pause Request For BatchId: " + batchId);
 			BatchObject batch = GlobalVars.BatchQueue.get(batchId);
@@ -6860,6 +6891,16 @@ public class SmsServiceImpl implements SmsService {
 
 	@Override
 	public ResponseEntity<?> abortBulk(String username, int batchId) {
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 		String target = IConstants.FAILURE_KEY;
 
 		try {
@@ -6889,6 +6930,16 @@ public class SmsServiceImpl implements SmsService {
 
 	@Override
 	public ResponseEntity<?> resumeBulk(String username, int batchId) {
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 		String target = IConstants.FAILURE_KEY;
 
 		try {
@@ -6920,6 +6971,16 @@ public class SmsServiceImpl implements SmsService {
 
 	@Override
 	public ResponseEntity<?> sendModifiedBulk(String username, BulkUpdateRequest bulkUpdateRequest) {
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
 		String target = IConstants.SUCCESS_KEY;
 
 		int id = bulkUpdateRequest.getId();
@@ -7004,4 +7065,167 @@ public class SmsServiceImpl implements SmsService {
 					content.getFlag(), content.getId(), tableName);
 		}
 	}
+
+	@Override
+	public ResponseEntity<?> listBulk(String username) {
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		Optional<WebMenuAccessEntry> webOptional = webMenuAccessEntryRepository.findById(user.getId());
+		if (!webOptional.isPresent()) {
+			throw new NotFoundException("Web Menu Access not found with the provided username." + username);
+		}
+		List<BulkEntry> reportList = null;
+		String target = null;
+		if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem") || webOptional.get().isUtility()) {
+			Collection<BatchObject> list = null;
+			if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
+				list = GlobalVars.BatchQueue.values();
+			} else {
+				Predicate<Integer, BatchObject> predicate = Predicates.equal("systemId", user.getSystemId());
+				list = GlobalVars.BatchQueue.values(predicate);
+			}
+			// Collection statusList = dbService.getUploadedStatusbulk(clientId, role, opt);
+			if (list.isEmpty()) {
+				target = IConstants.FAILURE_KEY;
+				logger.error(username + "[" + user.getRole() + "]" + " <- Failed to retrieve batch list ->");
+				throw new NotFoundException("No batches available for processing.");
+			} else {
+				reportList = new ArrayList<BulkEntry>();
+				BulkEntry entry = null;
+				long count = 0;
+				for (BatchObject batch : list) {
+					entry = bulkEntryRepository.findById(batch.getId()).get();
+					count = rowCount(batch.getId());
+					long processed = entry.getTotal() - count;
+					entry.setProcessed(processed);
+					entry.setActive(batch.isActive());
+					reportList.add(entry);
+				}
+				target = IConstants.SUCCESS_KEY;
+
+			}
+		} else {
+			logger.error(username + "[" + user.getRole() + "]" + " <- Invalid Request ->");
+			target = "invalidRequest";
+			throw new InternalServerException(username + "[" + user.getRole() + "]" + " <- Invalid Request ->");
+		}
+		return ResponseEntity.ok(reportList);
+	}
+
+	private long rowCount(int id) {
+		String queryString = "SELECT COUNT(*) FROM batch_content_" + id;
+		Query nativeQuery = entityManager.createNativeQuery(queryString);
+
+		// Execute the query and retrieve the result
+		Object result = nativeQuery.getSingleResult();
+
+		long rowCount;
+
+		if (result instanceof BigInteger) {
+			rowCount = ((BigInteger) result).longValue();
+		} else if (result instanceof Long) {
+			rowCount = (Long) result;
+		} else {
+			// Handle other cases or throw an exception if needed
+			throw new InternalServerException("Unexpected result type: " + result.getClass().getName());
+		}
+
+		return rowCount;
+	}
+
+	@Override
+	public ResponseEntity<?> listSchedule(String username) {
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		Optional<WebMenuAccessEntry> webOptional = webMenuAccessEntryRepository.findById(user.getId());
+		if (!webOptional.isPresent()) {
+			throw new NotFoundException("Web Menu Access not found with the provided username." + username);
+		}
+		List<ScheduleEntryExt> scheduleList = null;
+		String target = IConstants.FAILURE_KEY;
+		logger.info(username + "[" + user.getRole() + "] " + "Schedule List Request.");
+		if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem") || webOptional.get().isUtility()) {
+			scheduleList = new ArrayList<ScheduleEntryExt>();
+			try {
+				ScheduleEntry entry = null;
+				BulkSmsDTO bulkSmsDTO = null;
+				String filename = "";
+				List<ScheduleEntry> tempList = getScheduleList(user.getSystemId(), user.getRole());
+				Iterator<ScheduleEntry> iterator = tempList.iterator();
+				while (iterator.hasNext()) {
+					entry = iterator.next();
+					filename = IConstants.WEBSMPP_EXT_DIR + "schedule//" + entry.getFileName().trim();
+					// tempPath = filePath + filename;
+					System.out.println(entry.getUsername() + "[" + entry.getId() + "] Scheduled File: " + filename);
+					ObjectInputStream objectInputStream = null;
+					try {
+						objectInputStream = new ObjectInputStream(new FileInputStream(filename));
+						bulkSmsDTO = (BulkSmsDTO) objectInputStream.readObject();
+						ScheduleEntryExt ext = new ScheduleEntryExt(entry);
+						ext.setMessageType(bulkSmsDTO.getMessageType());
+						ext.setTotalNumbers(bulkSmsDTO.getDestinationList().size());
+						ext.setSenderId(bulkSmsDTO.getSenderId());
+						ext.setCustomContent(bulkSmsDTO.isCustomContent());
+						ext.setCampaign(bulkSmsDTO.getCampaignName());
+						ext.setFirstNum(bulkSmsDTO.getDestinationList().get(0));
+						ext.setDate(entry.getDate());
+						scheduleList.add(ext);
+					} catch (FileNotFoundException fnfe) {
+						logger.info(filename, fnfe);
+					} finally {
+						if (objectInputStream != null) {
+							try {
+								objectInputStream.close();
+							} catch (IOException ioe) {
+							}
+						}
+					}
+				}
+				if (scheduleList.size() > 0) {
+					target = IConstants.SUCCESS_KEY;
+
+				} else {
+					throw new InternalServerException(
+							"Records are unavailable for the specified filename: " + filename);
+				}
+			} catch (Exception ex) {
+				logger.error(username + "[" + user.getRole() + "] ", ex.getCause());
+				throw new InternalServerException(username + "[" + user.getRole() + "] " + ex.getLocalizedMessage());
+			}
+			logger.info(user.getSystemId() + "[" + user.getRole() + "] " + "Schedule List[" + scheduleList + "] Target:"
+					+ target);
+		} else {
+			logger.error(user.getSystemId() + "[" + user.getRole() + "]" + " <- Invalid Request ->");
+			target = "invalidRequest";
+			throw new InternalServerException(
+					user.getSystemId() + "[" + user.getRole() + "]" + " <- Invalid Request ->");
+		}
+
+		return ResponseEntity.ok(scheduleList);
+	}
+
+	private List<ScheduleEntry> getScheduleList(String systemId, String role) {
+		if (Access.isAuthorized(role, "isAuthorizedSuperAdminAndSystem")) {
+			return scheduleEntryRepository.findAll();
+		} else {
+			return scheduleEntryRepository.findByUsername(systemId);
+		}
+	}
+
 }
