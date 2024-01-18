@@ -7201,10 +7201,14 @@ public class SmsServiceImpl implements SmsService {
 					target = IConstants.SUCCESS_KEY;
 
 				} else {
-					throw new InternalServerException(
-							"Records are unavailable for the specified filename: " + filename);
+					throw new NotFoundException("No Records are available for the specified filename: " + filename);
 				}
-			} catch (Exception ex) {
+			} catch (NotFoundException ex) {
+				logger.error(username + "[" + user.getRole() + "] ", ex.getCause());
+				throw new NotFoundException(username + "[" + user.getRole() + "] " + ex.getLocalizedMessage());
+			}
+
+			catch (Exception ex) {
 				logger.error(username + "[" + user.getRole() + "] ", ex.getCause());
 				throw new InternalServerException(username + "[" + user.getRole() + "] " + ex.getLocalizedMessage());
 			}
@@ -7250,7 +7254,7 @@ public class SmsServiceImpl implements SmsService {
 		boolean proceed = true;
 
 		if (!scheduleEntryRepository.existsById(schedule_Id)) {
-			throw new ScheduledTimeException("schedule not found with the provided schedule Id" + schedule_Id);
+			throw new ScheduledTimeException("schedule not found with the provided schedule Id " + schedule_Id);
 		}
 		try {
 			ScheduleEntry schedule = scheduleEntryRepository.findById(schedule_Id).get();
@@ -7276,7 +7280,7 @@ public class SmsServiceImpl implements SmsService {
 					throw new ScheduledTimeException("Error: schedule Removal Failure ");
 				}
 				scheduleEntryRepository.deleteById(schedule_Id);
-				String schedule_time = schedule.getServerTime().split(" ")[1];
+				String schedule_time = schedule.getServerTime();
 				System.out.println("Schedule[" + schedule_Id + "] Time: " + schedule_time);
 				if (GlobalVarsSms.ScheduledBatches.containsKey(schedule_time)) {
 					Set<Integer> set = GlobalVarsSms.ScheduledBatches.get(schedule_time);
@@ -7287,9 +7291,12 @@ public class SmsServiceImpl implements SmsService {
 				}
 				System.out.println("Today's Schedules:" + GlobalVarsSms.ScheduledBatches);
 			}
+		} catch (ScheduledTimeException ioex) {
+			throw new ScheduledTimeException(ioex.getMessage());
 		} catch (Exception ioex) {
 			throw new InternalServerException(ioex.getMessage());
 		}
+		target = IConstants.SUCCESS_KEY;
 		logger.info(master + "[" + role + "] " + "Schedule Abort [" + schedule_Id + "] Target: " + target);
 		return ResponseEntity.ok(target);
 	}

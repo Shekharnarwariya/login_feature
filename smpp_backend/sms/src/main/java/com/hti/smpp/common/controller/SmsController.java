@@ -255,7 +255,7 @@ public class SmsController {
 	@DeleteMapping("/abort/schedule")
 	@Operation(summary = "Abort Schedule", description = "Abort the schedule for the specified username and schedule ID. This API endpoint allows users to cancel a scheduled task by providing the username and schedule ID.")
 	@ApiResponse(responseCode = "200", description = "Successfully aborted the schedule.")
-	public ResponseEntity<?> abortSchedule(@RequestParam(name = "username", required = true) String username,
+	public ResponseEntity<?> abortSchedule(@RequestHeader(name = "username", required = true) String username,
 			@RequestParam(name = "scheduleId", required = true) int scheduleId) {
 		return smsService.abortSchedule(username, scheduleId);
 	}
