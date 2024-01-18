@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -128,27 +129,32 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 					}
 
 					list.add(entry);
-					logger.info(entry.toString());
 				} else {
 					logger.warn("[" + systemId + "]" + " Invalid Group Name: " + names[i]);
 					continue;
 				}
 			}
 			if (list.isEmpty()) {
-				logger.error("[" + systemId + "]" + " No Valid Entry Found! ");
-				throw new NotFoundException("[" + systemId + "]" + " No Valid Entry Found! ");
+				logger.error("SystemID: [" + systemId + "]" + " No Valid Entry Found! ");
+				throw new NotFoundException("SystemID: [" + systemId + "]" + " No Valid Entry Found! ");
 			} else {
 				this.groupEntryDTORepository.saveAll(list);
 				target = IConstants.SUCCESS_KEY;
-				logger.info(systemId + " Add Contact Group Target:" + target);
-				return new ResponseEntity<>(target, HttpStatus.CREATED);
+				logger.info(systemId + ": Add Contact Group Target:" + target);
+				return new ResponseEntity<>("Group Entry Added Successfully!", HttpStatus.CREATED);
 			}
 		} catch (NotFoundException e) {
-			logger.error(systemId, e.getLocalizedMessage());
+			logger.error(e.getLocalizedMessage());
 			throw new NotFoundException(e.getLocalizedMessage());
-		} catch (Exception e) {
+		} catch (DataIntegrityViolationException e) {
+			logger.error(e.getLocalizedMessage());
+			throw new InternalServerException("Duplicate Entry found for the name");
+		} catch (ArrayIndexOutOfBoundsException e) {
 			logger.error(systemId, e.getLocalizedMessage());
-			throw new InternalServerException(e.getLocalizedMessage());
+			throw new InternalServerException("Please fill the correct entries.");
+		} catch (Exception e) {
+			logger.error(e.getLocalizedMessage());
+			throw new InternalServerException(e.getMessage());
 		}
 
 	}
@@ -186,7 +192,6 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 						entry = new GroupEntryDTO(new Converters().UTF16(names[i]), systemId, groupData[i]);
 						entry.setId(id[i]);
 						list.add(entry);
-						logger.info(entry.toString());
 					} else {
 						logger.info(systemId + "[" + user.getRole() + "]" + " Invalid Group Name: " + names[i]);
 						continue;
@@ -197,12 +202,9 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 					this.groupEntryDTORepository.saveAll(list);
 					target = IConstants.SUCCESS_KEY;
 				} else {
-					throw new InternalServerException("GroupEntry Save Unsuccessful Exception");
+					throw new InternalServerException("No Data Found To Update!");
 				}
 
-			} catch (InternalServerException e) {
-				logger.error(systemId, e.toString());
-				throw new InternalServerException(e.getLocalizedMessage());
 			} catch (Exception e) {
 				logger.error(systemId, e.toString());
 				throw new InternalServerException(e.getLocalizedMessage());
@@ -211,8 +213,8 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 			logger.error(systemId + " No Records Selected");
 			throw new NotFoundException(systemId + " No Records Selected");
 		}
-		logger.info(systemId + " modify Contact Group Target:" + target);
-		return new ResponseEntity<>(target, HttpStatus.CREATED);
+		logger.info(systemId + " Modify Contact Group. Status:" + target);
+		return new ResponseEntity<>("Group Entry Updated Successfully!", HttpStatus.CREATED);
 	}
 
 	/**
@@ -223,29 +225,32 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 	private void deleteGroup(List<GroupEntryDTO> list) {
 		for (GroupEntryDTO entry : list) {
 			try {
-				this.groupEntryDTORepository.delete(entry);
+				if (this.groupEntryDTORepository.existsById(entry.getId())) {
+					this.groupEntryDTORepository.delete(entry);
+				} else {
+					throw new NotFoundException("No Group Found With Id: " + entry.getId());
+				}
+			} catch (NotFoundException e) {
+				logger.error(e.getLocalizedMessage());
+				throw new NotFoundException(e.getLocalizedMessage());
 			} catch (Exception e) {
 				throw new InternalServerException("Unable to delete GroupEntry.");
 			}
 			if (entry.isGroupData()) {
 				List<GroupDataEntry> contacts = this.groupDataEntryRepository.findByGroupId(entry.getId());
 				if (!contacts.isEmpty()) {
-					try {
-						this.groupDataEntryRepository.deleteAll(contacts);
-					} catch (Exception e) {
-						throw new InternalServerException("Unable to delete GroupDataEntry.");
-					}
+					this.groupDataEntryRepository.deleteAll(contacts);
+
+				} else {
+					logger.info("No GroupDataEntry Found For the Group!");
 				}
 			} else {
 				List<ContactEntry> contacts = this.contactRepo.findByGroupId(entry.getId());
 				if (!contacts.isEmpty()) {
-					try {
-						this.contactRepo.deleteAll(contacts);
-					} catch (Exception e) {
-						throw new InternalServerException("Unable to delete ContactEntry.");
-					}
+					this.contactRepo.deleteAll(contacts);
+
 				} else {
-					throw new NotFoundException("Unable to find ContactEntry.");
+					logger.info("No ContactEntry Found For The Group!");
 				}
 			}
 		}
@@ -286,7 +291,6 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 					entry = new GroupEntryDTO(names[i], systemId, groupData[i]);
 					entry.setId(id[i]);
 					list.add(entry);
-					logger.info(entry.toString());
 				}
 
 				if (!list.isEmpty()) {
@@ -296,20 +300,24 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 					throw new InternalServerException("Unable to find Entries. List is empty!");
 				}
 
-			} catch (InternalServerException e) {
+			} catch (NotFoundException e) {
 				logger.error(systemId, e.toString());
-				throw new InternalServerException(e.getLocalizedMessage());
+				throw new NotFoundException(e.getLocalizedMessage());
+			} catch (IndexOutOfBoundsException e) {
+				logger.error(systemId, e.toString());
+				throw new InternalServerException("Please Enter Required Fields!");
 			} catch (Exception e) {
 				logger.error(systemId, e.toString());
 				throw new InternalServerException(e.getLocalizedMessage());
 			}
+
 		} else {
 			logger.info(systemId + " No Records Selected");
 			throw new NotFoundException(systemId + " No Records Selected");
 		}
-		logger.info(systemId + " Remove Contact Group Target:" + target);
+		logger.info(systemId + " Remove Contact Group. Status:" + target);
 
-		return new ResponseEntity<>(target, HttpStatus.OK);
+		return new ResponseEntity<>("Group Deleted Successfully!", HttpStatus.OK);
 	}
 
 	/**
