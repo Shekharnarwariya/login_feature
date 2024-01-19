@@ -14,4 +14,6 @@ public interface ScheduleEntryRepository extends JpaRepository<ScheduleEntry, In
 
 	public List<ScheduleEntry> findByUsername(String systemId);
 
+	public ScheduleEntry findByFileName(String reqFileName);
+
 }

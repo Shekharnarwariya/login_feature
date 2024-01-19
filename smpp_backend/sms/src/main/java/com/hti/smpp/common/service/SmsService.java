@@ -10,6 +10,7 @@ import com.hti.smpp.common.request.BulkContactRequest;
 import com.hti.smpp.common.request.BulkMmsRequest;
 import com.hti.smpp.common.request.BulkRequest;
 import com.hti.smpp.common.request.BulkUpdateRequest;
+import com.hti.smpp.common.request.SendBulkScheduleRequest;
 import com.hti.smpp.common.request.SmsRequest;
 import com.hti.smpp.common.response.BulkResponse;
 import com.hti.smpp.common.response.SmsResponse;
@@ -51,4 +52,14 @@ public interface SmsService {
 	public ResponseEntity<?> listSchedule(String username);
 
 	public ResponseEntity<?> abortSchedule(String username, int schedule_Id);
+
+	public ResponseEntity<?> editSchedule(String username, int schedule_Id);
+
+	public ResponseEntity<?> sendNowSchedule(String username, SendBulkScheduleRequest sendBulkScheduleRequest,
+			MultipartFile destinationNumberFile);
+
+	public ResponseEntity<?> modifiedSchedule(String username, int schedule_Id);
+
+	public ResponseEntity<?> identifyMessage(String username, String message);
+
 }

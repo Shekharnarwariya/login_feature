@@ -62,7 +62,9 @@ import org.springframework.web.multipart.MultipartFile;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.Predicates;
 import com.hti.smpp.common.contacts.dto.GroupDataEntry;
+import com.hti.smpp.common.contacts.dto.GroupEntryDTO;
 import com.hti.smpp.common.contacts.repository.GroupDataEntryRepository;
+import com.hti.smpp.common.contacts.repository.GroupEntryDTORepository;
 import com.hti.smpp.common.dto.SearchCriteria;
 import com.hti.smpp.common.exception.InsufficientBalanceException;
 import com.hti.smpp.common.exception.InternalServerException;
@@ -86,9 +88,12 @@ import com.hti.smpp.common.request.BulkContactRequest;
 import com.hti.smpp.common.request.BulkMmsRequest;
 import com.hti.smpp.common.request.BulkRequest;
 import com.hti.smpp.common.request.BulkUpdateRequest;
+import com.hti.smpp.common.request.SendBulkScheduleRequest;
 import com.hti.smpp.common.request.SmsRequest;
 import com.hti.smpp.common.response.BulkProccessResponse;
 import com.hti.smpp.common.response.BulkResponse;
+import com.hti.smpp.common.response.MessageIdentiryResponse;
+import com.hti.smpp.common.response.ScheduleEditResponse;
 import com.hti.smpp.common.response.SmsResponse;
 import com.hti.smpp.common.schedule.dto.ScheduleEntry;
 import com.hti.smpp.common.schedule.dto.ScheduleEntryExt;
@@ -100,6 +105,7 @@ import com.hti.smpp.common.session.SessionHandler;
 import com.hti.smpp.common.session.UserSession;
 import com.hti.smpp.common.user.dto.BalanceEntry;
 import com.hti.smpp.common.user.dto.DriverInfo;
+import com.hti.smpp.common.user.dto.User;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.dto.WebMenuAccessEntry;
@@ -111,6 +117,7 @@ import com.hti.smpp.common.user.repository.WebMenuAccessEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.BatchObject;
 import com.hti.smpp.common.util.Body;
+import com.hti.smpp.common.util.GMTmapping;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.GlobalVarsSms;
 import com.hti.smpp.common.util.IConstants;
@@ -183,6 +190,9 @@ public class SmsServiceImpl implements SmsService {
 
 	@Autowired
 	private WebMenuAccessEntryRepository webMenuAccessEntryRepository;
+
+	@Autowired
+	private GroupEntryDTORepository groupEntryDTORepository;
 
 	public SmsResponse sendSms(SmsRequest smsRequest, String username) {
 		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
@@ -1189,6 +1199,8 @@ public class SmsServiceImpl implements SmsService {
 			bulkSmsDTO.setTelemarketerId(bulkRequest.getTelemarketerId());
 		if (bulkRequest.getTemplateId() != null)
 			bulkSmsDTO.setTemplateId(bulkRequest.getTemplateId());
+
+		bulkSmsDTO.setReqType("Bulk");
 		if (bulkRequest.isTracking()) {
 			return BulkTracking(bulkRequest, bulkSmsDTO, webEntry, driverInfo, userEntry, progressEvent,
 					destinationNumberFile);
@@ -7301,4 +7313,589 @@ public class SmsServiceImpl implements SmsService {
 		return ResponseEntity.ok(target);
 	}
 
+	@Override
+	public ResponseEntity<?> editSchedule(String username, int schedule_Id) {
+
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		if (!scheduleEntryRepository.existsById(schedule_Id)) {
+			throw new ScheduledTimeException("schedule not found with the provided schedule Id " + schedule_Id);
+		}
+		String master = user.getSystemId();
+		String role = user.getRole();
+		logger.info(master + "[" + role + "] " + "Schedule Edit Request For: " + schedule_Id);
+		String target = IConstants.FAILURE_KEY;
+		String destination_no = "";
+		String gmtValue = "";
+		String clientId = null;
+		String filename = null;
+		ScheduleEditResponse scheduleEditResponse = new ScheduleEditResponse();
+		try {
+			ScheduleEntry schedule = scheduleEntryRepository.findById(schedule_Id).get();
+			if (schedule != null) {
+				clientId = schedule.getUsername();
+				filename = schedule.getFileName();
+				if (clientId.equalsIgnoreCase(master)) {
+					BulkSmsDTO upload = null;
+					boolean proceed = false;
+					File sch_file = new File(IConstants.WEBSMPP_EXT_DIR + "schedule//" + filename);
+					// System.out.println("Edit File Exist: " + sch_file.exists());
+					if (sch_file.exists()) {
+						logger.info(clientId + "[" + schedule_Id + "] Schedule File Found: " + filename);
+						ObjectInputStream ois = null;
+						try {
+							ois = new ObjectInputStream(new FileInputStream(sch_file));
+							upload = (BulkSmsDTO) ois.readObject();
+							proceed = true;
+						} catch (Exception ex) {
+							logger.error(filename, ex);
+						} finally {
+							if (ois != null) {
+								try {
+									ois.close();
+								} catch (IOException ioe) {
+									System.out.println("Error: Unable To Close File: " + filename);
+								}
+							}
+						}
+					} else {
+						logger.error(clientId + "[" + schedule_Id + "] Schedule File Not Found: " + filename);
+					}
+					if (proceed) {
+						// BulkListInfo listInfo = new BulkListInfo();
+						List<String> list = upload.getDestinationList();
+						long listSize = (long) list.size();
+						String listSizeStr = Long.toString(listSize);
+						List<String> templist = new ArrayList<String>();
+						for (int i = 0; i < list.size(); i++) {
+							destination_no = (String) list.get(i);
+							templist.add(destination_no);
+						}
+						System.out.println("Org: " + upload.getOrigMessage());
+						clientId = upload.getUsername();
+						String msg = null;
+						if (upload.getMessageType().equalsIgnoreCase("SpecialChar")) {
+							msg = SmsConverter.hexCodePointsToCharMsg(upload.getOrigMessage());
+						} else {
+							String unicodemsg = SmsConverter.getUTF8toHex(upload.getMessage());
+							msg = SmsConverter.hexCodePointsToCharMsg(unicodemsg);
+						}
+						if (upload.getReqType().equalsIgnoreCase("contact")) {
+							List<GroupEntryDTO> groupList = groupEntryDTORepository.findByMasterId(clientId);
+							scheduleEditResponse.setGroupList(groupList);
+						}
+						String gmt = upload.getGmt();
+						gmtValue = GMTmapping.getGMT(gmt);
+						scheduleEditResponse.setListSizeStr(listSizeStr);
+						scheduleEditResponse.setTempList(templist);
+						scheduleEditResponse.setGmt(gmt);
+						scheduleEditResponse.setGmtValue(gmtValue);
+						scheduleEditResponse.setSchaduleTime(schedule.getClientTime());
+						scheduleEditResponse.setMsg(msg);
+						scheduleEditResponse.setSenderId(upload.getSenderId());
+						scheduleEditResponse.setReqType(upload.getReqType());
+						scheduleEditResponse.setFilename(filename);
+						scheduleEditResponse.setDelay(upload.getDelay() + "");
+						scheduleEditResponse.setRepeat(upload.getRepeat());
+						scheduleEditResponse.setUsername(upload.getSystemId());
+						scheduleEditResponse.setExpiry(upload.getExpiryHour() + "");
+
+						target = IConstants.SUCCESS_KEY;
+					} else {
+						logger.error("File not found: {filename}", filename = "your_file_name.txt");
+						throw new NotFoundException("File not found: {filename}" + filename + "=.txt");
+					}
+				} else {
+					target = "invalidRequest";
+					logger.info(master + " mismatched Schedule[" + schedule_Id + "]" + clientId);
+					throw new InternalServerException(master + " mismatched Schedule[" + schedule_Id + "]" + clientId);
+
+				}
+			} else {
+				logger.error("File not found: {filename}", filename = "your_file_name.txt");
+				throw new NotFoundException("File not found: {filename}" + filename + "=.txt");
+			}
+		} catch (NotFoundException ex) {
+			logger.error(clientId + "[" + filename + "]", ex.fillInStackTrace());
+			throw new NotFoundException(ex.getMessage());
+		} catch (Exception ex) {
+			logger.error(clientId + "[" + filename + "]", ex.fillInStackTrace());
+			throw new InternalServerException(ex.getMessage());
+		}
+		return ResponseEntity.ok(scheduleEditResponse);
+	}
+
+	@Override
+	public ResponseEntity<?> sendNowSchedule(String username, SendBulkScheduleRequest sendBulkScheduleRequest,
+			MultipartFile destinationNumberFile) {
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		WebMasterEntry webEntry = webMasterEntryRepository.findByUserId(user.getId());
+		SendSmsService service = new SendSmsService();
+		String uploadedNumbers = "";
+		long count = 0;
+		double totalcost = 0;
+		String contactList = "";
+		boolean contactListExist = true;
+		boolean numListExist = true;
+		String target = IConstants.FAILURE_KEY;
+		BulkListInfo listInfo = new BulkListInfo();
+		double wallet = 0;
+		BulkSmsDTO bulkSmsDTO = new BulkSmsDTO();
+		bulkSmsDTO.setReqType(sendBulkScheduleRequest.getReqType());
+		bulkSmsDTO.setReCheck(sendBulkScheduleRequest.getReCheck());
+		bulkSmsDTO.setUploadedNumbers(sendBulkScheduleRequest.getUploadedNumbers());
+		bulkSmsDTO.setTotalNumbers(sendBulkScheduleRequest.getTotalNumbers());
+		bulkSmsDTO.setFileName(sendBulkScheduleRequest.getFileName());
+		String reCheck = bulkSmsDTO.getReCheck();
+		boolean formFileExist = false;
+		if ((bulkSmsDTO.getReqType().equalsIgnoreCase("bulk"))) {
+			if (reCheck.equalsIgnoreCase("yes")) {
+				try {
+					if ((destinationNumberFile) != null) {
+						formFileExist = true;
+					}
+				} catch (Exception ex) {
+					formFileExist = false;
+					System.out.println("Exception in FormFile ::" + ex);
+				}
+			}
+		}
+		if ((bulkSmsDTO.getReqType().equalsIgnoreCase("mobiledb"))) {
+			formFileExist = false;
+//			if (reCheck.equalsIgnoreCase("yes")) {
+//				String session_Query = (String) session.getAttribute("session_query");
+//				session.removeAttribute("session_query");
+//				if (session_Query == null) {
+//					numListExist = false;
+//				} else {
+//					boolean b_count = false;
+//					ArrayList newList = new MobileDBServices().getMobileRecords(session_Query, b_count);
+//					if (newList.size() > 0) {
+//						Iterator iterator = newList.iterator();
+//						while (iterator.hasNext()) {
+//							uploadedNumbers += (String) iterator.next() + "\n";
+//							count++;
+//						}
+//						bulkSmsDTO.setUploadedNumbers(uploadedNumbers);
+//						bulkSmsDTO.setTotalNumbers(count + "");
+//					} else {
+//						numListExist = false;
+//					}
+//				}
+//			}
+		}
+		if (bulkSmsDTO.getReqType().equalsIgnoreCase("contact")) {
+			formFileExist = false;
+			contactList = bulkSmsDTO.getUploadedNumbers();
+			if (contactList == null || contactList.equalsIgnoreCase("")) {
+				contactListExist = false;
+			}
+		}
+		if (numListExist && contactListExist) {
+			DriverInfo driverInfo = null;
+			Optional<DriverInfo> OptionalDriverInfo = driverInfoRepository.findById(user.getId());
+			if (OptionalDriverInfo.isPresent()) {
+				driverInfo = OptionalDriverInfo.get();
+			} else
+				throw new NotFoundException("drive info  not found with the provided username.");
+			String systemId = user.getSystemId();
+			bulkSmsDTO.setClientId(systemId);
+			bulkSmsDTO.setSystemId(systemId);
+			bulkSmsDTO.setPassword(driverInfo.getDriver());
+			String bulkSessionId = systemId + Long.toString(System.currentTimeMillis());
+			// String appPath = request.getPathTranslated();
+			boolean update = false;
+			String reqFileName = bulkSmsDTO.getFileName();
+			if (reqFileName != null && reqFileName.length() > 0) {
+				update = true;
+				reqFileName = reqFileName.trim();
+			}
+			try {
+				Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findBySystemId(user.getSystemId());
+				Optional<BalanceEntry> masterbalanceOptional = balanceEntryRepository
+						.findBySystemId(user.getMasterId());
+				String wallet_flag = null;
+				BalanceEntry balanceEntry = null;
+				BalanceEntry masterbalanceEntry = null;
+				double adminWallet = 0;
+				if (balanceOptional.isPresent()) {
+					balanceEntry = balanceOptional.get();
+					wallet_flag = balanceEntry.getWalletFlag();
+					wallet = balanceEntry.getWalletAmount();
+				}
+				if (masterbalanceOptional.isPresent()) {
+					masterbalanceEntry = masterbalanceOptional.get();
+					adminWallet = masterbalanceEntry.getWalletAmount();
+				}
+				int no_of_msg = bulkSmsDTO.getSmsParts();
+				if (sendBulkScheduleRequest.getMessageType().equalsIgnoreCase("Unicode")) {
+					bulkSmsDTO.setDistinct("yes");
+				} else {
+					String sp_msg = sendBulkScheduleRequest.getMessage();
+					String unicodeMsg = SmsConverter.getContent(sp_msg.toCharArray());
+					bulkSmsDTO.setMessage(unicodeMsg);
+					bulkSmsDTO.setMessageType("SpecialChar");
+				}
+
+				System.out.println(" No of Parts ::::::::" + no_of_msg);
+				List<String> destinationList = null;
+				if (formFileExist) {
+					destinationList = getDestinationList(bulkSmsDTO, listInfo, destinationNumberFile);
+				} else {
+					destinationList = bulkSmsDTO.getDestinationList2(listInfo);
+				}
+				if (wallet_flag.equalsIgnoreCase("yes")) {
+					bulkSmsDTO.setUserMode("wallet");
+					totalcost = routeService.calculateRoutingCost(user.getId(), destinationList, no_of_msg);
+					if (destinationList.size() > 0) {
+						boolean amount = false;
+						boolean inherit = false;
+						if (user.isAdminDepend() && (adminWallet >= totalcost)) {
+							amount = true;
+							inherit = true;
+						} else if (wallet >= totalcost) {
+							amount = true;
+						}
+						if (amount) {
+							// ****************** Delete Schedule File ***********
+							ScheduleEntry entry = scheduleEntryRepository.findByFileName(reqFileName);// dbService.getScheduleInfo(reqFileName);
+							if (update) {
+								scheduleEntryRepository.deleteById(entry.getId());
+								if (!scheduleEntryRepository.existsById(entry.getId())) {
+									System.out.println("Deleted File :" + reqFileName + " From DB");
+								}
+								String schedPath = IConstants.WEBSMPP_EXT_DIR + "schedule//";
+								String path = schedPath + reqFileName;
+								File delFile = new File(path);
+								try {
+									if (delFile.exists()) {
+										boolean removed = delFile.delete();
+										if (removed) {
+											System.out.println("Deleted File :" + reqFileName + " From DIRECTORY");
+										}
+									}
+								} catch (Exception ex) {
+									System.out.println("Exception in Delete Schedule File :" + path);
+									ex.printStackTrace();
+								}
+								String schedule_time = entry.getServerTime().split(" ")[1];
+								System.out.println("Schedule[" + entry.getId() + "] Time: " + schedule_time);
+								if (GlobalVarsSms.ScheduledBatches.containsKey(schedule_time)) {
+									Set<Integer> set = GlobalVarsSms.ScheduledBatches.get(schedule_time);
+									System.out.println("Time: " + schedule_time + " Schedules: " + set);
+									if (set.contains(entry.getId())) {
+										set.remove(entry.getId());
+									}
+								}
+							}
+							// ********************* Delete Schedule File ***********
+							if (inherit) {
+								adminWallet = adminWallet - totalcost;
+								masterbalanceEntry.setWalletAmount(adminWallet);
+								balanceEntryRepository.save(masterbalanceEntry);
+							} else {
+								wallet = wallet - totalcost;
+								balanceEntry.setWalletAmount(wallet);
+								balanceEntryRepository.save(balanceEntry);
+							}
+							// String applicationName = request.getContextPath();
+							bulkSmsDTO.setMsgCount(destinationList.size() * no_of_msg);
+							bulkSmsDTO.setTotalCost(totalcost);
+							String value = sendBulkMsg(bulkSmsDTO, webEntry.isBulkOnApprove(), user.getId());
+							if (!value.contains("Error")) {
+								target = IConstants.SUCCESS_KEY;
+								logger.info("message.batchSuccess");
+							} else {
+								// Submission Error
+								logger.error("error.batchError");
+							}
+							if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY)) {
+//								request.setAttribute("listInfo", listInfo);
+//								session.setAttribute("credits", new DecimalFormat("0.00000").format(wallet));
+//								request.setAttribute("deductcredits", new DecimalFormat("0.00000").format(totalcost));
+//								request.setAttribute("bulkSessionId", bulkSessionId);
+							}
+						} else {
+							// insufficient balance
+							logger.error("error.insufficientWallet");
+						}
+					} else {
+						// Number File Error
+						logger.error("error.novalidNumber");
+					}
+				} else if (wallet_flag.equalsIgnoreCase("no")) {
+					bulkSmsDTO.setUserMode("credit");
+					if (destinationList.size() > 0) {
+						long credits = balanceEntry.getCredits();
+						long adminCredit = masterbalanceEntry.getCredits();
+						boolean amount = false;
+						boolean inherit = false;
+						if (user.isAdminDepend() && (adminCredit > (destinationList.size() * no_of_msg))) {
+							amount = true;
+							inherit = true;
+						} else if (credits > (destinationList.size() * no_of_msg)) {
+							amount = true;
+						}
+						if (amount) {
+							// ****************** Delete Schedule File ***********
+
+							ScheduleEntry entry = scheduleEntryRepository.findByFileName(reqFileName);
+							if (update) {
+								scheduleEntryRepository.deleteById(entry.getId());// (entry.getId());
+								if (!scheduleEntryRepository.existsById(entry.getId())) {
+									System.out.println("Deleted File :" + reqFileName + " From DB");
+								}
+								String schedPath = IConstants.WEBSMPP_EXT_DIR + "schedule//";
+								String path = schedPath + reqFileName;
+								File delFile = new File(path);
+								try {
+									if (delFile.exists()) {
+										boolean removed = delFile.delete();
+										if (removed) {
+											System.out.println("Deleted File :" + reqFileName + " From DIRECTORY");
+										}
+									}
+								} catch (Exception ex) {
+									System.out.println("Exception in Delete Schedule File :" + path);
+									ex.printStackTrace();
+								}
+								String schedule_time = entry.getServerTime().split(" ")[1];
+								System.out.println(
+										"Schedule[" + sendBulkScheduleRequest.getId() + "] Time: " + schedule_time);
+								if (GlobalVarsSms.ScheduledBatches.containsKey(schedule_time)) {
+									Set<Integer> set = GlobalVarsSms.ScheduledBatches.get(schedule_time);
+									System.out.println("Time: " + schedule_time + " Schedules: " + set);
+									if (set.contains(sendBulkScheduleRequest.getId())) {
+										set.remove(sendBulkScheduleRequest.getId());
+									}
+								}
+							}
+							// *********************End Delete Schedule File ***********
+							if (inherit) {
+								adminCredit = adminCredit - (destinationList.size() * no_of_msg);
+								masterbalanceEntry.setCredits(adminCredit);
+								balanceEntryRepository.save(masterbalanceEntry);
+							} else {
+								credits = credits - (destinationList.size() * no_of_msg);
+								balanceEntry.setCredits(credits);
+								balanceEntryRepository.save(balanceEntry);
+							}
+							long deductCredits = destinationList.size() * no_of_msg;
+							bulkSmsDTO.setMsgCount(deductCredits);
+							String value = sendBulkMsg(bulkSmsDTO, webEntry.isBulkOnApprove(), user.getId());
+							if (!value.contains("Error")) {
+								target = IConstants.SUCCESS_KEY;
+								logger.info("message.batchSuccess");
+							} else {
+								// Submission Error
+								logger.error("error.batchError");
+							}
+							if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY)) {
+//								request.setAttribute("listInfo", listInfo);
+//								session.setAttribute("credits", Long.toString(credits));
+//								request.setAttribute("deductcredits", deductCredits + "");
+//								request.setAttribute("bulkSessionId", bulkSessionId);
+							}
+						} else {
+							// insufficient Credits
+							logger.error("error.insufficientCredit");
+						}
+					} else {
+						// Number File Error
+						logger.error("error.novalidNumber");
+					}
+				} else if (wallet_flag.equalsIgnoreCase("MIN")) {
+					// insufficient balance
+					logger.error("error.insufficientWallet");
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				target = IConstants.FAILURE_KEY;
+				logger.error("error.processError");
+			}
+		} else {
+			target = IConstants.FAILURE_KEY;
+			// Destination Number Error
+			logger.error("error.novalidNumber");
+		}
+		return ResponseEntity.ok(target);
+	}
+
+	public List<String> getDestinationList(BulkSmsDTO bulkSmsDTO, BulkListInfo listInfo, MultipartFile file)
+			throws FileNotFoundException, IOException {
+		List<String> destinationList = bulkSmsDTO.getDestinationList();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		InputStream stream = file.getInputStream();
+		int bytesRead = 0;
+		byte[] buffer = new byte[8192];
+		while ((bytesRead = stream.read(buffer, 0, 8192)) != -1) {
+			baos.write(buffer, 0, bytesRead);
+		}
+		String data = new String(baos.toByteArray());
+		List<String> noList = new ArrayList<String>();
+		StringTokenizer st = new StringTokenizer(data, "\n");
+		int tot = st.countTokens();
+		listInfo.setTotal(st.countTokens());
+		int invalidCount = 0;
+		while (st.hasMoreTokens()) {
+			String destinationNumber = (String) st.nextToken();
+			destinationNumber = destinationNumber.trim();
+			if ((destinationNumber != null) && (destinationNumber.contains(";"))) {
+				if (bulkSmsDTO.getReqType().equalsIgnoreCase("groupDataBulk")) {
+					String number = destinationNumber.substring(0, destinationNumber.indexOf(";"));
+					if (number != null && number.startsWith("+")) {
+						number = number.substring(1, number.length());
+					}
+					try {
+						long num = Long.parseLong(number);
+						number = String.valueOf(num);
+						noList.add(number);
+					} catch (NumberFormatException ne) {
+						System.out.println("INVALID DESTINATION NUMBER(1): " + number);
+						invalidCount++;
+					}
+				} else {
+					String name = destinationNumber.substring(0, destinationNumber.indexOf(";"));
+					String number = destinationNumber.substring(destinationNumber.indexOf(";") + 1,
+							destinationNumber.length());
+					if (number != null && number.startsWith("+")) {
+						number = number.substring(1, number.length());
+					}
+					try {
+						long num = Long.parseLong(number);
+						destinationNumber = name + ";" + String.valueOf(num);
+						noList.add(destinationNumber);
+					} catch (NumberFormatException ne) {
+						System.out.println("INVALID DESTINATION NUMBER(2): " + number);
+						invalidCount++;
+					}
+				}
+			} else if (destinationNumber == null) {
+				invalidCount++;
+			} else if (destinationNumber.equalsIgnoreCase("")) {
+				invalidCount++;
+			} else if (destinationNumber.length() == 0) {
+				invalidCount++;
+			} else {
+				try {
+					long num = Long.parseLong(destinationNumber);
+					noList.add(String.valueOf(num));
+				} catch (NumberFormatException nfe) {
+					System.out.println("INVALID DESTINATION NUMBER(3): " + destinationNumber);
+					invalidCount++;
+				}
+			} // else closed
+		}
+		Set<String> hashSet = new HashSet<String>(noList);
+		destinationList = new ArrayList<String>(hashSet);
+		Collections.sort(destinationList);
+		// --------------------------------------------------------
+		listInfo.setValidCount(destinationList.size());
+		listInfo.setInvalidCount(invalidCount);
+		int dup = tot - destinationList.size() - invalidCount;
+		// System.out.println("duplicate===="+dup);
+		listInfo.setDuplicate(dup);
+		bulkSmsDTO.setDestinationList(destinationList);
+		return destinationList;
+	}
+
+	@Override
+	public ResponseEntity<?> modifiedSchedule(String username, int schedule_Id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ResponseEntity<?> identifyMessage(String username, String msg) {
+		MessageIdentiryResponse messageIdentiryResponse = new MessageIdentiryResponse();
+		Optional<User> userOptional = userEntryRepository.getUsers(username);
+		User user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+		} else {
+			throw new NotFoundException("User not found with the provided username.");
+		}
+		String messageType = null;
+		int charCount = 0;
+		int charLimit = 0;
+		int smsParts = 0;
+		String regexpPattern = "^[A-Za-z0-9 \\r\\n@£$¥èéùìòÇØøÅå\u0394_\u03A6\u0393\u039B\u03A9\u03A0\u03A8\u00A4\u03A3\u0398\u039EÆæßÉ!\"#$%&'()*+,\\-./:;<=>?¡ÄÖÑÜ§¿äöñüà^{}\\\\\\[~\\]|\u20AC]*$";
+		java.util.regex.Pattern regexp = java.util.regex.Pattern.compile(regexpPattern);
+
+		if (regexp.matcher(msg).matches()) {
+			messageType = "SpecialChar";
+		} else {
+			messageType = "Unicode";
+		}
+
+		int count = 0;
+		if (msg != null && !msg.isEmpty()) {
+			for (int i = 0; i < msg.length(); i++) {
+				int asciiNum = (int) msg.charAt(i);
+				if (asciiNum == 12 || asciiNum == 94 || asciiNum == 123 || asciiNum == 125 || asciiNum == 91
+						|| asciiNum == 92 || asciiNum == 126 || asciiNum == 93 || asciiNum == 124 || asciiNum == 8364) {
+					count++;
+				}
+			}
+		}
+		charCount = msg.length() + count;
+
+		if ("SpecialChar".equals(messageType)) {
+			if (charCount <= 160) {
+				smsParts = 1;
+				charLimit = 160;
+			} else {
+				double x = (double) charCount / 153;
+				double remainder = charCount % 153;
+				if (x > 0) {
+					if (remainder > 0) {
+						x = x + 1;
+					}
+				}
+				smsParts = (int) x;
+				charLimit = 153;
+			}
+		} else {
+			if (charCount <= 70) {
+				smsParts = 1;
+				charLimit = 70;
+			} else {
+				double x = (double) charCount / 67;
+				double remainder = charCount % 67;
+				if (x > 0) {
+					if (remainder > 0) {
+						x = x + 1;
+					}
+				}
+				smsParts = (int) x;
+				charLimit = 67;
+			}
+		}
+		messageIdentiryResponse.setMessage(msg);
+		messageIdentiryResponse.setCharCount(charCount);
+		messageIdentiryResponse.setCharLimit(charLimit);
+		messageIdentiryResponse.setMessageType(messageType);
+		messageIdentiryResponse.setSmscount(smsParts);
+		return ResponseEntity.ok(messageIdentiryResponse);
+	}
 }
