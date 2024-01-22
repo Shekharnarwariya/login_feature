@@ -21,7 +21,7 @@ import com.hazelcast.cluster.Member;
 @Component
 public class ContextListener {
 	private static final Logger logger = LoggerFactory.getLogger(ContextListener.class);
-	// public static HazelcastInstance hazelInstance;
+
 	// Load properties file during class initialization
 
 	public static Properties property = new Properties();

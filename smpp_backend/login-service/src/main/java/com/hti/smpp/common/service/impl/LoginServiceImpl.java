@@ -50,7 +50,9 @@ import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.user.repository.WebMenuAccessEntryRepository;
 import com.hti.smpp.common.util.Constant;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.EmailValidator;
+import com.hti.smpp.common.util.MessageResourceBundle;
 import com.hti.smpp.common.util.OTPGenerator;
 import com.hti.smpp.common.util.PasswordConverter;
 /**
@@ -100,6 +102,10 @@ public class LoginServiceImpl implements LoginService {
 
 	@Autowired
 	private EmailSender emailSender;
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
+
 
 	private static final Logger logger = LoggerFactory.getLogger(LoginServiceImpl.class);
 
@@ -119,7 +125,7 @@ public class LoginServiceImpl implements LoginService {
 
 			if (!userEntryRepository.existsBySystemId(username)) {
 				logger.error("Authentication failed. User not found: {}", username);
-				throw new AuthenticationExceptionFailed("Authentication failed. Please check your Username");
+				throw new AuthenticationExceptionFailed(messageResourceBundle.getMessage(ConstantMessages.AUTHENTICATION_FAILED_USERNAME));
 			}
 
 			Authentication authentication = authenticationManager
@@ -140,13 +146,13 @@ public class LoginServiceImpl implements LoginService {
 
 		} catch (BadCredentialsException e) {
 			logger.error("Authentication failed for user: {}", username, e.getMessage());
-			throw new AuthenticationExceptionFailed("Authentication failed. Please check your Password");
+			throw new AuthenticationExceptionFailed(messageResourceBundle.getMessage(ConstantMessages.AUTHENTICATION_FAILED_PASSWORD));
 		} catch (AuthenticationExceptionFailed e) {
 			logger.error("Authentication failed for user: {}", username, e.getMessage());
 			throw new AuthenticationExceptionFailed(e.getMessage());
 		} catch (Exception e) {
 			logger.error("Internal server error during authentication", e.getMessage());
-			throw new InternalServerException("Internal server error" + e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
 		}
 	}
 /**
@@ -178,7 +184,7 @@ public class LoginServiceImpl implements LoginService {
 
 			return ResponseEntity.ok(profileResponse);
 		} else {
-			throw new NotFoundException("Error: User not found!");
+			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
 /**
@@ -220,7 +226,7 @@ public class LoginServiceImpl implements LoginService {
 
 			return ResponseEntity.ok("User registered successfully!");
 		} catch (Exception e) {
-			throw new InternalServerException("Internal server error: " + e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
 		}
 	}
 /**
@@ -290,15 +296,15 @@ public class LoginServiceImpl implements LoginService {
 					return ResponseEntity.ok("OTP validation successful. Please proceed...........");
 				} else {
 					// OTP has expired
-					throw new InvalidOtpException("Error: OTP has expired. Please request a new OTP.");
+					throw new InvalidOtpException(messageResourceBundle.getMessage(ConstantMessages.OTP_EXPIRED));
 				}
 			} else {
 				// Invalid OTP
-				throw new InvalidOtpException("Error: Invalid OTP. Please enter the correct OTP.");
+				throw new InvalidOtpException(messageResourceBundle.getMessage(ConstantMessages.INVALID_OTP));
 			}
 		} else {
 			// User not found
-			throw new NotFoundException("Error: User not found. Please check the username and try again.");
+			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
 	/**
@@ -309,7 +315,7 @@ public class LoginServiceImpl implements LoginService {
 	public ResponseEntity<?> forgotPassword(String newPassword, String username) {
 		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
 		if (userOptional.isEmpty()) {
-			throw new NotFoundException("Error: User Not Found!");
+			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
 		}
 		// Update User Password
 		UserEntry user = userOptional.get();
@@ -372,13 +378,13 @@ public class LoginServiceImpl implements LoginService {
 								professionEntry.getFirstName() + " " + professionEntry.getLastName()));
 				return ResponseEntity.ok("OTP Sent Successfully!");
 			} else {
-				throw new NotFoundException("Error: User Not Found!");
+				throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
 			}
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
 			// Handle exceptions, log or return appropriate error response
-			throw new InternalServerException("Error sending OTP: " + e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
 /**
@@ -414,10 +420,10 @@ public class LoginServiceImpl implements LoginService {
 				}
 				return ResponseEntity.ok("Password Updated Successfully!");
 			} else {
-				throw new InvalidPropertyException("Error: Invalid old password");
+				throw new InvalidPropertyException(messageResourceBundle.getMessage(ConstantMessages.INVALID_OLD_PASSWORD));
 			}
 		} else {
-			throw new NotFoundException("Error: User Not Found!");
+			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
 /**
@@ -437,7 +443,7 @@ public class LoginServiceImpl implements LoginService {
 			professionEntryRepository.save(professionEntry);
 			return ResponseEntity.ok("Profile updated successfully");
 		} else {
-			throw new NotFoundException("User not found!");
+			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
 /**
