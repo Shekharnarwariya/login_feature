@@ -14,8 +14,6 @@ public class SendBulkScheduleRequest {
 
 	private String schedTime;
 
-	private String schedDate;
-
 	private String totalNumbers;
 
 	private String uploadedNumbers;
@@ -40,7 +38,6 @@ public class SendBulkScheduleRequest {
 
 	private long expiryHour;
 
-	private String exclude; // excluded numbers from uploaded file
 
 	private String reqType;
 
@@ -179,20 +176,6 @@ public class SendBulkScheduleRequest {
 	 */
 	public void setSchedTime(String schedTime) {
 		this.schedTime = schedTime;
-	}
-
-	/**
-	 * @return the schedDate
-	 */
-	public String getSchedDate() {
-		return schedDate;
-	}
-
-	/**
-	 * @param schedDate the schedDate to set
-	 */
-	public void setSchedDate(String schedDate) {
-		this.schedDate = schedDate;
 	}
 
 	/**
@@ -363,19 +346,6 @@ public class SendBulkScheduleRequest {
 		this.expiryHour = expiryHour;
 	}
 
-	/**
-	 * @return the exclude
-	 */
-	public String getExclude() {
-		return exclude;
-	}
-
-	/**
-	 * @param exclude the exclude to set
-	 */
-	public void setExclude(String exclude) {
-		this.exclude = exclude;
-	}
 
 	/**
 	 * @return the peId

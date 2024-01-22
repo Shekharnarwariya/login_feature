@@ -58,7 +58,8 @@ public interface SmsService {
 	public ResponseEntity<?> sendNowSchedule(String username, SendBulkScheduleRequest sendBulkScheduleRequest,
 			MultipartFile destinationNumberFile);
 
-	public ResponseEntity<?> modifiedSchedule(String username, int schedule_Id);
+	public ResponseEntity<?> modifiedSchedule(String username, SendBulkScheduleRequest sendBulkScheduleRequest,
+			MultipartFile destinationNumberFile);
 
 	public ResponseEntity<?> identifyMessage(String username, String message);
 
