@@ -39,6 +39,7 @@
 		<module>Template</module>
 		<module>twoway</module>
 		<module>user</module>
+		<module>mobileDb</module>
 
 
 	</modules>
