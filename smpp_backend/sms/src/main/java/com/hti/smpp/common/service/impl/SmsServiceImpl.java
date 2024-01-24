@@ -7111,6 +7111,7 @@ public class SmsServiceImpl implements SmsService {
 				logger.error(username + "[" + user.getRole() + "]" + " <- Failed to retrieve batch list ->");
 				throw new NotFoundException("No batches available for processing.");
 			} else {
+				System.out.println(list);
 				reportList = new ArrayList<BulkEntry>();
 				BulkEntry entry = null;
 				long count = 0;
