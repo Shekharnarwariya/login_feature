@@ -1,5 +1,7 @@
 package com.hti.smpp.common.request;
 
+import jakarta.validation.constraints.NotBlank;
+
 /**
  * Represents a form containing information for creating or updating a SalesEntry.
  * Includes fields such as ID, master ID, username, email, number, reporting, createdOn,
@@ -8,16 +10,27 @@ package com.hti.smpp.common.request;
 
 public class SalesEntryForm {
 	private int id;
+	@NotBlank(message = "MasterId Can't Be Blank")
 	private String masterId;
+	@NotBlank(message = "Username Can't Be Blank")
 	private String username;
+	@NotBlank(message = "Email Can't Be Blank")
 	private String email;
+	@NotBlank(message = "Number Can't Be Blank")
 	private String number;
+	@NotBlank(message = "Reporting Can't Be Blank")
 	private String reporting;
+//	@NotBlank(message = "CreatedOn Can't Be Blank")
 	private String createdOn;
+	@NotBlank(message = "Remarks Can't Be Blank")
 	private String remarks;
+	@NotBlank(message = "Password Can't Be Blank")
 	private String password;
+	@NotBlank(message = "ExpiredOn Can't Be Blank")
 	private String expiredOn;
+	@NotBlank(message = "Role Can't Be Blank")
 	private String role;
+	@NotBlank(message = "DomainEmail Can't Be Blank")
 	private String domainEmail;
 
 	public int getId() {

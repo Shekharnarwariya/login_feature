@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hti.smpp.common.exception.ExceptionResponse;
 import com.hti.smpp.common.request.SalesEntryForm;
 import com.hti.smpp.common.response.ViewSalesEntry;
 import com.hti.smpp.common.sales.dto.SalesEntry;
@@ -47,10 +47,10 @@ public class SalesController {
 	
 	@Operation(summary = "Save Sales Entry", description = "Save a new sales entry")
 	@ApiResponses(value = {
-			@ApiResponse(responseCode = "201", description = "SalesEntry Saved Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
+			@ApiResponse(responseCode = "201", description = "SalesEntry Saved Successfully."),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) 
 	})
 	@PostMapping("/save")
 	public ResponseEntity<String> saveSalesEntry(@Valid @RequestBody SalesEntryForm salesEntry,
@@ -66,10 +66,10 @@ public class SalesController {
 	
 	@Operation(summary = "Update Sales Entry", description = "Update's an existing sales entry")
 	@ApiResponses(value = {
-			@ApiResponse(responseCode = "201", description = "SalesEntry Updated Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
-			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
+			@ApiResponse(responseCode = "201", description = "SalesEntry Updated Successfully."),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))), 
+			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) 
 	})
 	@PutMapping("/update")
 	public ResponseEntity<String> update(@Valid @RequestBody SalesEntryForm form,
@@ -84,10 +84,10 @@ public class SalesController {
 	
 	@Operation(summary = "Delete Sales Entry", description = "Delete's an existing sales entry")
 	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "SalesEntry Deleted Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
-			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
-			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
+			@ApiResponse(responseCode = "200", description = "SalesEntry Deleted Successfully."),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))), 
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))), 
+			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) 
 	})
 	@DeleteMapping("/delete/{id}")
 	public ResponseEntity<String> deleteSalesEntry(
@@ -103,12 +103,12 @@ public class SalesController {
 	 * With a function name listSalesUser.
 	 */
 	
-	@Operation(summary = "List Sales Users", description = "Returns Collection view of the values contained in SalesEntry map")
+	@Operation(summary = "List Sales Users", description = "Returns the list of sales user.")
 	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "List Sales Users Successful.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
-			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
+			@ApiResponse(responseCode = "200", description = "List Sales Successful."),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))), 
+			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) 
 	})
 	@GetMapping("/list-sales-users")
 	public ResponseEntity<Collection<SalesEntry>> listSalesUsers(
@@ -121,16 +121,16 @@ public class SalesController {
 	 * Returns a ResponseEntity with the sales entry details or an appropriate response.
 	 */
 	
-	@Operation(summary = "View Sales Entry", description = "Returns the ViewSalesEntry as response")
+	@Operation(summary = "View Sales Entry", description = "View Sales Entry By Id")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "ViewSalesEntry response Successful.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ViewSalesEntry.class))),
-			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
-			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
+			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))), 
+			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) 
 	})
-	@GetMapping("/view-sales-entry")
-	public ResponseEntity<?> viewSalesEntry(
-			@Parameter(description = "Id") @RequestParam(value = "id", required = true) int id,
+	@GetMapping("/view-sales-entry/{id}")
+	public ResponseEntity<ViewSalesEntry> viewSalesEntry(
+			@Parameter(description = "Id") @PathVariable(value = "id", required = true) int id,
 			@Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username) {
 		return this.salesService.viewSalesEntry(id, username);
 	}
@@ -141,11 +141,13 @@ public class SalesController {
 	 * Returns a ResponseEntity with the setup information or an appropriate response.
 	 */
 	
-	@Operation(summary = "Setup SalesEntry", description = "Returns a Collection view of the values contained in the SalesEntry map.")
+	@Operation(summary = "List Sales For Manager", description = "Returns the sales entries for the role manager.")
 	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Collection view of values Successful.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) })
+			@ApiResponse(responseCode = "200", description = "Successfully Fetched the sales entries for the role manager."),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) 
+	})
 	@GetMapping("/setup-sales-entry")
 	public ResponseEntity<?> setupSalesEntry(
 			@Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username) {

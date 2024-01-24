@@ -13,7 +13,7 @@
 	<artifactId>Sales</artifactId>
 	<version>0.0.1</version>
 	<name>Sales</name>
-	<description>this is sales application </description>
+	<description>Sales Service For SMPP</description>
 	<properties>
 		<java.version>17</java.version>
 		<spring-cloud.version>2022.0.4</spring-cloud.version>

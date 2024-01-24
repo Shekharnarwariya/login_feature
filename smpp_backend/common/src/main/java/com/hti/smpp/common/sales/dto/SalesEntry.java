@@ -10,7 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "sales_entry")
+@Table(name = "sales_master")
 public class SalesEntry implements Comparable<SalesEntry> {
 	@Id
 	@Column(name = "id")

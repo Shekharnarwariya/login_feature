@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -58,7 +59,7 @@ public class SalesServiceImpl implements SalesService {
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -73,29 +74,34 @@ public class SalesServiceImpl implements SalesService {
 				salesEntryForm.getRole(), systemId, user.getRole());
 		try {
 			BeanUtils.copyProperties(salesEntryForm, entry);
-			entry.setCreatedOn(LocalDate.now() + "");
-			SalesEntry sales = salesRepository.save(entry);
-			int id = sales.getId();
-			if (id > 0) {
-				GlobalVars.ExecutiveEntryMap.put(id, entry);
-				logger.info("Sales User Created: " + entry);
-				target = IConstants.SUCCESS_KEY;
+			if (userRepository.existsBySystemId(entry.getUsername())) {
+				logger.error("Usermaster Entry Exists With same Username " + entry.getUsername());
+				throw new InternalServerException("Usermaster Entry Exists With same Username " + entry.getUsername());
 			} else {
-				logger.error("Unable to create Sales User: {}", entry);
-				throw new InternalServerException("Unable to create Sales User");
-			}
+				entry.setCreatedOn(LocalDate.now() + "");
+				SalesEntry sales = salesRepository.save(entry);
+				int id = sales.getId();
+				if (id > 0) {
+					GlobalVars.ExecutiveEntryMap.put(id, entry);
+					target = IConstants.SUCCESS_KEY;
+					logger.info("Sales User Created With Id: " + id + ". Status: " + target);
+				} else {
+					logger.error("Unable to create Sales User: {}", entry.getUsername());
+					throw new InternalServerException("Unable to create Sales User");
+				}
 
-		} catch (InternalServerException ex) {
-			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
-			logger.error(ex.getLocalizedMessage());
-			throw new InternalServerException(ex.getLocalizedMessage());
-		} catch (Exception ex) {
+			}
+		} catch (DataIntegrityViolationException ex) {
+			ex.printStackTrace();
 			logger.error("Unexpected Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
-			logger.error(ex.getLocalizedMessage());
+			throw new InternalServerException("Duplicate Entry For Username: "+entry.getUsername());
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			logger.error("Unexpected Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
 			throw new InternalServerException(ex.getLocalizedMessage());
 		}
 
-		return new ResponseEntity<String>(target, HttpStatus.CREATED);
+		return new ResponseEntity<String>("Sales Entry Saved Successfully", HttpStatus.CREATED);
 	}
 
 	/**
@@ -114,7 +120,7 @@ public class SalesServiceImpl implements SalesService {
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -128,11 +134,17 @@ public class SalesServiceImpl implements SalesService {
 		SalesEntry seller = new SalesEntry();
 		try {
 			BeanUtils.copyProperties(form, seller);
-			logger.info("Update Requested: {}", seller);
-			SalesEntry entry = this.salesRepository.findById(seller.getId())
-					.orElseThrow(() -> new NotFoundException("Entry not found with id: " + seller.getId()));
-			SalesEntry savedEntry = this.salesRepository.save(entry);
+			logger.info("Update Requested: {}", seller.getUsername());
+			SalesEntry savedEntry = null;
+			if (this.salesRepository.existsById(seller.getId())) {
+				savedEntry = this.salesRepository.save(seller);
+			} else {
+				logger.error("Entry not found with id: " + seller.getId());
+				throw new NotFoundException("Entry not found with id: " + seller.getId());
+			}
+
 			if (savedEntry != null) {
+				logger.info("Sales Entry saved successfully! Status: " + target);
 				GlobalVars.ExecutiveEntryMap.put(seller.getId(), seller);
 				target = IConstants.SUCCESS_KEY;
 			} else {
@@ -140,17 +152,14 @@ public class SalesServiceImpl implements SalesService {
 				throw new InternalServerException("Unable to save SalesEntry.");
 			}
 
-		} catch (InternalServerException ex) {
-			logger.error("InternalServer Exception: {} [{}]", ex.getMessage(), ex.getCause());
-			throw new InternalServerException(ex.getLocalizedMessage());
 		} catch (NotFoundException ex) {
 			logger.error("NotFound Exception: {} [{}]", ex.getMessage(), ex.getCause());
 			throw new NotFoundException(ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: {} [{}]", ex.getMessage(), ex.getCause());
-			throw new InternalServerException("Unexpected Exception: " + ex.getLocalizedMessage());
+			throw new InternalServerException(ex.getLocalizedMessage());
 		}
-		return new ResponseEntity<String>(target, HttpStatus.CREATED);
+		return new ResponseEntity<String>("SalesEntry Updated Successfully!", HttpStatus.CREATED);
 	}
 
 	/**
@@ -168,7 +177,7 @@ public class SalesServiceImpl implements SalesService {
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -178,14 +187,22 @@ public class SalesServiceImpl implements SalesService {
 		logger.info("Delete Requested for Sale ID: " + id);
 		String target = IConstants.FAILURE_KEY;
 		try {
-			this.salesRepository.deleteById(id);
-			target = IConstants.SUCCESS_KEY;
-			logger.info("Operation successful: Sale ID {}", id);
+			if (this.salesRepository.existsById(id)) {
+				this.salesRepository.deleteById(id);
+				target = IConstants.SUCCESS_KEY;
+				logger.info("Operation successful: Sale ID {}", id);
+			} else {
+				throw new NotFoundException("Entry not found with id: " + id);
+			}
+
+		} catch (NotFoundException ex) {
+			logger.error("NotFound Error: {} [{}]", ex.getMessage(), ex.getCause());
+			throw new NotFoundException(ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: {} [{}]", ex.getMessage(), ex.getCause());
 			throw new InternalServerException(ex.getLocalizedMessage());
 		}
-		return new ResponseEntity<String>(target, HttpStatus.OK);
+		return new ResponseEntity<String>("Sales Entry Deleted Successfully!", HttpStatus.OK);
 	}
 
 	/**
@@ -201,13 +218,21 @@ public class SalesServiceImpl implements SalesService {
 		List<SalesEntry> list = null;
 		try {
 			list = this.salesRepository.findAll();
+			if(!list.isEmpty()) {
+				for (SalesEntry entry : list) {
+					map.put(entry.getId(), entry);
+				}
+			}else {
+				throw new NotFoundException("No SalesEntry Found!");
+			}
+		} catch (NotFoundException e) {
+			logger.error("Not Found Error: " + e.getLocalizedMessage());
+			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error("Error: " + e.getLocalizedMessage());
 			throw new InternalServerException(e.getLocalizedMessage());
 		}
-		for (SalesEntry entry : list) {
-			map.put(entry.getId(), entry);
-		}
+		
 		return map;
 	}
 
@@ -226,15 +251,23 @@ public class SalesServiceImpl implements SalesService {
 		List<SalesEntry> list = null;
 		try {
 			list = this.salesRepository.findAll();
+			if(!list.isEmpty()) {
+				for (SalesEntry entry : list) {
+					if (entry.getRole().equalsIgnoreCase(role)) {
+						map.put(entry.getId(), entry);
+					}
+				}
+			}else {
+				throw new NotFoundException("No Sales Entry Found!");
+			}
+		} catch (NotFoundException e) {
+			logger.error("NotFound Error: " + e.getLocalizedMessage());
+			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error("Error: " + e.getLocalizedMessage());
 			throw new InternalServerException(e.getLocalizedMessage());
 		}
-		for (SalesEntry entry : list) {
-			if (entry.getRole().equalsIgnoreCase(role)) {
-				map.put(entry.getId(), entry);
-			}
-		}
+		
 		return map;
 	}
 
@@ -254,13 +287,21 @@ public class SalesServiceImpl implements SalesService {
 		List<SalesEntry> list = null;
 		try {
 			list = this.salesRepository.findByMasterIdAndRole(mgrId, role);
+			if(!list.isEmpty()) {
+				for (SalesEntry entry : list) {
+					map.put(entry.getId(), entry);
+				}
+			} else {
+				throw new NotFoundException("No SalesEntry Found!");
+			}
+		} catch (NotFoundException e) {
+			logger.error(e.getLocalizedMessage());
+			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error(e.getLocalizedMessage());
 			throw new InternalServerException(e.getLocalizedMessage());
 		}
-		for (SalesEntry entry : list) {
-			map.put(entry.getId(), entry);
-		}
+		
 		return map;
 	}
 
@@ -292,14 +333,16 @@ public class SalesServiceImpl implements SalesService {
 		String target = IConstants.FAILURE_KEY;
 		String masterId = user.getMasterId();
 		logger.info("Executive List Requested By {} [{}]", masterId, user.getRole());
-		SalesEntry salesEntry = this.salesRepository.findByMasterId(masterId);
+
 		Collection<SalesEntry> salesList = null;
 		try {
 			if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				salesList = list().values();
-			} else if (salesEntry.getRole().equalsIgnoreCase("manager")
+			} else if (Access.isAuthorized(user.getRole(), "isAuthorizedManager")
 					|| Access.isAuthorized(user.getRole(), "isAuthorizedAdmin")) {
 				salesList = listSellersUnderManager(masterId, "seller").values();
+			} else {
+				throw new NotFoundException("User not found with the provided username.");
 			}
 
 			if (salesList != null && !salesList.isEmpty()) {
@@ -314,15 +357,9 @@ public class SalesServiceImpl implements SalesService {
 
 		} catch (NotFoundException e) {
 			logger.error("Not Found Exception: " + e.getMessage() + "[" + e.getCause() + "]");
-			logger.error(masterId, e.toString());
 			throw new NotFoundException(e.getLocalizedMessage());
-		} catch (InternalServerException e) {
-			logger.error("Process Error: " + e.getMessage() + "[" + e.getCause() + "]");
-			logger.error(masterId, e.toString());
-			throw new InternalServerException(e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error("Process Error: " + e.getMessage() + "[" + e.getCause() + "]");
-			logger.error(masterId, e.toString());
 			throw new InternalServerException(e.getLocalizedMessage());
 		}
 		return ResponseEntity.ok(salesList);
@@ -341,7 +378,7 @@ public class SalesServiceImpl implements SalesService {
 	 */
 
 	@Override
-	public ResponseEntity<?> viewSalesEntry(int id, String username) {
+	public ResponseEntity<ViewSalesEntry> viewSalesEntry(int id, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -359,7 +396,6 @@ public class SalesServiceImpl implements SalesService {
 		ViewSalesEntry response = new ViewSalesEntry();
 		try {
 			SalesEntry seller = null;
-			System.out.println(id);
 			Optional<SalesEntry> salesOptional = this.salesRepository.findById(id);
 			if (salesOptional.isPresent()) {
 				seller = salesOptional.get();
@@ -367,29 +403,23 @@ public class SalesServiceImpl implements SalesService {
 				logger.error("SalesEntry not found");
 				throw new NotFoundException("SalesEntry not found");
 			}
-			logger.info("Requested: " + seller);
+			logger.info("Requested: " + seller.getUsername());
 			if (seller != null) {
 				if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 					Collection<SalesEntry> list = null;
-					try {
-						list = list("manager").values();
-					} catch (Exception e) {
-						logger.error(e.getLocalizedMessage());
-						throw new InternalServerException(e.getLocalizedMessage());
+					list = list("manager").values();
+					
+					if(!list.isEmpty()) {
+						response.setManagers(list);
+					}else {
+						logger.info("No Sales Entry Found For The Role Manager!");
 					}
-					response.setManagers(list);
 				}
 				response.setSeller(seller);
 				target = IConstants.SUCCESS_KEY;
-			} else {
-				logger.error("Operation failed");
-				throw new InternalServerException("View Sales Entry Failed!");
 			}
 			return new ResponseEntity<>(response, HttpStatus.OK);
 
-		} catch (InternalServerException e) {
-			logger.error("Process Error: " + e.getMessage() + "[" + e.getCause() + "]");
-			throw new InternalServerException(e.getLocalizedMessage());
 		} catch (NotFoundException e) {
 			logger.error("NotFound Error: " + e.getMessage() + "[" + e.getCause() + "]");
 			throw new NotFoundException(e.getLocalizedMessage());
@@ -415,7 +445,7 @@ public class SalesServiceImpl implements SalesService {
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -424,20 +454,26 @@ public class SalesServiceImpl implements SalesService {
 		String target = IConstants.SUCCESS_KEY;
 		// Finding the user by system ID
 		String systemId = user.getSystemId();
-		String masterId = user.getMasterId();
 
 		logger.info("Sales User Setup Requested By " + systemId + "[" + user.getRole() + "]");
-		SalesEntry salesEntry = this.salesRepository.findByMasterId(masterId);
 		Collection<SalesEntry> list = null;
 		if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 			try {
 				list = list("manager").values();
+				
+				if(list.isEmpty()) {
+					logger.error("No Data Found For The Role Manager In SalesEntry!");
+					throw new NotFoundException("No SaleEntry Found For Manager!");
+				}
+			} catch (NotFoundException e) {
+				logger.error("Not found ERROR " + e.getLocalizedMessage());
+				throw new NotFoundException(e.getLocalizedMessage());
 			} catch (Exception e) {
 				logger.error("ERROR " + e.getLocalizedMessage());
-				throw new NotFoundException(e.getLocalizedMessage());
+				throw new InternalServerException(e.getLocalizedMessage());
 			}
 		} else {
-			if (salesEntry.getRole().equalsIgnoreCase("manager")
+			if (Access.isAuthorized(user.getRole(), "isAuthorizedManager")
 					|| Access.isAuthorized(user.getRole(), "isAuthorizedAdmin")) {
 				logger.info("Authorized User :" + systemId);
 			} else {
