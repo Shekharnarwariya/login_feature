@@ -55,8 +55,10 @@ import com.hti.smpp.common.util.EmailValidator;
 import com.hti.smpp.common.util.MessageResourceBundle;
 import com.hti.smpp.common.util.OTPGenerator;
 import com.hti.smpp.common.util.PasswordConverter;
+
 /**
- * Implementation of the LoginService interface for handling user authentication and authorization.
+ * Implementation of the LoginService interface for handling user authentication
+ * and authorization.
  */
 @Service
 public class LoginServiceImpl implements LoginService {
@@ -102,20 +104,21 @@ public class LoginServiceImpl implements LoginService {
 
 	@Autowired
 	private EmailSender emailSender;
-	
+
 	@Autowired
 	private MessageResourceBundle messageResourceBundle;
-
 
 	private static final Logger logger = LoggerFactory.getLogger(LoginServiceImpl.class);
 
 	public enum UserRole {
 		ADMIN, SUPERADMIN, SYSTEM, USER
 	}
-/**
- * Authenticates a user based on the provided login credentials.
- * If authentication is successful, generates a JWT token and returns it along with user details.
- */
+
+	/**
+	 * Authenticates a user based on the provided login credentials. If
+	 * authentication is successful, generates a JWT token and returns it along with
+	 * user details.
+	 */
 	@Override
 	public ResponseEntity<?> login(LoginRequest loginRequest) {
 		String username = loginRequest.getUsername();
@@ -125,7 +128,8 @@ public class LoginServiceImpl implements LoginService {
 
 			if (!userEntryRepository.existsBySystemId(username)) {
 				logger.error("Authentication failed. User not found: {}", username);
-				throw new AuthenticationExceptionFailed(messageResourceBundle.getMessage(ConstantMessages.AUTHENTICATION_FAILED_USERNAME));
+				throw new AuthenticationExceptionFailed(
+						messageResourceBundle.getMessage(ConstantMessages.AUTHENTICATION_FAILED_USERNAME));
 			}
 
 			Authentication authentication = authenticationManager
@@ -146,7 +150,8 @@ public class LoginServiceImpl implements LoginService {
 
 		} catch (BadCredentialsException e) {
 			logger.error("Authentication failed for user: {}", username, e.getMessage());
-			throw new AuthenticationExceptionFailed(messageResourceBundle.getMessage(ConstantMessages.AUTHENTICATION_FAILED_PASSWORD));
+			throw new AuthenticationExceptionFailed(
+					messageResourceBundle.getMessage(ConstantMessages.AUTHENTICATION_FAILED_PASSWORD));
 		} catch (AuthenticationExceptionFailed e) {
 			logger.error("Authentication failed for user: {}", username, e.getMessage());
 			throw new AuthenticationExceptionFailed(e.getMessage());
@@ -155,9 +160,10 @@ public class LoginServiceImpl implements LoginService {
 			throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
 		}
 	}
-/**
- * Retrieves and returns the profile information for the specified user.
- */
+
+	/**
+	 * Retrieves and returns the profile information for the specified user.
+	 */
 	@Override
 	public ResponseEntity<?> profile(String username) {
 		System.out.println("get profile method call username" + username);
@@ -187,9 +193,10 @@ public class LoginServiceImpl implements LoginService {
 			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
-/**
- * Registers a new user based on the provided signup request.
- */
+
+	/**
+	 * Registers a new user based on the provided signup request.
+	 */
 	@Override
 	public ResponseEntity<?> registerUser(SignupRequest signUpRequest) {
 		try {
@@ -229,11 +236,13 @@ public class LoginServiceImpl implements LoginService {
 			throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
 		}
 	}
-/**
- * Converts a SignupRequest object to a UserEntry object.
- * @param signUpRequest
- * @return
- */
+
+	/**
+	 * Converts a SignupRequest object to a UserEntry object.
+	 * 
+	 * @param signUpRequest
+	 * @return
+	 */
 	public UserEntry ConvertRequert(SignupRequest signUpRequest) {
 		UserEntry entry = new UserEntry();
 		String strRoles = signUpRequest.getRole().toUpperCase();
@@ -280,9 +289,10 @@ public class LoginServiceImpl implements LoginService {
 		entry.setPassword(encoder.encode(signUpRequest.getPassword()));
 		return entry;
 	}
-/**
- * Validates a one-time passcode (OTP) for a given user.
- */
+
+	/**
+	 * Validates a one-time passcode (OTP) for a given user.
+	 */
 	@Override
 	public ResponseEntity<?> validateOtp(String username, String otp) {
 		Optional<OTPEntry> optionalOtp = otpEntryRepository.findBySystemId(username);
@@ -307,6 +317,7 @@ public class LoginServiceImpl implements LoginService {
 			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
+
 	/**
 	 * Resets the password for a user and sends a notification email.
 	 */
@@ -338,9 +349,11 @@ public class LoginServiceImpl implements LoginService {
 
 		return ResponseEntity.ok("Password Reset Successfully!");
 	}
-/**
- * Sends a One-Time Password (OTP) to the user's registered email address for authentication.
- */
+
+	/**
+	 * Sends a One-Time Password (OTP) to the user's registered email address for
+	 * authentication.
+	 */
 	@Override
 	public ResponseEntity<?> sendOTP(String username) {
 		System.out.println("send otp method called  username{}" + username);
@@ -387,9 +400,10 @@ public class LoginServiceImpl implements LoginService {
 			throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
-/**
- * Updates the password for the user associated with the given username.
- */
+
+	/**
+	 * Updates the password for the user associated with the given username.
+	 */
 	@Override
 	public ResponseEntity<?> updatePassword(PasswordUpdateRequest passwordUpdateRequest, String username) {
 		System.out.println("called update password username{}" + username);
@@ -420,15 +434,17 @@ public class LoginServiceImpl implements LoginService {
 				}
 				return ResponseEntity.ok("Password Updated Successfully!");
 			} else {
-				throw new InvalidPropertyException(messageResourceBundle.getMessage(ConstantMessages.INVALID_OLD_PASSWORD));
+				throw new InvalidPropertyException(
+						messageResourceBundle.getMessage(ConstantMessages.INVALID_OLD_PASSWORD));
 			}
 		} else {
 			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
-/**
- * Updates the user profile information for the specified username.
- */
+
+	/**
+	 * Updates the user profile information for the specified username.
+	 */
 	@Override
 	public ResponseEntity<?> updateUserProfile(String username, ProfileUpdateRequest profileUpdateRequest) {
 		Optional<UserEntry> optionalUser = userEntryRepository.findBySystemId(username);
@@ -446,13 +462,16 @@ public class LoginServiceImpl implements LoginService {
 			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
-/**
- * Updates the user-related data (such as email, first name, last name, and contact) based on the
- * provided {@link ProfileUpdateRequest}. Only non-null fields in the request will be updated.
- * @param user
- * @param profileUpdateRequest
- * @param professionEntry
- */
+
+	/**
+	 * Updates the user-related data (such as email, first name, last name, and
+	 * contact) based on the provided {@link ProfileUpdateRequest}. Only non-null
+	 * fields in the request will be updated.
+	 * 
+	 * @param user
+	 * @param profileUpdateRequest
+	 * @param professionEntry
+	 */
 	private void updateUserData(UserEntry user, ProfileUpdateRequest profileUpdateRequest,
 			ProfessionEntry professionEntry) {
 		// Use null checks to update only non-null fields
