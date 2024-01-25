@@ -7,6 +7,10 @@ public class ConstantMessages {
     public static final String OTP_EXPIRED = "otp.expired";
     public static final String INVALID_OTP = "invalid.otp";
     public static final String NOT_FOUND = "not.found";
+    public static final String ROLE_NOT_FOUND_ERROR = "role.not.found.error";
+    public static final String PROFESSION_ENTRY_ERROR = "profession.entry.error";
+
+    
     public static final String INVALID_OLD_PASSWORD = "invalid.old.password";
     public static final String UNAUTHORIZED_OPERATION = "unauthorized.operation";
     public static final String TEMPLATE_NOT_FOUND = "template.not.found";

@@ -120,7 +120,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 		logger.info("Get Template Request By userId: " + userOptional.get().getId() + " Template Id: " + id);
 		TemplatesDTO template = templatesRepository.findByIdAndMasterId(id, system_id)
-				.orElseThrow(() -> new NotFoundException("Template with id: " + id + " not found."));
+				.orElseThrow(() -> new NotFoundException("Template with id: " + id +": " + messageResourceBundle.getMessage(ConstantMessages.TEMPLATE_NOT_FOUND)));
 		if (template != null) {
 			if (template.getMessage() != null && template.getMessage().length() > 0) {
 				template.setMessage(Converter.hexCodePointsToCharMsg(template.getMessage()));
@@ -164,7 +164,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 			templates = (List<TemplatesDTO>) templatesRepository.findByMasterId(system_id);
 		} catch (Exception e) {
 			logger.error("Error processing templates: " + e.toString());
-			throw new NotFoundException("Template not found for system id: " + system_id);
+			throw new NotFoundException( messageResourceBundle.getMessage(ConstantMessages.TEMPLATE_NOT_FOUND) + "for system id: " + system_id);
 		}
 		templates.forEach(template -> {
 			if (template.getMessage() != null && !template.getMessage().isEmpty()) {
@@ -205,7 +205,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 				+ request.getMessage());
 
 		TemplatesDTO template = templatesRepository.findByIdAndMasterId(id, system_id)
-				.orElseThrow(() -> new NotFoundException("Template with id: " + id + " not found."));
+				.orElseThrow(() -> new NotFoundException("Template with id: " + id +": " + messageResourceBundle.getMessage(ConstantMessages.TEMPLATE_NOT_FOUND)));
 		// Error handling statement
 		TemplatesDTO updatedTemplate = null;
 		if (template != null) {
@@ -252,7 +252,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 		String system_id = user.getSystemId();
 		logger.info("userId: " + system_id + " delete templateId: " + id);
 		if (!templatesRepository.existsById(id))
-			throw new NotFoundException(" templateId: " + id + messageResourceBundle.getMessage(ConstantMessages.TEMPLATE_NOT_FOUND));
+			throw new NotFoundException(" templateId: " + id + " :" + messageResourceBundle.getMessage(ConstantMessages.TEMPLATE_NOT_FOUND));
 
 		try {
 			templatesRepository.deleteByIdAndMasterId(id, system_id);

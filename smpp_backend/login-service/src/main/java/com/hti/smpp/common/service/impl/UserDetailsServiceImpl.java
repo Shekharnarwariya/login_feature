@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.hti.smpp.common.user.dto.User;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
+import com.hti.smpp.common.util.ConstantMessages;
+import com.hti.smpp.common.util.MessageResourceBundle;
 /**
  * Implementation of the Spring Security {@code UserDetailsService} interface.
  */
@@ -20,11 +22,14 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 /**
  * Loads a user by the provided username and constructs a UserDetails object.
  */
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 	@Override
 	@Transactional
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		User user = userEntryRepository.getUsers(username)
-				.orElseThrow(() -> new UsernameNotFoundException("User Not Found with username: " + username));
+				.orElseThrow(() -> new UsernameNotFoundException((
+						messageResourceBundle.getMessage(ConstantMessages.AUTHENTICATION_FAILED_USERNAME + username))));
 		return UserDetailsImpl.build(user);
 	}
 
