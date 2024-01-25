@@ -401,12 +401,9 @@ public class SmsServiceImpl implements SmsService {
 						if ((adminWallet >= adminCost)) {
 							if (wallet >= totalcost) {
 								adminWallet = adminWallet - adminCost;
-								masterbalance.setWalletAmount(adminWallet);
-								balanceEntryRepository.save(masterbalance);
 								wallet = wallet - totalcost;
-								balanceEntry.setWalletAmount(wallet);
 								amount = true;
-								balanceEntryRepository.save(balanceEntry);
+
 							} else {
 								logger.error(bulkSessionId + " <-- Insufficient Balance -->");
 								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Balance -->");
@@ -421,9 +418,7 @@ public class SmsServiceImpl implements SmsService {
 					} else {
 						if (wallet >= totalcost) {
 							wallet = wallet - totalcost;
-							balanceEntry.setWalletAmount(wallet);
 							amount = true;
-							balanceEntryRepository.save(balanceEntry);
 						} else {
 							// Insufficient balance
 							logger.error(bulkSessionId + " <-- Insufficient Balance -->");
@@ -532,12 +527,9 @@ public class SmsServiceImpl implements SmsService {
 						if (adminCredit >= total_msg) {
 							if (credits >= total_msg) {
 								adminCredit = adminCredit - total_msg;
-								masterbalance.setCredits(adminCredit);
 								credits = credits - total_msg;
-								balanceEntryRepository.save(masterbalance);
-								balanceEntry.setCredits(credits);
 								amount = true;
-								balanceEntryRepository.save(balanceEntry);
+
 							} else {
 								logger.error(bulkSessionId + " <-- Insufficient Credits -->");
 								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Credits -->");
@@ -551,9 +543,9 @@ public class SmsServiceImpl implements SmsService {
 					} else {
 						if (credits >= total_msg) {
 							credits = credits - total_msg;
-							balanceEntry.setCredits(credits);
+
 							amount = true;
-							balanceEntryRepository.save(balanceEntry);
+
 						} else {
 							logger.error(bulkSessionId + " <-- Insufficient Credits -->");
 							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Credits -->");
@@ -1517,11 +1509,7 @@ public class SmsServiceImpl implements SmsService {
 							if ((adminWallet >= adminCost)) {
 								if (wallet >= totalcost) {
 									adminWallet = adminWallet - adminCost;
-									masterbalance.setWalletAmount(adminWallet);
-									balanceEntryRepository.save(masterbalance);
 									wallet = wallet - totalcost;
-									balanceEntry.setWalletAmount(wallet);
-									balanceEntryRepository.save(balanceEntry);
 									amount = true;
 								} else {
 									logger.error(bulkSessionId + " <-- Insufficient Balance -->");
@@ -1538,8 +1526,6 @@ public class SmsServiceImpl implements SmsService {
 						} else {
 							if (wallet > 0 && wallet >= totalcost) {
 								wallet = wallet - totalcost;
-								balanceEntry.setWalletAmount(wallet);
-								balanceEntryRepository.save(balanceEntry);
 								amount = true;
 							} else {
 								// Insufficient balance
@@ -1654,11 +1640,9 @@ public class SmsServiceImpl implements SmsService {
 							if (adminCredit >= (destinationList.size() * no_of_msg)) {
 								if (credits >= (destinationList.size() * no_of_msg)) {
 									adminCredit = adminCredit - (destinationList.size() * no_of_msg);
-									masterbalance.setCredits(adminCredit);
-									balanceEntryRepository.save(masterbalance);
+
 									credits = credits - (destinationList.size() * no_of_msg);
-									balanceEntry.setCredits(credits);
-									balanceEntryRepository.save(balanceEntry);
+
 									amount = true;
 								} else {
 									String errorMessage = bulkSessionId + " Error: Insufficient Credits.";
@@ -1674,8 +1658,7 @@ public class SmsServiceImpl implements SmsService {
 						} else {
 							if (credits >= (destinationList.size() * no_of_msg)) {
 								credits = credits - (destinationList.size() * no_of_msg);
-								balanceEntry.setCredits(credits);
-								balanceEntryRepository.save(balanceEntry);
+
 								amount = true;
 							} else {
 								String errorMessage = bulkSessionId + " Error: Insufficient Credits.";
@@ -2193,12 +2176,9 @@ public class SmsServiceImpl implements SmsService {
 						if ((adminWallet >= adminCost)) {
 							if (wallet >= totalcost) {
 								adminWallet = adminWallet - adminCost;
-								masterbalance.setWalletAmount(adminWallet);
 								wallet = wallet - totalcost;
-								balanceEntry.setWalletAmount(wallet);
 								amount = true;
-								balanceEntryRepository.save(masterbalance);
-								balanceEntryRepository.save(balanceEntry);
+
 							} else {
 								logger.error(bulkSessionId + " <-- Insufficient Balance -->");
 								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Balance -->");
@@ -2213,9 +2193,8 @@ public class SmsServiceImpl implements SmsService {
 					} else {
 						if (wallet > 0 && wallet >= totalcost) {
 							wallet = wallet - totalcost;
-							balanceEntry.setWalletAmount(wallet);
 							amount = true;
-							balanceEntryRepository.save(balanceEntry);
+
 						} else {
 							// Insufficient balance
 							logger.info(bulkSessionId + " <-- Insufficient Balance -->");
@@ -2325,12 +2304,9 @@ public class SmsServiceImpl implements SmsService {
 						if (adminCredit >= totalMsg) {
 							if (credits >= totalMsg) {
 								adminCredit = adminCredit - totalMsg;
-								balanceEntry.setCredits(adminCredit);
 								credits = credits - totalMsg;
-								masterbalance.setCredits(credits);
 								amount = true;
-								balanceEntryRepository.save(balanceEntry);
-								balanceEntryRepository.save(masterbalance);
+
 							} else {
 								logger.error(bulkSessionId + " <-- Insufficient Credits -->");
 								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Credits -->");
@@ -2344,9 +2320,9 @@ public class SmsServiceImpl implements SmsService {
 					} else {
 						if (credits >= totalMsg) {
 							credits = credits - totalMsg;
-							balanceEntry.setCredits(credits);
+
 							amount = true;
-							balanceEntryRepository.save(balanceEntry);
+
 						} else {
 							logger.error(bulkSessionId + " <-- Insufficient Credits -->");
 							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Credits -->");
@@ -3495,12 +3471,9 @@ public class SmsServiceImpl implements SmsService {
 							if ((adminWallet >= adminCost)) {
 								if (wallet >= totalcost) {
 									adminWallet = adminWallet - adminCost;
-									masterbalance.setWalletAmount(adminWallet);
 									wallet = wallet - totalcost;
-									balanceEntry.setWalletAmount(wallet);
 									amount = true;
-									balanceEntryRepository.save(masterbalance);
-									balanceEntryRepository.save(balanceEntry);
+
 								} else {
 									logger.error(bulkSessionId + " <-- Insufficient Balance --> " + wallet);
 									throw new InsufficientBalanceException(
@@ -3516,8 +3489,6 @@ public class SmsServiceImpl implements SmsService {
 						} else {
 							if (wallet >= totalcost) {
 								wallet = wallet - totalcost;
-								balanceEntry.setWalletAmount(wallet);
-								balanceEntryRepository.save(balanceEntry);
 								amount = true;
 							} else {
 								// Insufficient balance
@@ -3630,12 +3601,11 @@ public class SmsServiceImpl implements SmsService {
 							if (adminCredit >= totalMsg) {
 								if (credits >= totalMsg) {
 									adminCredit = adminCredit - totalMsg;
-									masterbalance.setCredits(adminCredit);
+
 									credits = credits - totalMsg;
-									balanceEntry.setCredits(credits);
+
 									amount = true;
-									balanceEntryRepository.save(balanceEntry);
-									balanceEntryRepository.save(masterbalance);
+
 								} else {
 									System.out.println(user.getId() + " <-- Insufficient Credits -->");
 									throw new InsufficientBalanceException(
@@ -3650,8 +3620,7 @@ public class SmsServiceImpl implements SmsService {
 						} else {
 							if (credits >= totalMsg) {
 								credits = credits - totalMsg;
-								balanceEntry.setCredits(credits);
-								balanceEntryRepository.save(balanceEntry);
+
 								amount = true;
 							} else {
 								System.out.println(user.getId() + " <-- Insufficient Credits -->");
@@ -3953,12 +3922,9 @@ public class SmsServiceImpl implements SmsService {
 						if (amount) {
 							if (inherit) {
 								adminWallet = adminWallet - totalcost;
-								masterbalance.setWalletAmount(adminWallet);
-								balanceEntryRepository.save(masterbalance);
+
 							} else {
 								wallet = wallet - totalcost;
-								balanceEntry.setWalletAmount(wallet);
-								balanceEntryRepository.save(balanceEntry);
 							}
 							// String applicationName = request.getContextPath();
 							bulkSmsDTO.setMsgCount(destinationList.size() * no_of_msg);
@@ -4070,12 +4036,10 @@ public class SmsServiceImpl implements SmsService {
 						if (amount) {
 							if (inherit) {
 								adminCredit = adminCredit - (destinationList.size() * no_of_msg);
-								masterbalance.setCredits(adminCredit);
-								balanceEntryRepository.save(masterbalance);
+
 							} else {
 								credits = credits - (destinationList.size() * no_of_msg);
-								balanceEntry.setCredits(credits);
-								balanceEntryRepository.save(balanceEntry);
+
 							}
 							long deductCredits = destinationList.size() * no_of_msg;
 							// String applicationName = request.getContextPath();
@@ -4400,12 +4364,9 @@ public class SmsServiceImpl implements SmsService {
 						if ((adminWallet >= adminCost)) {
 							if (wallet >= totalcost) {
 								adminWallet = adminWallet - adminCost;
-								masterbalance.setWalletAmount(adminWallet);
 								wallet = wallet - totalcost;
-								balanceEntry.setWalletAmount(wallet);
 								amount = true;
-								balanceEntryRepository.save(masterbalance);
-								balanceEntryRepository.save(balanceEntry);
+
 							} else {
 								logger.error(bulkSessionId + " <-- Insufficient Balance -->");
 								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Balance -->");
@@ -4421,9 +4382,8 @@ public class SmsServiceImpl implements SmsService {
 					} else {
 						if (wallet > 0 && wallet >= totalcost) {
 							wallet = wallet - totalcost;
-							balanceEntry.setWalletAmount(wallet);
 							amount = true;
-							balanceEntryRepository.save(balanceEntry);
+
 						} else {
 							// Insufficient balance
 							logger.error(bulkSessionId + " <-- Insufficient Balance -->");
@@ -4527,12 +4487,11 @@ public class SmsServiceImpl implements SmsService {
 						if (adminCredit >= totalMsg) {
 							if (credits >= totalMsg) {
 								adminCredit = adminCredit - totalMsg;
-								masterbalance.setCredits(adminCredit);
+
 								credits = credits - totalMsg;
-								balanceEntry.setCredits(credits);
+
 								amount = true;
-								balanceEntryRepository.save(masterbalance);
-								balanceEntryRepository.save(balanceEntry);
+
 							} else {
 								logger.error(bulkSessionId + " <-- Insufficient Credits -->");
 								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Credits -->");
@@ -4547,9 +4506,9 @@ public class SmsServiceImpl implements SmsService {
 					} else {
 						if (credits >= totalMsg) {
 							credits = credits - totalMsg;
-							balanceEntry.setCredits(credits);
+
 							amount = true;
-							balanceEntryRepository.save(balanceEntry);
+
 						} else {
 							logger.error(bulkSessionId + " <-- Insufficient Credits -->");
 							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Credits -->");
@@ -5066,12 +5025,9 @@ public class SmsServiceImpl implements SmsService {
 					if (amount) {
 						if (inherit) {
 							adminWallet = adminWallet - totalcost;
-							masterbalance.setWalletAmount(adminWallet);
-							balanceEntryRepository.save(masterbalance);
+
 						} else {
 							wallet = wallet - totalcost;
-							balanceEntry.setWalletAmount(wallet);
-							balanceEntryRepository.save(balanceEntry);
 						}
 						// String applicationName = request.getContextPath();
 						bulkSmsDTO.setMsgCount(totalMsg);
@@ -5173,12 +5129,10 @@ public class SmsServiceImpl implements SmsService {
 				if (amount) {
 					if (inherit) {
 						adminCredit = adminCredit - totalMsg;
-						masterbalance.setCredits(adminCredit);
-						balanceEntryRepository.save(masterbalance);
+
 					} else {
 						credits = credits - totalMsg;
-						balanceEntry.setCredits(credits);
-						balanceEntryRepository.save(balanceEntry);
+
 					}
 					long deductCredits = totalMsg;
 					// String applicationName = request.getContextPath();
@@ -5662,12 +5616,9 @@ public class SmsServiceImpl implements SmsService {
 						if ((adminWallet >= adminCost)) {
 							if (wallet >= totalcost) {
 								adminWallet = adminWallet - adminCost;
-								masterbalance.setWalletAmount(adminWallet);
 								wallet = wallet - totalcost;
-								balanceEntry.setWalletAmount(wallet);
 								amount = true;
-								balanceEntryRepository.save(masterbalance);
-								balanceEntryRepository.save(balanceEntry);
+
 							} else {
 								logger.error(bulkSessionId + " <-- Insufficient Balance -->");
 								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Balance -->");
@@ -5681,9 +5632,9 @@ public class SmsServiceImpl implements SmsService {
 					} else {
 						if (wallet > 0 && wallet >= totalcost) {
 							wallet = wallet - totalcost;
-							balanceEntry.setWalletAmount(wallet);
+
 							amount = true;
-							balanceEntryRepository.save(balanceEntry);
+
 						} else {
 							// Insufficient balance
 							logger.error(bulkSessionId + " <-- Insufficient Balance -->");
@@ -5789,12 +5740,11 @@ public class SmsServiceImpl implements SmsService {
 						if (adminCredit >= (destinationList.size() * no_of_msg)) {
 							if (credits >= (destinationList.size() * no_of_msg)) {
 								adminCredit = adminCredit - (destinationList.size() * no_of_msg);
-								masterbalance.setCredits(adminCredit);
+
 								credits = credits - (destinationList.size() * no_of_msg);
-								balanceEntry.setCredits(credits);
+
 								amount = true;
-								balanceEntryRepository.save(balanceEntry);
-								balanceEntryRepository.save(masterbalance);
+
 							} else {
 								logger.error(bulkSessionId + " <-- Insufficient Credits -->");
 								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Credits -->");
@@ -5807,9 +5757,9 @@ public class SmsServiceImpl implements SmsService {
 					} else {
 						if (credits >= (destinationList.size() * no_of_msg)) {
 							credits = credits - (destinationList.size() * no_of_msg);
-							balanceEntry.setCredits(credits);
+
 							amount = true;
-							balanceEntryRepository.save(balanceEntry);
+
 						} else {
 							logger.error(bulkSessionId + " <-- Insufficient Credits -->");
 							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Credits -->");
@@ -7635,12 +7585,10 @@ public class SmsServiceImpl implements SmsService {
 							// ********************* Delete Schedule File ***********
 							if (inherit) {
 								adminWallet = adminWallet - totalcost;
-								masterbalanceEntry.setWalletAmount(adminWallet);
-								balanceEntryRepository.save(masterbalanceEntry);
+
 							} else {
 								wallet = wallet - totalcost;
-								balanceEntry.setWalletAmount(wallet);
-								balanceEntryRepository.save(balanceEntry);
+
 							}
 							// String applicationName = request.getContextPath();
 							bulkSmsDTO.setMsgCount(destinationList.size() * no_of_msg);
@@ -7724,12 +7672,9 @@ public class SmsServiceImpl implements SmsService {
 							// *********************End Delete Schedule File ***********
 							if (inherit) {
 								adminCredit = adminCredit - (destinationList.size() * no_of_msg);
-								masterbalanceEntry.setCredits(adminCredit);
-								balanceEntryRepository.save(masterbalanceEntry);
 							} else {
 								credits = credits - (destinationList.size() * no_of_msg);
-								balanceEntry.setCredits(credits);
-								balanceEntryRepository.save(balanceEntry);
+
 							}
 							long deductCredits = destinationList.size() * no_of_msg;
 							bulkSmsDTO.setMsgCount(deductCredits);
@@ -8083,12 +8028,9 @@ public class SmsServiceImpl implements SmsService {
 							// ********************* Delete Schedule File ***********
 							if (inherit) {
 								adminWallet = adminWallet - totalcost;
-								masterbalanceEntry.setWalletAmount(adminWallet);
-								balanceEntryRepository.save(masterbalanceEntry);
+
 							} else {
 								wallet = wallet - totalcost;
-								balanceEntry.setWalletAmount(wallet);
-								balanceEntryRepository.save(balanceEntry);
 							}
 							smsDTO.setMsgCount(destinationList.size() * no_of_msg);
 							smsDTO.setTotalCost(totalcost);
@@ -8204,12 +8146,8 @@ public class SmsServiceImpl implements SmsService {
 							// *********************End Delete Schedule File ***********
 							if (inherit) {
 								adminCredit = adminCredit - (destinationList.size() * no_of_msg);
-								masterbalanceEntry.setCredits(adminCredit);
-								balanceEntryRepository.save(masterbalanceEntry);
 							} else {
 								credits = credits - (destinationList.size() * no_of_msg);
-								balanceEntry.setCredits(credits);
-								balanceEntryRepository.save(balanceEntry);
 							}
 							long deductCredits = destinationList.size() * no_of_msg;
 							smsDTO.setMsgCount(deductCredits);
