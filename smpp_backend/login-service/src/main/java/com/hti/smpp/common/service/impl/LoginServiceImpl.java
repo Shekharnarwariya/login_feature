@@ -18,7 +18,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.email.EmailSender;
@@ -34,6 +33,7 @@ import com.hti.smpp.common.request.ProfileUpdateRequest;
 import com.hti.smpp.common.request.SignupRequest;
 import com.hti.smpp.common.response.JwtResponse;
 import com.hti.smpp.common.response.ProfileResponse;
+import com.hti.smpp.common.security.BCryptPasswordEncoder;
 import com.hti.smpp.common.service.LoginService;
 import com.hti.smpp.common.user.dto.BalanceEntry;
 import com.hti.smpp.common.user.dto.DriverInfo;
@@ -65,7 +65,7 @@ public class LoginServiceImpl implements LoginService {
 	private AuthenticationManager authenticationManager;
 
 	@Autowired
-	private PasswordEncoder encoder;
+	private BCryptPasswordEncoder encoder;
 
 	@Autowired
 	private JwtUtils jwtUtils;
