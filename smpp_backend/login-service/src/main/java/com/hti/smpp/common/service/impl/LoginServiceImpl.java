@@ -176,7 +176,7 @@ public class LoginServiceImpl implements LoginService {
 
 			// Use map to simplify getting profession entry
 			ProfessionEntry professionEntry = professionEntryRepository.findById(userEntry.getId())
-					.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
+					.orElseThrow(() -> new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
 			ProfileResponse profileResponse = new ProfileResponse();
 			profileResponse.setUserName(userEntry.getSystemId());
 			profileResponse.setBalance(String.valueOf(balanceEntry.getWalletAmount()));
@@ -250,7 +250,7 @@ public class LoginServiceImpl implements LoginService {
 			UserRole userRole = UserRole.valueOf(strRoles);
 			entry.setRole(userRole.name());
 		} catch (IllegalArgumentException e) {
-			throw new NotFoundException("Error: Role is not found. " + strRoles);
+			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.ROLE_NOT_FOUND_ERROR + strRoles));
 		}
 		entry.setAccessCountry(String.join(",", signUpRequest.getAccessCountries()));
 		entry.setAccessIp(signUpRequest.getAccessIp());
@@ -331,7 +331,7 @@ public class LoginServiceImpl implements LoginService {
 		// Update User Password
 		UserEntry user = userOptional.get();
 		ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
-				.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
 
 		String updateQuery = "UPDATE usermaster SET password = ?, editOn = CURRENT_TIMESTAMP, editby = ? WHERE system_id = ?";
 		jdbcTemplate.update(updateQuery, new Object[] { encoder.encode(newPassword), username, username },
@@ -383,7 +383,7 @@ public class LoginServiceImpl implements LoginService {
 				}
 
 				ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
-						.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
+						.orElseThrow(() -> new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
 				// Send Email with OTP
 				emailSender.sendEmail(professionEntry.getDomainEmail(), Constant.OTP_SUBJECT, Constant.TEMPLATE_PATH,
 						emailSender.createSourceMap(Constant.MESSAGE_FOR_OTP, generateOTP,
@@ -424,7 +424,7 @@ public class LoginServiceImpl implements LoginService {
 						new PasswordConverter().convertToDatabaseColumn(passwordUpdateRequest.getNewPassword()),
 						LocalDateTime.now()));
 				ProfessionEntry professionEntry = professionEntryRepository.findById(userEntry.getId())
-						.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
+						.orElseThrow(() -> new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
 				if (EmailValidator.isEmailValid(professionEntry.getDomainEmail())) {
 					emailSender.sendEmail(professionEntry.getDomainEmail(), Constant.PASSWORD_UPDATE_SUBJECT,
 							Constant.TEMPLATE_PATH,
@@ -451,7 +451,7 @@ public class LoginServiceImpl implements LoginService {
 		if (optionalUser.isPresent()) {
 			UserEntry user = optionalUser.get();
 			ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
-					.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
+					.orElseThrow(() -> new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
 			updateUserData(user, profileUpdateRequest, professionEntry);
 			user.setEditOn(LocalDateTime.now() + "");
 			user.setEditBy(username);
