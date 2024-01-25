@@ -124,10 +124,10 @@ public class LoginServiceImpl implements LoginService {
 		String username = loginRequest.getUsername();
 
 		try {
-			logger.info("Attempting to authenticate user: {}", username);
+			logger.info(messageResourceBundle.getLogMessage("log.attemptAuth"), username);
 
 			if (!userEntryRepository.existsBySystemId(username)) {
-				logger.error("Authentication failed. User not found: {}", username);
+				logger.error(messageResourceBundle.getLogMessage("auth.failed.userNotFound"), username);
 				throw new AuthenticationExceptionFailed(
 						messageResourceBundle.getMessage(ConstantMessages.AUTHENTICATION_FAILED_USERNAME));
 			}
@@ -142,21 +142,21 @@ public class LoginServiceImpl implements LoginService {
 			List<String> roles = userDetails.getAuthorities().stream().map(item -> item.getAuthority())
 					.collect(Collectors.toList());
 
-			logger.info("Authentication successful for user: {}", username);
+			logger.info(messageResourceBundle.getLogMessage("auth.successful"), username);
 
 			JwtResponse jwtResponse = new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), roles);
 
 			return ResponseEntity.ok(jwtResponse);
 
 		} catch (BadCredentialsException e) {
-			logger.error("Authentication failed for user: {}", username, e.getMessage());
+			logger.error(messageResourceBundle.getLogMessage("auth.failed.password"), username, e.getMessage());
 			throw new AuthenticationExceptionFailed(
 					messageResourceBundle.getMessage(ConstantMessages.AUTHENTICATION_FAILED_PASSWORD));
 		} catch (AuthenticationExceptionFailed e) {
-			logger.error("Authentication failed for user: {}", username, e.getMessage());
+			logger.error(messageResourceBundle.getLogMessage("auth.failed.userNotFound"), username, e.getMessage());
 			throw new AuthenticationExceptionFailed(e.getMessage());
 		} catch (Exception e) {
-			logger.error("Internal server error during authentication", e.getMessage());
+			logger.error(messageResourceBundle.getLogMessage("internal.server.error"), e.getMessage());
 			throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
 		}
 	}
