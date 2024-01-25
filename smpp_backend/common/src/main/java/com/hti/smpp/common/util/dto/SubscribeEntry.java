@@ -8,40 +8,69 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table (name = "subscribe_entry")
+@Table (name = "subscription")
 public class SubscribeEntry {
 	@Id
 	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
+	
+	@Column(name="page")
 	private String pageName;
+	
+	@Column(name="sender")
 	private String sender;
+	
+	@Column(name="message")
 	private String message;
+	
+	@Column(name="orig_message")
 	private String origMessage;
+	
+	@Column(name="msg_type")
 	private String messageType;
+	
+	@Column(name="country_code")
 	private String countryCode;
+	
+	@Column(name="username")
 	private String username;
+	
+	@Column(name="password")
 	private String password;
+	
+	@Column(name="header_file")
 	private String headerFileName;
+	
+	@Column(name="footer_file")
 	private String footerFileName;
+	
+	@Column(name="created_by")
 	private String createdBy;
+	
+	@Column(name="group_id")
 	private int groupId;
 
 	public SubscribeEntry() {
 	}
 
-	public SubscribeEntry(String pageName, String sender, String message, String messageType, String countryCode,
-			String username, String password, String headerFileName, String footerFileName, String origMessage) {
+	public SubscribeEntry(int id, String pageName, String sender, String message, String origMessage,
+			String messageType, String countryCode, String username, String password, String headerFileName,
+			String footerFileName, String createdBy, int groupId) {
+		super();
+		this.id = id;
 		this.pageName = pageName;
 		this.sender = sender;
 		this.message = message;
+		this.origMessage = origMessage;
 		this.messageType = messageType;
 		this.countryCode = countryCode;
 		this.username = username;
 		this.password = password;
 		this.headerFileName = headerFileName;
 		this.footerFileName = footerFileName;
-		this.origMessage = origMessage;
+		this.createdBy = createdBy;
+		this.groupId = groupId;
 	}
 
 	public int getId() {
@@ -76,8 +105,12 @@ public class SubscribeEntry {
 		this.message = message;
 	}
 
-	public String getCountryCode() {
-		return countryCode;
+	public String getOrigMessage() {
+		return origMessage;
+	}
+
+	public void setOrigMessage(String origMessage) {
+		this.origMessage = origMessage;
 	}
 
 	public String getMessageType() {
@@ -86,6 +119,10 @@ public class SubscribeEntry {
 
 	public void setMessageType(String messageType) {
 		this.messageType = messageType;
+	}
+
+	public String getCountryCode() {
+		return countryCode;
 	}
 
 	public void setCountryCode(String countryCode) {
@@ -140,17 +177,5 @@ public class SubscribeEntry {
 		this.groupId = groupId;
 	}
 
-	public String getOrigMessage() {
-		return origMessage;
-	}
-
-	public void setOrigMessage(String origMessage) {
-		this.origMessage = origMessage;
-	}
-
-	public String toString() {
-		return "SubscribeEntry: id=" + id + ",pageName=" + pageName + ",sender=" + sender + ",message=" + message
-				+ ",username=" + username + ",countryCode=" + countryCode + ",headerFileName=" + headerFileName
-				+ ",footerFileName=" + footerFileName;
-	}
+	
 }
