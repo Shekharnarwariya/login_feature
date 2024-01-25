@@ -5,7 +5,7 @@ import java.util.Locale;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
-
+import java.util.Locale;
 @Component
 public class MessageResourceBundle {
 
@@ -16,8 +16,13 @@ public class MessageResourceBundle {
 		this.messageSource = messageSource;
 	}
 
-	public String getMessage(String key) {
-		Locale hindiLocale = new Locale("hi", "IN");
-		return messageSource.getMessage(key, null, hindiLocale);
-	}
+    public String getMessage(String key, String languageCode) {
+        Locale locale;
+        if (languageCode != null && languageCode.length > 0) {
+            locale = Customlocale.getLocaleByLanguage(languageCode[0]);
+        } else {
+            locale = LocaleContextHolder.getLocale();
+        }
+        return messageSource.getMessage(key, null, locale);
+    }
 }

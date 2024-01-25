@@ -26,7 +26,9 @@ import com.hti.smpp.common.templates.repository.TemplatesRepository;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Converter;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 import jakarta.transaction.Transactional;
 
@@ -40,6 +42,9 @@ public class TemplatesServiceImpl implements TemplatesService {
 	@Autowired
 	private SummaryReportRepository summaryReportRepository;
 
+	@Autowired
+    private MessageResourceBundle messageResourceBundle;
+	
 	@Autowired
 	public TemplatesServiceImpl(TemplatesRepository templatesRepository) {
 		this.templatesRepository = templatesRepository;
@@ -56,10 +61,10 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
-			}
+				throw new UnauthorizedException(messageResourceBundle.getMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
+		           }
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		logger.info("Add Template Request By userId: " + user.getId() + " Title: " + request.getTitle() + " Message: "
@@ -105,10 +110,10 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		String system_id = user.getSystemId();
@@ -144,10 +149,10 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		String system_id = user.getSystemId();
@@ -189,10 +194,10 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getMessage(ConstantMessages.USER_NOT_FOUND));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		String system_id = user.getSystemId();
@@ -238,16 +243,17 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		String system_id = user.getSystemId();
 		logger.info("userId: " + system_id + " delete templateId: " + id);
 		if (!templatesRepository.existsById(id))
-			throw new NotFoundException(" templateId: " + id + "  not found <-- No template to delete -->");
+			throw new NotFoundException(" templateId: " + id + messageResourceBundle.getMessage(ConstantMessages.TEMPLATE_NOT_FOUND));
+
 		try {
 			templatesRepository.deleteByIdAndMasterId(id, system_id);
 			isDone = true; // Return true if the deletion was successful.
@@ -281,10 +287,10 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		try {
@@ -299,8 +305,8 @@ public class TemplatesServiceImpl implements TemplatesService {
 		} catch (Exception e) {
 			// Logging other exceptions
 			logger.error("An unexpected error occurred: {}", e.getMessage(), e);
-			throw new InternalServerException("An unexpected error occurred. Please try again." + e.getMessage());
-		}
+			throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
+	}
 	}
 
 }
