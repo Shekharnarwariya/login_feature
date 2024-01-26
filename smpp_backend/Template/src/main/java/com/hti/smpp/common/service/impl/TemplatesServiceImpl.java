@@ -1,6 +1,5 @@
 package com.hti.smpp.common.service.impl;
 
-//Import statements for required classes and annotations
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -43,8 +42,8 @@ public class TemplatesServiceImpl implements TemplatesService {
 	private SummaryReportRepository summaryReportRepository;
 
 	@Autowired
-    private MessageResourceBundle messageResourceBundle;
-	
+	private MessageResourceBundle messageResourceBundle;
+
 	@Autowired
 	public TemplatesServiceImpl(TemplatesRepository templatesRepository) {
 		this.templatesRepository = templatesRepository;
@@ -61,8 +60,9 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
-		           }
+				throw new UnauthorizedException(
+						messageResourceBundle.getMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
+			}
 		} else {
 			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.USER_NOT_FOUND));
 		}
@@ -110,7 +110,8 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
+				throw new UnauthorizedException(
+						messageResourceBundle.getMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
 			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.USER_NOT_FOUND));
@@ -120,7 +121,8 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 		logger.info("Get Template Request By userId: " + userOptional.get().getId() + " Template Id: " + id);
 		TemplatesDTO template = templatesRepository.findByIdAndMasterId(id, system_id)
-				.orElseThrow(() -> new NotFoundException("Template with id: " + id +": " + messageResourceBundle.getMessage(ConstantMessages.TEMPLATE_NOT_FOUND)));
+				.orElseThrow(() -> new NotFoundException("Template with id: " + id + ": "
+						+ messageResourceBundle.getMessage(ConstantMessages.TEMPLATE_NOT_FOUND)));
 		if (template != null) {
 			if (template.getMessage() != null && template.getMessage().length() > 0) {
 				template.setMessage(Converter.hexCodePointsToCharMsg(template.getMessage()));
@@ -149,7 +151,8 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
+				throw new UnauthorizedException(
+						messageResourceBundle.getMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
 			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.USER_NOT_FOUND));
@@ -164,7 +167,8 @@ public class TemplatesServiceImpl implements TemplatesService {
 			templates = (List<TemplatesDTO>) templatesRepository.findByMasterId(system_id);
 		} catch (Exception e) {
 			logger.error("Error processing templates: " + e.toString());
-			throw new NotFoundException( messageResourceBundle.getMessage(ConstantMessages.TEMPLATE_NOT_FOUND) + "for system id: " + system_id);
+			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.TEMPLATE_NOT_FOUND)
+					+ "for system id: " + system_id);
 		}
 		templates.forEach(template -> {
 			if (template.getMessage() != null && !template.getMessage().isEmpty()) {
@@ -205,7 +209,8 @@ public class TemplatesServiceImpl implements TemplatesService {
 				+ request.getMessage());
 
 		TemplatesDTO template = templatesRepository.findByIdAndMasterId(id, system_id)
-				.orElseThrow(() -> new NotFoundException("Template with id: " + id +": " + messageResourceBundle.getMessage(ConstantMessages.TEMPLATE_NOT_FOUND)));
+				.orElseThrow(() -> new NotFoundException("Template with id: " + id + ": "
+						+ messageResourceBundle.getMessage(ConstantMessages.TEMPLATE_NOT_FOUND)));
 		// Error handling statement
 		TemplatesDTO updatedTemplate = null;
 		if (template != null) {
@@ -243,7 +248,8 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
+				throw new UnauthorizedException(
+						messageResourceBundle.getMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
 			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.USER_NOT_FOUND));
@@ -252,7 +258,8 @@ public class TemplatesServiceImpl implements TemplatesService {
 		String system_id = user.getSystemId();
 		logger.info("userId: " + system_id + " delete templateId: " + id);
 		if (!templatesRepository.existsById(id))
-			throw new NotFoundException(" templateId: " + id + " :" + messageResourceBundle.getMessage(ConstantMessages.TEMPLATE_NOT_FOUND));
+			throw new NotFoundException(" templateId: " + id + " :"
+					+ messageResourceBundle.getMessage(ConstantMessages.TEMPLATE_NOT_FOUND));
 
 		try {
 			templatesRepository.deleteByIdAndMasterId(id, system_id);
@@ -287,7 +294,8 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
+				throw new UnauthorizedException(
+						messageResourceBundle.getMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
 			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.USER_NOT_FOUND));
@@ -295,18 +303,16 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 		try {
 			List<Object[]> recentContent = summaryReportRepository.getRecentContent(username);
-			// Logging success
 			logger.info("RecentUseTemplate operation succeeded for user: {}", username);
-
-			Set<String> convertedRecentContent = recentContent.stream().map(e -> e[0].toString())
-					.map(Converter::hexCodePointsToCharMsg).collect(Collectors.toSet());
+			Set<String> convertedRecentContent = recentContent.stream()
+					.filter(e -> e != null && e.length > 0 && e[0] != null).map(e -> e[0].toString())
+					.map(Converter::hexCodePointsToCharMsg).map(String::toLowerCase).collect(Collectors.toSet());
 
 			return ResponseEntity.ok(convertedRecentContent);
 		} catch (Exception e) {
-			// Logging other exceptions
 			logger.error("An unexpected error occurred: {}", e.getMessage(), e);
 			throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
-	}
+		}
 	}
 
 }

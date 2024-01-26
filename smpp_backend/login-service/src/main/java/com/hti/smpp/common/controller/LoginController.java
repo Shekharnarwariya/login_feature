@@ -21,7 +21,9 @@ import com.hti.smpp.common.response.JwtResponse;
 import com.hti.smpp.common.response.ProfileResponse;
 import com.hti.smpp.common.service.LoginService;
 
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -35,6 +37,7 @@ import jakarta.validation.Valid;
  */
 @RestController
 @RequestMapping("/login")
+@OpenAPIDefinition(info = @Info(title = "SMPP Login API", version = "1.0", description = "API for managing SMPP Login"))
 @Tag(name = "Login Controller", description = "APIs related to user authentication and profile management")
 public class LoginController {
 
@@ -74,7 +77,7 @@ public class LoginController {
 			@ApiResponse(responseCode = "201", description = "User registered successfully. A confirmation may be required.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiResponse.class))),
 			@ApiResponse(responseCode = "400", description = "Invalid or malformed request. Registration failed.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "500", description = "Internal server error during the registration process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	public ResponseEntity<?> registerUser(@RequestBody SignupRequest signUpRequest) {
+	public ResponseEntity<?> registerUser(@RequestBody @Valid SignupRequest signUpRequest) {
 		return loginService.registerUser(signUpRequest);
 	}
 
@@ -93,7 +96,7 @@ public class LoginController {
 			@ApiResponse(responseCode = "400", description = "Invalid or malformed request. Unable to retrieve user profile data.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "404", description = "User not found. Profile data not available.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "500", description = "Internal server error during the profile data retrieval process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	public ResponseEntity<?> getUserProfile(@RequestHeader("username") String username) {
+	public ResponseEntity<?> getUserProfile(@RequestHeader(value = "username", required = true) String username) {
 		return loginService.profile(username);
 	}
 
@@ -111,7 +114,7 @@ public class LoginController {
 			@ApiResponse(responseCode = "200", description = "Service status retrieved successfully.", content = @Content(mediaType = "text/plain")),
 			@ApiResponse(responseCode = "400", description = "Invalid or malformed request. Unable to retrieve service status.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "500", description = "Internal server error during the service status retrieval process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	public ResponseEntity<?> getStatus(@RequestHeader("username") String username) {
+	public ResponseEntity<?> getStatus(@RequestHeader(value = "username", required = true) String username) {
 		return new ResponseEntity<>("Login service running.", HttpStatus.OK);
 	}
 
@@ -131,7 +134,8 @@ public class LoginController {
 			@ApiResponse(responseCode = "400", description = "Invalid or malformed request. Unable to validate OTP.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized. OTP validation failed.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "500", description = "Internal server error during OTP validation process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	public ResponseEntity<?> validateOtp(@RequestHeader("username") String username, @RequestParam String otp) {
+	public ResponseEntity<?> validateOtp(@RequestHeader(value = "username", required = true) String username,
+			@RequestParam(value = "otp", required = true) String otp) {
 		return loginService.validateOtp(username, otp);
 	}
 
@@ -152,8 +156,8 @@ public class LoginController {
 			@ApiResponse(responseCode = "400", description = "Invalid or malformed request. Unable to reset password.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized. Password reset failed.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "500", description = "Internal server error during password reset process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	public ResponseEntity<?> forgotPassword(@RequestParam String newPassword,
-			@RequestHeader("username") String username) {
+	public ResponseEntity<?> forgotPassword(@RequestParam(value = "newPassword", required = true) String newPassword,
+			@RequestHeader(value = "username", required = true) String username) {
 		return loginService.forgotPassword(newPassword, username);
 	}
 
@@ -172,7 +176,7 @@ public class LoginController {
 			@ApiResponse(responseCode = "200", description = "OTP sent successfully. Check your registered email or phone for the OTP.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiResponse.class))),
 			@ApiResponse(responseCode = "400", description = "Invalid or malformed request. Unable to send OTP.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "500", description = "Internal server error during OTP sending process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	public ResponseEntity<?> sendOTP(@RequestHeader("username") String username) {
+	public ResponseEntity<?> sendOTP(@RequestHeader(value = "username", required = true) String username) {
 		return loginService.sendOTP(username);
 	}
 
@@ -193,8 +197,8 @@ public class LoginController {
 			@ApiResponse(responseCode = "400", description = "Invalid or malformed request. Unable to update password.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized. Password update failed.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "500", description = "Internal server error during password update process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	public ResponseEntity<?> updatePassword(@RequestBody PasswordUpdateRequest passwordUpdateRequest,
-			@RequestHeader("username") String username) {
+	public ResponseEntity<?> updatePassword(@RequestBody @Valid PasswordUpdateRequest passwordUpdateRequest,
+			@RequestHeader(value = "username", required = true) String username) {
 		return loginService.updatePassword(passwordUpdateRequest, username);
 	}
 
@@ -215,8 +219,8 @@ public class LoginController {
 			@ApiResponse(responseCode = "400", description = "Invalid or malformed request. Unable to update user profile.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized. User profile update failed.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "500", description = "Internal server error during user profile update process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	public ResponseEntity<?> updateUserProfile(@RequestHeader("username") String username,
-			@RequestBody ProfileUpdateRequest profileUpdateRequest) {
+	public ResponseEntity<?> updateUserProfile(@RequestHeader(value = "username", required = true) String username,
+			@RequestBody @Valid ProfileUpdateRequest profileUpdateRequest) {
 		return loginService.updateUserProfile(username, profileUpdateRequest);
 	}
 
