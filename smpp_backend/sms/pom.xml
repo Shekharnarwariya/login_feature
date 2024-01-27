@@ -31,6 +31,13 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
+			<groupId>smpp</groupId>
+			<artifactId>smpp</artifactId>
+			<scope>system</scope>
+			<version>1.0</version>
+			<systemPath>${basedir}/lib/smpp.jar</systemPath>
+		</dependency>
+		<dependency>
 			<groupId>org.bytedeco</groupId>
 			<artifactId>javacpp</artifactId>
 			<version>1.4.1</version>

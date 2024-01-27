@@ -55,13 +55,7 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-jdbc</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>smpp</groupId>
-			<artifactId>smpp</artifactId>
-			<scope>system</scope>
-			<version>1.0</version>
-			<systemPath>${basedir}/lib/smpp.jar</systemPath>
-		</dependency>
+
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-entitymanager</artifactId>
@@ -84,4 +78,9 @@
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
+	<build>
+		<finalName>COMMON_SERVICE</finalName>
+
+	</build>
+
 </project>
