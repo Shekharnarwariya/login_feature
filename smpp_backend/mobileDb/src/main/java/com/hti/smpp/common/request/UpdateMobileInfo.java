@@ -15,6 +15,7 @@ public class UpdateMobileInfo {
 	    private String[] profession;
 	    private String selectAll;
 	    private String totalRecords;
+	    private String[] classType;
 	    
 	    
 	    
@@ -89,6 +90,12 @@ public class UpdateMobileInfo {
 		}
 		public void setTotalRecords(String totalRecords) {
 			this.totalRecords = totalRecords;
+		}
+		public String[] getClassType() {
+			return classType;
+		}
+		public void setClassType(String[] classType) {
+			this.classType = classType;
 		}
 	    
 	    

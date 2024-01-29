@@ -15,6 +15,8 @@ import java.util.Optional;
 
 import javax.sql.DataSource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,10 +25,15 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.dto.MobileDataDto;
+import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.mobileDb.repository.MobileDbRepo;
 import com.hti.smpp.common.request.MobileDbRequest;
+import com.hti.smpp.common.response.MobileUserListInfoResponse;
+import com.hti.smpp.common.response.MobileUserListResponse;
+import com.hti.smpp.common.response.QueryMobileRecordResponse;
+import com.hti.smpp.common.response.SendAreaWiseSmsResponse;
 import com.hti.smpp.common.services.MobileDbUserService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
@@ -35,6 +42,7 @@ import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.IConstants;
+
 
 @Service
 public class MobileDbUserServiceImpl implements MobileDbUserService {
@@ -59,7 +67,7 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
 		return dataSource.getConnection();
 	}
 	
-	
+	private final Logger logger = LoggerFactory.getLogger(MobileDbUserServiceImpl.class);
 	
 	@Override
 	public ResponseEntity<?> mobileScheduleUpload(String username) {
@@ -76,19 +84,15 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
 	@Override
 	public ResponseEntity<?> mobileUserList(MobileDbRequest mobileDbRequest, String username) {
 
-//
-//        ActionMessages messages = null;
-//        ActionMessage message = null;
-		  HashMap<String, Object> combinedMap = new HashMap<String, Object>();
+		MobileUserListResponse mobileUserListResponse = new MobileUserListResponse();
         String target = "";
         boolean b_count = true;
         long mob_count = 0;
-//        AddNewMobileDbForm addNewMobileDbForm = (AddNewMobileDbForm) actionForm;
+
         
         MobileDataDto addNewMobileDbDTO = new MobileDataDto();
         BeanUtils.copyProperties(mobileDbRequest, addNewMobileDbDTO);
-//        IMobileDBServices mobileDbServc = new MobileDBServices();
-//        HttpSession session = request.getSession(false);
+
         String query = "";
 
         String viewAs = "NoPopUp";
@@ -208,76 +212,74 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
                 }
             }
         }
-        query = "select count(*) as count_total from mobileuserdata where " + area_temp + " and " + subarea_temp + " and " + profession_temp + " and " + age_temp + " and sex like '" + addNewMobileDbDTO.getSex() + "' and vip like '" + addNewMobileDbDTO.getVip() + "' and " + classType_temp + "";
-        String query1 = "select count(*) as count_total,area from mobileuserdata where " + area_temp + " and " + subarea_temp + " and " + profession_temp + " and " + age_temp + " and sex like '" + addNewMobileDbDTO.getSex() + "' and vip like '" + addNewMobileDbDTO.getVip() + "' and " + classType_temp + " group by area";
-        String query2 = "select area,mobNumber from mobileuserdata where " + area_temp + " and " + subarea_temp + " and " + profession_temp + " and " + age_temp + " and sex like '" + addNewMobileDbDTO.getSex() + "' and vip like '" + addNewMobileDbDTO.getVip() + "' and " + classType_temp + "";
+//--------------------------------------------------------
+       logger.info(area_temp);
+       logger.info(subarea_temp);
+       logger.info(profession_temp);
+       logger.info(age_temp);
+       logger.info(classType_temp);
+       logger.info(addNewMobileDbDTO.getVip());
+       logger.info(addNewMobileDbDTO.getSex());
+//  ------------------------------------------------------------      
         
-       
-        
-        ArrayList mobileRecord = new ArrayList<>();
-         mobileRecord = getMobileRecords(query, b_count);
-
-       
-         
-        Iterator itr = mobileRecord.iterator();
-        if (itr.hasNext()) {
-            mob_count = Long.parseLong((itr.next()).toString());
-        }
-        
-        if (mob_count > 0) {
-//            request.setAttribute("TotalRecords", "" + mob_count);
-         //   session.setAttribute("session_query", session_query);
-            if (viewAs.equalsIgnoreCase("popUp")) {
-                target = "PopUpView";
-            } else {
-            	
-            	
-//                Map recordMap = mobileDbServc.fetchMobileRecords(query1,true);
-                
-            	 Map<String, Object> recordMap = new HashMap<>();
-
-            	 recordMap = fetchMobileRecords(query1,true);
+       try {
+		
+    	   query = "select count(*) as count_total from mobileuserdata where " + area_temp + " and " + subarea_temp + " and " + profession_temp + " and " + age_temp + " and sex like '" + addNewMobileDbDTO.getSex() + "' and vip like '" + addNewMobileDbDTO.getVip() + "' and " + classType_temp + "";
+           String query1 = "select count(*) as count_total,area from mobileuserdata where " + area_temp + " and " + subarea_temp + " and " + profession_temp + " and " + age_temp + " and sex like '" + addNewMobileDbDTO.getSex() + "' and vip like '" + addNewMobileDbDTO.getVip() + "' and " + classType_temp + " group by area";
+           String query2 = "select area,mobNumber from mobileuserdata where " + area_temp + " and " + subarea_temp + " and " + profession_temp + " and " + age_temp + " and sex like '" + addNewMobileDbDTO.getSex() + "' and vip like '" + addNewMobileDbDTO.getVip() + "' and " + classType_temp + "";
+           
+          
+           
+           ArrayList mobileRecord = new ArrayList<>();
+            mobileRecord = getMobileRecords(query, b_count);
+            System.out.println(mobileRecord);
+            
+          
+            
+           Iterator itr = mobileRecord.iterator();
+           if (itr.hasNext()) {
+               mob_count = Long.parseLong((itr.next()).toString());
+           }
+           
+           if (mob_count > 0) {
+//               request.setAttribute("TotalRecords", "" + mob_count);
+           	   mobileUserListResponse.setMobileRecord(mob_count);
+            //   session.setAttribute("session_query", session_query);
+               if (viewAs.equalsIgnoreCase("popUp")) {
+                   target = "PopUpView";
+                   mobileUserListResponse.setTarget(target);
+               } else {
+               	
+               	               
+               	 Map<String, Object> recordMap = new HashMap<>();
+               	 recordMap = fetchMobileRecords(query1,true);
+                                    
+                   Map<String, List<String>> numberMap = new HashMap<>();
+                    numberMap = fetchMobileRecords(query2,false);
                  
+                   
+                 mobileUserListResponse.setNumberMap(numberMap);
+                 mobileUserListResponse.setRecordMap(recordMap);          
+                   
 
-                
-                
-//                Map numberMap = mobileDbServc.fetchMobileRecords(query2,false);
-                
-                Map<String, List<String>> numberMap = new HashMap<>();
-                 numberMap = fetchMobileRecords(query2,false);
-              
+                   target = IConstants.SUCCESS_KEY;
+                   mobileUserListResponse.setTarget(target);
+               }
+           } else {
 
-                
-              
 
-             // Put recordMap into combinedMap
-             combinedMap.putAll(recordMap);
-
-             // Put numberMap into combinedMap
-             combinedMap.putAll(numberMap);
-
-                
-               
-                
-//                request.setAttribute("recordMap", recordMap);
-//                session.setAttribute("numberMap", numberMap);
-//                target = IConstants.SUCCESS_KEY;
-            }
-        } else {
-//            messages = new ActionMessages();
-//            message = new ActionMessage("error.record.unavailable");
-//            messages.add("param_message", message);
-//            saveMessages(request, messages);
-//            request.setAttribute("param_value", "Any Record..Try Again");
-            if (viewAs.equalsIgnoreCase("popUp")) {
-                target = "PopUpFailure";
-            } else {
-//                target = IConstants.FAILURE_KEY;
-            }
-        }
-//        return mapping.findForward(target);
-    
-        return new ResponseEntity<>(combinedMap ,HttpStatus.OK); 
+               if (viewAs.equalsIgnoreCase("popUp")) {
+                   target = "PopUpFailure";
+               } else {
+                   target = IConstants.FAILURE_KEY;
+               }
+           }
+           
+	    } catch (Exception e) {
+		  throw new InternalServerException("Something Went Wrong");
+	    }
+        
+        return new ResponseEntity<>(mobileUserListResponse ,HttpStatus.OK); 
        
 	}
 
@@ -285,15 +287,12 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
 	public ResponseEntity<?> mobileUserListInfo(MobileDbRequest mobileDbRequest ,String username) {
 
 
-		 HashMap<String, Object> resultMap = new HashMap<>();
+		 MobileUserListInfoResponse mobileUserListInfoResponse = new MobileUserListInfoResponse();
         String target = "";
-//        ActionMessages messages = null;
-//        ActionMessage message = null;
-//        AddNewMobileDbForm addNewMobileDbForm = (AddNewMobileDbForm) form;
+
         MobileDataDto addNewMobileDbDTO = new MobileDataDto();
         BeanUtils.copyProperties(mobileDbRequest, addNewMobileDbDTO);
-//        IMobileDBServices mobileDbServc = new MobileDBServices();
-//        HttpSession session = request.getSession(false);
+
         String query = "";
         int ageMin = addNewMobileDbDTO.getAgeMin();
         int ageMax = addNewMobileDbDTO.getAgeMax();
@@ -420,53 +419,50 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
             }
         }
 
-        query = "select * from mobileuserdata where " + area_temp + " and " + subarea_temp + " and " + profession_temp + " and " + age_temp + " and sex like '" + addNewMobileDbDTO.getSex() + "' and vip like '" + addNewMobileDbDTO.getVip() + "' and " + classType_temp + " order by area,subarea";
+        try {
+			
+        	   query = "select * from mobileuserdata where " + area_temp + " and " + subarea_temp + " and " + profession_temp + " and " + age_temp + " and sex like '" + addNewMobileDbDTO.getSex() + "' and vip like '" + addNewMobileDbDTO.getVip() + "' and " + classType_temp + " order by area,subarea";
 
-        Collection mobileRecord = getMobileRecordsFull(query);
-        
-        if (mobileRecord.size() > 0) {
-            int maxSize = IConstants.MaxRecordFetch;
-           
+               Collection mobileRecord = getMobileRecordsFull(query);
+               System.out.println(mobileRecord);
+               
+               if (mobileRecord.size() > 0) {
+                   int maxSize = IConstants.MaxRecordFetch;
+                  
+                
+                mobileUserListInfoResponse.setMobileRecord(mobileRecord);
+                
+                mobileUserListInfoResponse.setSize(mobileRecord.size());
+                
+                   if (mobileRecord.size() <= 10) {
+                       mobileUserListInfoResponse.setDiv_setting("Not_Scrollable");
+                   } else {
+                       mobileUserListInfoResponse.setDiv_setting("Scrollable");
+                   }
+                   target = IConstants.SUCCESS_KEY;
+                   mobileUserListInfoResponse.setTarget(target);
 
-         // Put the mobile information list into the HashMap
-         resultMap.put("mobinfo", mobileRecord);
+               } else {
 
-         // Put the size of the mobile information list into the HashMap
-         resultMap.put("mobinfoSize", String.valueOf(mobileRecord.size()));
-         
-//            request.setAttribute("mobinfo", mobileRecord);
-//            request.setAttribute("mobinfoSize", mobileRecord.size() + "");
-            if (mobileRecord.size() <= 10) {
-//                request.setAttribute("div_setting", "Not_Scrollable");
-            } else {
-//                request.setAttribute("div_setting", "Scrollable");
-            }
-            target = IConstants.SUCCESS_KEY;
-
-        } else {
-//            messages = new ActionMessages();
-//            message = new ActionMessage("error.record.unavailable");
-//            messages.add("param_message", message);
-//            saveMessages(request, messages);
-//            request.setAttribute("param_value", "Any Record..Try Again");
-//            target = IConstants.FAILURE_KEY;
-        }
-//        return mapping.findForward(target);
-    
-        
-        
-        return new ResponseEntity<>(resultMap ,HttpStatus.OK); 
+               	 mobileUserListInfoResponse.setParam_value("Any Record..Try Again");
+                   target = IConstants.FAILURE_KEY;
+                   mobileUserListInfoResponse.setTarget(target);
+               }
+               
+		} catch (Exception e) {
+			  throw new InternalServerException("Something Went Wrong");
+		}
+          
+        return new ResponseEntity<>(mobileUserListInfoResponse ,HttpStatus.OK); 
 	}
 
+	
 	@Override
 	public ResponseEntity<?> queryForMobileRecord(String username) {
 
 
-//		String target = IConstants.FAILURE_KEY;
-//		ActionMessages messages = new ActionMessages();
-//		ActionMessage message = null;
-//		UserSessionObject userSessionObject = (UserSessionObject) SessionHelper.getSessionObject(request,
-//				IConstants.USER_SESSION_KEY);
+	    QueryMobileRecordResponse queryMobileRecordResponse = new QueryMobileRecordResponse();
+		String target = IConstants.FAILURE_KEY;
 		
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry userEntry = null;
@@ -480,19 +476,23 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
 		}
 		
 		int userId = userEntry.getId();
+		
+		logger.info("userId - "+userId);
+		
 		WebMasterEntry webMenu = null;
 		Optional<WebMasterEntry> webEntryOptional = this.webMasterEntryRepo.findById(userId);
+		logger.info("webEntryOptional - "+webEntryOptional);
 		if (webEntryOptional.isPresent()) {
 			webMenu = webEntryOptional.get();
 		} else {
 			throw new NotFoundException("WebMenuAccessEntry not found.");
 		}
+
 		
-		Map<String, Object> attributeMap = new HashMap<>();
+		logger.info("WebMasterEntry - "+webMenu);
 		
 		if (webMenu.isMobileDBAccess()) {
 			try {
-//				MobileDBServices mobileDBServices = new MobileDBServices();
 				ArrayList<String> professionList = mobileDbRepo.findDistinctByProfession();
 				ArrayList<String> areaList = mobileDbRepo.findDistinctByArea();
 				ArrayList<String> subAreaList = mobileDbRepo.findDistinctSubareaByAreaIn(null);
@@ -502,56 +502,47 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
 				} else {
 					Collections.sort(professionList);
 					Collections.sort(areaList);
-//					request.setAttribute("professionList", professionList);
-//					request.setAttribute("professionListSize", professionList.size() + "");
-//					request.setAttribute("areaList", areaList);
-//					request.setAttribute("areaListSize", areaList.size() + "");
-//					request.setAttribute("subareaList", subAreaList);
-//					request.setAttribute("subareaListSize", subAreaList.size() + "");
-//					target = IConstants.SUCCESS_KEY;
+					target = IConstants.SUCCESS_KEY;
 					
 					
-					
-					    attributeMap.put("professionList", professionList);
-				        attributeMap.put("professionListSize", String.valueOf(professionList.size()));
-				        attributeMap.put("areaList", areaList);
-				        attributeMap.put("areaListSize", String.valueOf(areaList.size()));
-				        attributeMap.put("subareaList", subAreaList);
-				        attributeMap.put("subareaListSize", String.valueOf(subAreaList.size()));
+					queryMobileRecordResponse.setProfessionList(professionList);
+					queryMobileRecordResponse.setProfessionListSize(professionList.size());
+					queryMobileRecordResponse.setAreaList(areaList);
+					queryMobileRecordResponse.setAreaListSize(areaList.size());
+					queryMobileRecordResponse.setSubAreaList(subAreaList);
+					queryMobileRecordResponse.setSubareaListSize(subAreaList.size());
+					queryMobileRecordResponse.setTarget(target);
 				        
 				        
 				}
 			} catch (Exception ex) {
-				ex.printStackTrace();
-//				message = new ActionMessage("error.processError");
+				  throw new InternalServerException("Something Went Wrong");
 			}
 		} else {
-//			target = "invalidRequest";
+			target = "invalidRequest";
+			queryMobileRecordResponse.setTarget(target);
 		}
-//		messages.add(ActionMessages.GLOBAL_MESSAGE, message);
-//		saveMessages(request, messages);
-//		return mapping.findForward(target);
-	
 		
-		
-		return new ResponseEntity<>(attributeMap ,HttpStatus.OK); 
+		return new ResponseEntity<>(queryMobileRecordResponse ,HttpStatus.OK); 
 	}
 
+	
 	@Override
 	public ResponseEntity<?> SendAreaWiseSms(MobileDbRequest mobileDbRequest,String username) {
 		
 		
-		HashMap<String, Object> resultMap = new HashMap<>();
-//        String target = IConstants.FAILURE_KEY;
+//		HashMap<String, Object> resultMap = new HashMap<>();
+		SendAreaWiseSmsResponse sendAreaWiseSmsResponse = new SendAreaWiseSmsResponse();
+        String target = IConstants.FAILURE_KEY;
         try {
-//            HttpSession session = request.getSession(false);
-//            AddNewMobileDbForm addNewMobileDbForm = (AddNewMobileDbForm) form;
+
             MobileDataDto addNewMobileDbDTO=new MobileDataDto();
             BeanUtils.copyProperties(mobileDbRequest, addNewMobileDbDTO);
+            
             String[] arearArr = addNewMobileDbDTO.getAreaArr();
             String[] areaWiseNumber = addNewMobileDbDTO.getAreaWiseNumber();
             Map numberMap = addNewMobileDbDTO.getNumberMap();
-//            session.removeAttribute("numberMap");
+
             List finalList = new ArrayList();
             for (int i = 0; i < arearArr.length; i++) {
                 String area = arearArr[i];
@@ -565,7 +556,7 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
                 
                 if (count > 0) {
                     if (numberMap.containsKey(area)) {
-                        List list = (List) numberMap.get(area);
+                        List list = (List) numberMap.get(area);                   
                         for (int k = 0; k < count; k++) {
                             finalList.add((String) list.get(k));
                         }
@@ -576,34 +567,24 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
             System.out.println("finalList:: " + finalList.size());
             if (finalList.size() > 0) {
             	
-            	
+            	sendAreaWiseSmsResponse.setNumberList(finalList);
 
-            	// Put the phone numbers list into the HashMap
-            	resultMap.put("numberList", finalList);
-
-            	// Put the total records count into the HashMap
-            	resultMap.put("TotalRecords", String.valueOf(finalList.size()));
+            	sendAreaWiseSmsResponse.setTotalRecords(finalList.size());
             	
-//                session.setAttribute("numberList", finalList);
-//                request.setAttribute("TotalRecords", "" + finalList.size());
-//                target = IConstants.SUCCESS_KEY;
+                target = IConstants.SUCCESS_KEY;
+                
+               
             } else {
-//                target = IConstants.FAILURE_KEY;
-//                ActionMessages messages = new ActionMessages();
-//                ActionMessage message = new ActionMessage("error.record.unavailable");
-//                messages.add("param_message", message);
-//                saveMessages(request, messages);
-//                request.setAttribute("param_value", "Any Record..Try Again");
+                target = IConstants.FAILURE_KEY;
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-//        return mapping.findForward(target);
-    
-        
-        
-        
-        return new ResponseEntity<>(resultMap ,HttpStatus.OK); 
+            sendAreaWiseSmsResponse.setTarget(target);
+        } catch (IndexOutOfBoundsException ex) {
+           throw new InternalServerException("Area wise number count is incorrect"); 
+        }catch (Exception ex) {
+        	throw new InternalServerException("Something went Wrong"); 
+        }     
+             
+        return new ResponseEntity<>(sendAreaWiseSmsResponse ,HttpStatus.OK); 
 	}
 	
 	

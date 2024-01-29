@@ -3,17 +3,17 @@ package com.hti.smpp.common.dto;
 public class UpdateMobileInfoDto {
 
 	private int[] mobile_id;
-    String[] vip;
-    String[] mobileNumber;
-    String[] sex;
-    int[] age;
-    int checkedC;
+    private String[] vip;
+    private String[] mobileNumber;
+    private String[] sex;
+    private  int[] age;
+    private  int checkedC;
     private String[] oldMobileNumber;
-    String[] area;
-    String[] subarea;
-    String[] profession;
-    String[] select;
-    String classType[];
+    private String[] area;
+    private String[] subarea;
+    private String[] profession;
+    private String[] select;
+    private String[] classType;
     
     
 	public int[] getMobile_id() {

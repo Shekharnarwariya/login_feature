@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
@@ -31,12 +32,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hti.smpp.common.dto.MobileDataDto;
 import com.hti.smpp.common.dto.UpdateMobileInfoDto;
 import com.hti.smpp.common.dto.UpdateMobileInfoDtoSingle;
+import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.mobileDb.dto.MobileDbEntity;
 import com.hti.smpp.common.mobileDb.repository.MobileDbRepo;
 import com.hti.smpp.common.request.MobileDbRequest;
 import com.hti.smpp.common.request.UpdateMobileInfo;
+import com.hti.smpp.common.response.ChooseRequestResponse;
+import com.hti.smpp.common.response.EditDataResponse;
 import com.hti.smpp.common.response.MobileDbResponse;
+import com.hti.smpp.common.response.UpdateMobileDbResponse;
 import com.hti.smpp.common.services.MobileDbService;
+import com.hti.smpp.common.util.IConstants;
 //import com.hti.smpp.common.util.IConstants;
 
 @Service
@@ -54,14 +60,10 @@ public class MobileDbServiceImpl implements MobileDbService {
 		String target = "";
         long mob_number = 0;
         String num = "";
-//        ActionMessages messages = null;
-//        messages = new ActionMessages();
-//        ActionMessage message = null;
         
         List<MobileDbEntity> isInsert = null;
         MobileDataDto form;
         try {
-//            AddNewMobileDbForm addNewMobileDbForm = (AddNewMobileDbForm) actionForm;
             MobileDataDto addNewMobileDbDTO = new MobileDataDto();
             MobileDbEntity mobileDbEntity = new MobileDbEntity();
             MobileDataDto tempMobileDbDTO = null;
@@ -69,14 +71,9 @@ public class MobileDbServiceImpl implements MobileDbService {
             ArrayList<MobileDataDto> mobileUserdata = new ArrayList<>();
             ArrayList<MobileDbEntity> mobileUserdataEntry = new ArrayList<>();
             
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            form= objectMapper.readValue(mobileDb, MobileDataDto.class);
-//            
-//            BeanUtils.copyProperties(form,addNewMobileDbDTO );
-//
 //            String type = addNewMobileDbDTO.getListType();
 
-            System.out.println(addNewMobileDbDTO.getAge());
+            logger.info("Add Mobile DTO get Age-----------> "+addNewMobileDbDTO.getAge());
             
             String format = "";
             if (file != null && file.getName().length() > 0) {
@@ -85,25 +82,17 @@ public class MobileDbServiceImpl implements MobileDbService {
                 String file_name = uploadedFile.getOriginalFilename();
                 if (file_name.indexOf(".xlsx") > 0) {
                     format = " : Excel(.xlsx)";
-//                    message = new ActionMessage("message.FileFormatError");
-//                    messages.add(ActionMessages.GLOBAL_MESSAGE, message);
-//                    saveMessages(request, messages);
-//                    request.setAttribute("param_value", format);
-//                    target = IConstants.FAILURE_KEY;
-//                    return mapping.findForward(target);
-                    
-                    
+
+                    target = IConstants.FAILURE_KEY;
+         
                 } else if (file_name.indexOf(".txt") > 0) {
                     format = "Text";
                 } else if (file_name.indexOf(".xls") > 0) {
                     format = "Excel";
                 } else {
                     format = "FormatNotSupported";
-//                    message = new ActionMessage("message.FileFormatError");
-//                    messages.add(ActionMessages.GLOBAL_MESSAGE, message);
-//                    saveMessages(request, messages);
-//                    target = IConstants.FAILURE_KEY;
-//                    return mapping.findForward(target);
+                    target = IConstants.FAILURE_KEY;
+
                 }
 
                 if (format.equalsIgnoreCase("Text")) {
@@ -218,8 +207,7 @@ public class MobileDbServiceImpl implements MobileDbService {
                     }
 
                 } else {
-//                    target = IConstants.FAILURE_KEY;
-//                    message = new ActionMessage("error.processError");
+                    target = IConstants.FAILURE_KEY;
                 }
 
  
@@ -245,7 +233,6 @@ public class MobileDbServiceImpl implements MobileDbService {
                  form= objectMapper.readValue(mobileDb, MobileDataDto.class);
                  
                  BeanUtils.copyProperties(form,addNewMobileDbDTO );
-//                 IMobileDBServices mobileDbServc = new MobileDBServices();
                  String type = addNewMobileDbDTO.getListType();
                 mobileUserdata.add(addNewMobileDbDTO);
                 mobileDbEntity.setMobileNumber(addNewMobileDbDTO.getMobileNumber());
@@ -260,29 +247,22 @@ public class MobileDbServiceImpl implements MobileDbService {
                 
                 mobileUserdataEntry.add(mobileDbEntity);
             }
-
-//            boolean isInsert = mobileDbServc.insertMobileDataList(mobileUserdata);
                  
-            System.out.println(mobileUserdata);
-            System.out.println("12");
+            logger.info("Moble user object ------------> "+mobileUserdata);
             
             
              isInsert = mobileDbRepo.saveAll(mobileUserdataEntry);
       
             if (!isInsert.isEmpty()) {
-//                target = IConstants.SUCCESS_KEY;
-//                message = new ActionMessage("message.operation.success");
+                target = IConstants.SUCCESS_KEY;
             } else {
-//                target = IConstants.FAILURE_KEY;
-//                message = new ActionMessage("error.processError");
+                target = IConstants.FAILURE_KEY;
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        } catch (Exception e) {
+        	logger.error("Failure in Upload the contact List-------------->"+e.getLocalizedMessage());
+        	throw new InternalServerException("Something went Wrong"); 
         }
 
-//        messages.add(ActionMessages.GLOBAL_MESSAGE, message);
-//        saveMessages(request, messages);
-//        return mapping.findForward(target);
 		return new ResponseEntity<>(isInsert,HttpStatus.CREATED);
 	}
 
@@ -295,52 +275,55 @@ public class MobileDbServiceImpl implements MobileDbService {
 
 		String target = "";
         String mobileNumber="";
-//        AddNewMobileDbForm addNewMobileDbForm = (AddNewMobileDbForm) actionForm;
-        MobileDataDto addNewMobileDbDTO = new MobileDataDto();
-        BeanUtils.copyProperties(mobileDb, addNewMobileDbDTO);
-        
-        mobileNumber = addNewMobileDbDTO.getMobileNumber();
-        
-        System.out.println("MOBILE>>>>>"+mobileNumber);
-        
-//        IMobileDBServices mobileDbServc = new MobileDBServices();
-        
-        ArrayList<MobileDbEntity> tempMob = mobileDbRepo.findByMobileNumber(mobileNumber);
-        
-        ArrayList<MobileDbResponse> responseMobileDb = new ArrayList<MobileDbResponse>();
-        
-        
-        tempMob.forEach(l -> {
-		     MobileDbResponse response = new MobileDbResponse ();				
-            response.setMobileNumber(l.getMobileNumber());
-            response.setSex(l.getSex());
-            response.setAge(l.getAge());
-            response.setVip(l.getVip());
-            response.setArea(l.getArea());
-            response.setSubarea(l.getSubArea());
-            response.setClassType(l.getClassType());
-            response.setProfession(l.getProfession());
-            
+
+        try {
 			
-            responseMobileDb.add(response);
-		});
+        	MobileDataDto addNewMobileDbDTO = new MobileDataDto();
+            BeanUtils.copyProperties(mobileDb, addNewMobileDbDTO);
+            
+            mobileNumber = addNewMobileDbDTO.getMobileNumber();
+            
+            logger.info("MOBILE------------>"+mobileNumber);
+            
+            
+            ArrayList<MobileDbEntity> tempMob = mobileDbRepo.findByMobileNumber(mobileNumber);
+            
+            ArrayList<MobileDbResponse> responseMobileDb = new ArrayList<MobileDbResponse>();
+            
+            
+            tempMob.forEach(l -> {
+    		     MobileDbResponse response = new MobileDbResponse ();				
+                response.setMobileNumber(l.getMobileNumber());
+                response.setSex(l.getSex());
+                response.setAge(l.getAge());
+                response.setVip(l.getVip());
+                response.setArea(l.getArea());
+                response.setSubarea(l.getSubArea());
+                response.setClassType(l.getClassType());
+                response.setProfession(l.getProfession());
+                
+    			
+                responseMobileDb.add(response);
+    		});
+                          
+//            request.setAttribute("moNumber", mobileNumber);
+            logger.info("mobileNumber--->"+tempMob);
+            
+            if (tempMob.size() > 0) {
+            	 logger.info("MOBILE------------------>>"+mobileNumber);
+                target = IConstants.SUCCESS_KEY;
+            } else {
+                target = IConstants.FAILURE_KEY;
+                return new ResponseEntity<>(target,HttpStatus.OK);
+            }
+            
+            return new ResponseEntity<>(tempMob,HttpStatus.OK);
+            
+		} catch (Exception e) {
+			logger.info("Cannot find the mobile number in database"+e.getLocalizedMessage());
+			  throw new InternalServerException("Something Went Wrong");
+		}
         
-        
-        
-        
-//        request.setAttribute("moNumber", mobileNumber);
-//        System.out.println("mobileNumber--->"+mobileNumber);
-        if (tempMob.size() > 0) {
-//            request.setAttribute("mobinfo", tempMob);
-        	 System.out.println("MOBILE>>>>>"+mobileNumber);
-//            target = IConstants.SUCCESS_KEY;
-        } else {
-//            target = IConstants.FAILURE_KEY;
-        }
-//        return mapping.findForward(target);
-        
-        
-		return new ResponseEntity<>(tempMob,HttpStatus.OK);
 	}
 
 
@@ -357,32 +340,29 @@ public class MobileDbServiceImpl implements MobileDbService {
             updateMobileInfo.getAge() == null ||
             updateMobileInfo.getArea() == null ||
             updateMobileInfo.getSubarea() == null ||
-            updateMobileInfo.getProfession() == null ) {
+            updateMobileInfo.getProfession() == null ||
+            updateMobileInfo.getClassType() == null) {
             // Handle the case where any of the arrays is null
             return new ResponseEntity<>("One or more arrays are null", HttpStatus.BAD_REQUEST);
         }
        
 
-//		 String target = null;
-//		    MobileDBServices mobileDBServices = new MobileDBServices();
-//		    MobileDataDto addNewMobileDbDTO = new MobileDataDto();
-//		    ActionMessages msg = null;
-//		    ActionMessage message = null;
+		 String target = null;
         
                 UpdateMobileInfoDto updateMobileInfoDTO = new UpdateMobileInfoDto();
 		        MobileDbEntity updateMobileSingle = null;
 		        int checkedC = 0;
 		        ArrayList<MobileDbEntity> entryList = null;
-		    
+		        List<MobileDbEntity> updatedList = new ArrayList<>();
 		        checkedC = updateMobileInfo.getCheckedC();
 		        entryList = new ArrayList<>();  //list
-//		        UpdateMobileInfoForm updateMobileInfoForm = (UpdateMobileInfoForm) form;
-		       
-		        System.out.println(updateMobileInfo.getMobile_id());
 		        
+		        ArrayList<UpdateMobileDbResponse> responseList = new ArrayList<>();
+
+		     	        
 		        BeanUtils.copyProperties(updateMobileInfo, updateMobileInfoDTO);
-		        System.out.println(updateMobileInfo.getMobile_id());
-		        System.out.println(updateMobileInfoDTO.getMobile_id());
+		        logger.info("User Mobile get Mobile ID------->"+updateMobileInfo.getMobile_id());
+//		        System.out.println(updateMobileInfoDTO.getMobile_id());
 		        
 		        //--------------------
 		        int[] mob_id = updateMobileInfoDTO.getMobile_id();
@@ -393,45 +373,47 @@ public class MobileDbServiceImpl implements MobileDbService {
 		        String[] subarea = updateMobileInfoDTO.getSubarea();
 		        String[] profession = updateMobileInfoDTO.getProfession();
 		        String[] classType = updateMobileInfoDTO.getClassType();
+		        System.out.println("classtype"+classType);
 		        //--------------------
-		        
-		        for (int i = 0; i < checkedC; i++) {
-		        	updateMobileSingle = new MobileDbEntity();
-		        	updateMobileSingle.setMobile_id(mob_id[i]);
-		        	updateMobileSingle.setVip(vip[i]);
-		        	updateMobileSingle.setSex(sex[i]);
-		        	updateMobileSingle.setAge(age[i]);
-		        	updateMobileSingle.setProfession(profession[i]);
-		        	updateMobileSingle.setArea(area[i]);
-		        	updateMobileSingle.setSubArea(subarea[i]);
-		        	updateMobileSingle.setClassType(classType[i]);
-		            entryList.add(updateMobileSingle);
-		        }
-		        updateMobileInfoDTO.setCheckedC(checkedC);
-		        
-		        List<MobileDbEntity> updatedList = mobileDbRepo.saveAll(entryList);
-//		        int update_s = mobileDBServices.UpdateMobileInfo(entryList);
-		        
-		        int update_s = updatedList.size();
-		        if (update_s != 0) {
-//		            msg = new ActionMessages();
-//		            message = new ActionMessage("message.DBUpdateSuccess");
-//		            msg.add("param_message", message);
-//		            saveMessages(request, msg);
-//		            request.setAttribute("param_value", update_s + "");
-//		            target = IConstants.SUCCESS_KEY;
-		        }
-		        if (update_s == 0) {
-//		            msg = new ActionMessages();
-//		            message = new ActionMessage("message.DBUpdateSuccess");
-//		            msg.add("param_message", message);
-//		            saveMessages(request, msg);
-//		            request.setAttribute("param_value", update_s + "");
-//		            target = IConstants.FAILURE_KEY;
-		        }
-//		        return mapping.findForward(target);
-		        
-		        
+                try {
+                    for (int i = 0; i < checkedC; i++) {
+    		        	
+    		        	MobileDbEntity entry = mobileDbRepo.findById(mob_id[i]).get();
+    		        	updateMobileSingle = new MobileDbEntity();
+    		        	updateMobileSingle.setMobile_id(mob_id[i]);
+    		        	updateMobileSingle.setVip(vip[i]);
+    		        	updateMobileSingle.setSex(sex[i]);
+    		        	updateMobileSingle.setAge(age[i]);
+    		        	updateMobileSingle.setProfession(profession[i]);
+    		        	updateMobileSingle.setArea(area[i]);
+    		        	updateMobileSingle.setSubArea(subarea[i]);
+    		        	updateMobileSingle.setClassType(classType[i]);
+    		        	updateMobileSingle.setMobileNumber(entry.getMobileNumber());
+    		            entryList.add(updateMobileSingle);
+    		        }
+    		        updateMobileInfoDTO.setCheckedC(checkedC);
+    		        
+    		         updatedList = mobileDbRepo.saveAll(entryList);
+    		        
+    		        
+    		        int update_s = updatedList.size();
+    		        if (update_s != 0) {
+    		            logger.info("param_value", update_s + "");
+    		            target = IConstants.SUCCESS_KEY;
+    		        }
+    		        if (update_s == 0) {
+    		            logger.info("param_value", update_s + "");
+    		            target = IConstants.FAILURE_KEY;
+    		        }
+
+				}catch (NoSuchElementException e) {
+					logger.error("NO Such Element Error occured");
+					throw new InternalServerException("Entry with given id is not present");
+				}	 catch (Exception e) {
+					throw new InternalServerException("Something went Wrong");
+				}		       
+		    
+		       		        
 		return new ResponseEntity<>(updatedList,HttpStatus.OK);
 	}
 
@@ -444,88 +426,90 @@ public class MobileDbServiceImpl implements MobileDbService {
 		 UpdateMobileInfoDto updateMobileInfoDTO = new UpdateMobileInfoDto();
 		 ArrayList<MobileDbEntity> entryList = null;
 		 MobileDbEntity updateMobileSingle = null;
-		 
-		 
+		    String target = null;
+        String messaage ="";
 		int delete_s = 0;
        int checkedC = mobileData.getCheckedC();
-//        UpdateMobileInfoForm updateMobileInfoForm = (UpdateMobileInfoForm) form;
+        logger.info("Checked Counts--------->"+checkedC);
         BeanUtils.copyProperties(mobileData, updateMobileInfoDTO);
         int[] mob_id = updateMobileInfoDTO.getMobile_id();
         entryList = new ArrayList<MobileDbEntity>();
-        for (int i = 0; i < checkedC; i++) {
-        	updateMobileSingle = new MobileDbEntity();
-        	updateMobileSingle.setMobile_id(mob_id[i]);
-            entryList.add(updateMobileSingle);
-        }
         
         try {
-        	 mobileDbRepo.deleteAll(entryList);
-		} catch (Exception e) {
-		   System.out.println(e);
+			
+        	 for (int i = 0; i < checkedC; i++) {
+             	MobileDbEntity entry = mobileDbRepo.findById(mob_id[i]).get();
+             	updateMobileSingle = new MobileDbEntity();
+             	updateMobileSingle.setMobile_id(mob_id[i]);
+                 entryList.add(updateMobileSingle);
+             }
+        	 
+        	 try {
+        		 
+                mobileDbRepo.deleteAll(entryList);             	 
+             	 target = IConstants.SUCCESS_KEY;
+			} catch (Exception e) {
+				 target = IConstants.FAILURE_KEY;
+				 throw new InternalServerException("Failed to Delete the Entry");
+			}
+             
+             
+		}catch (NoSuchElementException e) {
+			throw new InternalServerException("Entry with given ID not present");
+		}catch (ArrayIndexOutOfBoundsException e) {
+			throw new InternalServerException("Count of entry mobile ID and Check_Count Does not match");
+		}  catch (Exception e) {
+			logger.error("ERROR ---------->" + e.getLocalizedMessage());
+			throw new InternalServerException("Something Went Wrong");
 		}
-        
-        if (delete_s != 0) {
-//            msg = new ActionMessages();
-//            message = new ActionMessage("message.DBDeleteSuccess");
-//            msg.add("param_message", message);
-//            saveMessages(request, msg);
-//            request.setAttribute("param_value", delete_s + "");
-//            target = IConstants.SUCCESS_KEY;
-        }
-        if (delete_s == 0) {
-//            msg = new ActionMessages();
-//            message = new ActionMessage("message.DBDeleteSuccess");
-//            msg.add("param_message", message);
-//            saveMessages(request, msg);
-//            request.setAttribute("param_value", delete_s + "");
-//            target = IConstants.FAILURE_KEY;
-        }
-//        return mapping.findForward(target);
+       
         
         
-		return new ResponseEntity<>(delete_s,HttpStatus.OK);
+		return new ResponseEntity<>(target,HttpStatus.OK);
 	}
 
-
-
-	
-	
 
 
 
 	@Override
 	public ResponseEntity<?> chooseRequired(MobileDbRequest mobileDbRequest, String username) {
+		
 
-
-//		  HttpSession session = request.getSession(false);
+		ChooseRequestResponse chooseRequestResponse = new ChooseRequestResponse();
 	        ArrayList mobileRecordList=new ArrayList();
 	        List newList=(List)mobileDbRequest.getNumberList();
-//	        session.removeAttribute("numberList");
+
 	        Collections.shuffle(newList);
 	        String target = "";
 	        try{
-//	        AddNewMobileDbForm addNewMobileDbForm = (AddNewMobileDbForm) actionForm;
+
 	        MobileDataDto addNewMobileDbDTO = new MobileDataDto();
 	        BeanUtils.copyProperties(mobileDbRequest, addNewMobileDbDTO);
 	        String smsCount ="";
 	        smsCount=addNewMobileDbDTO.getSendNowMsgCount();
 	        int smsCount_I =0;
 	        smsCount_I=Integer.parseInt(smsCount);
+	        logger.info("SMS Count - "+ smsCount);
 	        Iterator iterator=newList.iterator();
 	        String number_list="";
-	        for(int j=0;j<smsCount_I;j++)
-	        {
-	         if(iterator.hasNext()){
-	         number_list=(String)newList.get(j);
-	         mobileRecordList.add(number_list);
-	        }}
-	     
-//	        session.setAttribute("mobileRecord",mobileRecordList);
-	        String actionType = addNewMobileDbDTO.getActionReq();
+	       
+	        	for(int j=0;j<smsCount_I;j++)
+		        {
+		         if(iterator.hasNext()){
+		         number_list=(String)newList.get(j);
+		         mobileRecordList.add(number_list);
+		        }}  
+
+	        	
+	        	chooseRequestResponse.setMobileRecordList(mobileRecordList);
+	        	
+	            String actionType = addNewMobileDbDTO.getActionReq();
+	
 
 	        if (actionType.equalsIgnoreCase("sendnow")) {
-	            target = "sendnow";
-//	            request.setAttribute("smscounts", smsCount);
+	        	target = "sendnow";
+	            
+	        	chooseRequestResponse.setSmsCount(smsCount);
 	        } else if (actionType.equalsIgnoreCase("schedule")) {
 	            String actiondo = addNewMobileDbDTO.getActionDo();
 	            if (actiondo.equalsIgnoreCase("partial")) {
@@ -546,32 +530,33 @@ public class MobileDbServiceImpl implements MobileDbService {
 	                r_num.add(rand_num);
 	                     }
 	               }
-//	                session.setAttribute("mobileRecord",r_num);
-//	                request.setAttribute("smscounts", smsCount_I+"");
-//	                session.setAttribute("smscount_s",smsCount_I+"");
-//	                request.setAttribute("partDay", partDay_I+"");
-//	                session.setAttribute("partDay_s", partDay_I+"");
-//	                request.setAttribute("temp_list_size",smsCount_I+"");
-//	                request.setAttribute("totalSmsParDay", "" + totalSmsParDay);
-//	                session.setAttribute("totalSmsParDay", "" + totalSmsParDay);
-//	                target = "schedulePartial";
+	                 
+	                 chooseRequestResponse.setMobileRecord_s(r_num);
+	                 chooseRequestResponse.setSmsCount_I(smsCount_I);
+	                 chooseRequestResponse.setPartDay_I(partDay_I);     
+	                 chooseRequestResponse.setTotalSmsParDay(totalSmsParDay);  
+	                
+	                 target = "schedulePartial";
 
 	            } else if (actiondo.equalsIgnoreCase("oneTime")) {
-//	                request.setAttribute("smscounts", smsCount);
-	                target = "scheduleOneTime";
+	            	chooseRequestResponse.setSmsCount(smsCount);
+	                 target = "scheduleOneTime";
 	            }
 	        }
 
-	    }catch(Exception e)
-	    {
-	   System.out.println("Exception e :===>"+e);
+	    }catch(IndexOutOfBoundsException e)
+	    {	 logger.info("error",e.getLocalizedMessage());
+	    	throw new InternalServerException("SMS count is out of bound");
+	    }catch (NumberFormatException e) {
+	        logger.error("Error parsing integer", e);
+	        throw new InternalServerException("Error parsing integer");
+	    } catch(Exception e)
+	    {	 logger.info("error",e.getLocalizedMessage());   	
+	    	throw new InternalServerException("Send Now Sms Count is more than number list count");
 	    }
-//	        return mapping.findForward(target);
-	        
-	        
-	        
-		
-		return null;
+
+	    chooseRequestResponse.setTarget(target);
+		return  new ResponseEntity<>(chooseRequestResponse,HttpStatus.OK);
 	}
 
 
@@ -579,55 +564,38 @@ public class MobileDbServiceImpl implements MobileDbService {
 
 	@Override
 	public ResponseEntity<?> editData(String username) {
-		// TODO Auto-generated method stub
+	
 		
-		
-
-//        String target="";
-        System.out.println("<-- EditDataAction Called -> ");
-//         HttpSession session = request.getSession(false);
-//        MobileDBServices mobileDBServices = new MobileDBServices();
+        logger.info("<-- EditDataAction Called -> ");
         
-        
-//        ArrayList professionList = mobileDBServices.getProfessionList();
-        
-        ArrayList<String> professionList = mobileDbRepo.findDistinctByProfession();
-        
-//        ArrayList areaList=mobileDBServices.getAreaList();
-        
-        ArrayList<String> areaList = mobileDbRepo.findDistinctByArea();
-        
-//        ArrayList subAreaList=mobileDBServices.getSubAreaList(null);
-        
-        ArrayList<String> subAreaList = mobileDbRepo.findDistinctSubareaByAreaIn(null);
-        
-        Collections.sort(professionList);
-        Collections.sort(areaList);
-//        request.setAttribute("professionList",professionList);
-//        request.setAttribute("professionListSize", professionList.size()+"");
-//        request.setAttribute("areaList", areaList);
-//        request.setAttribute("areaListSize", areaList.size()+"");
-//        request.setAttribute("subareaList", subAreaList);
-//        request.setAttribute("subareaListSize", subAreaList.size()+"");
-//        target = IConstants.SUCCESS_KEY;
-//        return mapping.findForward(target);
-        
-        
+        EditDataResponse editDataResponse = new EditDataResponse();
     
-        HashMap<String, Object> attributeMap = new HashMap<>();
-        
-        attributeMap.put("professionList", professionList);
-        attributeMap.put("professionListSize", String.valueOf(professionList.size()));
-        attributeMap.put("areaList", areaList);
-        attributeMap.put("areaListSize", String.valueOf(areaList.size()));
-        attributeMap.put("subareaList", subAreaList);
-        attributeMap.put("subareaListSize", String.valueOf(subAreaList.size()));
-        
-        
-        
-        
-        
-		return new ResponseEntity<>(attributeMap,HttpStatus.OK);
+        try {
+        	 ArrayList<String> professionList = mobileDbRepo.findDistinctByProfession();
+           
+             ArrayList<String> areaList = mobileDbRepo.findDistinctByArea();
+             System.out.println(areaList);
+             ArrayList<String> subAreaList = mobileDbRepo.findDistinctSubareaByAreaIn(null);
+             
+             Collections.sort(professionList);
+             Collections.sort(areaList);
+             
+       
+             
+             editDataResponse.setProfessionList(professionList);
+             editDataResponse.setProfessionListSize(String.valueOf(professionList.size()));
+             editDataResponse.setAreaList(areaList);
+             editDataResponse.setAreaListSize(String.valueOf(areaList.size()));
+             editDataResponse.setSubAreaList(subAreaList);
+             editDataResponse.setSubareaListSize(String.valueOf(subAreaList.size()));
+             
+             
+		} catch (Exception e) {
+			logger.info("Error occurred",e);
+			throw new InternalServerException("Can not Process your request");
+		}
+      
+		return new ResponseEntity<>(editDataResponse,HttpStatus.OK);
 	}
 
 
@@ -638,46 +606,30 @@ public class MobileDbServiceImpl implements MobileDbService {
 
 
 		String subAreas="";
-//        StringBuffer strBuff = new StringBuffer();
-//        PrintWriter printw = response.getWriter();
-//        IDatabaseService dbservice = HtiSmsDB.getInstance();
-        try {
 
+        try {
+        	 logger.info("Area - "+ area);
 //            String area = request.getParameter("q");
             
             if (area != null && area.length() == 0) {
                 area = null;
             }
-            
-            
+                
             ArrayList<String> subAreaList = mobileDbRepo.findDistinctSubareaByAreaIn(area);
-            
-//            Iterator itr = sublist.iterator();
-//            while (itr.hasNext()) {
-//                String str = (String) itr.next();
-//                strBuff.append(str).append(",");
-//            }
-//            String finalstr = strBuff.toString();
-//            finalstr = finalstr.substring(0, finalstr.length() - 1);
-//
-//            printw.print(finalstr);
-//            printw.flush();
-//            printw.close();
-//            System.out.println("Sub Areas :: "+finalstr);
-            
-            
+                              
             subAreas = subAreaList.stream().collect(Collectors.joining(","));
 
-            System.out.println("Sub Areas :: " + subAreas);
-
-            
-            
+            logger.info("Sub Areas :: " + subAreas);
+         
+            if(subAreaList.isEmpty()) {
+            	logger.info("SubArea Does not exists for the given area");
+            	throw new InternalServerException("Subarea Does not exists for the given area");
+            }
 
         } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    
-        
+        	logger.info(ex.getMessage());
+           throw new InternalServerException(ex.getLocalizedMessage());
+        }       
         
 		return new ResponseEntity<>(subAreas,HttpStatus.OK);
 	}
@@ -705,31 +657,37 @@ public class MobileDbServiceImpl implements MobileDbService {
 	@Override
 	public ResponseEntity<?> updateMobileData(MobileDbRequest mobileDb, String username) {
 		
-		MobileDbEntity mobileDbEntity = new MobileDbEntity();
-		mobileDbEntity.setMobileNumber(mobileDb.getMobileNumber());
-		mobileDbEntity.setSex(mobileDb.getSex());
-		mobileDbEntity.setAge(mobileDb.getAge());
-		mobileDbEntity.setVip(mobileDb.getVip());
-		mobileDbEntity.setArea(mobileDb.getArea());
-		mobileDbEntity.setClassType(mobileDb.getClassType());
-		mobileDbEntity.setProfession(mobileDb.getProfession());
-		mobileDbEntity.setSubArea(mobileDb.getSubarea());
+		List<MobileDbEntity> updatedContact = new ArrayList<>();
+		try {
+			
+			MobileDbEntity mobileDbEntity = new MobileDbEntity();
+			mobileDbEntity.setMobileNumber(mobileDb.getMobileNumber());
+			mobileDbEntity.setSex(mobileDb.getSex());
+			mobileDbEntity.setAge(mobileDb.getAge());
+			mobileDbEntity.setVip(mobileDb.getVip());
+			mobileDbEntity.setArea(mobileDb.getArea());
+			mobileDbEntity.setClassType(mobileDb.getClassType());
+			mobileDbEntity.setProfession(mobileDb.getProfession());
+			mobileDbEntity.setSubArea(mobileDb.getSubarea());
+			
+			String mobileNumber = mobileDb.getMobileNumber();
+			String sex = mobileDb.getSex();
+			int age = mobileDb.getAge();
+			String vip = mobileDb.getVip();
+			String area = mobileDb.getArea();
+			String classType = mobileDb.getClassType();
+			String profession = mobileDb.getProfession();
+			String subArea = mobileDb.getSubarea();
+		    
+		    
+			mobileDbRepo.updateByMobileNumber(mobileNumber, sex, age,vip, area, classType, profession, subArea);
 		
-		String mobileNumber = mobileDb.getMobileNumber();
-		String sex = mobileDb.getSex();
-		int age = mobileDb.getAge();
-		String vip = mobileDb.getVip();
-		String area = mobileDb.getArea();
-		String classType = mobileDb.getClassType();
-		String profession = mobileDb.getProfession();
-		String subArea = mobileDb.getSubarea();
-	    
-	    
-		mobileDbRepo.updateByMobileNumber(mobileNumber, sex, age,vip, area, classType, profession, subArea);
+		    updatedContact = mobileDbRepo.findByMobileNumber(mobileNumber);
+			
+		} catch (Exception e) {
+		  throw new InternalServerException("Something Went Wrong");
+		}
 	
-		List<MobileDbEntity> updatedContact = mobileDbRepo.findByMobileNumber(mobileNumber);
-		
-		
 		return new ResponseEntity<>(updatedContact,HttpStatus.OK);
 	}
 
@@ -739,17 +697,25 @@ public class MobileDbServiceImpl implements MobileDbService {
 	@Override
 	public ResponseEntity<?> deleteMobileData(MobileDbRequest mobileData, String username) {
 
-	   String Message ="";
-       String mobileNumber = mobileData.getMobileNumber();
-       System.out.println(mobileNumber);
-       
-       int response = mobileDbRepo.deleteByMobileNumber(mobileNumber);
-       System.out.println(response);
-       if(response>0) {
-    	   Message = "Contact Deleted Successfully";
-       }else {
-    	   Message = "Can Not Delete Contact";
-       }
+		 String Message ="";
+		 
+		try {
+			
+		       String mobileNumber = mobileData.getMobileNumber();
+		       System.out.println(mobileNumber);
+		       
+		       int response = mobileDbRepo.deleteByMobileNumber(mobileNumber);
+		       System.out.println(response);
+		       if(response>0) {
+		    	   Message = "Contact Deleted Successfully";
+		       }else {
+		    	   Message = "Can Not Delete Contact";
+		       }
+			
+		} catch (Exception e) {
+			  throw new InternalServerException("Something Went Wrong");
+		}
+	  
 		
 		return new ResponseEntity<>(Message,HttpStatus.OK);
 	}
