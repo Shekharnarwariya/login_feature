@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 /**
  * Represents the Bsfm entity with attributes such as ID, profilename, username, content, smsc, prefixes, sourceid,
@@ -15,34 +16,80 @@ import jakarta.persistence.Table;
  */
 
 @Entity
-@Table(name = "bsfm_master")
+@Table(name = "bsfmaster")
 public class Bsfm {
 	@Id
 	@Column(name = "id", nullable = false)
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
+	
+	@Column(name="profilename")
 	private String profilename;
+	
+	@Column(name="username")
 	private String username;
+	
+	@Column(name="contents")
 	private String content;
+	
+	@Column(name="smsc")
 	private String smsc;
+	
+	@Column(name="prefixes")
 	private String prefixes;
+	
+	@Column(name="sourceid")
 	private String sourceid;
+	
+	@Column(name="active")
 	private boolean active;
+	
+	@Column(name="reverse")
 	private boolean reverse;
+	
+	@Column(name="reroute")
 	private String reroute;
+	
+	@Column(name="editBy")
 	private String editBy;
+	
+	@Column(name="edit_on")
 	private String editOn;
+	
+	@Column(name="schedule")
 	private boolean schedule;
+	
+	@Column(name="day_time")
 	private String dayTime;
+	
+	@Column(name = "active_on_sch_time")
 	private boolean activeOnScheduleTime;
+	
+	@Column(name="priority")
 	private int priority;
+	
+	@Column(name="sender_type")
 	private String senderType;
+	
+	@Column(name="master_id")
 	private String masterId;
+	
+	@Column(name="force_sender")
 	private String forceSenderId;
+	
+	@Column(name="reroute_group_id")
 	private int rerouteGroupId;
+	
+	@Transient
 	private String rerouteGroupName;
+	
+	@Column(name="msg_length")
 	private int msgLength;
+	
+	@Column(name="msg_length_opr")
 	private int lengthOpr;
+	
+	@Column(name="networks")
 	private String networks;
 
 	public String getRerouteGroupName() {

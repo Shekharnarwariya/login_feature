@@ -1,6 +1,7 @@
 package com.hti.smpp.common.bsfm.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,10 +16,12 @@ import jakarta.transaction.Transactional;
  */
 @Repository
 public interface BsfmProfileRepository extends JpaRepository<Bsfm, Integer> {
-	@Query("SELECT MAX(b.priority) FROM Bsfm b")
-	public Integer findMaxPriority();
+	@Query("SELECT COALESCE(MAX(b.priority), 0) FROM Bsfm b")
+    int findMaxPriority();
 
 	public List<Bsfm> findByMasterIdOrderByPriority(String masterId);
+	
+	Optional<Bsfm> findByProfilenameAndIdNot(String profilename, int currentId);
 
 	public Bsfm findByUsername(String username);
 
