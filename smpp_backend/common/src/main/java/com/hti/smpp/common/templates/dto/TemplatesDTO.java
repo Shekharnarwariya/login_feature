@@ -19,6 +19,8 @@ public class TemplatesDTO {
 	private String message;
 	private String masterId;
 	private String title;
+	
+	
 	public int getId() {
 		return id;
 	}
