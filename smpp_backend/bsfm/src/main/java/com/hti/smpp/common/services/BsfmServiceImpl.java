@@ -15,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -24,6 +25,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.hazelcast.query.Predicate;
@@ -41,9 +45,11 @@ import com.hti.smpp.common.request.BsfmFilterFrom;
 import com.hti.smpp.common.response.BSFMResponse;
 import com.hti.smpp.common.response.DeleteProfileResponse;
 import com.hti.smpp.common.smsc.dto.SmscEntry;
+import com.hti.smpp.common.smsc.repository.SmscEntryRepository;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
+import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.user.repository.WebMenuAccessEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.Constants;
@@ -74,12 +80,18 @@ public class BsfmServiceImpl implements BsfmService {
 	
 	@Autowired
 	private UserEntryRepository userRepository;
+	
+	@Autowired
+	private SmscEntryRepository smscRepo;
+	
+	@Autowired
+	private WebMasterEntryRepository webmasterRepo;
 /**
  * Adds a new Bsfm profile based on the provided filter and username.
  */
 	@Override
-	@Transactional
-	public String addBsfmProfile(BsfmFilterFrom bsfmForm, String username) throws Exception {
+//	@Transactional
+	public ResponseEntity<String> addBsfmProfile(BsfmFilterFrom bsfmForm, String username){
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -143,7 +155,7 @@ public class BsfmServiceImpl implements BsfmService {
 					try {
 						encoded_content += UTF16(content_token) + ",";
 					} catch (Exception e) {
-						logger.error(e.toString());
+						logger.error(e.getLocalizedMessage());
 						throw new InternalServerException(e.getLocalizedMessage());
 					}
 				}
@@ -173,7 +185,8 @@ public class BsfmServiceImpl implements BsfmService {
 						MultiUtility.changeFlag(Constants.BSFM_FLAG_FILE, "707");
 					}
 				} else {
-					logger.error("Failed to add Bsfm Profile: " + bsfmForm.getProfilename());
+					logger.error("Failed to add Bsfm Profile: " + bsfmForm.getProfilename()+". Duplicate Entry Found!");
+					throw new InternalServerException("Failed to add Bsfm Profile: " + bsfmForm.getProfilename()+". Duplicate Entry Found!");
 				}
 			} catch (Exception ex) {
 				logger.error("Failed to add Bsfm Profile: " + bsfmForm.getProfilename(), ex.toString());
@@ -183,7 +196,7 @@ public class BsfmServiceImpl implements BsfmService {
 			logger.error("Failed to add Bsfm Profile: " + bsfmForm.getProfilename() + ". Rollback.");
 			throw new InternalServerException("Error while processing the request.");
 		}
-		return target;
+		return new ResponseEntity<String>("Bsfm Profile added successfully: " + bsfmForm.getProfilename(), HttpStatus.CREATED);
 	}
 /**
  * Adds a new Bsfm profile to the database.
@@ -256,12 +269,12 @@ public class BsfmServiceImpl implements BsfmService {
  *  Retrieves information for Bsfm profiles based on the provided username.
  */
 	@Override
-	public BSFMResponse checked(String username) {
+	public ResponseEntity<BSFMResponse> checked(String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystemAndAdmin")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -272,8 +285,8 @@ public class BsfmServiceImpl implements BsfmService {
 		BSFMResponse bSFMResponse = new BSFMResponse();
 		String systemId = user.getSystemId();
 		String target = IConstants.FAILURE_KEY;
-		bSFMResponse.setSmscList(listNames());
-		bSFMResponse.setUserlist(listUsers());
+		bSFMResponse.setSmscList(listNames().values());
+		bSFMResponse.setUserlist(listUsers().values());
 		bSFMResponse.setGroupDetail(listGroupNames());
 		Map<String, String> networkmap = null;
 		try {
@@ -284,22 +297,23 @@ public class BsfmServiceImpl implements BsfmService {
 		}
 		Map<Integer, String> operatormap = new HashMap<Integer, String>();
 		bSFMResponse.setNetworkmap(networkmap);
-		for (NetworkEntry entry : GlobalVars.NetworkEntries.values()) {
+		List<NetworkEntry> networkEntries = this.networkRepository.findAll();
+		for (NetworkEntry entry : networkEntries) {
 			operatormap.put(entry.getId(),
 					entry.getCountry() + "-" + entry.getOperator() + " [" + entry.getMnc() + "]");
 		}
 		bSFMResponse.setNetworkmap(networkmap);
 		bSFMResponse.setOperatormap(operatormap);
 		target = IConstants.SUCCESS_KEY;
+		
 		if (Access.isAuthorized(user.getRole(),"isAuthorizedAdmin")
 				&& menuAccessEntryRepository.findById(user.getId()).get().isBsfm()) {
-			Collection<String> values = listNames(systemId).values();
-			bSFMResponse.setSmscList((Map<Integer, String>) values);
+			bSFMResponse.setSmscList(listNames(systemId).values());
 			List<String> users = new ArrayList<String>(listUsersUnderMaster(systemId).values());
-			Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject().get("secondaryMaster")
-					.equal(systemId);
-			for (WebMasterEntry webEntry : GlobalVars.WebmasterEntries.values(p)) {
-				UserEntry userEntry = GlobalVars.UserEntries.get(webEntry.getUserId());
+
+			List<WebMasterEntry> webEntries = this.webmasterRepo.findBySecondaryMaster(systemId);
+			for (WebMasterEntry webEntry : webEntries) {
+				UserEntry userEntry = this.userRepository.findById(webEntry.getUserId()).get();
 				users.add(userEntry.getSystemId());
 			}
 			try {
@@ -310,16 +324,17 @@ public class BsfmServiceImpl implements BsfmService {
 			}
 			Map<Integer, String> operatormap1 = new HashMap<Integer, String>();
 			bSFMResponse.setNetworkmap(networkmap);
-			for (NetworkEntry entry : GlobalVars.NetworkEntries.values()) {
+			List<NetworkEntry> networkEntriesAdmin = this.networkRepository.findAll();
+			for (NetworkEntry entry : networkEntriesAdmin) {
 				operatormap1.put(entry.getId(),
 						entry.getCountry() + "-" + entry.getOperator() + " [" + entry.getMnc() + "]");
 			}
 			bSFMResponse.setNetworkmap(networkmap);
 			bSFMResponse.setOperatormap(operatormap1);
-			bSFMResponse.setUsers(users);
+			bSFMResponse.setUserlist(users);
 			target = IConstants.SUCCESS_KEY;
 		}
-		return bSFMResponse;
+		return ResponseEntity.ok(bSFMResponse);
 	}
 /**
  * Retrieves distinct countries and their codes from the network repository.
@@ -334,7 +349,8 @@ public class BsfmServiceImpl implements BsfmService {
 				countries.put((String) result[0], (String) result[1]);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error(e.getLocalizedMessage());
+			throw new SQLException("Error retrieving distinct countries. Msg: "+e.getLocalizedMessage());
 		}
 		return countries;
 	}
@@ -344,9 +360,10 @@ public class BsfmServiceImpl implements BsfmService {
  * @return
  */
 	public Map<Integer, String> listUsersUnderMaster(String master) {
-		logger.debug("listUsersUnderMaster(" + master + ")");
+		logger.info("listUsersUnderMaster(" + master + ")");
 		Map<Integer, String> map = new HashMap<Integer, String>();
-		for (UserEntry entry : GlobalVars.UserEntries.values()) {
+		List<UserEntry> userEntries = this.userRepository.findAll();
+		for (UserEntry entry : userEntries) {
 			if (entry.getMasterId().equalsIgnoreCase(master)) {
 				map.put(entry.getId(), entry.getSystemId());
 			}
@@ -362,7 +379,8 @@ public class BsfmServiceImpl implements BsfmService {
  */
 	public Map<Integer, String> listNames() {
 		Map<Integer, String> names = new HashMap<Integer, String>();
-		for (SmscEntry entry : GlobalVars.SmscEntries.values()) {
+		List<SmscEntry> smscEntries = this.smscRepo.findAll();
+		for (SmscEntry entry : smscEntries) {
 			names.put(entry.getId(), entry.getName());
 		}
 		names = names.entrySet().stream().sorted(Entry.comparingByValue())
@@ -376,7 +394,8 @@ public class BsfmServiceImpl implements BsfmService {
 	public Map<Integer, String> listUsers() {
 		logger.debug("listUsers()");
 		Map<Integer, String> map = new HashMap<Integer, String>();
-		for (UserEntry entry : GlobalVars.UserEntries.values()) {
+		List<UserEntry> userEntries = this.userRepository.findAll();
+		for (UserEntry entry : userEntries) {
 			map.put(entry.getId(), entry.getSystemId());
 		}
 		Map<Integer, String> sortedMap = map.entrySet().stream()
@@ -406,8 +425,8 @@ public class BsfmServiceImpl implements BsfmService {
  */
 	public Map<Integer, String> listNames(String masterId) {
 		Map<Integer, String> names = new HashMap<Integer, String>();
-		Predicate<Integer, SmscEntry> p = new PredicateBuilderImpl().getEntryObject().get("masterId").equal(masterId);
-		for (SmscEntry entry : GlobalVars.SmscEntries.values(p)) {
+		List<SmscEntry> smscEntries = this.smscRepo.findByMasterId(masterId);
+		for (SmscEntry entry : smscEntries) {
 			names.put(entry.getId(), entry.getName());
 		}
 		names = names.entrySet().stream().sorted(Entry.comparingByValue())
@@ -418,7 +437,7 @@ public class BsfmServiceImpl implements BsfmService {
  * Deletes a Bsfm profile based on the provided username and profile ID.
  */
 	@Override
-	public DeleteProfileResponse deleteProfile(String username, int id) {
+	public ResponseEntity<DeleteProfileResponse> deleteProfile(String username, int id) {
 		DeleteProfileResponse deleteProfileResponse = new DeleteProfileResponse();
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
@@ -438,6 +457,8 @@ public class BsfmServiceImpl implements BsfmService {
 			Bsfm bsfm = null;
 			if (bsfmOptional.isPresent()) {
 				bsfm = bsfmOptional.get();
+			}else {
+				throw new NotFoundException("No Bsfm Profile Found With Id: "+id);
 			}
 			if (bsfm != null) {
 				if (bsfm.getSenderType() != null) {
@@ -448,10 +469,9 @@ public class BsfmServiceImpl implements BsfmService {
 				if (Access.isAuthorized(user.getRole(),"isAuthorizedAdmin")) {
 					smscList = listNames(systemid).values();
 					underUserList = new ArrayList<String>(listUsersUnderMaster(systemid).values());
-					Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject()
-							.get("secondaryMaster").equal(systemid);
-					for (WebMasterEntry webEntry : GlobalVars.WebmasterEntries.values(p)) {
-						UserEntry userEntry = GlobalVars.UserEntries.get(webEntry.getUserId());
+					List<WebMasterEntry> webMasterEntries = this.webmasterRepo.findBySecondaryMaster(systemid);
+					for (WebMasterEntry webEntry : webMasterEntries) {
+						UserEntry userEntry = this.userRepository.findById(webEntry.getUserId()).get();
 						underUserList.add(userEntry.getSystemId());
 					}
 				} else {
@@ -488,8 +508,6 @@ public class BsfmServiceImpl implements BsfmService {
 							}
 						} catch (Exception e) {
 							logger.error(bsfm.getId() + "[" + bsfm.getProfilename() + "] Invalid Network: " + network);
-							logger.error("An error occured in line {}: {}", Thread.currentThread().getStackTrace()[1].getLineNumber(), e.getMessage());
-							throw new InternalServerException("Error: "+e.getLocalizedMessage());
 						}
 					}
 				}
@@ -569,7 +587,7 @@ public class BsfmServiceImpl implements BsfmService {
 				// request.setAttribute("message", content);
 				deleteProfileResponse.setBsfm(bsfm);
 				deleteProfileResponse.setUnderUserList(underUserList);
-				deleteProfileResponse.setSmscList(existSmscList);
+				deleteProfileResponse.setSmscList(smscList);
 				deleteProfileResponse.setExistUserList(existUserList);
 				deleteProfileResponse.setExistSmscList(existSmscList);
 				deleteProfileResponse.setGrouping(grouping);
@@ -580,6 +598,9 @@ public class BsfmServiceImpl implements BsfmService {
 			} else {
 				logger.error("Requested Bsfm profile is unavailable.");         //
 			}
+		} catch (NotFoundException ex) {
+			logger.error("Not Found Error: "+ex.getLocalizedMessage());
+			throw new NotFoundException(ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
 			logger.error("An error occured in line {}: {}", Thread.currentThread().getStackTrace()[1].getLineNumber(), ex.getMessage());
@@ -587,7 +608,7 @@ public class BsfmServiceImpl implements BsfmService {
 		}
 		logger.info("final target value: " + target);             //
 		deleteProfileResponse.setStatus(target);
-		return deleteProfileResponse;
+		return ResponseEntity.ok(deleteProfileResponse);
 	}
 /**
  *  Converts a string containing hex values of Unicode to Unicode characters.
@@ -642,7 +663,8 @@ public class BsfmServiceImpl implements BsfmService {
  */
 	public Map<Integer, String> listCountries() {
 		Map<Integer, String> countries = new HashMap<Integer, String>();
-		for (NetworkEntry entry : GlobalVars.NetworkEntries.values()) {
+		List<NetworkEntry> networkEntries = this.networkRepository.findAll();
+		for (NetworkEntry entry : networkEntries) {
 			countries.put(entry.getId(), entry.getCountry() + "-" + entry.getOperator());
 		}
 		return countries;
@@ -693,7 +715,7 @@ public class BsfmServiceImpl implements BsfmService {
  * Retrieves a list of Bsfm profiles for the specified user.
  */
 	@Override
-	public List<Bsfm> showBsfmProfile(String username) {
+	public ResponseEntity<List<Bsfm>> showBsfmProfile(String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -706,7 +728,7 @@ public class BsfmServiceImpl implements BsfmService {
 		}
 
 			if (menuAccessEntryRepository.findById(user.getId()).get().isBsfm()) {
-				List<Bsfm> list;
+				List<Bsfm> list = null;
 				if (Access.isAuthorized(user.getRole(),"isAuthorizedAdmin")) {
 					list = bsfmRepo.findByMasterIdOrderByPriority(user.getSystemId());
 				} else {
@@ -715,20 +737,21 @@ public class BsfmServiceImpl implements BsfmService {
 
 				if (!list.isEmpty()) {
 					 logger.info("Bsfm profiles listed successfully for user: {}", username);       //
-					return list;
+					return ResponseEntity.ok(list);
 				} else {
 					  logger.warn("No Bsfm profiles available for user: {}", username);       //
+					  return ResponseEntity.ok(Collections.emptyList()); // Return an empty list if no data is found
 				}
 			} else {
 				throw new InternalServerException("Invalid request for user without Bsfm access.");
 			}
-		return Collections.emptyList(); // Return an empty list if no data is found
 	}
 /**
  * Updates a Bsfm profile based on the provided form data and the user's authorization.
  */
 	@Override
-	public String updateBsfmProfil(BsfmFilterFrom bsfmForm, String username) {
+	@Transactional
+	public ResponseEntity<String> updateBsfmProfile(BsfmFilterFrom bsfmForm, String username) {
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
@@ -743,6 +766,7 @@ public class BsfmServiceImpl implements BsfmService {
 		String target = IConstants.FAILURE_KEY;
 		String systemid = user.getSystemId();
 		logger.info(systemid + "[" + user.getRole() + "] Update Spam Profile: " + bsfmForm.getProfilename());
+		
 		Bsfm bdto = new Bsfm();
 		BeanUtils.copyProperties(bsfmForm, bdto);
 		boolean proceed = true;
@@ -777,8 +801,7 @@ public class BsfmServiceImpl implements BsfmService {
 					try {
 						encoded_content += UTF16(content_token) + ",";
 					} catch (Exception e) {
-						logger.error(systemid + "[" + user.getRole() + "]  [" + content_token + "]", e);
-						logger.error("An error occured in line {}: {}", Thread.currentThread().getStackTrace()[1].getLineNumber(), e.getMessage());
+						logger.error(systemid + "[" + user.getRole() + "]  [" + content_token + "]", e.getMessage());
 						throw new InternalServerException("Error: "+e.getLocalizedMessage());
 					}
 				}
@@ -817,8 +840,15 @@ public class BsfmServiceImpl implements BsfmService {
 			logger.error("No user selected for the update.");  
 			throw new InternalServerException("No user selected for the update.");//
 		}
-		return target;
+		return new ResponseEntity<String>("Bsfm profile updated successfully!",HttpStatus.CREATED);
 	}
+	
+	// Method to check if the profilename already exists for a different record
+	private boolean profileAlreadyExists(String profilename, int currentId) {
+	    Optional<Bsfm> existingProfile = bsfmRepo.findByProfilenameAndIdNot(profilename, currentId);
+	    return existingProfile.isPresent();
+	}
+	
 /**
  * Updates the Bsfm profile in the repository.
  * @param bdto
@@ -826,18 +856,57 @@ public class BsfmServiceImpl implements BsfmService {
  */
 	private boolean updatedBsfmProfile(Bsfm bdto) {
 		try {
-			bsfmRepo.save(bdto);
-			return true;
+			Bsfm update = bsfmRepo.findById(bdto.getId()).get();
+			if (update!=null) {
+	            // Check if the profilename already exists before updating
+	            if (profileAlreadyExists(bdto.getProfilename(), bdto.getId())) {
+	                logger.error("Duplicate Bsfm Profile with profilename: " + bdto.getProfilename());
+	                throw new InternalServerException("Duplicate Bsfm Profile with profilename: " + bdto.getProfilename());
+	            } else {
+	                // Update the existing record
+	            	update.setProfilename(bdto.getProfilename());
+	            	update.setUsername(bdto.getUsername());
+	            	update.setContent(bdto.getContent());
+	            	update.setSmsc(bdto.getSmsc());
+	            	update.setPrefixes(bdto.getPrefixes());
+	            	update.setSourceid(bdto.getSourceid());
+	            	update.setActive(bdto.isActive());
+	            	update.setReverse(bdto.isReverse());
+	            	update.setReroute(bdto.getReroute());
+	            	update.setSchedule(bdto.isSchedule());
+	            	update.setDayTime(bdto.getDayTime());
+	            	update.setActiveOnScheduleTime(bdto.isActiveOnScheduleTime());
+	            	update.setSenderType(bdto.getSenderType());
+	            	update.setForceSenderId(bdto.getForceSenderId());
+	            	update.setRerouteGroupId(bdto.getRerouteGroupId());
+	            	update.setMsgLength(bdto.getMsgLength());
+	            	update.setLengthOpr(bdto.getLengthOpr());
+	            	update.setNetworks(bdto.getNetworks());
+	            	update.setEditBy(bdto.getEditBy());
+	                bsfmRepo.save(update);
+	                return true;
+	            }
+	        } else {
+	            logger.error("No Bsfm Profile exists with Id: " + bdto.getId());
+	            throw new NoSuchElementException("No Bsfm Profile exists with Id: " + bdto.getId());
+	        }
+			
+		} catch (NoSuchElementException e) {
+			logger.error("Failed to update Bsfm Profile. "+e.getLocalizedMessage());            //
+			throw new NotFoundException("No Bsfm Profile exists with Id: " + bdto.getId());
+		} catch (InternalServerException e) {
+			logger.error("Failed to update Bsfm Profile. "+ e.getLocalizedMessage());            //
+			throw new InternalServerException(e.getMessage());
 		} catch (Exception e) {
-			 logger.error("Failed to update Bsfm Profile.", e);            //
+			logger.error("Failed to update Bsfm Profile.", e);            //
 			return false;
-		}
+		}   
 	}
 /**
  * Deletes the Bsfm profile based on the provided filter parameters.
  */
 	@Override
-	public String delete(String username, BsfmFilterFrom bsfmFilterFrom) {
+	public ResponseEntity<String> delete(String username, String profilename) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -850,13 +919,10 @@ public class BsfmServiceImpl implements BsfmService {
 		}
 		String target = IConstants.FAILURE_KEY;
 		logger.info("Delete request by username: "+username);
-		Bsfm bdto = new Bsfm();
-		BeanUtils.copyProperties(bsfmFilterFrom, bdto);
-		String profileName = bdto.getProfilename();
-		boolean isDeleted = deleteBsfmActiveProfile(profileName);
+		boolean isDeleted = deleteBsfmActiveProfile(profilename);
 		logger.info("isDeleted value: " + isDeleted);
 		if (isDeleted) {
-			logger.info("Spam Profile deleted successfully ");
+			logger.info("Spam Profile deleted successfully!");
 			target = IConstants.SUCCESS_KEY;
 			String bsfm_flag = MultiUtility.readFlag(Constants.BSFM_FLAG_FILE);
 			if (bsfm_flag != null && bsfm_flag.equalsIgnoreCase("100")) {
@@ -865,10 +931,10 @@ public class BsfmServiceImpl implements BsfmService {
 		} else {
 			logger.error("Failed to delete Spam Profile");
 			target = IConstants.FAILURE_KEY;
-			logger.error("An error occured in line {}: {}", Thread.currentThread().getStackTrace()[1].getLineNumber());
-			throw new InternalServerException("Error while deleting the spam profile");
+			logger.error("An error occured while deleting the spam profile");
+			throw new InternalServerException("Unable to delete the spam profile name: "+profilename);
 		}
-		return target;
+		return ResponseEntity.ok("Spam Profile Deleted Successfully!");
 	}
 /**
  * 
@@ -890,7 +956,7 @@ public class BsfmServiceImpl implements BsfmService {
  * Updates the Bsfm profile flag based on the provided information.
  */
 	@Override
-	public String updateBsfmProfileFlag(String username, BsfmFilterFrom filterFrom) {
+	public ResponseEntity<String> updateBsfmProfileFlag(String username, String flag) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -905,8 +971,7 @@ public class BsfmServiceImpl implements BsfmService {
 		String target = IConstants.FAILURE_KEY;
 		// System.err.println("inside of the action class ::::" + bdto.getFlagValue());
 		String hostConfig = IConstants.CAAS_FLAG_DIR;
-		String flagValue = filterFrom.getFlag();
-		String text = "FLAG = " + flagValue;
+		String text = "FLAG = " + flag;
 		try {
 			File file = new File(hostConfig + "BSFM.flag");
 			Writer output = null;
@@ -924,8 +989,7 @@ public class BsfmServiceImpl implements BsfmService {
 		if (target.equalsIgnoreCase(IConstants.FAILURE_KEY)) {
 			logger.error("Flag value change: Failure");
 		}
-
-		return target;
+		return ResponseEntity.ok("Flag Value Change: "+target);
 	}
 
 }
