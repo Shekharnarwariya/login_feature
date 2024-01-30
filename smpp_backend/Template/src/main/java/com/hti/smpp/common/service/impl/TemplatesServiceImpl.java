@@ -1,5 +1,7 @@
 package com.hti.smpp.common.service.impl;
 
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -76,6 +78,9 @@ public class TemplatesServiceImpl implements TemplatesService {
 			template.setMasterId(user.getSystemId());
 		}
 		template.setTitle(Converter.UTF16(request.getTitle()));
+		// Set createdOn field automatically
+		template.setCreatedOn(new Date());
+
 		TemplatesDTO savedTemplate = null;
 		try {
 			savedTemplate = templatesRepository.save(template);
@@ -144,8 +149,9 @@ public class TemplatesServiceImpl implements TemplatesService {
 	}
 
 	// Method for retrieving all templates
+	@Transactional
 	@Override
-	public ResponseEntity<?> getAllTemplates(String username) {
+	public ResponseEntity<?> getAllTemplates(String username, LocalDate fromDate, LocalDate toDate) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -164,25 +170,32 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 		List<TemplatesDTO> templates = null;
 		try {
-			templates = (List<TemplatesDTO>) templatesRepository.findByMasterId(system_id);
+			if (fromDate != null && toDate != null) {
+				templates = templatesRepository.findByMasterIdAndCreatedOnBetween(system_id, fromDate, toDate);
+			} else {
+				templates = templatesRepository.findByMasterId(system_id);
+			}
+
 		} catch (Exception e) {
 			logger.error("Error processing templates: " + e.toString());
 			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.TEMPLATE_NOT_FOUND)
 					+ "for system id: " + system_id);
 		}
-		templates.forEach(template -> {
-			if (template.getMessage() != null && !template.getMessage().isEmpty()) {
-				template.setMessage(Converter.hexCodePointsToCharMsg(template.getMessage()));
-			}
-			if (template.getTitle() != null && !template.getTitle().isEmpty()) {
-				template.setTitle(Converter.hexCodePointsToCharMsg(template.getTitle()));
-			}
-		});
 
 		if (!templates.stream().map(this::mapToResponse).collect(Collectors.toList()).isEmpty()
 				&& templates.stream().map(this::mapToResponse).collect(Collectors.toList()) != null) {
+			List<TemplatesResponse> collect = templates.stream().map(this::mapToResponse).collect(Collectors.toList());
+			collect.forEach(template -> {
+				if (template.getMessage() != null && !template.getMessage().isEmpty()) {
+					template.setMessage(Converter.hexCodePointsToCharMsg(template.getMessage()));
+				}
+				if (template.getTitle() != null && !template.getTitle().isEmpty()) {
+					template.setTitle(Converter.hexCodePointsToCharMsg(template.getTitle()));
+				}
+			});
+
 			logger.info("Get all templates request successful for userId: " + system_id);
-			return ResponseEntity.ok(templates.stream().map(this::mapToResponse).collect(Collectors.toList()));
+			return ResponseEntity.ok(collect);
 		} else {
 			logger.error("Error Processing Request for Get All Templates.");
 			return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
@@ -217,6 +230,10 @@ public class TemplatesServiceImpl implements TemplatesService {
 			template.setMessage(Converter.UTF16(request.getMessage()));
 			// template.setMasterId(request.getMasterId());
 			template.setTitle(Converter.UTF16(request.getTitle()));
+
+			// Set updatedOn field automatically
+			template.setUpdatedOn(new Date());
+
 			updatedTemplate = templatesRepository.save(template);
 			if (updatedTemplate.getMessage() != null && !updatedTemplate.getMessage().isEmpty()) {
 				updatedTemplate.setMessage(Converter.hexCodePointsToCharMsg(updatedTemplate.getMessage()));
