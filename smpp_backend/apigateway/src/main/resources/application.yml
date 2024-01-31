@@ -1,14 +1,14 @@
 server:
   port: 9090
-  ssl:
-    key-alias: spring-https
-    key-store: classpath:smpp.jks
-    key-store-type: JKS
-    key-password: smpp6263
-    key-store-password: smpp6263
-    trust-store: classpath:smpp.jks
-    trust-store-type: JKS
-    trust-store-password: smpp6263
+  #ssl:
+   # key-alias: spring-https
+    #key-store: classpath:smpp.jks
+    #key-store-type: JKS
+    #key-password: smpp6263
+    #key-store-password: smpp6263
+    #trust-store: classpath:smpp.jks
+    #trust-store-type: JKS
+    #trust-store-password: smpp6263
 
 spring:
   application:
