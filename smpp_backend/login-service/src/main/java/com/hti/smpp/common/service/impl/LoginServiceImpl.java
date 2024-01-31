@@ -129,7 +129,7 @@ public class LoginServiceImpl implements LoginService {
 			if (!userEntryRepository.existsBySystemId(username)) {
 				logger.error(messageResourceBundle.getLogMessage("auth.failed.userNotFound"), username);
 				throw new AuthenticationExceptionFailed(
-						messageResourceBundle.getMessage(ConstantMessages.AUTHENTICATION_FAILED_USERNAME));
+						messageResourceBundle.getExMessage(ConstantMessages.AUTHENTICATION_FAILED_USERNAME));
 			}
 
 			Authentication authentication = authenticationManager
@@ -151,13 +151,13 @@ public class LoginServiceImpl implements LoginService {
 		} catch (BadCredentialsException e) {
 			logger.error(messageResourceBundle.getLogMessage("auth.failed.password"), username, e.getMessage());
 			throw new AuthenticationExceptionFailed(
-					messageResourceBundle.getMessage(ConstantMessages.AUTHENTICATION_FAILED_PASSWORD));
+					messageResourceBundle.getExMessage(ConstantMessages.AUTHENTICATION_FAILED_PASSWORD));
 		} catch (AuthenticationExceptionFailed e) {
 			logger.error(messageResourceBundle.getLogMessage("auth.failed.userNotFound"), username, e.getMessage());
 			throw new AuthenticationExceptionFailed(e.getMessage());
 		} catch (Exception e) {
 			logger.error(messageResourceBundle.getLogMessage("internal.server.error"), e.getMessage());
-			throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
 		}
 	}
 
@@ -176,8 +176,8 @@ public class LoginServiceImpl implements LoginService {
 
 			// Use map to simplify getting profession entry
 			ProfessionEntry professionEntry = professionEntryRepository.findById(userEntry.getId())
-					.orElseThrow(() -> new NotFoundException(
-							messageResourceBundle.getMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
+					.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
+
 			ProfileResponse profileResponse = new ProfileResponse();
 			profileResponse.setUserName(userEntry.getSystemId());
 			profileResponse.setBalance(String.valueOf(balanceEntry.getWalletAmount()));
@@ -191,7 +191,7 @@ public class LoginServiceImpl implements LoginService {
 
 			return ResponseEntity.ok(profileResponse);
 		} else {
-			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
 
@@ -234,7 +234,7 @@ public class LoginServiceImpl implements LoginService {
 
 			return ResponseEntity.ok("User registered successfully!");
 		} catch (Exception e) {
-			throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
 		}
 	}
 
@@ -251,8 +251,7 @@ public class LoginServiceImpl implements LoginService {
 			UserRole userRole = UserRole.valueOf(strRoles);
 			entry.setRole(userRole.name());
 		} catch (IllegalArgumentException e) {
-			throw new NotFoundException(
-					messageResourceBundle.getMessage(ConstantMessages.ROLE_NOT_FOUND_ERROR + strRoles));
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ROLE_NOT_FOUND_ERROR + strRoles));
 		}
 		entry.setAccessCountry(String.join(",", signUpRequest.getAccessCountries()));
 		entry.setAccessIp(signUpRequest.getAccessIp());
@@ -308,15 +307,15 @@ public class LoginServiceImpl implements LoginService {
 					return ResponseEntity.ok("OTP validation successful. Please proceed...........");
 				} else {
 					// OTP has expired
-					throw new InvalidOtpException(messageResourceBundle.getMessage(ConstantMessages.OTP_EXPIRED));
+					throw new InvalidOtpException(messageResourceBundle.getExMessage(ConstantMessages.OTP_EXPIRED));
 				}
 			} else {
 				// Invalid OTP
-				throw new InvalidOtpException(messageResourceBundle.getMessage(ConstantMessages.INVALID_OTP));
+				throw new InvalidOtpException(messageResourceBundle.getExMessage(ConstantMessages.INVALID_OTP));
 			}
 		} else {
 			// User not found
-			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
 
@@ -328,12 +327,12 @@ public class LoginServiceImpl implements LoginService {
 	public ResponseEntity<?> forgotPassword(String newPassword, String username) {
 		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
 		if (userOptional.isEmpty()) {
-			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 		}
 		// Update User Password
 		UserEntry user = userOptional.get();
-		ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId()).orElseThrow(
-				() -> new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
+		ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
 
 		String updateQuery = "UPDATE usermaster SET password = ?, editOn = CURRENT_TIMESTAMP, editby = ? WHERE system_id = ?";
 		jdbcTemplate.update(updateQuery, new Object[] { encoder.encode(newPassword), username, username },
@@ -385,8 +384,7 @@ public class LoginServiceImpl implements LoginService {
 				}
 
 				ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
-						.orElseThrow(() -> new NotFoundException(
-								messageResourceBundle.getMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
+						.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
 				// Send Email with OTP
 				emailSender.sendEmail(professionEntry.getDomainEmail(), Constant.OTP_SUBJECT, Constant.TEMPLATE_PATH,
 						emailSender.createSourceMap(Constant.MESSAGE_FOR_OTP, generateOTP,
@@ -394,13 +392,13 @@ public class LoginServiceImpl implements LoginService {
 								professionEntry.getFirstName() + " " + professionEntry.getLastName()));
 				return ResponseEntity.ok("OTP Sent Successfully!");
 			} else {
-				throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 			}
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
 			// Handle exceptions, log or return appropriate error response
-			throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
 
@@ -427,8 +425,7 @@ public class LoginServiceImpl implements LoginService {
 						new PasswordConverter().convertToDatabaseColumn(passwordUpdateRequest.getNewPassword()),
 						LocalDateTime.now()));
 				ProfessionEntry professionEntry = professionEntryRepository.findById(userEntry.getId())
-						.orElseThrow(() -> new NotFoundException(
-								messageResourceBundle.getMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
+						.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
 				if (EmailValidator.isEmailValid(professionEntry.getDomainEmail())) {
 					emailSender.sendEmail(professionEntry.getDomainEmail(), Constant.PASSWORD_UPDATE_SUBJECT,
 							Constant.TEMPLATE_PATH,
@@ -439,10 +436,10 @@ public class LoginServiceImpl implements LoginService {
 				return ResponseEntity.ok("Password Updated Successfully!");
 			} else {
 				throw new InvalidPropertyException(
-						messageResourceBundle.getMessage(ConstantMessages.INVALID_OLD_PASSWORD));
+						messageResourceBundle.getExMessage(ConstantMessages.INVALID_OLD_PASSWORD));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
 
@@ -455,8 +452,7 @@ public class LoginServiceImpl implements LoginService {
 		if (optionalUser.isPresent()) {
 			UserEntry user = optionalUser.get();
 			ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
-					.orElseThrow(() -> new NotFoundException(
-							messageResourceBundle.getMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
+					.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
 			updateUserData(user, profileUpdateRequest, professionEntry);
 			user.setEditOn(LocalDateTime.now() + "");
 			user.setEditBy(username);
@@ -464,7 +460,7 @@ public class LoginServiceImpl implements LoginService {
 			professionEntryRepository.save(professionEntry);
 			return ResponseEntity.ok("Profile updated successfully");
 		} else {
-			throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
 

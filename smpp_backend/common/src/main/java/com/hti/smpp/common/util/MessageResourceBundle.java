@@ -16,13 +16,28 @@ public class MessageResourceBundle {
 		this.messageSource = messageSource;
 	}
 
-	public String getMessage(String key) {
-		Locale locale = Locale.getDefault();
+	public String getExMessage(String key) {
+		Locale locale = new Locale("ex", "US");
 		return messageSource.getMessage(key, null, locale);
+	}
+	
+	public String getExMessage(String key,Object[] args) {
+		Locale locale = new Locale("ex", "US");
+		return messageSource.getMessage(key, args, locale);
 	}
 
 	public String getLogMessage(String key) {
 		Locale locale = new Locale("log", "US");
 		return messageSource.getMessage(key, null, locale);
+	}
+	
+	public String getMessage(String key) {
+		Locale locale = Locale.getDefault();
+		return messageSource.getMessage(key, null, locale);
+	}
+	
+	public String getMessage(String key, Object[] args) {
+		Locale locale = Locale.getDefault();
+		return messageSource.getMessage(key, args, locale);
 	}
 }

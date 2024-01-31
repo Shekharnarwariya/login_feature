@@ -51,12 +51,30 @@ public class ConstantMessages {
     public static final String DELETE_SCHEDULE_FILE_EXCEPTION = "delete.schedule.file.exception.message";
     public static final String BALANCE_INFO_NOT_FOUND_EXCEPTION = "balance.info.not.found.exception.message";
     
+    //bsfm exception message
+    public static final String EXCEPTION_MSG = "bsfm.msg.error";
+    public static final String DUPLICATE_MSG = "bsfm.duplicate.error";
+    public static final String ADD_EXCEPTION = "bsfm.add.msg.error";
+    public static final String PROFILE_NOT_FOUND = "bsfm.profile.notfound";
+    public static final String INVALID_BSFM_USER = "bsfm.user.invalid";
+    public static final String BSFM_UPDATE_FAILURE="bsfm.update.failed";
+    public static final String BSFM_NO_USER_SELECTED = "bsfm.no.user";
+    public static final String BSFM_DUPLICATE_PROFILE="bsfm.duplicate.profilename";
+    public static final String BSFM_DELETE_FAILED="bsfm.delete.failed";
     
+    //bsfm success message
+    public static final String ADD_SUCCESS_BSFM = "bsfm.success.add";
+    public static final String UPDATE_SUCCESS_BSFM = "bsfm.success.update";
+    public static final String DELETE_SUCCESS_BSFM="bsfm.success.delete";
+    public static final String UPDATE_SUCCESS_BSFM_FLAG="bsfm.success.updateFlag";
+     
+    //sales exception message
+    public static final String SALES_USER_EXIST = "sales.user.exist";
+    public static final String SALES_ADD_FAILED = "sales.add.failure";
+    public static final String SALES_DUPLICATE_USER = "sales.warn.duplicateUsername";
     
-    
-    
-    
-    
+    //sales success message
+    public static final String SALES_ADD_SUCCESS = "sales.success.add";
     
     
 }

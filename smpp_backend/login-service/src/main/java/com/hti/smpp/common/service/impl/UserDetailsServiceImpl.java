@@ -29,7 +29,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		User user = userEntryRepository.getUsers(username)
 				.orElseThrow(() -> new UsernameNotFoundException((
-						messageResourceBundle.getMessage(ConstantMessages.AUTHENTICATION_FAILED_USERNAME + username))));
+						messageResourceBundle.getExMessage(ConstantMessages.AUTHENTICATION_FAILED_USERNAME + username))));
 		return UserDetailsImpl.build(user);
 	}
 
