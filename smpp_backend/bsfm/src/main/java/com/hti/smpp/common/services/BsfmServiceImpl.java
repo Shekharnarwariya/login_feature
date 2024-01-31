@@ -52,9 +52,11 @@ import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.user.repository.WebMenuAccessEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Constants;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 import com.hti.smpp.common.util.MultiUtility;
 
 import jakarta.transaction.Transactional;
@@ -86,6 +88,9 @@ public class BsfmServiceImpl implements BsfmService {
 	
 	@Autowired
 	private WebMasterEntryRepository webmasterRepo;
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 /**
  * Adds a new Bsfm profile based on the provided filter and username.
  */
@@ -97,15 +102,15 @@ public class BsfmServiceImpl implements BsfmService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystemAndAdmin")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 	
 		String target = IConstants.FAILURE_KEY;
 		String systemid = user.getSystemId();
-		logger.info(systemid + "[" + user.getRole() + "] Add Spam Profile: " + bsfmForm.getProfilename());
+		logger.info(messageResourceBundle.getLogMessage("bsfm.add.msg"),systemid,user.getRole(),bsfmForm.getProfilename());
 		Bsfm bdto = new Bsfm();
 		BeanUtils.copyProperties(bsfmForm, bdto);
 		boolean proceed = true;
@@ -113,7 +118,7 @@ public class BsfmServiceImpl implements BsfmService {
 			if (bsfmForm.getUsername() != null && bsfmForm.getUsername().length > 0) {
 				bdto.setUsername(String.join(",", bsfmForm.getUsername()));
 			} else {
-				logger.error(systemid + "[" + user.getRole() + "]  No User Selected.");
+				logger.error(messageResourceBundle.getLogMessage("bsfm.noUser"),systemid,user.getRole());
 				proceed = false;
 			}
 		} else {
@@ -155,8 +160,8 @@ public class BsfmServiceImpl implements BsfmService {
 					try {
 						encoded_content += UTF16(content_token) + ",";
 					} catch (Exception e) {
-						logger.error(e.getLocalizedMessage());
-						throw new InternalServerException(e.getLocalizedMessage());
+						logger.error(messageResourceBundle.getLogMessage("bsfm.msg.error"),e.getLocalizedMessage());
+						throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.EXCEPTION_MSG, new Object[] {e.getLocalizedMessage()}));
 					}
 				}
 				if (encoded_content.length() > 0) {
@@ -178,25 +183,25 @@ public class BsfmServiceImpl implements BsfmService {
 				bdto.setPriority(++priority);
 				bdto.setEditBy(systemid);
 				if (addNewBsfmProfile(bdto)) {
-					logger.info("Bsfm Profile added successfully: " + bsfmForm.getProfilename());
+					logger.info(messageResourceBundle.getLogMessage("bsfm.add.success"),bsfmForm.getProfilename());
 					target = IConstants.SUCCESS_KEY;
 					String bsfm_flag = MultiUtility.readFlag(Constants.BSFM_FLAG_FILE);
 					if (bsfm_flag != null && bsfm_flag.equalsIgnoreCase("100")) {
 						MultiUtility.changeFlag(Constants.BSFM_FLAG_FILE, "707");
 					}
 				} else {
-					logger.error("Failed to add Bsfm Profile: " + bsfmForm.getProfilename()+". Duplicate Entry Found!");
-					throw new InternalServerException("Failed to add Bsfm Profile: " + bsfmForm.getProfilename()+". Duplicate Entry Found!");
+					logger.error(messageResourceBundle.getLogMessage("bsfm.failed.duplicate"),bsfmForm.getProfilename());
+					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.DUPLICATE_MSG, new Object[] {bsfmForm.getProfilename()}));
 				}
 			} catch (Exception ex) {
-				logger.error("Failed to add Bsfm Profile: " + bsfmForm.getProfilename(), ex.toString());
-				throw new InternalServerException("Error while adding profile. Msg: "+ex.getLocalizedMessage());
+				logger.error(messageResourceBundle.getLogMessage("bsfm.add.failed"),bsfmForm.getProfilename());
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADD_EXCEPTION, new Object[] {ex.getLocalizedMessage()}));
 			}
 		} else {
-			logger.error("Failed to add Bsfm Profile: " + bsfmForm.getProfilename() + ". Rollback.");
-			throw new InternalServerException("Error while processing the request.");
+			logger.error(messageResourceBundle.getLogMessage("bsfm.add.failed"),bsfmForm.getProfilename());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADD_EXCEPTION, new Object[] {bsfmForm.getProfilename()}));
 		}
-		return new ResponseEntity<String>("Bsfm Profile added successfully: " + bsfmForm.getProfilename(), HttpStatus.CREATED);
+		return new ResponseEntity<String>(messageResourceBundle.getMessage(ConstantMessages.ADD_SUCCESS_BSFM, new Object[] {bsfmForm.getProfilename()}), HttpStatus.CREATED);
 	}
 /**
  * Adds a new Bsfm profile to the database.
@@ -275,13 +280,12 @@ public class BsfmServiceImpl implements BsfmService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystemAndAdmin")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
-
-		logger.info("Checked Request By username: "+username+" userId: "+user.getId());
+		logger.info(messageResourceBundle.getLogMessage("bsfm.req.check"),username,user.getId());
 		BSFMResponse bSFMResponse = new BSFMResponse();
 		String systemId = user.getSystemId();
 		String target = IConstants.FAILURE_KEY;
@@ -292,8 +296,8 @@ public class BsfmServiceImpl implements BsfmService {
 		try {
 			networkmap = getDistinctCountry();
 		} catch (SQLException e) {
-			logger.error("An error occured in line {}: {}", Thread.currentThread().getStackTrace()[1].getLineNumber(), e.getMessage());
-			throw new InternalServerException("Error: "+e.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("bsfm.msg.error"),e.getLocalizedMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.EXCEPTION_MSG, new Object[] {e.getLocalizedMessage()}));
 		}
 		Map<Integer, String> operatormap = new HashMap<Integer, String>();
 		bSFMResponse.setNetworkmap(networkmap);
@@ -319,8 +323,8 @@ public class BsfmServiceImpl implements BsfmService {
 			try {
 				networkmap = getDistinctCountry();
 			} catch (SQLException e) {
-				logger.error("An error occured in line {}: {}", Thread.currentThread().getStackTrace()[1].getLineNumber(), e.getMessage());
-				throw new InternalServerException("Error: "+e.getLocalizedMessage());
+				logger.error(messageResourceBundle.getLogMessage("bsfm.msg.error"),e.getLocalizedMessage());
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.EXCEPTION_MSG, new Object[] {e.getLocalizedMessage()}));
 			}
 			Map<Integer, String> operatormap1 = new HashMap<Integer, String>();
 			bSFMResponse.setNetworkmap(networkmap);
@@ -349,7 +353,7 @@ public class BsfmServiceImpl implements BsfmService {
 				countries.put((String) result[0], (String) result[1]);
 			}
 		} catch (Exception e) {
-			logger.error(e.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("bsfm.msg.error"),e.getLocalizedMessage());
 			throw new SQLException("Error retrieving distinct countries. Msg: "+e.getLocalizedMessage());
 		}
 		return countries;
@@ -444,21 +448,21 @@ public class BsfmServiceImpl implements BsfmService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystemAndAdmin")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		String target = IConstants.FAILURE_KEY;
 		String systemid = user.getSystemId();
-		logger.info(user.getRole() + " Edit Profile Request: " + id);
+		logger.info(messageResourceBundle.getLogMessage("bsfm.req.edit"),user.getRole(),id);
 		try {
 			Optional<Bsfm> bsfmOptional = bsfmRepo.findById(id);
 			Bsfm bsfm = null;
 			if (bsfmOptional.isPresent()) {
 				bsfm = bsfmOptional.get();
 			}else {
-				throw new NotFoundException("No Bsfm Profile Found With Id: "+id);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PROFILE_NOT_FOUND, new Object[] {id}));
 			}
 			if (bsfm != null) {
 				if (bsfm.getSenderType() != null) {
@@ -507,7 +511,7 @@ public class BsfmServiceImpl implements BsfmService {
 								existNetworks.put(network_id, networkmap.remove(network_id));
 							}
 						} catch (Exception e) {
-							logger.error(bsfm.getId() + "[" + bsfm.getProfilename() + "] Invalid Network: " + network);
+							logger.error(messageResourceBundle.getLogMessage("bsfm.invalid.network"),bsfm.getId(),bsfm.getProfilename(),network);
 						}
 					}
 				}
@@ -528,12 +532,12 @@ public class BsfmServiceImpl implements BsfmService {
 				} else {
 					bsfm.setContent(null);
 				}
-				logger.info(bsfm.getProfilename() + " isSchedule: " + bsfm.isSchedule());
+				logger.info(messageResourceBundle.getLogMessage("bsfm.is.scheduled"),bsfm.getProfilename(),bsfm.isSchedule());
 				if (bsfm.isSchedule()) {
 					List<String[]> daytimelist = new ArrayList<String[]>();
 					for (String day_time_token : bsfm.getDayTime().split(",")) {
 						if (day_time_token != null && day_time_token.length() == 19) {
-							logger.info(bsfm.getProfilename() + " day_time_token: " + day_time_token);
+							logger.info(messageResourceBundle.getLogMessage("bsfm.day.time"),bsfm.getProfilename(),day_time_token);
 							try {
 								int day = Integer.parseInt(day_time_token.substring(0, day_time_token.indexOf("F")));
 								String from = day_time_token.substring(day_time_token.indexOf("F") + 1,
@@ -542,7 +546,7 @@ public class BsfmServiceImpl implements BsfmService {
 										day_time_token.length());
 								String day_name = "Everyday";
 								if (day > 7) {
-									logger.error(bsfm.getId() + " Invalid Day: " + day);
+									logger.error(messageResourceBundle.getLogMessage("bsfm.invalid.day"),bsfm.getId(),day);
 									continue;
 								} else {
 									if (day == 1) {
@@ -565,11 +569,11 @@ public class BsfmServiceImpl implements BsfmService {
 								daytimelist.add(new String[] { day + "", day_name, from, to });
 								// daytimelist.add(day + " " + day_name + " " + from + " " + to);
 							} catch (Exception ex) {
-								logger.error(bsfm.getId() + " Invalid Schedule token: " + day_time_token, ex);
+								logger.error(messageResourceBundle.getLogMessage("bsfm.invalid.schToken"),bsfm.getId(),day_time_token);
 								continue;
 							}
 						} else {
-							logger.error(bsfm.getId() + " Invalid Schedule token: " + day_time_token);
+							logger.error(messageResourceBundle.getLogMessage("bsfm.invalid.schToken"),bsfm.getId(),day_time_token);
 							continue;
 						}
 					}
@@ -594,19 +598,14 @@ public class BsfmServiceImpl implements BsfmService {
 				deleteProfileResponse.setNetworkmap(networkmap);
 				deleteProfileResponse.setExistNetworks(existNetworks);
 				target = IConstants.SUCCESS_KEY;
-				logger.info("finished: " + target);
-			} else {
-				logger.error("Requested Bsfm profile is unavailable.");         //
 			}
 		} catch (NotFoundException ex) {
-			logger.error("Not Found Error: "+ex.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("bsfm.msg.error"),ex.getLocalizedMessage());
 			throw new NotFoundException(ex.getLocalizedMessage());
 		} catch (Exception ex) {
-			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
-			logger.error("An error occured in line {}: {}", Thread.currentThread().getStackTrace()[1].getLineNumber(), ex.getMessage());
-			throw new InternalServerException("Error: "+ex.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("bsfm.msg.error"),ex.getLocalizedMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.EXCEPTION_MSG, new Object[] {ex.getLocalizedMessage()}));
 		}
-		logger.info("final target value: " + target);             //
 		deleteProfileResponse.setStatus(target);
 		return ResponseEntity.ok(deleteProfileResponse);
 	}
@@ -721,10 +720,10 @@ public class BsfmServiceImpl implements BsfmService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystemAndAdmin")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 			if (menuAccessEntryRepository.findById(user.getId()).get().isBsfm()) {
@@ -736,14 +735,14 @@ public class BsfmServiceImpl implements BsfmService {
 				}
 
 				if (!list.isEmpty()) {
-					 logger.info("Bsfm profiles listed successfully for user: {}", username);       //
+					 logger.info(messageResourceBundle.getLogMessage("bsfm.show.success"), username);       //
 					return ResponseEntity.ok(list);
 				} else {
-					  logger.warn("No Bsfm profiles available for user: {}", username);       //
+					  logger.warn(messageResourceBundle.getLogMessage("bsfm.show.failed"), username);       //
 					  return ResponseEntity.ok(Collections.emptyList()); // Return an empty list if no data is found
 				}
 			} else {
-				throw new InternalServerException("Invalid request for user without Bsfm access.");
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INVALID_BSFM_USER));
 			}
 	}
 /**
@@ -758,15 +757,14 @@ public class BsfmServiceImpl implements BsfmService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystemAndAdmin")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		String target = IConstants.FAILURE_KEY;
 		String systemid = user.getSystemId();
-		logger.info(systemid + "[" + user.getRole() + "] Update Spam Profile: " + bsfmForm.getProfilename());
-		
+		logger.info(messageResourceBundle.getLogMessage("bsfm.update.profile"),systemid,user.getRole(),bsfmForm.getProfilename());
 		Bsfm bdto = new Bsfm();
 		BeanUtils.copyProperties(bsfmForm, bdto);
 		boolean proceed = true;
@@ -774,7 +772,7 @@ public class BsfmServiceImpl implements BsfmService {
 			if (bsfmForm.getUsername() != null && bsfmForm.getUsername().length > 0) {
 				bdto.setUsername(String.join(",", bsfmForm.getUsername()));
 			} else {
-				logger.error(systemid + "[" + user.getRole() + "]  No User Selected.");
+				logger.error(messageResourceBundle.getLogMessage("bsfm.noUser"),systemid,user.getRole());
 				proceed = false;
 			}
 		} else {
@@ -801,8 +799,8 @@ public class BsfmServiceImpl implements BsfmService {
 					try {
 						encoded_content += UTF16(content_token) + ",";
 					} catch (Exception e) {
-						logger.error(systemid + "[" + user.getRole() + "]  [" + content_token + "]", e.getMessage());
-						throw new InternalServerException("Error: "+e.getLocalizedMessage());
+						logger.error(messageResourceBundle.getLogMessage("bsfm.msg.error"),e.getLocalizedMessage());
+						throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.EXCEPTION_MSG, new Object[] {e.getLocalizedMessage()}));
 					}
 				}
 				if (encoded_content.length() > 0) {
@@ -819,28 +817,28 @@ public class BsfmServiceImpl implements BsfmService {
 			}
 			if (bdto.isSchedule()) {
 				if (bdto.getDayTime() == null || bdto.getDayTime().length() < 19) {
-					logger.info(bdto.getProfilename() + " Invalid DayTime Configured: " + bdto.getDayTime());
+					logger.warn(messageResourceBundle.getLogMessage("bsfm.invalid.daytime"),bdto.getProfilename(),bdto.getDayTime());
 					bdto.setSchedule(false);
 				}
 			}
 			bdto.setEditBy(systemid);
 			boolean isUpdated = updatedBsfmProfile(bdto);
 			if (isUpdated) {
-				logger.info("Spam Profile updated successfully: {}", bsfmForm.getProfilename());
+				logger.info(messageResourceBundle.getLogMessage("bsfm.update.success"),bsfmForm.getProfilename());
 				target = IConstants.SUCCESS_KEY;
 				String bsfm_flag = MultiUtility.readFlag(Constants.BSFM_FLAG_FILE);
 				if (bsfm_flag != null && bsfm_flag.equalsIgnoreCase("100")) {
 					MultiUtility.changeFlag(Constants.BSFM_FLAG_FILE, "707");
 				}
 			} else {
-				logger.error("Failed to update Spam Profile: {}", bsfmForm.getProfilename()); 
-				throw new InternalServerException("Failed to update Spam Profile: "+bsfmForm.getProfilename());//
+				logger.error(messageResourceBundle.getLogMessage("bsfm.update.failed"),bsfmForm.getProfilename());
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.BSFM_UPDATE_FAILURE, new Object[] {bsfmForm.getProfilename()}));//
 			}
 		} else {
-			logger.error("No user selected for the update.");  
-			throw new InternalServerException("No user selected for the update.");//
+			logger.error(messageResourceBundle.getLogMessage("bsfm.noUser"),systemid,user.getRole());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.BSFM_NO_USER_SELECTED));//
 		}
-		return new ResponseEntity<String>("Bsfm profile updated successfully!",HttpStatus.CREATED);
+		return new ResponseEntity<String>(messageResourceBundle.getMessage(ConstantMessages.UPDATE_SUCCESS_BSFM),HttpStatus.CREATED);
 	}
 	
 	// Method to check if the profilename already exists for a different record
@@ -860,8 +858,8 @@ public class BsfmServiceImpl implements BsfmService {
 			if (update!=null) {
 	            // Check if the profilename already exists before updating
 	            if (profileAlreadyExists(bdto.getProfilename(), bdto.getId())) {
-	                logger.error("Duplicate Bsfm Profile with profilename: " + bdto.getProfilename());
-	                throw new InternalServerException("Duplicate Bsfm Profile with profilename: " + bdto.getProfilename());
+	                logger.error(messageResourceBundle.getLogMessage("bsfm.duplicate.profilename"),bdto.getProfilename());
+	                throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.BSFM_DUPLICATE_PROFILE, new Object[] {bdto.getProfilename()}));
 	            } else {
 	                // Update the existing record
 	            	update.setProfilename(bdto.getProfilename());
@@ -887,18 +885,18 @@ public class BsfmServiceImpl implements BsfmService {
 	                return true;
 	            }
 	        } else {
-	            logger.error("No Bsfm Profile exists with Id: " + bdto.getId());
-	            throw new NoSuchElementException("No Bsfm Profile exists with Id: " + bdto.getId());
+	            logger.error(messageResourceBundle.getLogMessage("bsfm.noProfile.exist"),bdto.getId());
+	            throw new NoSuchElementException(messageResourceBundle.getExMessage(ConstantMessages.PROFILE_NOT_FOUND, new Object[] {bdto.getId()}));
 	        }
 			
 		} catch (NoSuchElementException e) {
-			logger.error("Failed to update Bsfm Profile. "+e.getLocalizedMessage());            //
-			throw new NotFoundException("No Bsfm Profile exists with Id: " + bdto.getId());
+			logger.error(messageResourceBundle.getLogMessage("bsfm.noProfile.exist"),bdto.getId());          //
+			throw new NotFoundException(e.getMessage());
 		} catch (InternalServerException e) {
-			logger.error("Failed to update Bsfm Profile. "+ e.getLocalizedMessage());            //
-			throw new InternalServerException(e.getMessage());
+			logger.error(messageResourceBundle.getLogMessage("bsfm.update.failed"),bdto.getProfilename());           //
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.EXCEPTION_MSG, new Object[] {e.getMessage()}));
 		} catch (Exception e) {
-			logger.error("Failed to update Bsfm Profile.", e);            //
+			logger.error(messageResourceBundle.getLogMessage("bsfm.msg.error"));            //
 			return false;
 		}   
 	}
@@ -912,29 +910,28 @@ public class BsfmServiceImpl implements BsfmService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystemAndAdmin")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		String target = IConstants.FAILURE_KEY;
-		logger.info("Delete request by username: "+username);
+		logger.info(messageResourceBundle.getLogMessage("bsfm.req.delete"),username);
 		boolean isDeleted = deleteBsfmActiveProfile(profilename);
 		logger.info("isDeleted value: " + isDeleted);
 		if (isDeleted) {
-			logger.info("Spam Profile deleted successfully!");
+			logger.info(messageResourceBundle.getLogMessage("bsfm.delete.success"));
 			target = IConstants.SUCCESS_KEY;
 			String bsfm_flag = MultiUtility.readFlag(Constants.BSFM_FLAG_FILE);
 			if (bsfm_flag != null && bsfm_flag.equalsIgnoreCase("100")) {
 				MultiUtility.changeFlag(Constants.BSFM_FLAG_FILE, "707");
 			}
 		} else {
-			logger.error("Failed to delete Spam Profile");
+			logger.error(messageResourceBundle.getLogMessage("bsfm.delete.failed"));
 			target = IConstants.FAILURE_KEY;
-			logger.error("An error occured while deleting the spam profile");
-			throw new InternalServerException("Unable to delete the spam profile name: "+profilename);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.BSFM_DELETE_FAILED, new Object[] {profilename}));
 		}
-		return ResponseEntity.ok("Spam Profile Deleted Successfully!");
+		return ResponseEntity.ok(messageResourceBundle.getMessage(ConstantMessages.DELETE_SUCCESS_BSFM,new Object[] {profilename}));
 	}
 /**
  * 
@@ -948,7 +945,7 @@ public class BsfmServiceImpl implements BsfmService {
 
 			return count > 0;
 		} catch (Exception e) {
-			logger.error("Error deleting BsfmActiveProfile", e);
+			logger.error(messageResourceBundle.getLogMessage("bsfm.delete.error"),profileName);
 			return false;
 		}
 	}
@@ -962,12 +959,12 @@ public class BsfmServiceImpl implements BsfmService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystemAndAdmin")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}))  ;
 		}
-		logger.info("Update Bsfm profile flag requested by: "+username);
+		logger.info(messageResourceBundle.getLogMessage("bsfm.req.updateFlag"),username);
 		String target = IConstants.FAILURE_KEY;
 		// System.err.println("inside of the action class ::::" + bdto.getFlagValue());
 		String hostConfig = IConstants.CAAS_FLAG_DIR;
@@ -980,16 +977,16 @@ public class BsfmServiceImpl implements BsfmService {
 			output.close();
 			target = IConstants.SUCCESS_KEY;
 		} catch (Exception e) {
-			logger.error("An error occured in line {}: {}", Thread.currentThread().getStackTrace()[1].getLineNumber(), e.getMessage());
-			throw new InternalServerException("Error: "+e.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("bsfm.msg.error"),e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.EXCEPTION_MSG,new Object[] {e.getMessage()}));
 		}
 		if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY)) {
-			logger.info("Flag value change: Success");
+			logger.info(messageResourceBundle.getLogMessage("bsfm.updateFlag.success"));
 		}
 		if (target.equalsIgnoreCase(IConstants.FAILURE_KEY)) {
-			logger.error("Flag value change: Failure");
+			logger.error(messageResourceBundle.getLogMessage("bsfm.updateFlag.failed"));
 		}
-		return ResponseEntity.ok("Flag Value Change: "+target);
+		return ResponseEntity.ok(messageResourceBundle.getMessage(ConstantMessages.UPDATE_SUCCESS_BSFM_FLAG, new Object[] {target}));
 	}
 
 }

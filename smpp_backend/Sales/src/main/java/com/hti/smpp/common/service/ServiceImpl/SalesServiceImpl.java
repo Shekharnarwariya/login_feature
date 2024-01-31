@@ -27,8 +27,10 @@ import com.hti.smpp.common.service.SalesService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 @Service
 public class SalesServiceImpl implements SalesService {
@@ -40,6 +42,9 @@ public class SalesServiceImpl implements SalesService {
 
 	@Autowired
 	private UserEntryRepository userRepository;
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 
 	/**
 	 * Saves a sales entry based on the provided form data and username. Validates
@@ -60,23 +65,23 @@ public class SalesServiceImpl implements SalesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		String target = IConstants.FAILURE_KEY;
 		SalesEntry entry = new SalesEntry();
 
 		String systemId = user.getSystemId();
 
-		logger.info("Sales User [{}-{}] Add Requested By {} [{}]", salesEntryForm.getUsername(),
+		logger.info(messageResourceBundle.getLogMessage("sales.req.add"),salesEntryForm.getUsername(),
 				salesEntryForm.getRole(), systemId, user.getRole());
 		try {
 			BeanUtils.copyProperties(salesEntryForm, entry);
 			if (userRepository.existsBySystemId(entry.getUsername())) {
-				logger.error("Usermaster Entry Exists With same Username " + entry.getUsername());
-				throw new InternalServerException("Usermaster Entry Exists With same Username " + entry.getUsername());
+				logger.error(messageResourceBundle.getLogMessage("sales.warn.user"),entry.getUsername());
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SALES_USER_EXIST, new Object[] {entry.getUsername()}));
 			} else {
 				entry.setCreatedOn(LocalDate.now() + "");
 				SalesEntry sales = salesRepository.save(entry);
@@ -84,24 +89,22 @@ public class SalesServiceImpl implements SalesService {
 				if (id > 0) {
 					GlobalVars.ExecutiveEntryMap.put(id, entry);
 					target = IConstants.SUCCESS_KEY;
-					logger.info("Sales User Created With Id: " + id + ". Status: " + target);
+					logger.info(messageResourceBundle.getLogMessage("sales.add.success"),id,target);
 				} else {
-					logger.error("Unable to create Sales User: {}", entry.getUsername());
-					throw new InternalServerException("Unable to create Sales User");
+					logger.error(messageResourceBundle.getLogMessage("sales.add.failure"),entry.getUsername());
+					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SALES_ADD_FAILED));
 				}
 
 			}
 		} catch (DataIntegrityViolationException ex) {
-			ex.printStackTrace();
-			logger.error("Unexpected Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
-			throw new InternalServerException("Duplicate Entry For Username: "+entry.getUsername());
+			logger.error(messageResourceBundle.getLogMessage("sales.msg.error"),ex.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SALES_DUPLICATE_USER, new Object[] {entry.getUsername()}));
 		} catch (Exception ex) {
-			ex.printStackTrace();
-			logger.error("Unexpected Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
+			logger.error(messageResourceBundle.getLogMessage("sales.msg.error"),ex.getMessage());
 			throw new InternalServerException(ex.getLocalizedMessage());
 		}
 
-		return new ResponseEntity<String>("Sales Entry Saved Successfully", HttpStatus.CREATED);
+		return new ResponseEntity<String>(messageResourceBundle.getMessage(ConstantMessages.SALES_ADD_SUCCESS), HttpStatus.CREATED);
 	}
 
 	/**
@@ -121,10 +124,10 @@ public class SalesServiceImpl implements SalesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		String target = IConstants.FAILURE_KEY;
 		// Finding the user by system ID
@@ -178,10 +181,10 @@ public class SalesServiceImpl implements SalesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		logger.info("Delete Requested for Sale ID: " + id);
@@ -324,10 +327,10 @@ public class SalesServiceImpl implements SalesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		String target = IConstants.FAILURE_KEY;
@@ -342,7 +345,7 @@ public class SalesServiceImpl implements SalesService {
 					|| Access.isAuthorized(user.getRole(), "isAuthorizedAdmin")) {
 				salesList = listSellersUnderManager(masterId, "seller").values();
 			} else {
-				throw new NotFoundException("User not found with the provided username.");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 			}
 
 			if (salesList != null && !salesList.isEmpty()) {
@@ -384,10 +387,10 @@ public class SalesServiceImpl implements SalesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		String target = IConstants.FAILURE_KEY;
 		// Finding the user by system ID
@@ -446,10 +449,10 @@ public class SalesServiceImpl implements SalesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		String target = IConstants.SUCCESS_KEY;
 		// Finding the user by system ID
