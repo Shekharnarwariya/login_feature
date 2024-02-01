@@ -51,6 +51,15 @@ public class ConstantMessages {
     public static final String DELETE_SCHEDULE_FILE_EXCEPTION = "delete.schedule.file.exception.message";
     public static final String BALANCE_INFO_NOT_FOUND_EXCEPTION = "balance.info.not.found.exception.message";
     
+    //mobiledb exception message
+    public static final String INSUFFICIENT_DATA_VALUES = "exception.insufficientData.message";
+    public static final String INVALID_PROVIDED_ID = "exception.invalidId.message";
+    public static final String MISMATCH_COUNT_NUMBER = "exception.missMatchCountNo.message";
+    public static final String MOBILEDB_SMSCOUNT_OUTOFBOUND = "exception.mobiledb.smscount.message";
+    public static final String MOBILEDB_MISMATCH_SMSCOUNT = "exception.mobiledb.misMatchsmscount.message";
+    public static final String MOBILEDB_SUBAREA_ERROR = "exception.mobiledb.subAreaError.message";
+    public static final String MOBILEDB_AREAWISECOUNT_ERROR = "exception.mobiledb.areaWiseCount.message";
+    
     //bsfm exception message
     public static final String EXCEPTION_MSG = "bsfm.msg.error";
     public static final String DUPLICATE_MSG = "bsfm.duplicate.error";

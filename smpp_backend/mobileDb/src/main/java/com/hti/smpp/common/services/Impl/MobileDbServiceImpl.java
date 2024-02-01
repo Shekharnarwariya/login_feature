@@ -2,11 +2,9 @@ package com.hti.smpp.common.services.Impl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -25,25 +23,30 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hti.smpp.common.dto.MobileDataDto;
 import com.hti.smpp.common.dto.UpdateMobileInfoDto;
-import com.hti.smpp.common.dto.UpdateMobileInfoDtoSingle;
 import com.hti.smpp.common.exception.InternalServerException;
+import com.hti.smpp.common.exception.NumberFormatError;
 import com.hti.smpp.common.mobileDb.dto.MobileDbEntity;
 import com.hti.smpp.common.mobileDb.repository.MobileDbRepo;
-import com.hti.smpp.common.request.MobileDbRequest;
+import com.hti.smpp.common.request.ChooseRequest;
+import com.hti.smpp.common.request.DeleteMobDataRequest;
+import com.hti.smpp.common.request.ShowMobileDataRequest;
 import com.hti.smpp.common.request.UpdateMobileInfo;
+import com.hti.smpp.common.request.UpdateSingleRequest;
+
 import com.hti.smpp.common.response.ChooseRequestResponse;
 import com.hti.smpp.common.response.EditDataResponse;
 import com.hti.smpp.common.response.MobileDbResponse;
 import com.hti.smpp.common.response.UpdateMobileDbResponse;
 import com.hti.smpp.common.services.MobileDbService;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.IConstants;
 //import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 @Service
 public class MobileDbServiceImpl implements MobileDbService {
@@ -52,11 +55,14 @@ public class MobileDbServiceImpl implements MobileDbService {
 	
 	@Autowired
 	private MobileDbRepo mobileDbRepo;
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 
 	@Override
 	public ResponseEntity<?> addMobileData(String mobileDb, MultipartFile file, String username) {
 		
-		logger.info("add mobile data method");
+		logger.info(messageResourceBundle.getLogMessage("mobileDb.enter.addMobileDbData"));
 		String target = "";
         long mob_number = 0;
         String num = "";
@@ -72,8 +78,9 @@ public class MobileDbServiceImpl implements MobileDbService {
             ArrayList<MobileDbEntity> mobileUserdataEntry = new ArrayList<>();
             
 //            String type = addNewMobileDbDTO.getListType();
-
-            logger.info("Add Mobile DTO get Age-----------> "+addNewMobileDbDTO.getAge());
+            
+            logger.info(messageResourceBundle.getLogMessage("mobileDb.addDataEntry.getAge"),addNewMobileDbDTO.getAge());
+            logger.info(messageResourceBundle.getLogMessage("mobileDb.getUsername"), username);
             
             String format = "";
             if (file != null && file.getName().length() > 0) {
@@ -135,13 +142,18 @@ public class MobileDbServiceImpl implements MobileDbService {
                                 tempMobileDbDTO.setProfession(st1.nextToken().trim());
                                 
                                 mobileUserdata.add(tempMobileDbDTO);
-                            } catch (Exception e) {
-                                System.out.println("Exception in Uploading number :" + e);
+                            }catch (NumberFormatException e) {
+                            	 logger.error(messageResourceBundle.getLogMessage("mobileDb.mobileUserList.numberFormatException"), e.getMessage());
+                                throw new NumberFormatError(messageResourceBundle.getExMessage(ConstantMessages.NO_VALID_NUMBERS_FOUND_EXCEPTION));
+                            }catch (Exception e) {
+                            	 logger.error(messageResourceBundle.getLogMessage("mobileDb.mobileUserList.generalException"), e.getMessage());
+                                throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR)); 
                             }
                         }
 
                     } catch (Exception ex) {
-                        System.out.println("Error In Saving Multiple Conacts From List :" + ex);
+                    	 logger.error(messageResourceBundle.getLogMessage("mobileDb.mobileUserList.SaveContactList"), ex.getMessage());
+                        throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR)); 
 
                     }
                 } else if (format.equalsIgnoreCase("Excel")) {
@@ -210,7 +222,8 @@ public class MobileDbServiceImpl implements MobileDbService {
                     target = IConstants.FAILURE_KEY;
                 }
 
- 
+                logger.info(messageResourceBundle.getLogMessage("file.format"), format);
+                
                 mobileUserdata.forEach(l -> {
  				     MobileDbEntity response = new MobileDbEntity ();				
                      response.setMobileNumber(l.getMobileNumber());
@@ -225,14 +238,30 @@ public class MobileDbServiceImpl implements MobileDbService {
     				
                      mobileUserdataEntry.add(response);
    			});
-                
+               
         
     			
             } else {
+            	
             	 ObjectMapper objectMapper = new ObjectMapper();
                  form= objectMapper.readValue(mobileDb, MobileDataDto.class);
                  
                  BeanUtils.copyProperties(form,addNewMobileDbDTO );
+                 
+                 if (addNewMobileDbDTO.getMobileNumber() == null ||
+                	 addNewMobileDbDTO.getVip() == null ||
+                	 addNewMobileDbDTO.getSex() == null ||
+                	 addNewMobileDbDTO.getAge() == 0 ||
+                	 addNewMobileDbDTO.getArea() == null ||
+                	 addNewMobileDbDTO.getSubarea() == null ||
+                	 addNewMobileDbDTO.getProfession() == null ||
+                	 addNewMobileDbDTO.getClassType() == null) {
+         	            // Handle the case where any of the arrays is null
+         	         logger.info(messageResourceBundle.getLogMessage("mobileDb.addMobileData.nullValues"));
+         	         return new ResponseEntity<>(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_DATA_VALUES), HttpStatus.BAD_REQUEST);
+         	        }
+         	 
+               
                  String type = addNewMobileDbDTO.getListType();
                 mobileUserdata.add(addNewMobileDbDTO);
                 mobileDbEntity.setMobileNumber(addNewMobileDbDTO.getMobileNumber());
@@ -247,22 +276,23 @@ public class MobileDbServiceImpl implements MobileDbService {
                 
                 mobileUserdataEntry.add(mobileDbEntity);
             }
-                 
-            logger.info("Moble user object ------------> "+mobileUserdata);
-            
-            
+                      
              isInsert = mobileDbRepo.saveAll(mobileUserdataEntry);
       
             if (!isInsert.isEmpty()) {
+            	 logger.info(messageResourceBundle.getLogMessage("mobileDb.saveSuccess"));
                 target = IConstants.SUCCESS_KEY;
             } else {
+            	logger.warn(messageResourceBundle.getLogMessage("mobileDb.saveFailure"));
                 target = IConstants.FAILURE_KEY;
             }
+            
         } catch (Exception e) {
-        	logger.error("Failure in Upload the contact List-------------->"+e.getLocalizedMessage());
-        	throw new InternalServerException("Something went Wrong"); 
+        	 logger.error(messageResourceBundle.getLogMessage("mobileDb.uploadFailure"), e.getLocalizedMessage());
+        	throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR)); 
         }
-
+        
+        logger.info(messageResourceBundle.getLogMessage("mobileDb.addMobileData.exiting"));
 		return new ResponseEntity<>(isInsert,HttpStatus.CREATED);
 	}
 
@@ -270,7 +300,7 @@ public class MobileDbServiceImpl implements MobileDbService {
 	
 	
 	@Override
-	public ResponseEntity<?> showMobileData(MobileDbRequest mobileDb, String username) {
+	public ResponseEntity<?> showMobileData(ShowMobileDataRequest mobileDb, String username) {
 
 
 		String target = "";
@@ -283,7 +313,7 @@ public class MobileDbServiceImpl implements MobileDbService {
             
             mobileNumber = addNewMobileDbDTO.getMobileNumber();
             
-            logger.info("MOBILE------------>"+mobileNumber);
+            logger.info(messageResourceBundle.getLogMessage("mobileDb.showData.mobileNumber"), mobileNumber);
             
             
             ArrayList<MobileDbEntity> tempMob = mobileDbRepo.findByMobileNumber(mobileNumber);
@@ -306,22 +336,23 @@ public class MobileDbServiceImpl implements MobileDbService {
                 responseMobileDb.add(response);
     		});
                           
-//            request.setAttribute("moNumber", mobileNumber);
-            logger.info("mobileNumber--->"+tempMob);
             
             if (tempMob.size() > 0) {
-            	 logger.info("MOBILE------------------>>"+mobileNumber);
+            	logger.info(messageResourceBundle.getLogMessage("mobileDb.showData.success"));
                 target = IConstants.SUCCESS_KEY;
             } else {
+            	 logger.info(messageResourceBundle.getLogMessage("mobileDb.showData.failure"));
                 target = IConstants.FAILURE_KEY;
-                return new ResponseEntity<>(target,HttpStatus.OK);
+                String message ="No data Available with this Mobile Number : " + mobileNumber;
+                return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+
             }
             
             return new ResponseEntity<>(tempMob,HttpStatus.OK);
             
 		} catch (Exception e) {
-			logger.info("Cannot find the mobile number in database"+e.getLocalizedMessage());
-			  throw new InternalServerException("Something Went Wrong");
+			 logger.error(messageResourceBundle.getLogMessage("mobileDb.showData.exception"), e);
+			  throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
 		}
         
 	}
@@ -343,6 +374,7 @@ public class MobileDbServiceImpl implements MobileDbService {
             updateMobileInfo.getProfession() == null ||
             updateMobileInfo.getClassType() == null) {
             // Handle the case where any of the arrays is null
+        	  logger.info(messageResourceBundle.getLogMessage("mobileDb.updateDataList.nullArrays"));
             return new ResponseEntity<>("One or more arrays are null", HttpStatus.BAD_REQUEST);
         }
        
@@ -359,10 +391,8 @@ public class MobileDbServiceImpl implements MobileDbService {
 		        
 		        ArrayList<UpdateMobileDbResponse> responseList = new ArrayList<>();
 
-		     	        
-		        BeanUtils.copyProperties(updateMobileInfo, updateMobileInfoDTO);
-		        logger.info("User Mobile get Mobile ID------->"+updateMobileInfo.getMobile_id());
-//		        System.out.println(updateMobileInfoDTO.getMobile_id());
+		        logger.info(messageResourceBundle.getLogMessage("mobileDb.getUsername"), username);   
+		        BeanUtils.copyProperties(updateMobileInfo, updateMobileInfoDTO);	
 		        
 		        //--------------------
 		        int[] mob_id = updateMobileInfoDTO.getMobile_id();
@@ -373,7 +403,6 @@ public class MobileDbServiceImpl implements MobileDbService {
 		        String[] subarea = updateMobileInfoDTO.getSubarea();
 		        String[] profession = updateMobileInfoDTO.getProfession();
 		        String[] classType = updateMobileInfoDTO.getClassType();
-		        System.out.println("classtype"+classType);
 		        //--------------------
                 try {
                     for (int i = 0; i < checkedC; i++) {
@@ -398,19 +427,20 @@ public class MobileDbServiceImpl implements MobileDbService {
     		        
     		        int update_s = updatedList.size();
     		        if (update_s != 0) {
-    		            logger.info("param_value", update_s + "");
+    		        	 logger.info(messageResourceBundle.getLogMessage("mobileDb.updateDataList.success"));
     		            target = IConstants.SUCCESS_KEY;
     		        }
     		        if (update_s == 0) {
-    		            logger.info("param_value", update_s + "");
+    		        	 logger.info(messageResourceBundle.getLogMessage("mobileDb.updateDataList.failure"));
     		            target = IConstants.FAILURE_KEY;
     		        }
 
 				}catch (NoSuchElementException e) {
-					logger.error("NO Such Element Error occured");
-					throw new InternalServerException("Entry with given id is not present");
+					  logger.error(messageResourceBundle.getLogMessage("mobileDb.updateDataList.noSuchElementError"));
+					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INVALID_PROVIDED_ID));
 				}	 catch (Exception e) {
-					throw new InternalServerException("Something went Wrong");
+					 logger.error(messageResourceBundle.getLogMessage("mobileDb.updateDataList.exception"), e);
+					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
 				}		       
 		    
 		       		        
@@ -421,18 +451,18 @@ public class MobileDbServiceImpl implements MobileDbService {
 
 
 	@Override
-	public ResponseEntity<?> deleteMobileDataList(UpdateMobileInfo mobileData, String username) {
+	public ResponseEntity<?> deleteMobileDataList(DeleteMobDataRequest mobileData, String username) {
 
-		 UpdateMobileInfoDto updateMobileInfoDTO = new UpdateMobileInfoDto();
+//		 UpdateMobileInfoDto updateMobileInfoDTO = new UpdateMobileInfoDto();
 		 ArrayList<MobileDbEntity> entryList = null;
 		 MobileDbEntity updateMobileSingle = null;
 		    String target = null;
         String messaage ="";
 		int delete_s = 0;
        int checkedC = mobileData.getCheckedC();
-        logger.info("Checked Counts--------->"+checkedC);
-        BeanUtils.copyProperties(mobileData, updateMobileInfoDTO);
-        int[] mob_id = updateMobileInfoDTO.getMobile_id();
+       logger.info(messageResourceBundle.getLogMessage("mobileDb.deleteDataList.checkedC"), checkedC);
+//        BeanUtils.copyProperties(mobileData, updateMobileInfoDTO);
+        int[] mob_id = mobileData.getMobile_id();
         entryList = new ArrayList<MobileDbEntity>();
         
         try {
@@ -448,19 +478,23 @@ public class MobileDbServiceImpl implements MobileDbService {
         		 
                 mobileDbRepo.deleteAll(entryList);             	 
              	 target = IConstants.SUCCESS_KEY;
+             	 logger.info(messageResourceBundle.getLogMessage("mobileDb.deleteDataList.success"));
 			} catch (Exception e) {
 				 target = IConstants.FAILURE_KEY;
+				 logger.error(messageResourceBundle.getLogMessage("mobileDb.deleteDataList.failure"));
 				 throw new InternalServerException("Failed to Delete the Entry");
 			}
              
              
 		}catch (NoSuchElementException e) {
-			throw new InternalServerException("Entry with given ID not present");
+			  logger.error(messageResourceBundle.getLogMessage("mobileDb.deleteDataList.noSuchElementError"));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INVALID_PROVIDED_ID));
 		}catch (ArrayIndexOutOfBoundsException e) {
-			throw new InternalServerException("Count of entry mobile ID and Check_Count Does not match");
+			 logger.error(messageResourceBundle.getLogMessage("mobileDb.deleteDataList.arrayIndexOutOfBoundsError"));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.MISMATCH_COUNT_NUMBER));
 		}  catch (Exception e) {
-			logger.error("ERROR ---------->" + e.getLocalizedMessage());
-			throw new InternalServerException("Something Went Wrong");
+		    logger.error(messageResourceBundle.getLogMessage("mobileDb.deleteDataList.exception"), e.getLocalizedMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
 		}
        
         
@@ -472,7 +506,9 @@ public class MobileDbServiceImpl implements MobileDbService {
 
 
 	@Override
-	public ResponseEntity<?> chooseRequired(MobileDbRequest mobileDbRequest, String username) {
+
+	public ResponseEntity<?> chooseRequired(ChooseRequest mobileDbRequest, String username) {
+
 		
 
 		ChooseRequestResponse chooseRequestResponse = new ChooseRequestResponse();
@@ -489,7 +525,7 @@ public class MobileDbServiceImpl implements MobileDbService {
 	        smsCount=addNewMobileDbDTO.getSendNowMsgCount();
 	        int smsCount_I =0;
 	        smsCount_I=Integer.parseInt(smsCount);
-	        logger.info("SMS Count - "+ smsCount);
+	        logger.info(messageResourceBundle.getLogMessage("mobileDb.chooseRequired.smsCount"), smsCount);
 	        Iterator iterator=newList.iterator();
 	        String number_list="";
 	       
@@ -545,14 +581,14 @@ public class MobileDbServiceImpl implements MobileDbService {
 	        }
 
 	    }catch(IndexOutOfBoundsException e)
-	    {	 logger.info("error",e.getLocalizedMessage());
-	    	throw new InternalServerException("SMS count is out of bound");
+	    {	 logger.info(messageResourceBundle.getLogMessage("mobileDb.chooseRequired.smsCountOutOfBounds"));
+	    	throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.MOBILEDB_SMSCOUNT_OUTOFBOUND));
 	    }catch (NumberFormatException e) {
-	        logger.error("Error parsing integer", e);
-	        throw new InternalServerException("Error parsing integer");
+	        logger.error(messageResourceBundle.getLogMessage("mobileDb.chooseRequired.parseError"));
+	        throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NO_VALID_NUMBERS_FOUND_EXCEPTION));
 	    } catch(Exception e)
-	    {	 logger.info("error",e.getLocalizedMessage());   	
-	    	throw new InternalServerException("Send Now Sms Count is more than number list count");
+	    {	 logger.info(messageResourceBundle.getLogMessage("mobileDb.chooseRequired.sendNowSmsCountError"));   	
+	    	throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.MOBILEDB_MISMATCH_SMSCOUNT));
 	    }
 
 	    chooseRequestResponse.setTarget(target);
@@ -565,8 +601,7 @@ public class MobileDbServiceImpl implements MobileDbService {
 	@Override
 	public ResponseEntity<?> editData(String username) {
 	
-		
-        logger.info("<-- EditDataAction Called -> ");
+	    logger.info(messageResourceBundle.getLogMessage("mobileDb.editData.info"));
         
         EditDataResponse editDataResponse = new EditDataResponse();
     
@@ -574,7 +609,7 @@ public class MobileDbServiceImpl implements MobileDbService {
         	 ArrayList<String> professionList = mobileDbRepo.findDistinctByProfession();
            
              ArrayList<String> areaList = mobileDbRepo.findDistinctByArea();
-             System.out.println(areaList);
+
              ArrayList<String> subAreaList = mobileDbRepo.findDistinctSubareaByAreaIn(null);
              
              Collections.sort(professionList);
@@ -591,8 +626,8 @@ public class MobileDbServiceImpl implements MobileDbService {
              
              
 		} catch (Exception e) {
-			logger.info("Error occurred",e);
-			throw new InternalServerException("Can not Process your request");
+			   logger.info(messageResourceBundle.getLogMessage("mobileDb.editData.exception"), e);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
 		}
       
 		return new ResponseEntity<>(editDataResponse,HttpStatus.OK);
@@ -608,7 +643,7 @@ public class MobileDbServiceImpl implements MobileDbService {
 		String subAreas="";
 
         try {
-        	 logger.info("Area - "+ area);
+        	logger.info(messageResourceBundle.getLogMessage("mobileDb.getSubArea.info"), area);
 //            String area = request.getParameter("q");
             
             if (area != null && area.length() == 0) {
@@ -619,16 +654,16 @@ public class MobileDbServiceImpl implements MobileDbService {
                               
             subAreas = subAreaList.stream().collect(Collectors.joining(","));
 
-            logger.info("Sub Areas :: " + subAreas);
+            logger.info(messageResourceBundle.getLogMessage("mobileDb.getSubArea.subAreas"), subAreas);
          
             if(subAreaList.isEmpty()) {
-            	logger.info("SubArea Does not exists for the given area");
-            	throw new InternalServerException("Subarea Does not exists for the given area");
+            	 logger.info(messageResourceBundle.getLogMessage("mobileDb.getSubArea.subAreaDoesNotExist"));
+            	throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.MOBILEDB_SUBAREA_ERROR));
             }
 
         } catch (Exception ex) {
-        	logger.info(ex.getMessage());
-           throw new InternalServerException(ex.getLocalizedMessage());
+        	 logger.info(messageResourceBundle.getLogMessage("mobileDb.getSubArea.exception"), ex.getMessage());
+           throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
         }       
         
 		return new ResponseEntity<>(subAreas,HttpStatus.OK);
@@ -655,7 +690,7 @@ public class MobileDbServiceImpl implements MobileDbService {
 //	-------------------------------Separate API------------------------------------------------------------------------------------
 
 	@Override
-	public ResponseEntity<?> updateMobileData(MobileDbRequest mobileDb, String username) {
+	public ResponseEntity<?> updateMobileData(UpdateSingleRequest mobileDb, String username) {
 		
 		List<MobileDbEntity> updatedContact = new ArrayList<>();
 		try {
@@ -695,13 +730,15 @@ public class MobileDbServiceImpl implements MobileDbService {
 
 
 	@Override
-	public ResponseEntity<?> deleteMobileData(MobileDbRequest mobileData, String username) {
+	public ResponseEntity<?> deleteMobileData(String mobNumber, String username) {
 
 		 String Message ="";
 		 
 		try {
 			
-		       String mobileNumber = mobileData.getMobileNumber();
+
+		       String mobileNumber = mobNumber;
+
 		       System.out.println(mobileNumber);
 		       
 		       int response = mobileDbRepo.deleteByMobileNumber(mobileNumber);

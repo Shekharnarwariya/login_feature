@@ -16,8 +16,15 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.hti.smpp.common.request.ChooseRequest;
+import com.hti.smpp.common.request.DeleteMobDataRequest;
 import com.hti.smpp.common.request.MobileDbRequest;
+import com.hti.smpp.common.request.MobileUserListInfoRequest;
+import com.hti.smpp.common.request.MobileUserListRequest;
+import com.hti.smpp.common.request.SendAreaSmsRequest;
+import com.hti.smpp.common.request.ShowMobileDataRequest;
 import com.hti.smpp.common.request.UpdateMobileInfo;
+import com.hti.smpp.common.request.UpdateSingleRequest;
 import com.hti.smpp.common.services.MobileDbService;
 import com.hti.smpp.common.services.MobileDbUserService;
 
@@ -31,7 +38,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/MobileDb")
+@RequestMapping("/mobiledb")
 @OpenAPIDefinition(info = @Info(title = "SMPP MobileDB  API..", version = "1.0", description = "API for managing SMPP  MobileDb..."))
 public class MobileDbController {
 
@@ -44,12 +51,13 @@ public class MobileDbController {
 	
 	@Operation(summary = "Add Mobile Data Entry", description = "Add a new Mobile Data Entry")
 	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "ContactDataEntry Saved Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "201", description = "ContactDataEntry Saved Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
-			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
+			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
+			@ApiResponse(responseCode = "400", description = "Bad Request.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
 	})
-	@PostMapping(value ="/addMobileData",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PostMapping(value ="/add-mobiledata",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<?> addMobileData(@RequestParam(name = "mobileDbRequest", required = false) String  mobileDbRequest, @RequestPart(name = "file", required = false) MultipartFile file,
 			@RequestHeader(name = "username", required = true) String username){
 		
@@ -64,10 +72,12 @@ public class MobileDbController {
 			@ApiResponse(responseCode = "200", description = "Entry Fetched Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
-			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
+			@ApiResponse(responseCode = "400", description = "Bad Request.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
 	})
-	@GetMapping("/showMobileData")
-	public ResponseEntity<?> showMobileData(@RequestBody MobileDbRequest MobileData ,@RequestHeader(name = "username", required = true) String username ){
+
+	@PostMapping("/show-mobiledata")
+	public ResponseEntity<?> showMobileData(@RequestBody ShowMobileDataRequest MobileData ,@RequestHeader(name = "username", required = true) String username ){
+
 		
 		return this.mobileDbService.showMobileData(MobileData, username);
 	}
@@ -83,7 +93,9 @@ public class MobileDbController {
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
 	})
-	@PutMapping("/updateMobileDataList")
+
+	@PutMapping("/update-mobiledata")
+
 	public ResponseEntity<?> updateMobileDataList(@RequestBody UpdateMobileInfo updatedMobileData ,@RequestHeader(name = "username", required = true) String username ){
 		
 		return this.mobileDbService.updateMobileDataList(updatedMobileData, username);
@@ -100,8 +112,10 @@ public class MobileDbController {
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
 	})
-	@DeleteMapping("/deleteMobileDataList")
-	public ResponseEntity<?> deleteMobileDataList(@RequestBody UpdateMobileInfo mobileData ,@RequestHeader(name = "username", required = true) String username ){
+
+	@DeleteMapping("/delete-mobiledata")
+	public ResponseEntity<?> deleteMobileDataList(@RequestBody DeleteMobDataRequest mobileData ,@RequestHeader(name = "username", required = true) String username ){
+
 		
 		return this.mobileDbService.deleteMobileDataList(mobileData, username);
 	}
@@ -117,8 +131,10 @@ public class MobileDbController {
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
 	})
-	@PostMapping("/chooseRequired")
-	public ResponseEntity<?> chooseRequired(@RequestBody MobileDbRequest mobileDbRequest ,@RequestHeader(name = "username", required = true) String username ){
+
+	@PostMapping("/choose-required")
+	public ResponseEntity<?> chooseRequired(@RequestBody ChooseRequest mobileDbRequest ,@RequestHeader(name = "username", required = true) String username ){
+
 		
 		return this.mobileDbService.chooseRequired(mobileDbRequest,username);
 	}
@@ -134,7 +150,9 @@ public class MobileDbController {
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
 	})
-	@PostMapping("/editData")
+
+	@PostMapping("/editdata")
+
 	public ResponseEntity<?> editData(@RequestHeader(name = "username", required = true) String username ){
 		
 		return this.mobileDbService.editData(username);
@@ -152,7 +170,9 @@ public class MobileDbController {
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
 	})
-	@GetMapping("/getSubArea")
+
+	@GetMapping("/get-subarea")
+
 	public ResponseEntity<?> getSubArea(@RequestParam(required = false) String area, @RequestHeader(name = "username", required = true) String username ){
 		
 		return this.mobileDbService.getSubArea(area , username);
@@ -201,8 +221,10 @@ public class MobileDbController {
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
 	})
-	@PostMapping("/mobileUserList")
-	public ResponseEntity<?> mobileUserList(@Valid @RequestBody MobileDbRequest mobileDbRequest ,@RequestHeader(name = "username", required = true) String username ){
+
+	@PostMapping("/mob-userlist")
+	public ResponseEntity<?> mobileUserList(@Valid @RequestBody MobileUserListRequest mobileDbRequest ,@RequestHeader(name = "username", required = true) String username ){
+
 		
 		return this.mobileDbUserService.mobileUserList(mobileDbRequest,username);
 	}
@@ -218,8 +240,10 @@ public class MobileDbController {
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
 	})
-	@PostMapping("/mobileUserListInfo")
-	public ResponseEntity<?> mobileUserListInfo(@RequestBody MobileDbRequest mobileDbRequest ,@RequestHeader(name = "username", required = true) String username ){
+
+	@PostMapping("/mob-userlistinfo")
+	public ResponseEntity<?> mobileUserListInfo(@RequestBody MobileUserListInfoRequest mobileDbRequest ,@RequestHeader(name = "username", required = true) String username ){
+
 		
 		return this.mobileDbUserService.mobileUserListInfo(mobileDbRequest,username);
 	}
@@ -236,7 +260,9 @@ public class MobileDbController {
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
 	})
-	@PostMapping("/queryForMobileRecord")
+
+	@PostMapping("/query-mobile")
+
 	public ResponseEntity<?> queryForMobileRecord(@RequestHeader(name = "username", required = true) String username ){
 		
 		return this.mobileDbUserService.queryForMobileRecord(username);
@@ -255,8 +281,10 @@ public class MobileDbController {
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
 	})
-	@PostMapping("/SendAreaWiseSms")
-	public ResponseEntity<?> SendAreaWiseSms(@RequestBody MobileDbRequest mobileDbRequest ,@RequestHeader(name = "username", required = true) String username ){
+
+	@PostMapping("/send-areawise-sms")
+	public ResponseEntity<?> SendAreaWiseSms(@RequestBody SendAreaSmsRequest mobileDbRequest ,@RequestHeader(name = "username", required = true) String username ){
+
 		
 		return this.mobileDbUserService.SendAreaWiseSms(mobileDbRequest,username);
 		
@@ -281,8 +309,10 @@ public class MobileDbController {
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
 	})
-	@PutMapping("/updateMobileData")
-	public ResponseEntity<?> updateMobileData(@RequestBody MobileDbRequest updatedMobileData ,@RequestHeader(name = "username", required = true) String username ){
+
+	@PutMapping("/update-mobsingle")
+	public ResponseEntity<?> updateMobileData(@RequestBody UpdateSingleRequest updatedMobileData ,@RequestHeader(name = "username", required = true) String username ){
+
 		
 		return this.mobileDbService.updateMobileData(updatedMobileData, username);
 	}
@@ -296,10 +326,12 @@ public class MobileDbController {
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))), 
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) 
 	})
-	@DeleteMapping("/deleteMobileData")
-	public ResponseEntity<?> deleteMobileData(@RequestBody MobileDbRequest mobileData ,@RequestHeader(name = "username", required = true) String username ){
+
+	@DeleteMapping("/delete-mobsingle")
+	public ResponseEntity<?> deleteMobileData(@RequestParam(required = false) String mobileNumber ,@RequestHeader(name = "username", required = true) String username ){
+
 		
-		return this.mobileDbService.deleteMobileData(mobileData, username);
+		return this.mobileDbService.deleteMobileData(mobileNumber, username);
 	}
 	
 	

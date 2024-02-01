@@ -21,15 +21,18 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.dto.MobileDataDto;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
+import com.hti.smpp.common.exception.NumberFormatError;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.mobileDb.repository.MobileDbRepo;
-import com.hti.smpp.common.request.MobileDbRequest;
+import com.hti.smpp.common.request.MobileUserListInfoRequest;
+import com.hti.smpp.common.request.MobileUserListRequest;
+import com.hti.smpp.common.request.SendAreaSmsRequest;
+import com.hti.smpp.common.response.GetMobileRecordFullResponse;
 import com.hti.smpp.common.response.MobileUserListInfoResponse;
 import com.hti.smpp.common.response.MobileUserListResponse;
 import com.hti.smpp.common.response.QueryMobileRecordResponse;
@@ -37,11 +40,12 @@ import com.hti.smpp.common.response.SendAreaWiseSmsResponse;
 import com.hti.smpp.common.services.MobileDbUserService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
-import com.hti.smpp.common.user.dto.WebMenuAccessEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 
 @Service
@@ -57,8 +61,6 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
 	@Autowired
 	private MobileDbRepo mobileDbRepo;
 	
-	@Autowired
-	private JdbcTemplate jdbcTemplate;
 
 	@Autowired
 	private DataSource dataSource;
@@ -66,6 +68,10 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
 	}
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
+	
 	
 	private final Logger logger = LoggerFactory.getLogger(MobileDbUserServiceImpl.class);
 	
@@ -82,13 +88,13 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
 	}
 
 	@Override
-	public ResponseEntity<?> mobileUserList(MobileDbRequest mobileDbRequest, String username) {
+	public ResponseEntity<?> mobileUserList(MobileUserListRequest mobileDbRequest, String username) {
 
 		MobileUserListResponse mobileUserListResponse = new MobileUserListResponse();
         String target = "";
         boolean b_count = true;
         long mob_count = 0;
-
+        logger.info(messageResourceBundle.getLogMessage("mobileDb.enter.mobileUserList"));
         
         MobileDataDto addNewMobileDbDTO = new MobileDataDto();
         BeanUtils.copyProperties(mobileDbRequest, addNewMobileDbDTO);
@@ -112,6 +118,8 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
         String[] ProfessionArr = addNewMobileDbDTO.getProfessionArr();
         String[] classTypeArr = addNewMobileDbDTO.getClassTypeArr();
 
+        logger.info(messageResourceBundle.getLogMessage("mobileDb.intermediate.ageRange"), age_temp);
+        
         if (areaArr.length == 1) {
             for (int i = 0; i < areaArr.length; i++) {
                 if (areaArr[i].equalsIgnoreCase("%")) {
@@ -213,13 +221,10 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
             }
         }
 //--------------------------------------------------------
-       logger.info(area_temp);
-       logger.info(subarea_temp);
-       logger.info(profession_temp);
-       logger.info(age_temp);
-       logger.info(classType_temp);
-       logger.info(addNewMobileDbDTO.getVip());
-       logger.info(addNewMobileDbDTO.getSex());
+        logger.info(messageResourceBundle.getLogMessage("mobileDb.intermediate.areaArrayLength"), areaArr.length);
+        logger.info(messageResourceBundle.getLogMessage("mobileDb.intermediate.subareaArrayLength"), subareaArr.length);
+        logger.info(messageResourceBundle.getLogMessage("mobileDb.intermediate.professionArrayLength"), ProfessionArr.length);
+        logger.info(messageResourceBundle.getLogMessage("mobileDb.intermediate.classTypeArrayLength"), classTypeArr.length);
 //  ------------------------------------------------------------      
         
        try {
@@ -232,7 +237,7 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
            
            ArrayList mobileRecord = new ArrayList<>();
             mobileRecord = getMobileRecords(query, b_count);
-            System.out.println(mobileRecord);
+            logger.info(messageResourceBundle.getLogMessage("mobileDb.intermediate.executingQuery"), query);
             
           
             
@@ -254,8 +259,8 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
                	 Map<String, Object> recordMap = new HashMap<>();
                	 recordMap = fetchMobileRecords(query1,true);
                                     
-                   Map<String, List<String>> numberMap = new HashMap<>();
-                    numberMap = fetchMobileRecords(query2,false);
+                 Map<String, List<String>> numberMap = new HashMap<>();
+                 numberMap = fetchMobileRecords(query2,false);
                  
                    
                  mobileUserListResponse.setNumberMap(numberMap);
@@ -276,15 +281,17 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
            }
            
 	    } catch (Exception e) {
-		  throw new InternalServerException("Something Went Wrong");
+	    	 logger.error(messageResourceBundle.getLogMessage("mobileDb.error.mobileUserList"), e.getMessage(), e);
+		     throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
 	    }
         
+       logger.info(messageResourceBundle.getLogMessage("mobileDb.exit.mobileUserList"));
         return new ResponseEntity<>(mobileUserListResponse ,HttpStatus.OK); 
        
 	}
 
 	@Override
-	public ResponseEntity<?> mobileUserListInfo(MobileDbRequest mobileDbRequest ,String username) {
+	public ResponseEntity<?> mobileUserListInfo(MobileUserListInfoRequest mobileDbRequest ,String username) {
 
 
 		 MobileUserListInfoResponse mobileUserListInfoResponse = new MobileUserListInfoResponse();
@@ -293,6 +300,8 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
         MobileDataDto addNewMobileDbDTO = new MobileDataDto();
         BeanUtils.copyProperties(mobileDbRequest, addNewMobileDbDTO);
 
+        logger.info(messageResourceBundle.getLogMessage("mobileDb.enter.mobileUserListInfo"));
+        
         String query = "";
         int ageMin = addNewMobileDbDTO.getAgeMin();
         int ageMax = addNewMobileDbDTO.getAgeMax();
@@ -440,17 +449,20 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
                        mobileUserListInfoResponse.setDiv_setting("Scrollable");
                    }
                    target = IConstants.SUCCESS_KEY;
+                   logger.info(messageResourceBundle.getLogMessage("mobileDb.success.mobileUserListInfo"));
                    mobileUserListInfoResponse.setTarget(target);
 
                } else {
 
-               	 mobileUserListInfoResponse.setParam_value("Any Record..Try Again");
+               	   mobileUserListInfoResponse.setParam_value("Any Record..Try Again");
                    target = IConstants.FAILURE_KEY;
+                   logger.error(messageResourceBundle.getLogMessage("mobileDb.failure.mobileUserListInfo"));
                    mobileUserListInfoResponse.setTarget(target);
                }
                
 		} catch (Exception e) {
-			  throw new InternalServerException("Something Went Wrong");
+			logger.error(messageResourceBundle.getLogMessage("mobileDb.failure.mobileUserListInfo"), e.getMessage());
+			  throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
 		}
           
         return new ResponseEntity<>(mobileUserListInfoResponse ,HttpStatus.OK); 
@@ -477,19 +489,19 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
 		
 		int userId = userEntry.getId();
 		
-		logger.info("userId - "+userId);
+		 logger.info(messageResourceBundle.getLogMessage("mobileDb.userId.queryForMobileRecord"), userId);
 		
 		WebMasterEntry webMenu = null;
 		Optional<WebMasterEntry> webEntryOptional = this.webMasterEntryRepo.findById(userId);
-		logger.info("webEntryOptional - "+webEntryOptional);
+	
+		 logger.info(messageResourceBundle.getLogMessage("mobileDb.webEntryOptional.queryForMobileRecord"), webEntryOptional);
+		 
 		if (webEntryOptional.isPresent()) {
 			webMenu = webEntryOptional.get();
 		} else {
 			throw new NotFoundException("WebMenuAccessEntry not found.");
 		}
 
-		
-		logger.info("WebMasterEntry - "+webMenu);
 		
 		if (webMenu.isMobileDBAccess()) {
 			try {
@@ -504,6 +516,8 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
 					Collections.sort(areaList);
 					target = IConstants.SUCCESS_KEY;
 					
+					 logger.info(messageResourceBundle.getLogMessage("mobileDb.success.queryForMobileRecord"));
+					
 					
 					queryMobileRecordResponse.setProfessionList(professionList);
 					queryMobileRecordResponse.setProfessionListSize(professionList.size());
@@ -516,10 +530,11 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
 				        
 				}
 			} catch (Exception ex) {
-				  throw new InternalServerException("Something Went Wrong");
+				  throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
 			}
 		} else {
 			target = "invalidRequest";
+			 logger.info(messageResourceBundle.getLogMessage("mobileDb.failed.queryForMobileRecord"));
 			queryMobileRecordResponse.setTarget(target);
 		}
 		
@@ -528,10 +543,9 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
 
 	
 	@Override
-	public ResponseEntity<?> SendAreaWiseSms(MobileDbRequest mobileDbRequest,String username) {
+	public ResponseEntity<?> SendAreaWiseSms(SendAreaSmsRequest mobileDbRequest,String username) {
 		
 		
-//		HashMap<String, Object> resultMap = new HashMap<>();
 		SendAreaWiseSmsResponse sendAreaWiseSmsResponse = new SendAreaWiseSmsResponse();
         String target = IConstants.FAILURE_KEY;
         try {
@@ -550,8 +564,9 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
                 try {
                     count = Long.parseLong(areaWiseNumber[i]);
                 } catch (NumberFormatException ne) {
-                    System.out.println("NumberFormatException:: "+areaWiseNumber[i]);
+                    logger.info(messageResourceBundle.getLogMessage("mobileDb.NumberFormatException.SendAreaWiseSms")+areaWiseNumber[i]);
                     count = 0;
+                    throw new NumberFormatError(messageResourceBundle.getExMessage(ConstantMessages.NO_VALID_NUMBERS_FOUND_EXCEPTION));
                 }
                 
                 if (count > 0) {
@@ -564,7 +579,7 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
                 }
             }
             
-            System.out.println("finalList:: " + finalList.size());
+            logger.info(messageResourceBundle.getLogMessage("mobileDb.finalList.SendAreaWiseSms") + finalList.size());
             if (finalList.size() > 0) {
             	
             	sendAreaWiseSmsResponse.setNumberList(finalList);
@@ -572,16 +587,15 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
             	sendAreaWiseSmsResponse.setTotalRecords(finalList.size());
             	
                 target = IConstants.SUCCESS_KEY;
-                
-               
+                               
             } else {
                 target = IConstants.FAILURE_KEY;
             }
             sendAreaWiseSmsResponse.setTarget(target);
         } catch (IndexOutOfBoundsException ex) {
-           throw new InternalServerException("Area wise number count is incorrect"); 
+           throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.MOBILEDB_AREAWISECOUNT_ERROR )); 
         }catch (Exception ex) {
-        	throw new InternalServerException("Something went Wrong"); 
+        	throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR)); 
         }     
              
         return new ResponseEntity<>(sendAreaWiseSmsResponse ,HttpStatus.OK); 
@@ -686,14 +700,14 @@ public class MobileDbUserServiceImpl implements MobileDbUserService {
 		Connection con = null;
 		PreparedStatement pStmt = null;
 		ResultSet rs = null;
-		MobileDataDto addNewMobileDbDTO = null;
+		GetMobileRecordFullResponse addNewMobileDbDTO = null;
 //		logger.info("QUERY:: " + query);
 		try {
 			con = getConnection();
 			pStmt = con.prepareStatement(query);
 			rs = pStmt.executeQuery();
 			while (rs.next()) {
-				addNewMobileDbDTO = new MobileDataDto();
+				addNewMobileDbDTO = new GetMobileRecordFullResponse();
 				// ------------------------------------
 				addNewMobileDbDTO.setMob_id(rs.getInt("mob_id"));
 				addNewMobileDbDTO.setMobileNumber(rs.getString("mobNumber"));

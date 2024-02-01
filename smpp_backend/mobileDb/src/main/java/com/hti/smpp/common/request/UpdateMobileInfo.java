@@ -6,15 +6,11 @@ public class UpdateMobileInfo {
 	  private int[] mobile_id;
 	    private String[] vip;
 	    private int checkedC;
-	    private String[] oldMobileNumber;
-	    private String[] mobileNumber;
 	    private String[] sex;
 	    private int[] age;
 	    private String[] area;
 	    private String[] subarea;
 	    private String[] profession;
-	    private String selectAll;
-	    private String totalRecords;
 	    private String[] classType;
 	    
 	    
@@ -37,18 +33,7 @@ public class UpdateMobileInfo {
 		public void setCheckedC(int checkedC) {
 			this.checkedC = checkedC;
 		}
-		public String[] getOldMobileNumber() {
-			return oldMobileNumber;
-		}
-		public void setOldMobileNumber(String[] oldMobileNumber) {
-			this.oldMobileNumber = oldMobileNumber;
-		}
-		public String[] getMobileNumber() {
-			return mobileNumber;
-		}
-		public void setMobileNumber(String[] mobileNumber) {
-			this.mobileNumber = mobileNumber;
-		}
+	
 		public String[] getSex() {
 			return sex;
 		}
@@ -79,24 +64,14 @@ public class UpdateMobileInfo {
 		public void setProfession(String[] profession) {
 			this.profession = profession;
 		}
-		public String getSelectAll() {
-			return selectAll;
-		}
-		public void setSelectAll(String selectAll) {
-			this.selectAll = selectAll;
-		}
-		public String getTotalRecords() {
-			return totalRecords;
-		}
-		public void setTotalRecords(String totalRecords) {
-			this.totalRecords = totalRecords;
-		}
+	
 		public String[] getClassType() {
 			return classType;
 		}
 		public void setClassType(String[] classType) {
 			this.classType = classType;
 		}
+		
 	    
 	    
 }
