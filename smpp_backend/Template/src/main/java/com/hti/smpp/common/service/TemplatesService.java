@@ -19,6 +19,7 @@ public interface TemplatesService {
 	public ResponseEntity<?> deleteTemplate(int id, String userName);
 	// Method for retrieving recently used template
 	public ResponseEntity<?> RecentUseTemplate(String username);
-	ResponseEntity<?> getAllTemplates(String username, LocalDate fromDate, LocalDate toDate);
+//	ResponseEntity<?> getAllTemplates(String username, LocalDate fromDate, LocalDate toDate);
+	ResponseEntity<?> getAllTemplates(String username, LocalDate fromDate, LocalDate toDate, String search);
 
 }
