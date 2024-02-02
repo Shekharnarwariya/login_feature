@@ -32,9 +32,11 @@ import com.hti.smpp.common.service.SubscribeService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Converter;
 import com.hti.smpp.common.util.Converters;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 import com.hti.smpp.common.util.SevenBitChar;
 import com.hti.smpp.common.util.dto.SubscribeEntry;
 import com.hti.smpp.common.util.repository.SubscribeEntryRepository;
@@ -50,6 +52,9 @@ public class SubscribeServiceImpl implements SubscribeService {
 
 	@Autowired
 	private UserEntryRepository userRepository;
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 
 	private static final Logger logger = LoggerFactory.getLogger(SubscribeServiceImpl.class);
 
@@ -84,10 +89,10 @@ public class SubscribeServiceImpl implements SubscribeService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		// Initialize variables
@@ -99,14 +104,13 @@ public class SubscribeServiceImpl implements SubscribeService {
 			form.setHeaderFile(headerFile);
 			form.setFooterFile(footerFile);
 		} catch (JsonProcessingException e) {
-			throw new JsonProcessingError("JsonProccessingError: " + e.getLocalizedMessage());
+			throw new JsonProcessingError(messageResourceBundle.getExMessage(ConstantMessages.JSON_PROCESSING_ERROR,new Object[] {e.getMessage()}));
 		} catch (Exception ex) {
-			throw new InternalServerException("Error: " + ex.getLocalizedMessage());
+			throw new InternalServerException(ex.getLocalizedMessage());
 		}
 		String target = IConstants.FAILURE_KEY;
 		String masterId = user.getMasterId();
-		logger.info("Add Subcription page Request By " + masterId + " Name: " + form.getPageName() + " Sender: "
-				+ form.getSender());
+		logger.info(messageResourceBundle.getLogMessage("subscription.add.req"),masterId,form.getPageName(),form.getSender());
 		SubscribeEntry entry = new SubscribeEntry();
 		String header_file_name = null;
 		String footer_file_name = null;
@@ -117,9 +121,9 @@ public class SubscribeServiceImpl implements SubscribeService {
 					if (getAsciiList(form.getMessage()) != null) {
 						entry.setOrigMessage(new Converters().UTF16(form.getMessage()));
 						String hexmsg = SevenBitChar.getHexValue(getAsciiList(form.getMessage()));
-						logger.info("hex: " + hexmsg);
+						System.out.println("hex: " + hexmsg);
 						String content = Converter.getContent(hexmsg.toCharArray());
-						logger.info("content: " + content);
+						System.out.println("content: " + content);
 						if (hexmsg != null) {
 							entry.setMessage(new Converters().UTF16(content));
 							logger.info(entry.getMessage());
@@ -134,8 +138,7 @@ public class SubscribeServiceImpl implements SubscribeService {
 			// Process header file
 			if (form.getHeaderFile() != null && form.getHeaderFile().getOriginalFilename() != null
 					&& form.getHeaderFile().getOriginalFilename().length() > 0) {
-				logger.info(masterId + " Header File Uploaded: " + form.getHeaderFile().getOriginalFilename());
-
+				logger.info(messageResourceBundle.getLogMessage("subscription.header.upload"),masterId,form.getHeaderFile().getOriginalFilename());
 				String header_file_ext = form.getHeaderFile().getOriginalFilename()
 						.substring(form.getHeaderFile().getOriginalFilename().lastIndexOf(".") + 1);
 				if (form.getUsername().length() > 4) {
@@ -147,7 +150,7 @@ public class SubscribeServiceImpl implements SubscribeService {
 						+ header_file_ext;
 				try {
 					if (writeToFile(header_file_name, form.getHeaderFile())) {
-						logger.info(masterId + " Header File Created: " + header_file_name);
+						logger.info(messageResourceBundle.getLogMessage("subscription.header.created"),masterId,header_file_name);
 					} else {
 						header_file_name = null;
 					}
@@ -160,7 +163,7 @@ public class SubscribeServiceImpl implements SubscribeService {
 			// Process footer file
 			if (form.getFooterFile() != null && form.getFooterFile().getOriginalFilename() != null
 					&& form.getFooterFile().getOriginalFilename().length() > 0) {
-				System.out.println(masterId + " Footer File Uploaded: " + form.getFooterFile().getOriginalFilename());
+				logger.info(messageResourceBundle.getLogMessage("subscription.footer.upload"),masterId,form.getFooterFile().getOriginalFilename());
 				String footer_file_ext = form.getFooterFile().getOriginalFilename()
 						.substring(form.getFooterFile().getOriginalFilename().lastIndexOf(".") + 1);
 				if (form.getUsername().length() > 4) {
@@ -172,7 +175,7 @@ public class SubscribeServiceImpl implements SubscribeService {
 						+ footer_file_ext;
 				try {
 					if (writeToFile(footer_file_name, form.getFooterFile())) {
-						logger.info(masterId + " Footer File Created: " + footer_file_name);
+						logger.info(messageResourceBundle.getLogMessage("subscription.footer.created"),masterId,footer_file_name);
 					} else {
 						footer_file_name = null;
 					}
@@ -193,7 +196,7 @@ public class SubscribeServiceImpl implements SubscribeService {
 					Integer.parseInt(form.getCountryCode());
 					entry.setCountryCode(form.getCountryCode());
 				} catch (Exception e) {
-					logger.error(masterId + " Invalid Country Code: " + form.getCountryCode());
+					logger.error(messageResourceBundle.getLogMessage("subscription.invalid.cc"),masterId,form.getCountryCode());
 					// throw new InternalServerException(masterId + " Invalid Country Code: " +
 					// form.getCountryCode());
 				}
@@ -209,15 +212,15 @@ public class SubscribeServiceImpl implements SubscribeService {
 				entry.setGroupId(groupId);
 				int generatedId = subscribeEntryRepository.save(entry).getId();
 				if (generatedId > 0) {
-					logger.info("Subscription Entry Saved Successfully!");
+					logger.info(messageResourceBundle.getLogMessage("subscription.saved.success"));
 					target = IConstants.SUCCESS_KEY;
 				} else {
-					logger.error("Error saving subscription entry");
-					throw new InternalServerException("Unable to save subscription entry!");
+					logger.error(messageResourceBundle.getLogMessage("subscription.saved.failure"));
+					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SUBSCRIPTION_ADD_ERROR));
 				}
 			} else {
-				logger.error("Process Error: Contact Group not created", false);
-				throw new InternalServerException("Process Error: Contact Group not created");
+				logger.error(messageResourceBundle.getLogMessage("subscription.contact.failure"));
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SUBSCRIPTION_ADD_ERROR));
 			}
 		} catch (DataIntegrityViolationException ex) {
 			logger.error(masterId, ex.getMessage());
@@ -225,17 +228,16 @@ public class SubscribeServiceImpl implements SubscribeService {
 				deleteFile(header_file_name);
 				deleteFile(footer_file_name);
 			}
-			throw new InternalServerException(
-					"Duplicate entry page: " + form.getPageName() + " for username: " + form.getUsername());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SUBSCRIPTION_DUPLICATE_ENTRY, new Object[] {form.getPageName(),form.getUsername()}));
 		} catch (Exception ex) {
 			logger.error(masterId, ex.getMessage());
 			if (form.getHeaderFile() != null && form.getFooterFile() != null) {
 				deleteFile(header_file_name);
 				deleteFile(footer_file_name);
 			}
-			throw new InternalServerException("Process Error: " + ex.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SUBSCRIPTION_MSG_ERROR, new Object[] {ex.getMessage()}));
 		}
-		return new ResponseEntity<>("SubscribeEntry Saved Successfully!", HttpStatus.CREATED);
+		return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.SUBSCRIPTION_ADD_SUCCESS), HttpStatus.CREATED);
 	}
 
 	public boolean writeToFile(String fileName, MultipartFile file) {
@@ -243,12 +245,11 @@ public class SubscribeServiceImpl implements SubscribeService {
 			Path directoryPath = Path.of(IConstants.WEBAPP_DIR + "images//subscription");
 			if (!Files.exists(directoryPath)) {
 				Files.createDirectories(directoryPath);
-				System.out.println("Subscription Dir Created");
+				logger.info(messageResourceBundle.getLogMessage("subscription.dir.created"));
 			}
 			Path filePath = directoryPath.resolve(fileName);
 			Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-			System.out.println("File saved successfully at: " + filePath);
-
+			logger.info(messageResourceBundle.getLogMessage("subscription.file.saved"),filePath);
 			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -261,10 +262,10 @@ public class SubscribeServiceImpl implements SubscribeService {
 			Path filePath = Paths.get(IConstants.WEBAPP_DIR + "images//subscription", fileName);
 			if (Files.exists(filePath)) {
 				Files.delete(filePath);
-				System.out.println("File deleted successfully: " + filePath);
+				logger.info(messageResourceBundle.getLogMessage("subscription.file.deleted"),filePath);
 				return true;
 			} else {
-				System.out.println("File does not exist: " + filePath);
+				logger.info(messageResourceBundle.getLogMessage("subscription.file.notexist"),filePath);
 				return false;
 			}
 		} catch (IOException e) {
@@ -280,33 +281,33 @@ public class SubscribeServiceImpl implements SubscribeService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		String target = IConstants.FAILURE_KEY;
-		logger.info("View Subcription Page[" + id + "] Request By " + user.getMasterId());
+		logger.info(messageResourceBundle.getLogMessage("subscription.view.req"),id,user.getMasterId());
 		SubscribeEntry entry = null;
 		try {
 			Optional<SubscribeEntry> optionalEntry = this.subscribeEntryRepository.findById(id);
 			if (optionalEntry.isPresent()) {
 				entry = optionalEntry.get();
 			} else {
-				logger.error(user.getMasterId() + " No Entry found.");
-				throw new NotFoundException("Subscribe entry not found!");
+				logger.error(messageResourceBundle.getLogMessage("subscription.msg.noentry"),user.getMasterId());
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SUBSCRIPTION_MSG_NOTFOUND));
 			}
 			Converters convert = new Converters();
 			entry.setMessage(convert.HexCodePointsToCharMsg(entry.getMessage()));
 			entry.setOrigMessage(convert.HexCodePointsToCharMsg(entry.getOrigMessage()));
-			logger.info(user.getMasterId() + " Subscribe Entry Found: " + entry);
+			logger.info(messageResourceBundle.getLogMessage("subscription.msg.found"),user.getMasterId(),entry.getUsername());
 			target = IConstants.SUCCESS_KEY;
 		} catch (NotFoundException e) {
-			logger.error("NotFoundException: " + e.toString());
-			throw new NotFoundException("Exception: " + e.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("subscription.msg.error"),e.getMessage());
+			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
-			logger.error("Exception: " + e.toString());
-			throw new InternalServerException("Exception: " + e.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("subscription.msg.error"),e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SUBSCRIPTION_MSG_ERROR,new Object[] {e.getMessage()}));
 		}
 		return ResponseEntity.ok(entry);
 	}
@@ -318,30 +319,29 @@ public class SubscribeServiceImpl implements SubscribeService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		String target = IConstants.FAILURE_KEY;
 		String masterId = user.getMasterId();
-		logger.info("List Subcription page Request By " + masterId);
+		logger.info(messageResourceBundle.getLogMessage("subscription.req.list"),masterId);
 		List<SubscribeEntry> listEntry = null;
 		try {
 			listEntry = this.subscribeEntryRepository.findByCreatedBy(masterId);
 			if (listEntry.isEmpty()) {
-				logger.info(masterId + " No Entry found.");
-				throw new NotFoundException(masterId + " No Entry found.");
+				logger.info(messageResourceBundle.getLogMessage("subscription.msg.noentry"),masterId);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SUBSCRIPTION_MSG_NOTFOUND ));
 			} else {
-				logger.info(masterId + " Subscribe Entries: " + listEntry.size());
+				logger.info(messageResourceBundle.getLogMessage("subscription.entries"),masterId,listEntry.size());
 				target = IConstants.SUCCESS_KEY;
 			}
 		} catch (NotFoundException e) {
-			logger.error(e.toString());
 			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
-			logger.error("Process Error: " + e.getMessage() + "[" + e.getCause() + "]");
-			throw new InternalServerException(e.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("subscription.msg.error"),e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SUBSCRIPTION_MSG_ERROR,new Object[] {e.getMessage()}));
 		}
 		return ResponseEntity.ok(listEntry);
 	}
@@ -354,10 +354,10 @@ public class SubscribeServiceImpl implements SubscribeService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		SubscribeEntryForm form;
@@ -368,18 +368,18 @@ public class SubscribeServiceImpl implements SubscribeService {
 			form.setHeaderFile(headerFile);
 			form.setFooterFile(footerFile);
 		} catch (JsonProcessingException e) {
-			throw new JsonProcessingError("JsonProccessingError: " + e.getLocalizedMessage());
+			throw new JsonProcessingError(messageResourceBundle.getExMessage(ConstantMessages.JSON_PROCESSING_ERROR,new Object[] {e.getMessage()}));
 		} catch (Exception ex) {
-			throw new InternalServerException("Error: " + ex.getLocalizedMessage());
+			throw new InternalServerException(ex.getLocalizedMessage());
 		}
 
 		String masterId = user.getMasterId();
 		String target = IConstants.FAILURE_KEY;
 		String header_file_name = null;
 		String footer_file_name = null;
-		logger.info("Update Subcription Page[" + form.getId() + "] Request By " + masterId);
+		logger.info(messageResourceBundle.getLogMessage("subscription.req.update"),form.getId(),masterId);
 		SubscribeEntry entry = this.subscribeEntryRepository.findById(form.getId())
-				.orElseThrow(() -> new NotFoundException("SubscribeEntry Not Found!"));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SUBSCRIPTION_MSG_NOTFOUND)));
 		try {
 			entry.setId(form.getId());
 			if (form.getMessage() != null && form.getMessage().length() > 0) {
@@ -403,7 +403,7 @@ public class SubscribeServiceImpl implements SubscribeService {
 			}
 			if (form.getHeaderFile() != null && form.getHeaderFile().getOriginalFilename() != null
 					&& form.getHeaderFile().getOriginalFilename().length() > 0) {
-				System.out.println(masterId + " Header File Uploaded: " + form.getHeaderFile().getName());
+				logger.info(messageResourceBundle.getLogMessage("subscription.header.upload"),masterId,form.getHeaderFile().getOriginalFilename());
 				String header_file_ext = form.getHeaderFile().getOriginalFilename()
 						.substring(form.getHeaderFile().getOriginalFilename().lastIndexOf(".") + 1);
 				if (form.getUsername().length() > 4) {
@@ -415,7 +415,7 @@ public class SubscribeServiceImpl implements SubscribeService {
 						+ header_file_ext;
 				try {
 					if (writeToFile(header_file_name, form.getHeaderFile())) {
-						logger.info(masterId + " Header File Created: " + header_file_name);
+						logger.info(messageResourceBundle.getLogMessage("subscription.header.created"),masterId,header_file_name);
 					} else {
 						header_file_name = null;
 					}
@@ -432,7 +432,7 @@ public class SubscribeServiceImpl implements SubscribeService {
 			}
 			if (form.getFooterFile() != null && form.getFooterFile().getOriginalFilename() != null
 					&& form.getFooterFile().getOriginalFilename().length() > 0) {
-				System.out.println(masterId + " Footer File Uploaded: " + form.getFooterFile().getName());
+				logger.info(messageResourceBundle.getLogMessage("subscription.footer.upload"),masterId,form.getFooterFile().getOriginalFilename());
 				String footer_file_ext = form.getFooterFile().getOriginalFilename()
 						.substring(form.getFooterFile().getOriginalFilename().lastIndexOf(".") + 1);
 				if (form.getUsername().length() > 4) {
@@ -444,7 +444,7 @@ public class SubscribeServiceImpl implements SubscribeService {
 						+ footer_file_ext;
 				try {
 					if (writeToFile(footer_file_name, form.getFooterFile())) {
-						logger.info(masterId + " Footer File Created: " + footer_file_name);
+						logger.info(messageResourceBundle.getLogMessage("subscription.footer.created"),masterId,footer_file_name);
 					} else {
 						footer_file_name = null;
 					}
@@ -465,17 +465,17 @@ public class SubscribeServiceImpl implements SubscribeService {
 					Integer.parseInt(form.getCountryCode());
 					entry.setCountryCode(form.getCountryCode());
 				} catch (Exception e) {
-					logger.error(masterId + " Invalid Country Code: " + form.getCountryCode());
+					logger.error(messageResourceBundle.getLogMessage("subscription.invalid.cc"),masterId,form.getCountryCode());
 					// throw new InternalServerException(masterId + " Invalid Country Code: " +
 					// form.getCountryCode());
 				}
 			}
 			SubscribeEntry updatedEntry = this.subscribeEntryRepository.save(entry);
 			if (updatedEntry != null) {
-				logger.info("message: operation success");
+				logger.info(messageResourceBundle.getLogMessage("subscription.update.success"));
 				target = IConstants.SUCCESS_KEY;
 			} else {
-				logger.error("Exception: Failed Updating SubscribeEntry!");
+				logger.error(messageResourceBundle.getLogMessage("subscription.update.failed"));
 				throw new InternalServerException("Unable to update SubscribeEntry!");
 			}
 		} catch (NotFoundException ex) {
@@ -484,19 +484,18 @@ public class SubscribeServiceImpl implements SubscribeService {
 				deleteFile(footer_file_name);
 			}
 			logger.error(masterId, ex.getLocalizedMessage());
-			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
 			throw new NotFoundException(ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			if (form.getHeaderFile() != null && form.getFooterFile() != null) {
 				deleteFile(header_file_name);
 				deleteFile(footer_file_name);
 			}
-			logger.error(masterId, ex.getLocalizedMessage());
-			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
-			throw new InternalServerException("Exception: " + ex.getLocalizedMessage());
+			
+			logger.error(messageResourceBundle.getLogMessage("subscription.msg.error"),ex.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SUBSCRIPTION_MSG_ERROR,new Object[] {ex.getMessage()}));
 		}
 
-		return new ResponseEntity<>("SubscribeEntry Updated Successfully!", HttpStatus.CREATED);
+		return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.SUBSCRIPTION_UPDATE_SUCCESS), HttpStatus.CREATED);
 	}
 
 	@Override
@@ -506,16 +505,16 @@ public class SubscribeServiceImpl implements SubscribeService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		String target = IConstants.FAILURE_KEY;
-		logger.info("Delete Subcription Page[" + id + "] Request By " + user.getMasterId());
+		logger.info(messageResourceBundle.getLogMessage("subscription.req.delete"),id,user.getMasterId());
 		try {
 			SubscribeEntry entry = this.subscribeEntryRepository.findById(id)
-					.orElseThrow(() -> new NotFoundException("SubscribeEntry Not Found!"));
+					.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SUBSCRIPTION_MSG_NOTFOUND)));
 			if (entry.getHeaderFileName() != null && entry.getHeaderFileName().length() > 0) {
 				deleteFile(entry.getHeaderFileName());
 			}
@@ -523,18 +522,16 @@ public class SubscribeServiceImpl implements SubscribeService {
 				deleteFile(entry.getFooterFileName());
 			}
 			this.subscribeEntryRepository.deleteById(id);
-			logger.info("message: operation success");
+			logger.info(messageResourceBundle.getLogMessage("subscription.delete.success"));
 			target = IConstants.SUCCESS_KEY;
 		} catch (NotFoundException ex) {
 			logger.error(user.getMasterId(), ex.getMessage());
-			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
 			throw new NotFoundException(ex.getLocalizedMessage());
 		} catch (Exception ex) {
-			logger.error(user.getMasterId(), ex.fillInStackTrace());
-			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
-			throw new InternalServerException("Process Error: " + ex.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("subscription.msg.error"),ex.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SUBSCRIPTION_MSG_ERROR,new Object[] {ex.getMessage()}));
 		}
-		return new ResponseEntity<>("Subscribe Entry Deleted Successfully!", HttpStatus.OK);
+		return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.SUBSCRIPTION_DELETE_SUCCESS), HttpStatus.OK);
 	}
 
 }

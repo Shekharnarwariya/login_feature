@@ -101,7 +101,7 @@ public class SalesServiceImpl implements SalesService {
 			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SALES_DUPLICATE_USER, new Object[] {entry.getUsername()}));
 		} catch (Exception ex) {
 			logger.error(messageResourceBundle.getLogMessage("sales.msg.error"),ex.getMessage());
-			throw new InternalServerException(ex.getLocalizedMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SALES_MSG_ERROR, new Object[] {ex.getMessage()}));
 		}
 
 		return new ResponseEntity<String>(messageResourceBundle.getMessage(ConstantMessages.SALES_ADD_SUCCESS), HttpStatus.CREATED);
@@ -133,36 +133,35 @@ public class SalesServiceImpl implements SalesService {
 		// Finding the user by system ID
 		String systemId = user.getSystemId();
 
-		logger.info("Executive [{}] Update Requested By {} [{}]", form.getId(), systemId, user.getRole());
+		logger.info(messageResourceBundle.getLogMessage("sales.update.req"), form.getId(), systemId, user.getRole());
 		SalesEntry seller = new SalesEntry();
 		try {
 			BeanUtils.copyProperties(form, seller);
-			logger.info("Update Requested: {}", seller.getUsername());
+			logger.info(messageResourceBundle.getLogMessage("sales.updateRequest"), seller.getUsername());
 			SalesEntry savedEntry = null;
 			if (this.salesRepository.existsById(seller.getId())) {
 				savedEntry = this.salesRepository.save(seller);
 			} else {
-				logger.error("Entry not found with id: " + seller.getId());
-				throw new NotFoundException("Entry not found with id: " + seller.getId());
+				logger.error(messageResourceBundle.getLogMessage("sales.entry.notfound"),seller.getId());
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SALES_ENTRY_NOTFOUND, new Object[] {seller.getId()}));
 			}
 
 			if (savedEntry != null) {
-				logger.info("Sales Entry saved successfully! Status: " + target);
-				GlobalVars.ExecutiveEntryMap.put(seller.getId(), seller);
 				target = IConstants.SUCCESS_KEY;
+				logger.info(messageResourceBundle.getLogMessage("sales.update.success"),target);
+				GlobalVars.ExecutiveEntryMap.put(seller.getId(), seller);
 			} else {
-				logger.error("Error: Unable to save SalesEntry");
-				throw new InternalServerException("Unable to save SalesEntry.");
+				logger.error(messageResourceBundle.getLogMessage("sales.update.failure"),seller.getUsername());
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SALES_UPDATE_FAILED, new Object[] {seller.getUsername()}));
 			}
 
 		} catch (NotFoundException ex) {
-			logger.error("NotFound Exception: {} [{}]", ex.getMessage(), ex.getCause());
-			throw new NotFoundException(ex.getLocalizedMessage());
+			throw new NotFoundException(ex.getMessage());
 		} catch (Exception ex) {
-			logger.error("Process Error: {} [{}]", ex.getMessage(), ex.getCause());
-			throw new InternalServerException(ex.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("sales.msg.error"),ex.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SALES_MSG_ERROR, new Object[] {ex.getMessage()}));
 		}
-		return new ResponseEntity<String>("SalesEntry Updated Successfully!", HttpStatus.CREATED);
+		return new ResponseEntity<String>(messageResourceBundle.getMessage(ConstantMessages.SALES_UPDATE_SUCCESS), HttpStatus.CREATED);
 	}
 
 	/**
@@ -187,25 +186,25 @@ public class SalesServiceImpl implements SalesService {
 			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
-		logger.info("Delete Requested for Sale ID: " + id);
+		logger.info(messageResourceBundle.getLogMessage("sales.req.delete"),id);
 		String target = IConstants.FAILURE_KEY;
 		try {
 			if (this.salesRepository.existsById(id)) {
 				this.salesRepository.deleteById(id);
 				target = IConstants.SUCCESS_KEY;
-				logger.info("Operation successful: Sale ID {}", id);
+				logger.info(messageResourceBundle.getLogMessage("sales.operation.success"), id);
 			} else {
-				throw new NotFoundException("Entry not found with id: " + id);
+				logger.error(messageResourceBundle.getLogMessage("sales.entry.notfound"),id);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SALES_ENTRY_NOTFOUND, new Object[] {id}));
 			}
 
 		} catch (NotFoundException ex) {
-			logger.error("NotFound Error: {} [{}]", ex.getMessage(), ex.getCause());
-			throw new NotFoundException(ex.getLocalizedMessage());
+			throw new NotFoundException(ex.getMessage());
 		} catch (Exception ex) {
-			logger.error("Process Error: {} [{}]", ex.getMessage(), ex.getCause());
-			throw new InternalServerException(ex.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("sales.msg.error"),ex.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SALES_MSG_ERROR, new Object[] {ex.getMessage()}));
 		}
-		return new ResponseEntity<String>("Sales Entry Deleted Successfully!", HttpStatus.OK);
+		return new ResponseEntity<String>(messageResourceBundle.getMessage(ConstantMessages.SALES_DELETED_SUCCESS), HttpStatus.OK);
 	}
 
 	/**
@@ -226,14 +225,14 @@ public class SalesServiceImpl implements SalesService {
 					map.put(entry.getId(), entry);
 				}
 			}else {
-				throw new NotFoundException("No SalesEntry Found!");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SALES_NOTFOUND));
 			}
 		} catch (NotFoundException e) {
-			logger.error("Not Found Error: " + e.getLocalizedMessage());
-			throw new NotFoundException(e.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("sales.msg.error"),e.getMessage());
+			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
-			logger.error("Error: " + e.getLocalizedMessage());
-			throw new InternalServerException(e.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("sales.msg.error"),e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SALES_MSG_ERROR, new Object[] {e.getMessage()}));
 		}
 		
 		return map;
@@ -261,14 +260,14 @@ public class SalesServiceImpl implements SalesService {
 					}
 				}
 			}else {
-				throw new NotFoundException("No Sales Entry Found!");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SALES_NOTFOUND));
 			}
 		} catch (NotFoundException e) {
-			logger.error("NotFound Error: " + e.getLocalizedMessage());
-			throw new NotFoundException(e.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("sales.msg.error"),e.getMessage());
+			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
-			logger.error("Error: " + e.getLocalizedMessage());
-			throw new InternalServerException(e.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("sales.msg.error"),e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SALES_MSG_ERROR, new Object[] {e.getMessage()}));
 		}
 		
 		return map;
@@ -295,14 +294,14 @@ public class SalesServiceImpl implements SalesService {
 					map.put(entry.getId(), entry);
 				}
 			} else {
-				throw new NotFoundException("No SalesEntry Found!");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SALES_NOTFOUND));
 			}
 		} catch (NotFoundException e) {
-			logger.error(e.getLocalizedMessage());
-			throw new NotFoundException(e.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("sales.msg.error"),e.getMessage());
+			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
-			logger.error(e.getLocalizedMessage());
-			throw new InternalServerException(e.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("sales.msg.error"),e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SALES_MSG_ERROR, new Object[] {e.getMessage()}));
 		}
 		
 		return map;
@@ -335,7 +334,7 @@ public class SalesServiceImpl implements SalesService {
 
 		String target = IConstants.FAILURE_KEY;
 		String masterId = user.getMasterId();
-		logger.info("Executive List Requested By {} [{}]", masterId, user.getRole());
+		logger.info(messageResourceBundle.getLogMessage("sales.req.list"), masterId, user.getRole());
 
 		Collection<SalesEntry> salesList = null;
 		try {
@@ -350,20 +349,19 @@ public class SalesServiceImpl implements SalesService {
 
 			if (salesList != null && !salesList.isEmpty()) {
 				target = IConstants.SUCCESS_KEY;
-				logger.info("Executives Under [" + masterId + "] : " + salesList.size());
+				logger.info(messageResourceBundle.getLogMessage("sales.list.users"),masterId,salesList.size());
 			} else {
 				target = IConstants.FAILURE_KEY;
-				logger.error("No Executive Found Under " + masterId + "[" + user.getRole() + "]" + "|" + target);
+				logger.error(messageResourceBundle.getLogMessage("sales.list.nousers"),masterId,user.getRole(),target);
 				throw new NotFoundException(
-						"No Executive Found Under " + masterId + "[" + user.getRole() + "]" + "|" + target);
+						messageResourceBundle.getExMessage(ConstantMessages.SALES_NOEXECUTIVE, new Object[] {masterId,user.getRole(),target}));
 			}
 
 		} catch (NotFoundException e) {
-			logger.error("Not Found Exception: " + e.getMessage() + "[" + e.getCause() + "]");
-			throw new NotFoundException(e.getLocalizedMessage());
+			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
-			logger.error("Process Error: " + e.getMessage() + "[" + e.getCause() + "]");
-			throw new InternalServerException(e.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("sales.msg.error"),e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SALES_MSG_ERROR, new Object[] {e.getMessage()}));
 		}
 		return ResponseEntity.ok(salesList);
 	}
@@ -395,7 +393,7 @@ public class SalesServiceImpl implements SalesService {
 		String target = IConstants.FAILURE_KEY;
 		// Finding the user by system ID
 		String systemId = user.getSystemId();
-		logger.info("Executive[" + id + "] Details Requested By " + systemId + "[" + user.getRole() + "]");
+		logger.info(messageResourceBundle.getLogMessage("sales.view.req"),id,systemId,user.getRole());
 		ViewSalesEntry response = new ViewSalesEntry();
 		try {
 			SalesEntry seller = null;
@@ -403,10 +401,9 @@ public class SalesServiceImpl implements SalesService {
 			if (salesOptional.isPresent()) {
 				seller = salesOptional.get();
 			} else {
-				logger.error("SalesEntry not found");
-				throw new NotFoundException("SalesEntry not found");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SALES_NOTFOUND));
 			}
-			logger.info("Requested: " + seller.getUsername());
+
 			if (seller != null) {
 				if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 					Collection<SalesEntry> list = null;
@@ -415,7 +412,7 @@ public class SalesServiceImpl implements SalesService {
 					if(!list.isEmpty()) {
 						response.setManagers(list);
 					}else {
-						logger.info("No Sales Entry Found For The Role Manager!");
+						logger.warn(messageResourceBundle.getLogMessage("sales.manager.noentry"));
 					}
 				}
 				response.setSeller(seller);
@@ -424,11 +421,11 @@ public class SalesServiceImpl implements SalesService {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 
 		} catch (NotFoundException e) {
-			logger.error("NotFound Error: " + e.getMessage() + "[" + e.getCause() + "]");
+			logger.error(messageResourceBundle.getLogMessage("sales.msg.error"),e.getMessage());
 			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
-			logger.error("Process Error: " + e.getMessage() + "[" + e.getCause() + "]");
-			throw new InternalServerException(e.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("sales.msg.error"),e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SALES_MSG_ERROR, new Object[] {e.getMessage()}));
 		}
 	}
 
@@ -457,23 +454,22 @@ public class SalesServiceImpl implements SalesService {
 		String target = IConstants.SUCCESS_KEY;
 		// Finding the user by system ID
 		String systemId = user.getSystemId();
-
-		logger.info("Sales User Setup Requested By " + systemId + "[" + user.getRole() + "]");
+		logger.info(messageResourceBundle.getLogMessage("sales.setup.req"),systemId,user.getRole());
 		Collection<SalesEntry> list = null;
 		if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 			try {
 				list = list("manager").values();
 				
 				if(list.isEmpty()) {
-					logger.error("No Data Found For The Role Manager In SalesEntry!");
-					throw new NotFoundException("No SaleEntry Found For Manager!");
+					logger.error(messageResourceBundle.getLogMessage("sales.manager.noentry"));
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SALES_NOTFOUND));
 				}
 			} catch (NotFoundException e) {
-				logger.error("Not found ERROR " + e.getLocalizedMessage());
+				logger.error(messageResourceBundle.getLogMessage("sales.msg.error"),e.getMessage());
 				throw new NotFoundException(e.getLocalizedMessage());
 			} catch (Exception e) {
-				logger.error("ERROR " + e.getLocalizedMessage());
-				throw new InternalServerException(e.getLocalizedMessage());
+				logger.error(messageResourceBundle.getLogMessage("sales.msg.error"),e.getMessage());
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SALES_MSG_ERROR, new Object[] {e.getMessage()}));
 			}
 		} else {
 			if (Access.isAuthorized(user.getRole(), "isAuthorizedManager")
@@ -482,7 +478,7 @@ public class SalesServiceImpl implements SalesService {
 			} else {
 				target = "invalidRequest";
 				logger.error("Authorization Failed: {}: {}", systemId, target);
-				throw new UnauthorizedException("Authorization Failed");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		}
 		return ResponseEntity.ok(list);

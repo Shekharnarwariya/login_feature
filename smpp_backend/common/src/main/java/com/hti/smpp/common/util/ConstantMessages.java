@@ -81,11 +81,25 @@ public class ConstantMessages {
     public static final String SALES_USER_EXIST = "sales.user.exist";
     public static final String SALES_ADD_FAILED = "sales.add.failure";
     public static final String SALES_DUPLICATE_USER = "sales.warn.duplicateUsername";
-    
+    public static final String SALES_ENTRY_NOTFOUND = "sales.entry.notfound";
+    public static final String SALES_UPDATE_FAILED = "sales.update.failure";
+    public static final String SALES_MSG_ERROR = "sales.error.msg";
+    public static final String SALES_NOTFOUND = "sales.not.found";
+    public static final String SALES_NOEXECUTIVE = "sales.msg.noexecutive";
     //sales success message
     public static final String SALES_ADD_SUCCESS = "sales.success.add";
+    public static final String SALES_UPDATE_SUCCESS = "sales.success.update";
+    public static final String SALES_DELETED_SUCCESS = "sales.success.delete";
     
-    //dlt module
+    //Json Processing Exception
+    public static final String JSON_PROCESSING_ERROR = "process.json.error";
+    
+
+    //subscription exception message
+    public static final String SUBSCRIPTION_ADD_ERROR = "subscription.save.failure";
+    public static final String SUBSCRIPTION_DUPLICATE_ENTRY = "subscription.entry.duplicate";
+    public static final String SUBSCRIPTION_MSG_ERROR = "subscription.msg.error";
+    public static final String SUBSCRIPTION_MSG_NOTFOUND = "subscription.msg.notfound";
     public static final String DUPLICATE_ENTRY_FOUND="dlt.duplicate.entry";
     public static final String FAILED_TO_ADD_ENTRY="dlt.failed.addEntry";
     public static final String DLT_DATA_ACCESS_SUCC="dlt.dataAccess.success";
@@ -104,6 +118,8 @@ public class ConstantMessages {
     public static final String DLT_RESOURCE_NOTFOUND="dlt.resource.notfound";
     public static final String DLT_TEMP_DELETED="dlt.temp.deleted.success";
     
-    
-    
+    //subscription success message
+    public static final String SUBSCRIPTION_ADD_SUCCESS = "subscription.add.success";
+    public static final String SUBSCRIPTION_UPDATE_SUCCESS = "subscription.update.success";
+    public static final String SUBSCRIPTION_DELETE_SUCCESS = "subscription.delete.success";
 }
