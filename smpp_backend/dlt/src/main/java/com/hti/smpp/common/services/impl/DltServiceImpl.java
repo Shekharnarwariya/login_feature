@@ -44,9 +44,11 @@ import com.hti.smpp.common.services.DltService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Constants;
 import com.hti.smpp.common.util.Converters;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 import com.hti.smpp.common.util.MultiUtility;
 
 @Service
@@ -61,6 +63,10 @@ public class DltServiceImpl implements DltService {
 
 	@Autowired
 	private DltTemplEntryRepository dlttempRepo;
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
+	
 
 	private static final Logger logger = LoggerFactory.getLogger(DltServiceImpl.class.getName());
 
@@ -73,21 +79,24 @@ public class DltServiceImpl implements DltService {
 	@Override
 	public ResponseEntity<?> saveDltEntry(DltRequest dltEntry, String username) {
 		// Retrieve user information based on the provided name
+		
+		logger.info(messageResourceBundle.getLogMessage("dlt.saveDltEntry.enter"));
+		
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry userEntry = null;
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		
 		String target = IConstants.FAILURE_KEY;
 
 		// Log the request details
-		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Add DltEntry Request: " + dltEntry.getSender());
+		logger.info(messageResourceBundle.getLogMessage("dlt.saveDltEntry.userid"),userEntry.getSystemId(),userEntry.getRole(),dltEntry.getSender());
 		
 		try {
 			 // Create a new DltEntry instance
@@ -105,10 +114,12 @@ public class DltServiceImpl implements DltService {
 			dltResponse.setUsername(dlt.getUsername());
 			dltResponse.setSender(dlt.getSender());
 			dltResponse.setTelemarketerId(dlt.getTelemarketerId());	
-			logger.info(" DltEntry Added:" + dltEntry);
+//			logger.info(" DltEntry Added:" + dltEntry);
+			logger.info(messageResourceBundle.getLogMessage("dlt.saveDltEntry.dltEntry"),dltEntry);
 			// Log success and update target
 			target = IConstants.SUCCESS_KEY;
-			logger.info("Dlt Entry Added Successfully");
+//			logger.info("Dlt Entry Added Successfully");
+			logger.info(messageResourceBundle.getLogMessage("dlt.saveDltEntry.success"));
 
 			 // Trigger a flag change for DLT processing
 			MultiUtility.changeFlag(Constants.DLT_FLAG_FILE, "707");
@@ -116,8 +127,9 @@ public class DltServiceImpl implements DltService {
            return new ResponseEntity<>(dltResponse, HttpStatus.CREATED);
            
 		}catch (Exception e) {
-    		logger.error("Error Occured While Processing");
-			 throw new InternalServerException(e.getMessage());
+//    		logger.error("Error Occured While Processing");
+    		logger.info(messageResourceBundle.getLogMessage("dlt.saveDltEntry.error"));
+			 throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR, new Object[] {e.getMessage()}));
 			
 		}	
 		
@@ -150,13 +162,15 @@ public class DltServiceImpl implements DltService {
 			return this.dltRepo.save(entry);
 		    		
 		}catch (DataIntegrityViolationException e) {
-			logger.error("DataIntegrity Violation Exception error Occurred");
-          throw new InternalServerException("Duplicate Entry Found in DataBase");    
+//			logger.error("DataIntegrity Violation Exception error Occurred");
+			logger.info(messageResourceBundle.getLogMessage("dlt.saveDltEntry.DataIntegrity.error"));
+          throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.DUPLICATE_ENTRY_FOUND));    
        } catch (ConstraintViolationException e) {
-          throw new InternalServerException("Duplicate Entry Found in DB");
+          throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.DUPLICATE_ENTRY_FOUND));
        } catch (Exception e) {	
-			 logger.error("An error occurred while saving DltEntry to the repository", e);
-		  throw new InternalServerException("Can Not Add Duplicate Entry.");		 
+//			 logger.error("An error occurred while saving DltEntry to the repository", e);
+			 logger.info(messageResourceBundle.getLogMessage("dlt.saveDltEntry.Exception.error"),e);
+		  throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.FAILED_TO_ADD_ENTRY));		 
 		}
 		
 
@@ -171,6 +185,8 @@ public class DltServiceImpl implements DltService {
 	@Override
 	public ResponseEntity<?> addDltTemplate(String entryForm, MultipartFile file, String username) {
 
+		logger.info(messageResourceBundle.getLogMessage("dlt.addDltTemplate.enter"));
+		
 		// Retrieve user information based on the provided username
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry userEntry = null;
@@ -178,17 +194,18 @@ public class DltServiceImpl implements DltService {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		// Default target value
 		String target = IConstants.FAILURE_KEY;
 
 		 // Log user details and additional information
-		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "]");
+//		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "]");
+		logger.info(messageResourceBundle.getLogMessage("dlt.addDltTemplate.entry"),userEntry.getSystemId(),userEntry.getRole());
 		
 		DltTempRequest form;
 		try {	
@@ -198,8 +215,9 @@ public class DltServiceImpl implements DltService {
 			if (file != null && file.getName().length() > 0) {
 				
 				// Log the file name for XLS file processing
-				logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Add Dlt Template Request: "
-						+ file.getName());
+//				logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Add Dlt Template Request: "
+//						+ file.getName());
+				logger.info(messageResourceBundle.getLogMessage("dlt.addDltTemplate.systemid"),userEntry.getSystemId(),userEntry.getRole(),file.getName());
 				Workbook workbook = null;
 				try {
 					 // Determine the workbook type based on the file extension (XLS or XLSX)
@@ -210,16 +228,19 @@ public class DltServiceImpl implements DltService {
 						workbook = new HSSFWorkbook(file.getInputStream());
 					}
 					Sheet firstSheet = workbook.getSheetAt(0);
-					logger.info(
-							userEntry.getSystemId() + " Sheet[0] Total Rows: " + firstSheet.getPhysicalNumberOfRows());
+//					logger.info(
+//							userEntry.getSystemId() + " Sheet[0] Total Rows: " + firstSheet.getPhysicalNumberOfRows());
 
+					logger.info(messageResourceBundle.getLogMessage("dlt.addDltTemplate.firstSheet"),userEntry.getSystemId(),firstSheet.getPhysicalNumberOfRows());
+					
 					int column_count = 0;
 					for (Row nextRow : firstSheet) {
 						// x++;
 						if (nextRow.getRowNum() == 0) {
 							column_count = nextRow.getPhysicalNumberOfCells();
 							if (column_count == 0) {
-								logger.info("Invalid Format For Xls File");
+//								logger.info("Invalid Format For Xls File");
+								logger.info(messageResourceBundle.getLogMessage("dlt.addDltTemplate.Invalid"));
 								break;
 							} else {
 								continue;
@@ -238,12 +259,15 @@ public class DltServiceImpl implements DltService {
 										if (Character.isLetterOrDigit(cell_value.charAt(c))) {
 											peId += cell_value.charAt(c) + "";
 										} else {
-											System.out.println(nextRow.getRowNum() + " [PE_ID]Invalid Char found[" + c
-													+ "]: " + cell_value.charAt(c));
+//											System.out.println(nextRow.getRowNum() + " [PE_ID]Invalid Char found[" + c
+//													+ "]: " + cell_value.charAt(c));
+											
+											logger.info(messageResourceBundle.getLogMessage("dlt.addDltTemplate.getRowNum"),nextRow.getRowNum(), c,cell_value.charAt(c));
 										}
 									}
 								} else {
-									logger.info("Invalid PE_ID For Entry[" + nextRow.getRowNum() + "]: " + cell_value);
+//									logger.info("Invalid PE_ID For Entry[" + nextRow.getRowNum() + "]: " + cell_value);
+									logger.info(messageResourceBundle.getLogMessage("dlt.addDltTemplate.PE_ID"),nextRow.getRowNum(),cell_value);
 									continue;
 								}
 							}
@@ -255,13 +279,15 @@ public class DltServiceImpl implements DltService {
 										if (Character.isLetterOrDigit(cell_value.charAt(c))) {
 											templateId += cell_value.charAt(c) + "";
 										} else {
-											System.out.println(nextRow.getRowNum() + " [Template_ID]Invalid Char found["
-													+ c + "]: " + cell_value.charAt(c));
+//											System.out.println(nextRow.getRowNum() + " [Template_ID]Invalid Char found["
+//													+ c + "]: " + cell_value.charAt(c));
+											logger.info(messageResourceBundle.getLogMessage("dlt.addDltTemplate.Template_ID]Invalid"),nextRow.getRowNum(),c,cell_value.charAt(c));
 										}
 									}
 								} else {
-									logger.info("Invalid Template_ID For Entry[" + nextRow.getRowNum() + "]: "
-											+ cell_value);
+//									logger.info("Invalid Template_ID For Entry[" + nextRow.getRowNum() + "]: "
+//											+ cell_value);
+									logger.info(messageResourceBundle.getLogMessage("dlt.addDltTemplate.Template_ID"),nextRow.getRowNum(),cell_value);
 									continue;
 								}
 							}
@@ -270,14 +296,19 @@ public class DltServiceImpl implements DltService {
 								if (cell_value != null) {
 									template = cell_value;
 								} else {
-									logger.info(
-											"Invalid Template For Entry[" + nextRow.getRowNum() + "]: " + cell_value);
+//									logger.info(
+//											"Invalid Template For Entry[" + nextRow.getRowNum() + "]: " + cell_value);
+									logger.info(messageResourceBundle.getLogMessage("dlt.addDltTemplate.invalid.template"),nextRow.getRowNum(),cell_value);
 									continue;
 								}
 							}
 						}
-						logger.info(nextRow.getRowNum() + ": peId=" + peId + ",templateId=" + templateId + ",template="
-								+ template);
+//						logger.info(nextRow.getRowNum() + ": peId=" + peId + ",templateId=" + templateId + ",template="
+//								+ template);
+						
+						logger.info(messageResourceBundle.getLogMessage("dlt.addDltTemplate.getRow.template"),nextRow.getRowNum(),peId,templateId,template);
+						
+						
 						  // Check if the template is not null or empty, then add it to the list
 						if (template != null && template.length() > 0) {
 							if (template.contains("�")) {
@@ -289,14 +320,14 @@ public class DltServiceImpl implements DltService {
 					}
 				} catch (DataAccessError ex) {
 						
-					throw new DataAccessError("Storing Data was Unsuccessful");
+					throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.DLT_DATA_ACCESS_SUCC));
 				} finally {
 					// Close the workbook after processing
 					if (workbook != null) {
 						try {
 							workbook.close();
 						} catch (Exception e) {
-							throw new InternalServerException("Cannot Process your Request");
+							throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR, new Object[] {e.getLocalizedMessage()}));
 						}
 					}
 				}
@@ -306,13 +337,16 @@ public class DltServiceImpl implements DltService {
 					ObjectMapper objectMapper = new ObjectMapper();
 					form = objectMapper.readValue(entryForm, DltTempRequest.class);
 				} catch (MismatchedInputException e) {
-					logger.error("An error occurred while processing DltEntry.");
-					throw new InternalServerException("Error Occurred In Processing json Data");
+//					logger.error("An error occurred while processing DltEntry.");
+					logger.info(messageResourceBundle.getLogMessage("dlt.addDltTemplate.error.dltentry"));
+					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.DLT_ERROR_JSON));
 				}
 				
 				// Log Dlt Template Request details
-				logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Add Dlt Template Request: "
-						+ form.getTemplateId());
+//				logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Add Dlt Template Request: "
+//						+ form.getTemplateId());
+				
+				logger.info(messageResourceBundle.getLogMessage("dlt.addDltTemplate.Request.template"),userEntry.getSystemId(), userEntry.getRole(),form.getTemplateId());
 
 				 // Check if necessary fields are not null, then proceed to add the template to the list
 				if (form.getTemplateId() != null && form.getTemplate() != null && form.getPeId() != null) {
@@ -335,29 +369,32 @@ public class DltServiceImpl implements DltService {
 				}
 			}
 			if (list.isEmpty()) {
-				logger.info("<--- Dlt Templates empty --> ");
+//				logger.info("<--- Dlt Templates empty --> ");
+				logger.info(messageResourceBundle.getLogMessage("dlt.addDltTemplate.empty.template"));
 				throw new NotFoundException("No Entries to Add");
 			} else {
-				logger.info(" Dlt Template entries:" + list.size());
+//				logger.info(" Dlt Template entries:" + list.size());
+				logger.info(messageResourceBundle.getLogMessage("dlt.addDltTemplate.entries.template"),list.size());
 				int counter = saveDltTemplate(list);
-				logger.info(" Dlt Template Inserted: " + counter);
+//				logger.info(" Dlt Template Inserted: " + counter);
+				logger.info(messageResourceBundle.getLogMessage("dlt.addDltTemplate.Inserted.template"),counter);
 				target = IConstants.SUCCESS_KEY;
-				logger.info("Data Added to List Successfully");
+//				logger.info("Data Added to List Successfully");
+				logger.info(messageResourceBundle.getLogMessage("dlt.addDltTemplate.Successfully.template"));
 				if (counter > 0) {
 					MultiUtility.changeFlag(Constants.DLT_FLAG_FILE, "707");
 				}
 			}
 		}catch (DataAccessError ex) {	
-			throw new DataAccessError("Storing Data was Unsuccessful");
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.DLT_ERR_UNSUCC));
 		}catch (ConstraintViolationException ex) {
-			logger.info("" + ex.getCause());
 			throw new ConstraintViolationException(ex.getMessage(), ex.getSQLException(), "Duplicate Entry");
 		}catch (Exception ex) {
-			throw new InternalServerException("Cannot Add Duplicate Entry");
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.DLT_DUPLI_ENTY));
 		}
-		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Add Dlt Template Target: " + target);
-		
-			return new ResponseEntity<>("Entry Added Successfully", HttpStatus.CREATED);
+//		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Add Dlt Template Target: " + target);	
+		logger.info(messageResourceBundle.getLogMessage("dlt.addDltTemplate.userRole.template"),userEntry.getSystemId(),userEntry.getRole(),target);
+			return new ResponseEntity<>(messageResourceBundle.getExMessage(ConstantMessages.DLT_SUCC_ADD), HttpStatus.CREATED);
 	}
 
 	/**
@@ -378,7 +415,7 @@ public class DltServiceImpl implements DltService {
 
 				counter++;			
 			} catch (ConstraintViolationException ex) {
-				throw new ConstraintViolationException("Requested Method was Unsuccessfull", ex.getSQLException(), "Duplicate Entry");
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.DLT_REQ_UNSUCC));
 
 			}
 		}
@@ -395,7 +432,8 @@ public class DltServiceImpl implements DltService {
 	@Override
 	public ResponseEntity<List<DltResponse>> listDltEntry(String username) {
 
-	
+		logger.info(messageResourceBundle.getLogMessage("dlt.listDltEntry.enter"));
+		
 		String target = IConstants.FAILURE_KEY;
 
 		// Retrieve user information based on the provided username
@@ -405,13 +443,14 @@ public class DltServiceImpl implements DltService {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
-		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] list DltEntry Request");
+//		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] list DltEntry Request");
+		logger.info(messageResourceBundle.getLogMessage("dlt.listDltEntry.DltEntry"),userEntry.getSystemId(),userEntry.getRole());
 
 		try {
 
@@ -433,18 +472,21 @@ public class DltServiceImpl implements DltService {
 		
 		if (list != null && !list.isEmpty()) {
 			logger.info(" DltEntry List: " + list.size());
+			logger.info(messageResourceBundle.getLogMessage("dlt.listDltEntry.List"),list.size());
 			target = IConstants.SUCCESS_KEY;
-			logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] list DltEntry Target: " + target);
+//			logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] list DltEntry Target: " + target);
+			logger.info(messageResourceBundle.getLogMessage("dlt.listDltEntry.DltEntry.target"),userEntry.getSystemId(),userEntry.getRole(),target);
 
 			return new ResponseEntity<>(responseList, HttpStatus.OK);
 		} else {
-			logger.error("No data is Avaliable in the template list");
-			throw new NotFoundException("Template List Is Empty");
+//			logger.error("No data is Avaliable in the template list");
+			logger.info(messageResourceBundle.getLogMessage("dlt.listDltEntry.error"));
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.DLT_TEMP_EMPTY));
 		}
 
 		
 		} catch (Exception e) {
-			throw new InternalServerException("Cannot Process your Request");
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
 		}
 		
 		
@@ -475,19 +517,22 @@ public class DltServiceImpl implements DltService {
 	public ResponseEntity<List<DltTempResponse>> listDltTemplate(String username) {
 		
 		String target = IConstants.FAILURE_KEY;
+		logger.info(messageResourceBundle.getLogMessage("dlt.listDltTemplate.enter"));
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry userEntry = null;
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
-		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] list Dlt Template Request");
+//		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] list Dlt Template Request");
+		logger.info(messageResourceBundle.getLogMessage("dlt.listDltTemplate.Template.request"),userEntry.getSystemId(),userEntry.getRole());
+		
 			
 		// Convert DltTemplEntry instances to DltTempResponse instances
        List<DltTempResponse> responseList= new ArrayList<DltTempResponse>();
@@ -506,17 +551,20 @@ public class DltServiceImpl implements DltService {
 			
 			
 			if (list != null && !list.isEmpty()) {
-				logger.info(" Dlt Template List: " + list.size());
+//				logger.info(" Dlt Template List: " + list.size());
+				logger.info(messageResourceBundle.getLogMessage("dlt.listDltTemplate.Template.list"),list.size());
 				target = IConstants.SUCCESS_KEY;
-				logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] list Dlt Template Target: " + target);
+//				logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] list Dlt Template Target: " + target);
+				logger.info(messageResourceBundle.getLogMessage("dlt.listDltTemplate.Template.Target"),userEntry.getSystemId(),userEntry.getRole(),target);
 				return new ResponseEntity<>(responseList, HttpStatus.OK);
 			} else {
-				logger.error("No Record Avaliable");
-				throw new NotFoundException("No Record Avaliable");
+//				logger.error("No Record Avaliable");
+				logger.info(messageResourceBundle.getLogMessage("dlt.listDltTemplate.noRecord"));
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.DLT_NOT_FOUND_ERROR));
 			}
 			
 		} catch (Exception e) {
-			throw new InternalServerException("List Template Is Empty");
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.DLT_TEMP_EMPTY));
 		}
 		
 
@@ -599,6 +647,7 @@ public class DltServiceImpl implements DltService {
 
 	public ResponseEntity<?> updateDltEntry(DltRequest dltEntry, String username) {
 
+		logger.info(messageResourceBundle.getLogMessage("dlt.updateDltEntry.enter"));
 		
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -606,14 +655,16 @@ public class DltServiceImpl implements DltService {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
-		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Update DltEntry Request: "
-				+ dltEntry.getSender());
+//		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Update DltEntry Request: "
+//				+ dltEntry.getSender());
+		logger.info(messageResourceBundle.getLogMessage("dlt.updateDltEntry.Update.userDetail"),userEntry.getSystemId(),userEntry.getRole(),dltEntry.getSender());
+		
 		try {
 
 			DltEntry dlt = new DltEntry();	
@@ -626,13 +677,15 @@ public class DltServiceImpl implements DltService {
 
 			updateDltEntry(dlt);
 			target = IConstants.SUCCESS_KEY;
-			logger.info("message.operation.success");
+//			logger.info("message.operation.success");
+			logger.info(messageResourceBundle.getLogMessage("dlt.updateDltEntry.success"));
 			MultiUtility.changeFlag(Constants.DLT_FLAG_FILE, "707");
-			logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Update DltEntry Target: " + target);
-			return new ResponseEntity<>("Entry Updated Successfully", HttpStatus.OK);
+//			logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Update DltEntry Target: " + target);
+			logger.info(messageResourceBundle.getLogMessage("dlt.updateDltEntry.Target"),userEntry.getSystemId(),userEntry.getRole(),target);
+			return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.DLT_UPDATE_SUCCESS), HttpStatus.OK);
 
 		} catch (Exception e) {
-			throw new InternalServerException(e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR, new Object[] {e.getMessage()}));
 		}	
 			
 	}
@@ -659,7 +712,7 @@ public class DltServiceImpl implements DltService {
 			}
 			dltRepo.save(dltEntry);
 		} catch (Exception e) {
-			throw new InternalServerException("Entry Not Found In DataBase");
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.DLT_ENTRY_NOTFOUND));
 
 		}
 		
@@ -670,7 +723,8 @@ public class DltServiceImpl implements DltService {
 	public ResponseEntity<?> updateDltTemplate(DltTempRequest dltTemplate, String username) {
 		
 		String target = IConstants.FAILURE_KEY;
-
+		logger.info(messageResourceBundle.getLogMessage("dlt.updateDltTemplate.enter"));
+		
 		// Retrieve the user information based on the provided username
 		
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -678,14 +732,18 @@ public class DltServiceImpl implements DltService {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
-		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Update Dlt Template Request: "
-				+ dltTemplate.getTemplateId());
+//		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Update Dlt Template Request: "
+//				+ dltTemplate.getTemplateId());
+		
+		logger.info(messageResourceBundle.getLogMessage("dlt.updateDltTemplate.Template.user"),userEntry.getSystemId(), userEntry.getRole(),dltTemplate.getTemplateId());
+		
+		
 		try {
 			DltTemplEntry dlt = new DltTemplEntry();
 		
@@ -697,14 +755,16 @@ public class DltServiceImpl implements DltService {
 			updateDltTemplate(dlt);
 			 // Update the target status to indicate success
 			target = IConstants.SUCCESS_KEY;
-			logger.error("message.operation.success");
+//			logger.error("message.operation.success");
+			logger.info(messageResourceBundle.getLogMessage("dlt.updateDltTemplate.success"));
 			MultiUtility.changeFlag(Constants.DLT_FLAG_FILE, "707");
-			logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Update Dlt Template Target: " + target);
+//			logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Update Dlt Template Target: " + target);			
+			logger.info(messageResourceBundle.getLogMessage("dlt.updateDltTemplate.Target"),userEntry.getSystemId(),userEntry.getRole(),target);
 			
-			return new ResponseEntity<>("Template Updated Successfully", HttpStatus.OK);
+			return new ResponseEntity<>(messageResourceBundle.getExMessage(ConstantMessages.DLT_TEMP_UPDATE_SUCCES), HttpStatus.OK);
 
 		} catch (Exception e) {
-			throw new InternalServerException(e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR, new Object[] {e.getLocalizedMessage()}));
 		}
 	}
 
@@ -731,7 +791,7 @@ public class DltServiceImpl implements DltService {
 			 // Save the updated Dlt Template entry
 			dlttempRepo.save(dltTemplate);
 		} catch (Exception e) {
-			throw new InternalServerException("Template Entry Not Found.");
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.DLT_TEMP_NOTFOUND));
 		}
 		
 	}
@@ -740,18 +800,18 @@ public class DltServiceImpl implements DltService {
 	@Override
 	public ResponseEntity<?> deleteDltEntry(int id, String username) {
 		
+		
 		String target = IConstants.FAILURE_KEY;
 		 // Retrieve the user information based on the provided username
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry userEntry = null;
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
-			 // Check if the user has the required authorization roles; otherwise, throw an UnauthorizedException
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 
@@ -765,14 +825,15 @@ public class DltServiceImpl implements DltService {
 			deleteDltEntry(id);
 			 // Update the target status to indicate success
 			target = IConstants.SUCCESS_KEY;
-			logger.info("message.operation.success");
+//			logger.info("message.operation.success");
+			logger.info(messageResourceBundle.getLogMessage("dlt.deleteDltEntry.success"));
 			MultiUtility.changeFlag(Constants.DLT_FLAG_FILE, "707");
 
 		} catch (Exception ex) {
 			
-			throw new NotFoundException(ex.getLocalizedMessage());
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.DLT_RESOURCE_NOTFOUND, new Object[] {ex.getLocalizedMessage()}));
 		}		
-			return new ResponseEntity<>("Entry Deleted Successfully", HttpStatus.OK);
+			return new ResponseEntity<>(messageResourceBundle.getExMessage(ConstantMessages.DLT_DELETE_ENTRY), HttpStatus.OK);
 	}
 
 	/**
@@ -796,12 +857,11 @@ public class DltServiceImpl implements DltService {
 		UserEntry userEntry = null;
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
-			 // Check if the user has the required authorization roles; otherwise, throw an UnauthorizedException
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		try {
@@ -818,17 +878,19 @@ public class DltServiceImpl implements DltService {
 			 // Update the target status to indicate success
 			target = IConstants.SUCCESS_KEY;
 			// Log a success message
-			logger.info("message.operation.success");
+//			logger.info("message.operation.success");
+			logger.info(messageResourceBundle.getLogMessage("dlt.deleteDltTemplate.success"));
 			MultiUtility.changeFlag(Constants.DLT_FLAG_FILE, "707");
 
 		} catch (Exception ex) {
-			throw new NotFoundException(ex.getLocalizedMessage());
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.DLT_RESOURCE_NOTFOUND, new Object[] {ex.getLocalizedMessage()}));
 		}
-		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Remove Dlt Template Target: " + target);
+//		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] Remove Dlt Template Target: " + target);
+		logger.info(messageResourceBundle.getLogMessage("dlt.deleteDltTemplate.Target"),userEntry.getSystemId(),userEntry.getRole(),target);
 		
 
 
-			return new ResponseEntity<>("Template Deleted Successfully", HttpStatus.OK);
+			return new ResponseEntity<>(messageResourceBundle.getExMessage(ConstantMessages.DLT_TEMP_DELETED), HttpStatus.OK);
 	}
 
 	
@@ -857,14 +919,14 @@ public class DltServiceImpl implements DltService {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
-	
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
-		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] View DltEntry Request:" + id);
+//		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] View DltEntry Request:" + id);
+		logger.info(messageResourceBundle.getLogMessage("dlt.getDltEntry.DltEntry"),userEntry.getSystemId(),userEntry.getRole(),id);
 
 		try {
 			 // Retrieve the DltEntry based on the provided ID
@@ -881,17 +943,19 @@ public class DltServiceImpl implements DltService {
 		// Update the target status to indicate success
 		target = IConstants.SUCCESS_KEY;
 
-		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] View DltEntry Target:" + target);
+//		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] View DltEntry Target:" + target);
+		logger.info(messageResourceBundle.getLogMessage("dlt.getDltEntry.target"),userEntry.getSystemId(),userEntry.getRole(),target);
+		
 
 		return responseEntry;
 		} catch (NoSuchElementException ex) {
 		    // NotFoundException: Rethrow the exception or handle it as needed
-		    throw new NotFoundException("Entry Not Found");
+		    throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.DLT_ENTRY_NOTFOUND));
 		} catch (Exception e) {
 		    // Handle other exceptions
 //		    logger.error("An error occurred while processing DltEntry.", e);
 		    // Optionally throw a custom exception or return an error response
-		    throw new InternalServerException(e.getMessage());
+		    throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR, new Object[] {e.getLocalizedMessage()}));
 		}
 	}
 
@@ -917,13 +981,14 @@ public class DltServiceImpl implements DltService {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
-		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] View Dlt Template Request:" + id);
+//		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] View Dlt Template Request:" + id);
+		logger.info(messageResourceBundle.getLogMessage("dlt.getDltTemplate.DltEntry"),userEntry.getSystemId(),userEntry.getRole(),id);
 
 		try {
 		DltTemplEntry entry = getDltTemplate(id);
@@ -937,25 +1002,20 @@ public class DltServiceImpl implements DltService {
 		target = IConstants.SUCCESS_KEY;
 
 		logger.info(userEntry.getSystemId() + "[" + userEntry.getRole() + "] View Dlt Template Target:" + target);
+		logger.info(messageResourceBundle.getLogMessage("dlt.getDltTemplate.target"),userEntry.getSystemId(),userEntry.getRole(),target);
 
 
 		 return responseList;
 		} catch (NoSuchElementException ex) {
-		    throw new NotFoundException("Template Not Found");
+		    throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.DLT_TEMP_NOTFOUND));
 		} catch (Exception e) {
 //			logger.error("An error occurred while processing DltEntry.", e);
-		    throw new InternalServerException(e.getMessage());
+		    throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR, new Object[] {e.getLocalizedMessage()}));
 		}
 	}
 
 	/**
-	 * Retrieve the DltTemplEntry based on the provided ID, and decode the template content.
-<<<<<<< HEAD
-=======
-	 * 
-	 * @param id The ID of the DltTemplEntry to be retrieved
-	 * @return The DltTemplEntry with the provided ID, including decoded template content
->>>>>>> cd27d60790e2a4985d7ce65281ccd5e33f4b9ee3
+	 * Retrieve the DltTemplEntry based on the provided ID, and decode the template content
 	 * @throws NotFoundException If the DltTemplEntry with the provided ID is not found
 	 */
 	

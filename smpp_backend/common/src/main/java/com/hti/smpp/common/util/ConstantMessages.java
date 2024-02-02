@@ -85,5 +85,25 @@ public class ConstantMessages {
     //sales success message
     public static final String SALES_ADD_SUCCESS = "sales.success.add";
     
+    //dlt module
+    public static final String DUPLICATE_ENTRY_FOUND="dlt.duplicate.entry";
+    public static final String FAILED_TO_ADD_ENTRY="dlt.failed.addEntry";
+    public static final String DLT_DATA_ACCESS_SUCC="dlt.dataAccess.success";
+    public static final String DLT_ERROR_JSON="dlt.error.json";
+    public static final String DLT_SUCC_ADD="dlt.sccess.add";
+    public static final String DLT_REQ_UNSUCC="dlt.request.unsucc";
+    public static final String DLT_DUPLI_ENTY="dlt.dupli.entry";
+    public static final String DLT_ERR_UNSUCC="dlt.err.unsucc";
+    public static final String DLT_TEMP_EMPTY="dlt.temp.empty";
+    public static final String DLT_NOT_FOUND_ERROR="dlt.notFound.error";
+    public static final String DLT_UPDATE_SUCCESS="dlt.success.update";
+    public static final String DLT_ENTRY_NOTFOUND="dlt.entry.notfound";
+    public static final String DLT_TEMP_UPDATE_SUCCES="dlt.temp.update.success";
+    public static final String DLT_TEMP_NOTFOUND="dlt.temp.notfound";
+    public static final String DLT_DELETE_ENTRY="dlt.deleted.success";
+    public static final String DLT_RESOURCE_NOTFOUND="dlt.resource.notfound";
+    public static final String DLT_TEMP_DELETED="dlt.temp.deleted.success";
+    
+    
     
 }
