@@ -148,14 +148,16 @@ public class LoginServiceImpl implements LoginService {
 
 			return ResponseEntity.ok(jwtResponse);
 
-		} catch (BadCredentialsException e) {
+	} 
+			catch (BadCredentialsException e) {
 			logger.error(messageResourceBundle.getLogMessage("auth.failed.password"), username, e.getMessage());
 			throw new AuthenticationExceptionFailed(
 					messageResourceBundle.getExMessage(ConstantMessages.AUTHENTICATION_FAILED_PASSWORD));
 		} catch (AuthenticationExceptionFailed e) {
 			logger.error(messageResourceBundle.getLogMessage("auth.failed.userNotFound"), username, e.getMessage());
 			throw new AuthenticationExceptionFailed(e.getMessage());
-		} catch (Exception e) {
+		}
+			catch (Exception e) {
 			logger.error(messageResourceBundle.getLogMessage("internal.server.error"), e.getMessage());
 			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
 		}
