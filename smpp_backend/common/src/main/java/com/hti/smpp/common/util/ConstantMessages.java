@@ -100,6 +100,13 @@ public class ConstantMessages {
     public static final String SUBSCRIPTION_DUPLICATE_ENTRY = "subscription.entry.duplicate";
     public static final String SUBSCRIPTION_MSG_ERROR = "subscription.msg.error";
     public static final String SUBSCRIPTION_MSG_NOTFOUND = "subscription.msg.notfound";
+    
+    //subscription success message
+    public static final String SUBSCRIPTION_ADD_SUCCESS = "subscription.add.success";
+    public static final String SUBSCRIPTION_UPDATE_SUCCESS = "subscription.update.success";
+    public static final String SUBSCRIPTION_DELETE_SUCCESS = "subscription.delete.success";
+    
+    //dlt exception
     public static final String DUPLICATE_ENTRY_FOUND="dlt.duplicate.entry";
     public static final String FAILED_TO_ADD_ENTRY="dlt.failed.addEntry";
     public static final String DLT_DATA_ACCESS_SUCC="dlt.dataAccess.success";
@@ -118,8 +125,56 @@ public class ConstantMessages {
     public static final String DLT_RESOURCE_NOTFOUND="dlt.resource.notfound";
     public static final String DLT_TEMP_DELETED="dlt.temp.deleted.success";
     
-    //subscription success message
-    public static final String SUBSCRIPTION_ADD_SUCCESS = "subscription.add.success";
-    public static final String SUBSCRIPTION_UPDATE_SUCCESS = "subscription.update.success";
-    public static final String SUBSCRIPTION_DELETE_SUCCESS = "subscription.delete.success";
+    
+    //network exception
+    public static final String NETWORK_SELECT_SINGLE = "network.not.single";
+    public static final String NETWORK_FILE_NOTSELECTED = "network.file.notselected";
+    public static final String NETWORK_MSG_ERROR = "network.msg.error";
+    public static final String NETWORK_RECORD_UNAVAILABLE = "network.record.notfound";
+    public static final String NETWORK_NOT_FOUND = "network.entry.notfound";
+    public static final String NETWORK_DELETE_FAILED = "network.delete.failure";
+    public static final String NETWORK_MCCMNC_NOTFOUND = "network.mccdata.notfound";
+    public static final String NETWORK_NOMAP_RECORD = "network.map.notfound";
+    public static final String NETWORK_DATA_EMPTY = "network.data.notfound";
+    public static final String NETWORK_MCC_NOTFOUND = "network.mcc.notfound";
+    public static final String NETWORK_FETCHMCC_FAILURE = "network.failure.mcc";
+    public static final String NETWORK_MNC_NOTFOUND = "network.mnc.notfound";
+    public static final String NETWORK_FETCHMNC_FAILURE = "network.failure.mnc";
+    
+    //network success messages
+    public static final String NETWORK_UPDATE_SUCCESS = "network.update.success";
+    public static final String NETWORK_DELETE_SUCCESS = "network.delete.success";
+    
+    //addressbook exception
+    public static final String ADDBOOK_UPLOAD_FAILED = "addbook.upload.failed";
+    public static final String ADDBOOK_ERROR_MSG = "addbook.msg.error";
+    public static final String WORKBOOK_PROCESSING_ERROR = "addbook.workbook.process.error";
+    public static final String ADDBOOK_NUMBER_NOT_FOUND_ERROR = "addbook.number.notfound";
+    public static final String ADDBOOK_EMPTY_DATASET = "addbook.empty.dataset";
+    public static final String NOT_FOUND_TEMPLATES_ERROR = "addbook.not.found.templates.error";
+    public static final String NOT_FOUND_WEBMASTER_ERROR = "addbook.not.found.webmaster.error";
+    public static final String ADDBOOK_NORECORD = "addbook.no.record";
+    public static final String ADDBOOK_NO_CONTACT = "addbook.no.contact.found";
+    public static final String ADDBOOK_TEMPLATE_UNABLEFIND = "addbook.template.error";
+    public static final String ADDBOOK_CONTACT_UPDATE_ERROR = "addbook.contact.update.error";
+    public static final String ADDBOOK_INCOMPLETE_DATA = "addbook.incomplete.entry";
+    public static final String ADDBOOK_DELETECONTACT_NOTFOUND = "addbook.delete.contact.notfound";
+    public static final String ADDBOOK_ERROR_DELETE_CONTACT = "addbook.error.delete.contact";
+    public static final String ADDBOOK_GROUPDATA_AGEPARSE_ERROR = "addbook.groupdata.ageparse.error";
+    public static final String ADDBOOK_GROUPDATA_INVALID_NUMBER = "addbook.groupdata.invalid.number";
+    public static final String ADDBOOK_GROUPDATA_EMPTYDATASET = "addbook.groupdata.empty.datalist";
+    public static final String ADDBOOK_GROUPDATA_UPDATE_ERROR = "addbook.groupdata.error.update";
+    public static final String ADDBOOK_GROUP_DUPLICATE_ENTRY = "addbook.group.duplicate.entry";
+    public static final String ADDBOOK_GROUP_NOTFOUND = "addbook.group.notfound";
+    public static final String ADDBOOK_GROUP_DELETE_FAILED = "addbook.group.delete.failure";
+    //addressbook success message
+    public static final String ADDBOOK_CONTACT_SAVED = "addbook.addcontact.success";
+    public static final String ADDBOOK_CONTACT_UPDATED = "addbook.updatecontact.success";
+    public static final String ADDBOOK_CONTACT_DELETED = "addbook.deletecontact.success";
+    public static final String ADDBOOK_GROUPDATA_SAVED = "addbook.groupdata.save.success";
+    public static final String ADDBOOK_GROUPDATA_UPDATED = "addbook.groupdata.update.success";
+    public static final String ADDBOOK_GROUPDATA_DELETED = "addbook.groupdata.delete.success";
+    public static final String ADDBOOK_GROUP_SAVED = "addbook.group.save.success";
+    public static final String ADDBOOK_GROUP_UPDATED = "addbook.group.update.success";
+    public static final String ADDBOOK_GROUP_DELETED = "addbook.group.delete.success";
 }

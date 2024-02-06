@@ -60,8 +60,10 @@ import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 import jakarta.transaction.Transactional;
 
@@ -81,6 +83,9 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 
 	@Autowired
 	private WebMasterEntryRepository webMasterRepo;
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 
 	/**
 	 * Saves contact entries based on user authorization and input data
@@ -93,10 +98,10 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		ContactEntryRequest form;
@@ -106,14 +111,13 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 			form = objectMapper.readValue(reqdata, ContactEntryRequest.class);
 			form.setFile(file);
 		} catch (JsonProcessingException e) {
-			throw new JsonProcessingError("JsonProccessingError: " + e.getLocalizedMessage());
+			throw new JsonProcessingError(messageResourceBundle.getExMessage(ConstantMessages.JSON_PROCESSING_ERROR,new Object[] {e.getMessage()}));
 		} catch (Exception ex) {
-			throw new InternalServerException("Error: " + ex.getLocalizedMessage());
+			throw new InternalServerException(ex.getLocalizedMessage());
 		}
 
 		String target = IConstants.FAILURE_KEY;
-
-		logger.info(user.getSystemId() + "[" + user.getRole() + "]" + " Adding Contact To Group: " + form.getGroupId());
+		logger.info(messageResourceBundle.getLogMessage("addbook.contact.addreq"),user.getSystemId(),user.getRole(),form.getGroupId());
 		try {
 			int groupId = form.getGroupId();
 			String mode = form.getType();
@@ -123,7 +127,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 			if (mode.equalsIgnoreCase("multiple")) {
 				MultipartFile uploadedFile = form.getFile();
 				if (uploadedFile == null) {
-					throw new InternalServerException("Please upload a file!");
+					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_UPLOAD_FAILED));
 				}
 				String file_name = uploadedFile.getOriginalFilename();
 				if (file_name.indexOf(".xls") > 0) {
@@ -148,7 +152,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 									String name = null, email = null;
 									long number;
 									if (tokens.length == 0) {
-										logger.warn("Invalid Format For Entry[" + x + "]: " + entry);
+										logger.warn(messageResourceBundle.getLogMessage("addbook.invalid.entryformat"), x, entry);
 										continue;
 									} else {
 										try {
@@ -157,7 +161,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 																							// character.
 											number = Long.parseLong(tokens[0]);
 										} catch (Exception ex) {
-											logger.error("Invalid Number For Entry[" + x + "]: " + entry);
+											logger.warn(messageResourceBundle.getLogMessage("addbook.invalid.entryformat"), x, entry);
 											continue;
 										}
 										if (tokens.length == 2) {
@@ -174,7 +178,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 											name = new Converters().UTF16(name);
 										}
 										if (email != null && email.length() > 40) {
-											logger.info(x + " Email need to truncate: " + email.length());
+											logger.info(messageResourceBundle.getLogMessage("addbook.email.truncate.info"), x, email.length());
 											email = email.substring(0, 40);
 										}
 										entry_list.add(new ContactEntry(name, number, email, groupId));
@@ -182,8 +186,8 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 								}
 							}
 						} catch (Exception ex) {
-							logger.error("Error: " + ex.getLocalizedMessage());
-							throw new InternalServerException("Error Processing Data: " + ex.getLocalizedMessage());
+							logger.error(messageResourceBundle.getLogMessage("addbook.error.message"), ex.getLocalizedMessage());
+							throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {ex.getMessage()}));
 						} finally {
 							if (bufferedReader != null) {
 								try {
@@ -192,7 +196,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 									bufferedReader = null;
 									throw new InternalServerException("IOException: " + ioe.getLocalizedMessage());
 								} catch (Exception e) {
-									throw new InternalServerException("Exception Message: " + e.getLocalizedMessage());
+									throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getMessage()}));
 								}
 							}
 						}
@@ -205,7 +209,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 								workbook = new HSSFWorkbook(form.getFile().getInputStream());
 							}
 							Sheet firstSheet = workbook.getSheetAt(0);
-							logger.info("Sheet[0] Total Rows: " + firstSheet.getPhysicalNumberOfRows());
+							logger.info(messageResourceBundle.getLogMessage("addbooksheet.total.rows.info"), firstSheet.getPhysicalNumberOfRows());
 							// int x = 0;
 							int column_count = 0;
 							for (Row nextRow : firstSheet) {
@@ -213,7 +217,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 								if (nextRow.getRowNum() == 0) {
 									column_count = nextRow.getPhysicalNumberOfCells();
 									if (column_count == 0) {
-										logger.warn("Invalid Format For Xls File");
+										logger.warn(messageResourceBundle.getLogMessage("addbook.invalid.xls.format.warn"));
 										break;
 									}
 								}
@@ -227,8 +231,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 										try {
 											number = Long.parseLong(cell_value);
 										} catch (Exception ex) {
-											logger.warn("Invalid Number For Entry[" + nextRow.getRowNum() + "]: "
-													+ cell_value);
+											logger.warn(messageResourceBundle.getLogMessage("addbook.invalid.number.entry.warn"), nextRow.getRowNum(), cell_value);
 											break;
 										}
 									}
@@ -252,7 +255,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 										name = new Converters().UTF16(name);
 									}
 									if (email != null && email.length() > 40) {
-										logger.info(nextRow.getRowNum() + " Email need to truncate: " + email.length());
+										logger.info(messageResourceBundle.getLogMessage("addbook.truncate.email.info"), nextRow.getRowNum(), email.length());
 										email = email.substring(0, 40);
 									}
 									entry_list.add(new ContactEntry(name, number, email, groupId));
@@ -260,15 +263,14 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 							}
 						} catch (Exception ex) {
 							logger.error("Error: " + ex.getLocalizedMessage());
-							throw new WorkBookException("Error Processing Workbook: " + ex.getLocalizedMessage());
+							throw new WorkBookException(messageResourceBundle.getExMessage(ConstantMessages.WORKBOOK_PROCESSING_ERROR, new Object[]{ex.getLocalizedMessage()}));
 						} finally {
 							if (workbook != null) {
 								try {
 									workbook.close();
 								} catch (IOException ex) {
 									logger.error("Error: " + ex.getLocalizedMessage());
-									throw new WorkBookException(
-											"Error Processing Workbook: " + ex.getLocalizedMessage());
+									throw new WorkBookException(ex.getLocalizedMessage());
 								} catch (Exception e) {
 									logger.error("Error: " + e.getLocalizedMessage());
 									throw new InternalServerException(
@@ -291,25 +293,24 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 					}
 					entry_list.add(new ContactEntry(name, form.getNumber()[0], email, groupId));
 				} else {
-					logger.error("Invalid Number Found: " + form.getNumber());
-					throw new NotFoundException("Invalid Number!");
+					logger.error(messageResourceBundle.getLogMessage("addbook.invalid.number.error"), form.getNumber());
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_NUMBER_NOT_FOUND_ERROR));
 				}
 			}
 			if (entry_list.isEmpty()) {
-				logger.error("Entry List Empty.Data not found.");
-				throw new NotFoundException("Entry List Empty.Data not found.");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_EMPTY_DATASET));
 			} else {
 				List<ContactEntry> contacts = this.contactRepo.saveAll(entry_list);
 				target = IConstants.SUCCESS_KEY;
-				logger.info("ContactEntry Saved Successfully. Message: " + target);
-				return new ResponseEntity<>("ContactEntry Saved Successfully!", HttpStatus.CREATED);
+				logger.info(messageResourceBundle.getLogMessage("addbook.contactentry.saved.info"), target);
+				return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.ADDBOOK_CONTACT_SAVED), HttpStatus.CREATED);
 			}
 		} catch (NotFoundException e) {
 			logger.error("Error: " + e.getLocalizedMessage() + ", Message: " + target);
 			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error("Error: " + e.getLocalizedMessage() + ", Message: " + target);
-			throw new InternalServerException(e.getLocalizedMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getMessage()}));
 		}
 
 	}
@@ -327,17 +328,18 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		String target = IConstants.FAILURE_KEY;
 		List<Long> uploadedNumbers = new ArrayList<Long>();
 		ContactForBulk response = new ContactForBulk();
+		
+		logger.info(messageResourceBundle.getLogMessage("addbook.proceed.contact.bulk.info"), user.getSystemId());
 
-		logger.info("Proceed Contact For Bulk Request by " + user.getSystemId());
 		try {
 			if (numbers != null && numbers.size() > 0) {
 				int number_count = 0;
@@ -361,11 +363,11 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 							}
 						});
 					} else {
-						logger.info("NO template Exist");
+						logger.info(messageResourceBundle.getLogMessage("addbook.no.template.exist.info"));
 					}
 				} catch (Exception ex) {
-					logger.error("Error: " + ex.getLocalizedMessage());
-					throw new NotFoundException("Templates not found: " + ex.getLocalizedMessage());
+					logger.error(ex.getLocalizedMessage());
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND_TEMPLATES_ERROR, new Object[]{ex.getLocalizedMessage()}));
 				}
 
 				response.setTemplates(templates);
@@ -375,30 +377,28 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 					if (webMasterEntry.getSenderId() != null && webMasterEntry.getSenderId().length() > 1) {
 						Set<String> senders = new HashSet<String>(
 								Arrays.asList(webMasterEntry.getSenderId().split(",")));
-						logger.info(user.getSystemId() + " Configured Senders: " + senders);
+						logger.info(messageResourceBundle.getLogMessage("addbook.configured.senders.info"), user.getSystemId(), senders);
 						response.setSenders(senders);
 					} else {
-						logger.error(" No Senders Configured");
+						logger.error(messageResourceBundle.getLogMessage("addbook.no.senders.configured.error"));
 //						throw new InternalServerException("No Senders Configured");
 					}
 				} else {
-					logger.error(user.getSystemId() + " Webmaster Entry Not Found");
-					throw new NotFoundException("Webmaster Entry Not Found");
+					logger.error(messageResourceBundle.getLogMessage("addbook.webmaster.entry.notfound.error"), user.getSystemId());
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND_WEBMASTER_ERROR));
 				}
 				target = IConstants.SUCCESS_KEY;
 			} else {
-				logger.error(" No Record Found For Selected Criteria");
-				throw new NotFoundException("No Record Found For Selected Criteria");
+				logger.error(messageResourceBundle.getLogMessage("addbook.no.record.found.error"));
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_NORECORD));
 			}
 			response.setStatus(target);
 		} catch (NotFoundException ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]");
-			logger.error(user.getSystemId(), ex.getLocalizedMessage());
-			throw new NotFoundException("Exception: " + ex.getLocalizedMessage());
+			throw new NotFoundException(ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]");
-			logger.error(user.getSystemId(), ex.getLocalizedMessage());
-			throw new InternalServerException("Process Error: " + ex.getLocalizedMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {ex.getMessage()}));
 		}
 
 		return ResponseEntity.ok(response);
@@ -417,15 +417,16 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		String systemId = user.getSystemId();
 
-		logger.info("List Contact For Bulk Request by " + systemId);
+		logger.info(messageResourceBundle.getLogMessage("addbook.list.contact.bulk.info"), systemId);
+
 		List<ContactEntry> list = new ArrayList<ContactEntry>();
 		try {
 			if (ids != null && ids.size() > 0) {
@@ -442,7 +443,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 				}
 			}
 			if (list.isEmpty()) {
-				throw new NotFoundException("No Contact Found");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_NO_CONTACT));
 			}
 
 		} catch (NotFoundException ex) {
@@ -450,7 +451,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 			throw new NotFoundException(ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error(systemId, ex.toString());
-			throw new InternalServerException(ex.getLocalizedMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {ex.getMessage()}));
 		}
 
 		return ResponseEntity.ok(list);
@@ -469,15 +470,14 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		String systemId = user.getSystemId();
-
-		logger.info("Proceed Contact For Bulk Request by " + systemId);
+		logger.info(messageResourceBundle.getLogMessage("addbook.proceed.contact.bulk.info"), systemId);
 		String target = IConstants.FAILURE_KEY;
 		List<Long> uploadedNumbers = new ArrayList<Long>();
 		ContactForBulk response = new ContactForBulk();
@@ -515,11 +515,11 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 							}
 						});
 					} else {
-						logger.info("NO template Exist");
+						logger.warn(messageResourceBundle.getLogMessage("addbook.no.template.exist.info"));
 					}
 				} catch (Exception ex) {
-					logger.error("Error: " + ex.getLocalizedMessage());
-					throw new NotFoundException("Unable to find Templates!.");
+					logger.error(messageResourceBundle.getLogMessage("addbook.error.message"),ex.getMessage());
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_TEMPLATE_UNABLEFIND));
 				}
 
 				response.setTemplates(templates);
@@ -529,29 +529,28 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 					if (webMasterEntry.getSenderId() != null && webMasterEntry.getSenderId().length() > 1) {
 						Set<String> senders = new HashSet<String>(
 								Arrays.asList(webMasterEntry.getSenderId().split(",")));
-						logger.info(systemId + " Configured Senders: " + senders);
+						logger.info(messageResourceBundle.getLogMessage("addbook.configured.senders.info"),systemId, senders);
 						response.setSenders(senders);
 					} else {
-						logger.error(" No Senders Configured");
+						logger.error(messageResourceBundle.getLogMessage("addbook.no.senders.configured.error"));
 //						throw new InternalServerException("No Senders Configured");
 					}
 				} else {
-					logger.error(" Webmaster Entry Not Found");
-					throw new NotFoundException("Webmaster Entry Not Found");
+					logger.error(messageResourceBundle.getLogMessage("addbook.webmaster.entry.notfound.error"),user.getSystemId());
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND_WEBMASTER_ERROR));
 				}
 				target = "proceed";
 			} else {
-				logger.error(" No Record Found For Selected Criteria");
-				throw new NotFoundException("No Record Found. List is empty!");
+				logger.error(messageResourceBundle.getLogMessage("addbook.no.record.found.error"));
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_NORECORD));
 			}
 			response.setStatus(target);
 		} catch (NotFoundException ex) {
 			logger.error(systemId, ex.toString());
-			throw new NotFoundException("Error: " + ex.getLocalizedMessage());
+			throw new NotFoundException(ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error(systemId, ex.toString());
-			ex.printStackTrace();
-			throw new InternalServerException("Process Error: " + ex.getLocalizedMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {ex.getMessage()}));
 		}
 		return ResponseEntity.ok(response);
 	}
@@ -570,16 +569,16 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		String target = IConstants.FAILURE_KEY;
 		String systemId = user.getSystemId();
 		int groupId = form.getGroupId();
-		logger.info(systemId + "[" + user.getRole() + "]" + " Modify Contact Request For GroupId: " + groupId);
+		logger.info(messageResourceBundle.getLogMessage("addbook.modify.contact.request.info"), systemId, user.getRole(), groupId);
 		ContactEntry entry = null;
 		List<ContactEntry> list = new ArrayList<ContactEntry>();
 		int[] id = form.getId();
@@ -602,33 +601,33 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 					this.contactRepo.saveAll(list);
 					target = IConstants.SUCCESS_KEY;
 				} else {
-					logger.error("Error: List is Empty. Error while saving data.");
-					throw new InternalServerException("Error saving ContactEntry List. Empty List!");
+					logger.error(messageResourceBundle.getLogMessage("addbook.update.list.empty.error"));
+					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_CONTACT_UPDATE_ERROR));
 				}
 			} catch (ArrayIndexOutOfBoundsException e) {
 				logger.error(systemId, e.getLocalizedMessage());
-				throw new InternalServerException("Please enter complete details!");
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_INCOMPLETE_DATA));
 			} catch (Exception e) {
 				logger.error(systemId, e.getLocalizedMessage());
-				throw new InternalServerException("Status: " + target + " Message:" + e.getLocalizedMessage());
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getMessage()}));
 			}
 		} else {
-			logger.error(systemId + " No Records Selected");
-			throw new NotFoundException(systemId + " No Records Selected");
+			logger.error(messageResourceBundle.getLogMessage("addbook.no.record.found.error"));
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_NORECORD));
 		}
-		logger.info(systemId + " Modify Contact Status:" + target);
-		return new ResponseEntity<>("Contact Updated Successfully!", HttpStatus.CREATED);
+		logger.info(messageResourceBundle.getLogMessage("addbook.modify.contact.status.info"), systemId, target);
+		return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.ADDBOOK_CONTACT_UPDATED), HttpStatus.CREATED);
 	}
 
 	private void logDeletedContacts(String username, List<Integer> deletedContactsIds) {
 		if (!deletedContactsIds.isEmpty()) {
-			logger.info("Deleted contacts by {}: {}", username, deletedContactsIds);
+			logger.info(messageResourceBundle.getLogMessage("addbook.contact.deleted.info"), username, deletedContactsIds);
 		}
 	}
 
 	private void logFailedDeletions(String username, List<Integer> failedDeletionIds) {
 		if (!failedDeletionIds.isEmpty()) {
-			logger.warn("Failed to delete contacts by {}: {}", username, failedDeletionIds);
+			logger.warn(messageResourceBundle.getLogMessage("addbook.contact.failed.deletion.warn"), username, failedDeletionIds);
 		}
 	}
 
@@ -646,10 +645,10 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		String target = IConstants.FAILURE_KEY;
@@ -661,7 +660,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 				List<ContactEntry> contactsToDelete = null;
 				contactsToDelete = this.contactRepo.findAllById(ids);
 				if (contactsToDelete.isEmpty()) {
-					throw new NotFoundException("Contacts to delete list is empty!");
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_DELETECONTACT_NOTFOUND));
 				}
 
 				for (ContactEntry contact : contactsToDelete) {
@@ -669,9 +668,9 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 						contactRepo.delete(contact);
 						successfulDeletions.add(contact.getId());
 					} catch (Exception e) {
-						logger.error("Error deleting contact with ID {}: {}", contact.getId(), e.getMessage(), e);
+						logger.error("Error deleting contact with ID {}: {}", contact.getId(), e.getMessage());
 						failedDeletionIds.add(contact.getId());
-						throw new InternalServerException("Error deleting contact id: " + contact.getId());
+						throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_DELETE_CONTACT, new Object[] {contact.getId()}));
 					}
 				}
 
@@ -679,17 +678,17 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 				logDeletedContacts(username, successfulDeletions);
 				logFailedDeletions(username, failedDeletionIds);
 			} else {
-				throw new InternalServerException("Error Processing Deletion.");
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_DELETE_CONTACT, new Object[] {failedDeletionIds}));
 			}
 			return ResponseEntity.status(HttpStatus.OK)
-					.body("Successfully Deleted Contact With Ids: " + successfulDeletions);
+					.body(messageResourceBundle.getMessage(ConstantMessages.ADDBOOK_CONTACT_DELETED, new Object[] {successfulDeletions}));
 		} catch (NotFoundException e1) {
 			logger.error("Error Message: " + e1.getLocalizedMessage());
 			throw new NotFoundException(e1.getLocalizedMessage());
 		} catch (Exception e) {
-			logger.error("Error deleting contacts: {}", e.getMessage(), e);
+			logger.error("Error deleting contacts: {}", e.getMessage());
 			target = IConstants.FAILURE_KEY;
-			throw new InternalServerException(e.getLocalizedMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getMessage()}));
 		}
 	}
 
@@ -701,7 +700,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 	 * @return
 	 */
 	private Workbook getWorkBook(List<ContactEntry> list) {
-		logger.info("Start Creating WorkBook.");
+		logger.info(messageResourceBundle.getLogMessage("addbook.start.creating.workbook.info"));
 		SXSSFWorkbook workbook = new SXSSFWorkbook();
 		int records_per_sheet = 500000;
 		int sheet_number = 0;
@@ -787,7 +786,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 			}
 			sheet_number++;
 		}
-		logger.info("Contact Workbook Created");
+		logger.info(messageResourceBundle.getLogMessage("addbook.contact.workbook.created.info"));
 		return workbook;
 	}
 
@@ -804,10 +803,10 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		String target = IConstants.FAILURE_KEY;
@@ -815,7 +814,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		String systemId = user.getSystemId();
 
 		int groupId = form.getGroupId();
-		logger.info(systemId + "[" + user.getRole() + "]" + " Export Contact Request For GroupId: " + groupId);
+		logger.info(messageResourceBundle.getLogMessage("addbook.export.contact.request.info"), systemId, user.getRole(), groupId);
 		List<ContactEntry> list = new ArrayList<ContactEntry>();
 		int[] id = form.getId();
 		String[] names = form.getName();
@@ -839,12 +838,12 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 				try {
 					workbook = getWorkBook(list);
 				} catch (Exception e1) {
-					logger.error("WorkBook Exception: " + e1.toString());
-					throw new WorkBookException("WorkBook Error: " + e1.getLocalizedMessage());
+					logger.error(messageResourceBundle.getLogMessage("addbook.error.message"),e1.getLocalizedMessage());
+					throw new WorkBookException(messageResourceBundle.getExMessage(ConstantMessages.WORKBOOK_PROCESSING_ERROR, new Object[] {e1.getMessage()}));
 				}
 				String filename = systemId + "_Contact[" + groupId + "]" + ".xlsx";
 				ByteArrayOutputStream bos = new ByteArrayOutputStream();
-				logger.info(systemId + " Creating Contact XLSx ");
+				logger.info(messageResourceBundle.getLogMessage("addbook.creating.contact.xlsx.info"), systemId);
 				workbook.write(bos);
 
 				try (InputStream in = new ByteArrayInputStream(bos.toByteArray())) {
@@ -853,14 +852,14 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 					headers.setContentDispositionFormData("attachment", filename);
 					InputStreamResource resource = new InputStreamResource(in);
 					target = "export";
-					logger.info(systemId + " Export Contact Target:" + target);
+					logger.info(messageResourceBundle.getLogMessage("addbook.export.contact.target.info"), systemId, target);
 					return new ResponseEntity<>(resource, headers, HttpStatus.OK);
 				} catch (IOException e) {
-					logger.error("Contact XLSx Download Error: {}", e.toString());
-					throw new InternalServerException("IOException: " + e.getLocalizedMessage());
+					logger.error(messageResourceBundle.getLogMessage("addbook.contact.xlsx.download.error"), e.getMessage());
+					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getMessage()}));
 				} catch (Exception e) {
-					logger.error("Unexpected Exception: " + e.getLocalizedMessage());
-					throw new InternalServerException("Unexpected Exception: " + e.getLocalizedMessage());
+					logger.error(messageResourceBundle.getLogMessage("addbook.error.message"),e.getLocalizedMessage());
+					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getMessage()}));
 				} finally {
 					try {
 						if (workbook != null) {
@@ -879,8 +878,8 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 			}
 
 		} else {
-			logger.warn(systemId + " No Records Selected");
-			throw new NotFoundException("No Records Found.");
+			logger.warn(messageResourceBundle.getLogMessage("addbook.no.record.found.error"));
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_NORECORD));
 		}
 
 	}
@@ -893,13 +892,13 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
-		logger.info("listing ContactEntry for Group : " + groupId + " page request:" + pageRequest);
+		logger.info(messageResourceBundle.getLogMessage("addbook.listing.contactentry.info"), groupId, pageRequest);
 
 		try {
 			Page<ContactEntry> response = this.contactRepo.findByGroupIdOrderByIdAsc(groupId, pageRequest);
@@ -909,14 +908,14 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 				}
 			});
 			if (response.isEmpty()) {
-				throw new NotFoundException("No Contact Found. List is Empty!");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_NO_CONTACT));
 			} else {
 				return response;
 			}
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
-			throw new InternalServerException(e.getLocalizedMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getMessage()}));
 		}
 
 	}

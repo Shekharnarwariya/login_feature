@@ -13,9 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -46,8 +44,10 @@ import com.hti.smpp.common.services.NetworkService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Constants;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 import com.hti.smpp.common.util.MultiUtility;
 
 import jakarta.transaction.Transactional;
@@ -63,9 +63,12 @@ public class NetworkServiceImpl implements NetworkService {
 
 	@Autowired
 	private UserEntryRepository userRepository;
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 
-	@Value("${file.dir}")
-	private String filePath;
+//	@Value("${file.dir}")
+//	private String filePath;
 	
 	/**
      * Adds a new network entry to the network.
@@ -83,10 +86,10 @@ public class NetworkServiceImpl implements NetworkService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		String target = null;
@@ -107,9 +110,9 @@ public class NetworkServiceImpl implements NetworkService {
 					ObjectMapper objectMapper = new ObjectMapper();
 					form = objectMapper.readValue(formMccMnc, MccMncForm.class);
 				} catch (JsonProcessingException e) {
-					throw new JsonProcessingError("JsonProccessingError: " + e.getLocalizedMessage());
+					throw new JsonProcessingError(messageResourceBundle.getExMessage(ConstantMessages.JSON_PROCESSING_ERROR,new Object[] {e.getMessage()}));
 				} catch (Exception ex) {
-					throw new InternalServerException("Error: " + ex.getLocalizedMessage());
+					throw new InternalServerException(ex.getLocalizedMessage());
 				}
 
 				BeanUtils.copyProperties(form, mccMncDTO);
@@ -123,8 +126,8 @@ public class NetworkServiceImpl implements NetworkService {
 						replaceList.add(mccMncDTO);
 					}
 				} else {
-					logger.error("Check MCC not selected to single");
-					throw new InternalServerException("Check Mcc not selected to single");
+					logger.error(messageResourceBundle.getLogMessage("network.not.single"));
+					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NETWORK_SELECT_SINGLE));
 				}
 
 			} else {
@@ -145,7 +148,7 @@ public class NetworkServiceImpl implements NetworkService {
 						}
 					}
 				}else {
-					throw new InternalServerException("Please Select A File!");
+					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NETWORK_FILE_NOTSELECTED));
 				}
 			}
 			if (mccmncList.size() > 0) {
@@ -154,18 +157,16 @@ public class NetworkServiceImpl implements NetworkService {
 				count = insertMccMnc(mccmncList);
 				if (count == totalRecord) {
 					target = IConstants.SUCCESS_KEY;
-					logger.info("NetworkENtry Saved in DB Successful!");
-					// request.setAttribute("param_value", count + "");
-					logger.info("Total Inserted Records: ", count + "");
+					logger.info(messageResourceBundle.getLogMessage("network.saved.success"));
+					logger.info(messageResourceBundle.getLogMessage("network.total.record"), count);
 					response = "Network Entry Saved Successful! Total record inserted: " + count;
 					addResponse.setResponseMessage(response);
 					addResponse.setTotalRecords(count);
 				} else {
 					remained = totalRecord - count;
 					target = IConstants.FAILURE_KEY;
-					logger.error("DBEntryFailure. Internal Server Error!");
-					// request.setAttribute("param_value", remained + "");
-					logger.info("Remaining Records: ", remained + "");
+					logger.error(messageResourceBundle.getLogMessage("network.saved.failure"));
+					logger.warn(messageResourceBundle.getLogMessage("network.remaining"),remained);
 					addResponse.setTotalRecords(remained);
 					addResponse.setResponseMessage("DBEntry Failure. Remaining: " + remained);;
 					return new ResponseEntity<>(addResponse, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -176,21 +177,15 @@ public class NetworkServiceImpl implements NetworkService {
 				response = "Duplicate Entry Found! Total No. Of Duplicate Record: " + replaceList.size();
 				String param_message = "Total Records : " + count+"."+response;
 				logger.error(response);
-				// request.setAttribute("param_message", param_message);
-				logger.error("Message", param_message);
 				addResponse.setResponseMessage(param_message);
-				// request.setAttribute("list", replaceList);
-				logger.error("replace list", replaceList);
 				addResponse.setList(replaceList);
-				// request.setAttribute("totalRecords", replaceList.size() + "");
-				logger.error("Total Records", replaceList.size() + "");
 				addResponse.setTotalRecords(replaceList.size());
 				return new ResponseEntity<>(addResponse,HttpStatus.CONFLICT);
 			}
 			MultiUtility.changeFlag(Constants.NETWORK_FLAG_FILE, "707");
 		} catch (Exception e) {
-			logger.error("Error: " + e.getLocalizedMessage());
-			throw new InternalServerException(e.getMessage());
+			logger.error(messageResourceBundle.getLogMessage("network.msg.error"));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NETWORK_MSG_ERROR, new Object[] {e.getMessage()}));
 		}
 		return new ResponseEntity<>(addResponse, HttpStatus.CREATED);
 	}
@@ -289,15 +284,15 @@ public class NetworkServiceImpl implements NetworkService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
-		String response = "";
 		String target = null;
 		MccMncUpdateDTO updateDTO = new MccMncUpdateDTO();
 		MccMncDTO mncDTO = null;
+		int count = 0;
 		ArrayList<MccMncDTO> list = new ArrayList<MccMncDTO>();
 		try {
 			BeanUtils.copyProperties(form, updateDTO);
@@ -322,31 +317,27 @@ public class NetworkServiceImpl implements NetworkService {
 					mncDTO.setMnc(mnc[i]);
 					list.add(mncDTO);
 				}
-				int count = updateMccMnc(list);
-				logger.info("Message: Updated Successfully!");
-				// request.setAttribute("param_value", count + "");
-				logger.info("Total Update Records: ", count);
+				count = updateMccMnc(list);
+				logger.info(messageResourceBundle.getLogMessage("network.msg.update"));
+				logger.info(messageResourceBundle.getLogMessage("network.record.updated"), count);
 				target = IConstants.SUCCESS_KEY;
-				response = "Update Successful. Total Updated Records: " + count;
 				MultiUtility.changeFlag(Constants.NETWORK_FLAG_FILE, "707");
 			} else {
-				logger.error("error: record unavailable");
+				logger.error(messageResourceBundle.getLogMessage("network.record.unavailable"));
 				target = IConstants.FAILURE_KEY;
-				throw new NotFoundException("Record unavailable!");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NETWORK_RECORD_UNAVAILABLE));
 			}
 
 		} catch (NotFoundException e) {
-			logger.error("Not Found Exception");
 			target = IConstants.FAILURE_KEY;
-			logger.error("Exception:ReplaceMccMnc:" + e);
+			logger.error("Exception:" + e);
 			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
-			logger.error("error: processError");
 			target = IConstants.FAILURE_KEY;
-			logger.error("Exception:ReplaceMccMncAction(1)::" + e);
-			throw new InternalServerException(e.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("network.msg.error"),e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NETWORK_MSG_ERROR, new Object[] {e.getMessage()}));
 		}
-		return new ResponseEntity<String>(response, HttpStatus.CREATED);
+		return new ResponseEntity<String>(messageResourceBundle.getMessage(ConstantMessages.NETWORK_UPDATE_SUCCESS, new Object[] {count}), HttpStatus.CREATED);
 	}
 
 	public int updateMccMnc(ArrayList<MccMncDTO> list) {
@@ -366,8 +357,8 @@ public class NetworkServiceImpl implements NetworkService {
 				this.networkEntryRepo.save(entry);
 				count++;
 			}else {
-				logger.error("Network Entry not found with id: "+data.getId());
-				throw new NotFoundException("Network Entry not found with id: "+data.getId());
+				logger.error(messageResourceBundle.getLogMessage("network.entry.notfound"),data.getId());
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NETWORK_NOT_FOUND, new Object[] {data.getId()}));
 			}
 		}
 		return count;
@@ -389,26 +380,24 @@ public class NetworkServiceImpl implements NetworkService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		int count = ids.size();
 		String target = null;
-		String response = "";
 		try {
 			if (!ids.isEmpty()) {
 				this.networkEntryRepo.deleteByIdIn(ids);
-				logger.info("Deleted Records: " + count);
+				logger.info(messageResourceBundle.getLogMessage("network.deleted.record"),count);
 				target = IConstants.SUCCESS_KEY;
-				response = "Deleted Successfully! Deleted Records: " + count;
 				MultiUtility.changeFlag(Constants.NETWORK_FLAG_FILE, "707");
 			} else {
 				logger.error("Error: No Record Found To Delete!");
-				response = "No Record Found To Delete!";
 				target = IConstants.FAILURE_KEY;
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NETWORK_DELETE_FAILED));
 			}
 
 		} catch (Exception ex) {
@@ -418,7 +407,7 @@ public class NetworkServiceImpl implements NetworkService {
 			throw new InternalServerException(ex.getLocalizedMessage());
 		}
 
-		return new ResponseEntity<String>(response, HttpStatus.OK);
+		return new ResponseEntity<String>(messageResourceBundle.getMessage(ConstantMessages.NETWORK_DELETE_SUCCESS, new Object[] {count}), HttpStatus.OK);
 	}
 	
 	
@@ -443,10 +432,10 @@ public class NetworkServiceImpl implements NetworkService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		String target = null;
@@ -510,10 +499,10 @@ public class NetworkServiceImpl implements NetworkService {
 			throw new InternalServerException(e.getLocalizedMessage());
 		}
 		if (list.isEmpty()) {
-			logger.error("No records found!");
-			throw new NotFoundException("MccMnc data not found! List is empty!");
+			logger.error(messageResourceBundle.getLogMessage("network.record.unavailable"));
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NETWORK_MCCMNC_NOTFOUND));
 		} else {
-			logger.info("Total records found: " + list.size());
+			logger.info(messageResourceBundle.getLogMessage("network.record.notfound"),list.size());
 			target = IConstants.SUCCESS_KEY;
 			return ResponseEntity.ok(searchResponse);
 		}
@@ -592,10 +581,10 @@ public class NetworkServiceImpl implements NetworkService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		String target = null;
@@ -629,10 +618,11 @@ public class NetworkServiceImpl implements NetworkService {
 			if (!cc.equalsIgnoreCase("%")) {
 				fileName = "mccmnc_database_" + cc + ".xls";
 			}
-			String file = this.filePath + fileName;
+//			String file = this.filePath + fileName;
+			String file = IConstants.WEBAPP_DIR + "report//" + fileName;
 			FileContentGenerator contentGenerator = new FileContentGenerator();
 			contentGenerator.createMccMncContent(list, file);
-			logger.info("<---- Preparing for Download ---> ");
+			logger.info("<---- Preparing for Download --->");
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
 			headers.setContentDispositionFormData("attachment", fileName);
@@ -694,10 +684,10 @@ public class NetworkServiceImpl implements NetworkService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		String target = null;
@@ -713,9 +703,9 @@ public class NetworkServiceImpl implements NetworkService {
 				System.out.println(networkmap.size());
 				return ResponseEntity.ok(networkmap);
 			} else {
-				logger.error("No record found in network map!");
+				logger.error(messageResourceBundle.getLogMessage("network.map.norecord"));
 				target = IConstants.FAILURE_KEY;
-				throw new NotFoundException("No record found in network map!");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NETWORK_NOMAP_RECORD));
 			}
 		} catch (NotFoundException e) {
 			logger.error(e.toString());
@@ -744,10 +734,10 @@ public class NetworkServiceImpl implements NetworkService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		String response = "";
 		String target = null;
@@ -759,19 +749,19 @@ public class NetworkServiceImpl implements NetworkService {
 				count = updateMccMnc(tempList);
 				if (tempList.size() == count) {
 					target = IConstants.SUCCESS_KEY;
-					logger.info("Update Successful! Total Updated Records: " + count);
+					logger.info(messageResourceBundle.getLogMessage("network.record.updated"),count);
 					response = "Update Successful! Total Updated Records: " + count;
 				} else {
 					int remained = tempList.size() - count;
 					target = IConstants.FAILURE_KEY;
-					logger.error("Update Failure With Remaining Records: " + remained);
+					logger.error(messageResourceBundle.getLogMessage("network.update.failure"),remained);
 					response = "Update Failure With Remaining Records: " + remained;
 				}
 				MultiUtility.changeFlag(Constants.NETWORK_FLAG_FILE, "707");
 			} else {
 				target = IConstants.FAILURE_KEY;
 				logger.error(target, "Error fetching data or list is empty!");
-				throw new NotFoundException("No data found in MccMncDTO list!");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NETWORK_DATA_EMPTY));
 			}
 		} catch (NotFoundException e) {
 			logger.error(e.toString());
@@ -825,10 +815,10 @@ public class NetworkServiceImpl implements NetworkService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		String mcc = "", mccTokens = "";
@@ -870,22 +860,22 @@ public class NetworkServiceImpl implements NetworkService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		
 		try {
 			if(cc!=null && !(cc.equals("NA"))) {
 				List<String> getCC = this.networkEntryRepo.findDistinctMCCByCc(cc);
 				if(getCC.isEmpty()) {
-					throw new NotFoundException("No Mcc Entry Found!");
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NETWORK_MCC_NOTFOUND));
 				}else {
 					return ResponseEntity.ok(getCC);
 				}
 			}else {
-				throw new InternalServerException("Unable to fetch MCC! CC is NA!");
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NETWORK_FETCHMCC_FAILURE));
 			}
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getMessage());
@@ -903,10 +893,10 @@ public class NetworkServiceImpl implements NetworkService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		
 		try {
@@ -924,13 +914,13 @@ public class NetworkServiceImpl implements NetworkService {
 				}
 				
 				if(mncList.isEmpty()) {
-					throw new NotFoundException("MNC list is empty! No Data Found!");
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NETWORK_MNC_NOTFOUND));
 				}else {
 					return ResponseEntity.ok(mncList);
 				}
 				
 			}else {
-				throw new InternalServerException("Unable to fetch MNC! MCC is NA!");
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NETWORK_FETCHMNC_FAILURE));
 			}
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getLocalizedMessage());
