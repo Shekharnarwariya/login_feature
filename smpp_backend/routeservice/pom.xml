@@ -14,7 +14,8 @@
 	<groupId>com.hti.smpp.common</groupId>
 	<artifactId>route</artifactId>
 	<version>0.0.1</version>
-	<name>route</name>
+	<packaging>jar</packaging>
+	<name>ROUTE_SERVICE</name>
 	<description>Route project</description>
 
 	<properties>
@@ -98,6 +99,7 @@
 	</dependencyManagement>
 
 	<build>
+		<finalName>ROUTE_SERVICE</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

@@ -11,7 +11,8 @@
 	<groupId>com.hti.smpp.common</groupId>
 	<artifactId>subscription</artifactId>
 	<version>0.0.1</version>
-	<name>subscription</name>
+	<packaging>jar</packaging>
+	<name>SUBSCRIPTION_SERVICE</name>
 	<description>subscriptionproject for Spring Boot</description>
 	<properties>
 		<java.version>17</java.version>
@@ -77,6 +78,7 @@
 	</dependencyManagement>
 
 	<build>
+		<finalName>SUBSCRIPTION_SERVICE</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

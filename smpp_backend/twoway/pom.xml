@@ -12,7 +12,8 @@
 	<groupId>com.hti</groupId>
 	<artifactId>twoway</artifactId>
 	<version>0.0.1</version>
-	<name>twoway</name>
+	<packaging>jar</packaging>
+	<name>TWOWAY_SERVICE</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
 		<java.version>17</java.version>
@@ -107,6 +108,7 @@
 
 
 	<build>
+		<finalName>TWOWAY_SERVICE</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

@@ -55,8 +55,8 @@ public class ContextListener {
 
 		try {
 			ClientConfig config = new ClientConfig();
-//			// Configure Hazelcast client as neede
 			config.getNetworkConfig().setSmartRouting(false);
+			config.getNetworkConfig().addAddress(IConstants.Hazelcast_Client_IP);
 			GlobalVars.hazelInstance = HazelcastClient.newHazelcastClient(config);
 			GlobalVars.hazelInstance.getCluster().addMembershipListener(new MemberEventListener());
 			logClusterMembers();

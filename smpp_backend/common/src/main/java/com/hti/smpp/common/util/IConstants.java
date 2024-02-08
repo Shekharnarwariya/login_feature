@@ -1,9 +1,10 @@
 package com.hti.smpp.common.util;
 
 /**
- * The IConstants class contains constant values used throughout the application.
- * These constants include database batch size, file paths, prefix settings, and various configuration parameters.
- * All constants are loaded from a configuration file during application startup.
+ * The IConstants class contains constant values used throughout the
+ * application. These constants include database batch size, file paths, prefix
+ * settings, and various configuration parameters. All constants are loaded from
+ * a configuration file during application startup.
  */
 
 public final class IConstants {
@@ -147,6 +148,5 @@ public final class IConstants {
 	public static final int HTTPsmsCount = Integer.parseInt(ContextListener.property.getProperty("load.HTTPsmsCount"));
 	public static final int HTTPSleepTime = Integer
 			.parseInt(ContextListener.property.getProperty("load.HTTPSleepTime"));
-	// ************************************************End Card
-	// Menu******************************************
+	public static final String Hazelcast_Client_IP = ContextListener.property.getProperty("hazelcast.cluster.address");
 }

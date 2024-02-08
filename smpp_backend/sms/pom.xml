@@ -12,7 +12,8 @@
 	<groupId>com.hti.smpp.common</groupId>
 	<artifactId>sms</artifactId>
 	<version>0.0.1</version>
-	<name>sms</name>
+	<packaging>jar</packaging>
+	<name>SMS_SERVICE</name>
 	<description>project for Message module</description>
 	<properties>
 		<java.version>17</java.version>
@@ -158,6 +159,7 @@
 	</dependencyManagement>
 
 	<build>
+		<finalName>SMS_SERVICE</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

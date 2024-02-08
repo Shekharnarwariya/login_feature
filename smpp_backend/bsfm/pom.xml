@@ -12,7 +12,8 @@
 	<groupId>com.hti</groupId>
 	<artifactId>bsfm</artifactId>
 	<version>0.0.1</version>
-	<name>bsfm</name>
+	<packaging>jar</packaging>
+	<name>BSFM_SERVICE</name>
 	<description>BSFM module</description>
 	<properties>
 		<java.version>17</java.version>
@@ -71,6 +72,7 @@
 		</dependencies>
 	</dependencyManagement>
 	<build>
+		<finalName>BSFM_SERVICE</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

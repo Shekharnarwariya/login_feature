@@ -31,10 +31,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
-/**
- * This class handles HTTP requests related to user authentication and profile
- * management.
- */
 @RestController
 @RequestMapping("/login")
 @OpenAPIDefinition(info = @Info(title = "SMPP Login API", version = "1.0", description = "API for managing SMPP Login"))
