@@ -77,10 +77,12 @@
 			<version>1.18.28</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>smpp</groupId>
+			<artifactId>smpp</artifactId>
+			<scope>system</scope>
+			<version>1.0</version>
+			<systemPath>${basedir}/lib/smpp.jar</systemPath>
+		</dependency>
 	</dependencies>
-	<build>
-		<finalName>COMMON_SERVICE</finalName>
-
-	</build>
-
 </project>

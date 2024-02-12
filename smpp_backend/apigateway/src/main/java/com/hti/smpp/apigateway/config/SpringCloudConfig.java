@@ -18,95 +18,95 @@ public class SpringCloudConfig {
 		return builder.routes()
 
 				// Route for TEMPLATE-SERVICE
-				.route("TEMPLATE-SERVICE",
+				.route("template-service",
 						r -> r.path("/templates/**")
 								.filters(f -> f.rewritePath("./templates/(?<segment>.*)", "/${segment}")
 										// Apply authentication filter
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
-								.uri("lb://TEMPLATE-SERVICE:8081"))
+								.uri("lb://template-service:8081"))
 
 				// Route for LOGIN-SERVICE
-				.route("LOGIN-SERVICE", r -> r.path("/login/**") // Path pattern for the route
+				.route("login-service", r -> r.path("/login/**") // Path pattern for the route
 						.filters(f -> f.rewritePath("./login/(?<segment>.*)", "/${segment}") // Rewrite the path
 								.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
-						.uri("lb://LOGIN-SERVICE:8082")) // Target URI for the route
+						.uri("lb://login-service:8082")) // Target URI for the route
 
 				// Route for SMS-SERVICE
-				.route("SMS-SERVICE",
+				.route("sms-service",
 						r -> r.path("/sms/**")
 								.filters(f -> f.rewritePath("./sms/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
-								.uri("lb://SMS-SERVICE:8083"))
+								.uri("lb://sms-service:8083"))
 
 				// Route for HLR-SMSC-SERVICE
-				.route("HLR-SMSC-SERVICE",
+				.route("hlrsmsc-service",
 						r -> r.path("/hlr/**")
 								.filters(f -> f.rewritePath("/hlr/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
-								.uri("lb://HLR-SMSC-SERVICE:8084"))
+								.uri("lb://hlrsmsc-service:8084"))
 
 				// Route for SMSC-SERVICE
-				.route("SMSC-SERVICE",
+				.route("smsc-service",
 						r -> r.path("/smsc/**")
 								.filters(f -> f.rewritePath("/smsc/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
-								.uri("lb://SMSC-SERVICE:8085"))
+								.uri("lb://smsc-service:8085"))
 
 				// Route for ROUTE-SERVICE
-				.route("ROUTE-SERVICE",
+				.route("route-service",
 						r -> r.path("/routes/**")
 								.filters(f -> f.rewritePath("/routes/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
-								.uri("lb://ROUTE-SERVICE:8086"))
+								.uri("lb://route-service:8086"))
 
 				// Route for SALES-SERVICE
-				.route("SALES-SERVICE",
+				.route("sales-service",
 						r -> r.path("/sales/**")
 								.filters(f -> f.rewritePath("./sales/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
-								.uri("lb://SALES-SERVICE:8087"))
+								.uri("lb://sales-service:8087"))
 
 				// Route for ADDRESS-BOOK-SERVICE
-				.route("ADDRESS-BOOK-SERVICE",
+				.route("addressbook-service",
 						r -> r.path("/addressbook/**")
 								.filters(f -> f.rewritePath("./addressbook/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
-								.uri("lb://ADDRESS-BOOK-SERVICE:8088"))
+								.uri("lb://addressbook-service:8088"))
 
 				// Route for BSFM-SERVICE
-				.route("BSFM-SERVICE",
+				.route("bsfm-service",
 						r -> r.path("/bsfm/**")
 								.filters(f -> f.rewritePath("./bsfm/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
-								.uri("lb://BSFM-SERVICE:8089"))
+								.uri("lb://bsfm-service:8089"))
 
 				// Route for BSFM-SERVICE
-				.route("TWO-WAY-SERVICE",
+				.route("twoway-service",
 						r -> r.path("/twoway/**")
 								.filters(f -> f.rewritePath("/twoway/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
-								.uri("lb://TWO-WAY-SERVICE:8090"))
+								.uri("lb://twoway-service:8090"))
 
 				// Route for BSFM-SERVICE
-				.route("SUBSCRIPTION-SERVICE",
+				.route("subscription-service",
 						r -> r.path("/subscription/**")
 								.filters(f -> f.rewritePath("./subscription/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
-								.uri("lb://SUBSCRIPTION-SERVICE:8090"))
+								.uri("lb://subscription-service:8090"))
 
 				// Route for DLT-SERVICE
-				.route("DLT-SERVICE",
+				.route("dlt-service",
 						r -> r.path("/dlt/**")
 								.filters(f -> f.rewritePath("./dlt/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
-								.uri("lb://DLT-SERVICE:8092"))
+								.uri("lb://dlt-service:8092"))
 
 				// Route for NETWORK-SERVICE
-				.route("NETWORK-SERVICE",
+				.route("network-service",
 						r -> r.path("/network/**")
 								.filters(f -> f.rewritePath("./network/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
-								.uri("lb://NETWORK-SERVICE:8093"))
+								.uri("lb://network-service:8093"))
 
 				.build(); // Build the routes
 	}
