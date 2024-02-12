@@ -1,5 +1,6 @@
 package com.hti.smpp.common.service.impl;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
@@ -312,6 +313,14 @@ public class TemplatesServiceImpl implements TemplatesService {
 		}
 	}
 
+
+    private String formatDate(Date date) {
+        if (date == null) {
+            return null;
+        }
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+        return dateFormat.format(date);
+    }
 	// Method for mapping TemplatesDTO to TemplatesResponse
 	private TemplatesResponse mapToResponse(TemplatesDTO template) {
 		TemplatesResponse response = new TemplatesResponse();
@@ -319,6 +328,8 @@ public class TemplatesServiceImpl implements TemplatesService {
 		response.setMessage(template.getMessage());
 		response.setMasterId(template.getMasterId());
 		response.setTitle(template.getTitle());
+		  response.setCreatedOn(formatDate(template.getCreatedOn()));
+		    response.setUpdatedOn(formatDate(template.getUpdatedOn()));
 		return response;
 	}
 
