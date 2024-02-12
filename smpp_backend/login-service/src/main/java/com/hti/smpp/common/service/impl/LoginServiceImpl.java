@@ -33,6 +33,7 @@ import com.hti.smpp.common.request.ProfileUpdateRequest;
 import com.hti.smpp.common.request.SignupRequest;
 import com.hti.smpp.common.response.JwtResponse;
 import com.hti.smpp.common.response.ProfileResponse;
+import com.hti.smpp.common.sales.repository.SalesRepository;
 import com.hti.smpp.common.security.BCryptPasswordEncoder;
 import com.hti.smpp.common.service.LoginService;
 import com.hti.smpp.common.user.dto.BalanceEntry;
@@ -71,6 +72,9 @@ public class LoginServiceImpl implements LoginService {
 
 	@Autowired
 	private JwtUtils jwtUtils;
+	
+	@Autowired
+	private SalesRepository salesRepository;
 
 	@Autowired
 	private UserEntryRepository userEntryRepository;
@@ -126,7 +130,7 @@ public class LoginServiceImpl implements LoginService {
 		try {
 			logger.info(messageResourceBundle.getLogMessage("log.attemptAuth"), username);
 
-			if (!userEntryRepository.existsBySystemId(username)) {
+			if (!userEntryRepository.existsBySystemId(username) && !salesRepository.existsByUsername(username)) {
 				logger.error(messageResourceBundle.getLogMessage("auth.failed.userNotFound"), username);
 				throw new AuthenticationExceptionFailed(
 						messageResourceBundle.getExMessage(ConstantMessages.AUTHENTICATION_FAILED_USERNAME));

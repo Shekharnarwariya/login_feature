@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.hti.smpp.common.Security.BCryptPasswordEncoder;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
@@ -45,6 +46,9 @@ public class SalesServiceImpl implements SalesService {
 	
 	@Autowired
 	private MessageResourceBundle messageResourceBundle;
+	
+	@Autowired
+	private BCryptPasswordEncoder encoder;
 
 	/**
 	 * Saves a sales entry based on the provided form data and username. Validates
@@ -72,7 +76,7 @@ public class SalesServiceImpl implements SalesService {
 		}
 		String target = IConstants.FAILURE_KEY;
 		SalesEntry entry = new SalesEntry();
-
+		
 		String systemId = user.getSystemId();
 
 		logger.info(messageResourceBundle.getLogMessage("sales.req.add"),salesEntryForm.getUsername(),
@@ -84,6 +88,9 @@ public class SalesServiceImpl implements SalesService {
 				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SALES_USER_EXIST, new Object[] {entry.getUsername()}));
 			} else {
 				entry.setCreatedOn(LocalDate.now() + "");
+				
+				entry.setPassword(encoder.encode(salesEntryForm.getPassword()));
+				
 				SalesEntry sales = salesRepository.save(entry);
 				int id = sales.getId();
 				if (id > 0) {
