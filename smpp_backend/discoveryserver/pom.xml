@@ -9,11 +9,7 @@
 		<version>3.1.5</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
-<<<<<<< HEAD
-	<groupId>com.example</groupId>
-=======
 	<groupId>com.hti.smpp</groupId>
->>>>>>> 4b1adf75719b654fd00348064ec295f4c289c694
 	<artifactId>discoveryserver</artifactId>
 	<version>0.0.1</version>
 	<packaging>jar</packaging>

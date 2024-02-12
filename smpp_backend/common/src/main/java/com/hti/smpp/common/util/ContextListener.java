@@ -65,11 +65,6 @@ public class ContextListener {
 			GlobalVars.SmscGroupEntries = GlobalVars.hazelInstance.getMap("smsc_group");
 			GlobalVars.HttpDlrParam = GlobalVars.hazelInstance.getMap("http_dlr_param");
 			GlobalVars.NetworkEntries = GlobalVars.hazelInstance.getMap("network_entries");
-<<<<<<< HEAD
-			
-			
-=======
->>>>>>> 4b1adf75719b654fd00348064ec295f4c289c694
 		} catch (Exception e) {
 			logger.error("Error connecting to Hazelcast Cluster", e);
 			// Handle the exception appropriately
