@@ -26,6 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.hazelcast.query.Predicate;
@@ -36,7 +38,7 @@ import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.request.CustomReportDTO;
-import com.hti.smpp.common.request.CustomReportForm;
+import com.hti.smpp.common.request.SubmissionReportRequest;
 import com.hti.smpp.common.sales.dto.SalesEntry;
 import com.hti.smpp.common.sales.repository.SalesRepository;
 import com.hti.smpp.common.service.SubmissionReportService;
@@ -45,6 +47,7 @@ import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 
@@ -52,38 +55,35 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Service
 public class SubmissionReportServiceImpl implements SubmissionReportService {
-	
+
 	Logger logger = LoggerFactory.getLogger(SubmissionReportServiceImpl.class);
-	
 
 	@Autowired
 	private UserEntryRepository userRepository;
-	
+
 	@Autowired
 	private UserDAService userService;
 
-	
-	Locale locale =null;
+	Locale locale = null;
 	@Autowired
 	private DataSource dataSource;
-	
+
 	@Autowired
 	private SalesRepository salesRepository;
-	
+
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
 	}
-	
-	
+
 	Set<String> paramSet = new HashSet<String>();
 	boolean noCriteria = true;
 	List<String> sql_list = new ArrayList<String>();
 	Map<String, String> mis_sql_list = new HashMap<String, String>();
-	
+
 	@Override
-	public List<CustomReportDTO> execute(String username, CustomReportForm customReportForm,
-			HttpServletResponse response) {
-		
+	public ResponseEntity<?> execute(String username, SubmissionReportRequest customReportForm,
+			HttpServletResponse response, String lang) {
+
 		String target = IConstants.SUCCESS_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
@@ -97,14 +97,16 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 		boolean mis = true;
 		boolean mis_log = false;
 		String mis_sql = "";
-		
-		logger.info(username +" Submission Report Requested.");
+
+		logger.info(username + " Submission Report Requested.");
 		try {
-			
-			//CustomReportForm customReportForm = (CustomReportForm) actionForm;
+			locale = Customlocale.getLocaleByLanguage(lang);
+
+			// CustomReportForm customReportForm = (CustomReportForm) actionForm;
 			CustomReportDTO customReportDTO = new CustomReportDTO();
-			BeanUtils.copyProperties(customReportDTO, customReportForm);
-			//String username = customReportDTO.getClientId();
+			// BeanUtils.copyProperties(customReportDTO, customReportForm);
+			org.springframework.beans.BeanUtils.copyProperties(customReportForm, customReportDTO);
+			// String username = customReportDTO.getClientId();
 			String smsc = customReportDTO.getSmscName();
 			String country = customReportDTO.getCountry();
 			String sender = customReportDTO.getSenderId();
@@ -224,22 +226,20 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 						// Get Users List From Usermaster Under this admin
 						List<String> users = null;
 						if (user.getRole().equalsIgnoreCase("admin")) {
-							users = new ArrayList<String>(userService
-									.listUsersUnderMaster(user.getSystemId()).values());
+							users = new ArrayList<String>(
+									userService.listUsersUnderMaster(user.getSystemId()).values());
 							users.add(user.getSystemId());
-							Predicate<Integer,WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject().get("secondaryMaster")
-									.equal(user.getSystemId());
+							Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject()
+									.get("secondaryMaster").equal(user.getSystemId());
 							for (WebMasterEntry webEntry : GlobalVars.WebmasterEntries.values(p)) {
 								UserEntry userEntry = GlobalVars.UserEntries.get(webEntry.getUserId());
 								users.add(userEntry.getSystemId());
 							}
 						} else if (user.getRole().equalsIgnoreCase("seller")) {
-							users = new ArrayList<String>(
-								userService.listUsersUnderSeller(user.getId()).values());
+							users = new ArrayList<String>(userService.listUsersUnderSeller(user.getId()).values());
 						} else if (user.getRole().equalsIgnoreCase("manager")) {
 							// SalesDAService salesService = new SalesDAServiceImpl();
-							users = new ArrayList<String>(
-									listUsernamesUnderManager(user.getSystemId()).values());
+							users = new ArrayList<String>(listUsernamesUnderManager(user.getSystemId()).values());
 						}
 						if (users != null) {
 							while (!users.isEmpty()) {
@@ -250,10 +250,9 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 								mis_sql_list.put(underuserinfo, mis_sql);
 							}
 						} else {
-							logger.error("No Users Found Under " + user.getSystemId() + " ["
-									+ user.getRole() + "]");
-							throw new EntryNotFoundException("No Users Found Under " + user.getSystemId()
-									+ " [" + user.getRole() + "]");
+							logger.error("No Users Found Under " + user.getSystemId() + " [" + user.getRole() + "]");
+							throw new EntryNotFoundException(
+									"No Users Found Under " + user.getSystemId() + " [" + user.getRole() + "]");
 						}
 					} else {
 						System.out.println(user.getSystemId() + " Checking mis Records For: " + username);
@@ -285,11 +284,10 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 				}
 				groupbyStr += ",s_flag";
 				paramSet.add("sflag");
-				//request.setAttribute("sflag", "yes");
+				// request.setAttribute("sflag", "yes");
 				noCriteria = false;
 			}
-			if (user.getRole().equalsIgnoreCase("superadmin") || user.getRole().
-					equalsIgnoreCase("system")) {
+			if (user.getRole().equalsIgnoreCase("superadmin") || user.getRole().equalsIgnoreCase("system")) {
 				if (username != null) {
 					selectStr += ",username";
 					if (!username.equals("%")) {
@@ -298,7 +296,7 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 					groupbyStr += ",username";
 					orderbyStr += ",username";
 					paramSet.add("username");
-					//request.setAttribute("user", "yes");
+					// request.setAttribute("user", "yes");
 					noCriteria = false;
 				}
 			} else if (user.getRole().equalsIgnoreCase("admin") || user.getRole().equalsIgnoreCase("manager")
@@ -307,24 +305,20 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 				if (username.equals("%")) {
 					List<String> users = null;
 					if (user.getRole().equalsIgnoreCase("admin")) {
-						users = new ArrayList<String>(
-							userService.listUsersUnderMaster(user.getSystemId()).values());
+						users = new ArrayList<String>(userService.listUsersUnderMaster(user.getSystemId()).values());
 						users.add(user.getSystemId());
 					} else if (user.getRole().equalsIgnoreCase("seller")) {
-						users = new ArrayList<String>(
-								userService.listUsersUnderSeller(user.getId()).values());
+						users = new ArrayList<String>(userService.listUsersUnderSeller(user.getId()).values());
 					} else if (user.getRole().equalsIgnoreCase("manager")) {
 						// SalesDAService salesService = new SalesDAServiceImpl();
-						users = new ArrayList<String>(
-								listUsernamesUnderManager(user.getSystemId()).values());
+						users = new ArrayList<String>(listUsernamesUnderManager(user.getSystemId()).values());
 					}
 					if (users != null) {
 						conditionStr += "username in('" + String.join("','", users) + "') and ";
 					} else {
-						logger.error("No Users Found Under " + user.getSystemId() + " ["
-								+ user.getRole() + "]");
-						throw new EntryNotFoundException("No Users Found Under " + user.getSystemId()
-								+ " [" + user.getRole() + "]");
+						logger.error("No Users Found Under " + user.getSystemId() + " [" + user.getRole() + "]");
+						throw new EntryNotFoundException(
+								"No Users Found Under " + user.getSystemId() + " [" + user.getRole() + "]");
 					}
 				} else {
 					conditionStr += "username='" + username + "' and ";
@@ -332,7 +326,7 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 				groupbyStr += ",username";
 				orderbyStr += ",username";
 				paramSet.add("username");
-				//request.setAttribute("user", "yes");
+				// request.setAttribute("user", "yes");
 				noCriteria = false;
 			} else {
 				conditionStr += "username='" + user.getSystemId() + "' and ";
@@ -345,7 +339,7 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 				groupbyStr += ",smsc";
 				orderbyStr += ",smsc";
 				paramSet.add("smsc");
-				//request.setAttribute("smsc", "yes");
+				// request.setAttribute("smsc", "yes");
 				noCriteria = false;
 			}
 			if (country != null) {
@@ -355,7 +349,7 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 				}
 				groupbyStr += ",oprCountry";
 				paramSet.add("oprCountry");
-				//request.setAttribute("oprCountry", "yes");
+				// request.setAttribute("oprCountry", "yes");
 				noCriteria = false;
 			}
 			if (sender != null) {
@@ -365,7 +359,7 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 				}
 				groupbyStr += ",source_no";
 				paramSet.add("source_no");
-				//request.setAttribute("source", "yes");
+				// request.setAttribute("source", "yes");
 				noCriteria = false;
 			}
 			if (reportType.equalsIgnoreCase("Daily")) {
@@ -382,10 +376,11 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 						+ ":59'";
 			}
 			String sql = selectStr + " from smsc_in " + conditionStr + " " + groupbyStr + orderbyStr;
-			logger.info( user.getSystemId() + ": " + sql);
+			logger.info(user.getSystemId() + ": " + sql);
 			sql_list.add(sql);
+
 			sql = selectStr + " from unprocessed " + conditionStr + " " + groupbyStr + orderbyStr;
-			logger.info( user.getSystemId() + ": " + sql);
+			logger.info(user.getSystemId() + ": " + sql);
 			sql_list.add(sql);
 			// logger.info(system_id+" logSQL: " + logsql);
 			// ************* Getting Record From Database *****************
@@ -667,27 +662,22 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 			logger.info(username + " reportList: " + reportList.size());
 			if (reportList.isEmpty()) {
 				target = IConstants.FAILURE_KEY;
-				throw new NotFoundException("user delivery report not found with username {}" + username);
-			//	message = new ActionMessage("error.record.unavailable");
+				throw new NotFoundException("user Submission report not found with username {}" + username);
+				// message = new ActionMessage("error.record.unavailable");
 			} else {
 				System.out.println("Report Size: " + reportList.size());
 				target = IConstants.SUCCESS_KEY;
-				return reportList;
-				//request.setAttribute("reportList", reportList);
+				return new ResponseEntity<>(reportList, HttpStatus.OK);
+				// request.setAttribute("reportList", reportList);
 			}
-		}  catch (Exception ex) {
-			logger.error(user.getSystemId(), ex.fillInStackTrace());
+		} catch (Exception ex) {
+			// logger.error(user.getSystemId(), ex.fillInStackTrace());
+			ex.printStackTrace();
 			target = IConstants.FAILURE_KEY;
 			throw new InternalServerException("Error: getting error in submission report with username {}" + username);
 		}
-		
+
 	}
-
-
-	
-
-
-	
 
 	public Map<String, List<CustomReportDTO>> getSubmissionReport(List sql_list, Set paramSet) throws Exception {
 		List list = null;
@@ -703,7 +693,8 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 			pStmt.setFetchSize(Integer.MIN_VALUE);
 			while (!sql_list.isEmpty()) {
 				String sql = (String) sql_list.remove(0);
-				// logger.info("SQL => " + sql);
+			 logger.info("SQL getSubmissionReport => " + sql);
+
 				rs = pStmt.executeQuery(sql);
 				while (rs.next()) {
 					String timing = rs.getString("timing");
@@ -750,7 +741,8 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 						report.setCountry(country);
 					}
 					/*
-					 * if (paramSet.contains("oprCountry")) { report.setOperator(rs.getString("oprCountry")); }
+					 * if (paramSet.contains("oprCountry")) {
+					 * report.setOperator(rs.getString("oprCountry")); }
 					 */
 					if (paramSet.contains("source_no")) {
 						report.setSenderId(rs.getString("source_no"));
@@ -776,22 +768,18 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 					rs.close();
 				}
 				if (con != null) {
-					//dbCon.releaseConnection(con);
+					con.close();
+
 				}
 			} catch (SQLException sqle) {
+				sqle.printStackTrace();
 			}
 		}
 		return reportmap;
 	}
-
-
-
-
-
-
-	/////
-	private Map<String, List<CustomReportDTO>> getSubmissionReport(Map<String, String> sql_list,
-			Set<String> paramSet) throws SQLException {
+	////////////////
+	private Map<String, List<CustomReportDTO>> getSubmissionReport(Map<String, String> sql_list, Set<String> paramSet)
+			throws SQLException {
 		List list = null;
 		Map<String, List<CustomReportDTO>> reportmap = new TreeMap<String, List<CustomReportDTO>>();
 		// Map countrymap = null;
@@ -803,8 +791,8 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 			con = getConnection();
 			pStmt = con.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY);
 			pStmt.setFetchSize(Integer.MIN_VALUE);
-			for (String mis_user :  sql_list.keySet()) {
-				String sql =  sql_list.get(mis_user);
+			for (String mis_user : sql_list.keySet()) {
+				String sql = sql_list.get(mis_user);
 				logger.info(mis_user + " SubmissionReport: " + sql);
 				try {
 					rs = pStmt.executeQuery(sql);
@@ -813,6 +801,7 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 						report = new CustomReportDTO();
 						report.setTotalSmsSend(rs.getString("count"));
 						report.setStartdate(timing);
+						
 						if (paramSet.contains("sflag")) {
 							String sflag = rs.getString("s_flag");
 							String status = "Processed";
@@ -843,7 +832,8 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 							report.setCountry(country);
 						}
 						/*
-						 * if (paramSet.contains("oprCountry")) { report.setOperator(rs.getString("oprCountry")); }
+						 * if (paramSet.contains("oprCountry")) {
+						 * report.setOperator(rs.getString("oprCountry")); }
 						 */
 						if (paramSet.contains("source_no")) {
 							report.setSenderId(rs.getString("source_no"));
@@ -872,21 +862,14 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 					rs.close();
 				}
 				if (con != null) {
-					//dbCon.releaseConnection(con);
+				
+					con.close();
 				}
 			} catch (SQLException sqle) {
 			}
 		}
 		return reportmap;
 	}
-
-
-
-
-
-
-
-
 	public Map<Integer, String> listUsernamesUnderManager(String mgrId) {
 		Map<Integer, String> map = listNamesUnderManager(mgrId);
 		Map<Integer, String> users = new HashMap<Integer, String>();
@@ -895,8 +878,6 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 		}
 		return users;
 	}
-
-
 
 	public Map<Integer, String> listNamesUnderManager(String mgrId) {
 		Map<Integer, String> map = new HashMap<Integer, String>();
@@ -907,14 +888,12 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 		return map;
 	}
 
-
-		public List<SalesEntry> listSellersUnderManager(String mgrId) {
+	public List<SalesEntry> listSellersUnderManager(String mgrId) {
 		return salesRepository.findByMasterIdAndRole(mgrId, "seller");
 	}
 
-
 //methode getSubmissionUsers//
-		public List getSubmissionUsers(String sql) {
+	public List getSubmissionUsers(String sql) {
 		List list = new ArrayList();
 		Connection con = null;
 		Statement pStmt = null;
@@ -937,7 +916,7 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 					pStmt = null;
 				}
 				if (con != null) {
-				//	dbCon.releaseConnection(con);
+					con.close();
 				}
 			} catch (SQLException sqle) {
 			}
@@ -945,12 +924,10 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 		return list;
 	}
 
-
-		private long daysDifference(String inputtxt) throws IOException, ParseException {
+	private long daysDifference(String inputtxt) throws IOException, ParseException {
 		Date inputDate = new SimpleDateFormat("yyyy-MM-dd").parse(inputtxt);
 		long days = ChronoUnit.DAYS.between(inputDate.toInstant(), new Date().toInstant());
 		logger.info(inputtxt + " Difference From Today: " + days);
 		return days;
 	}
-	}
-
+}

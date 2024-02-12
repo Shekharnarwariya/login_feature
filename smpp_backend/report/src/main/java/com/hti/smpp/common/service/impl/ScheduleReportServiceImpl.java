@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.StringTokenizer;
 
@@ -14,6 +15,7 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.database.DataBase;
@@ -21,6 +23,7 @@ import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.request.CustomReportForm;
+import com.hti.smpp.common.request.ScheduleReportRequest;
 import com.hti.smpp.common.schedule.dto.ScheduleEntry;
 import com.hti.smpp.common.schedule.dto.ScheduleEntryExt;
 import com.hti.smpp.common.service.ScheduleReportService;
@@ -28,9 +31,10 @@ import com.hti.smpp.common.service.UserDAService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.IConstants;
 
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServlet;
 
 @Service
 public class ScheduleReportServiceImpl implements ScheduleReportService {
@@ -49,46 +53,45 @@ public class ScheduleReportServiceImpl implements ScheduleReportService {
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
 	}
-	
+
 	private String template_file = IConstants.FORMAT_DIR + "report//SmscDlrReport.jrxml";
 	private final String summary_template_file = IConstants.FORMAT_DIR + "report//SmscDlrSummaryReport.jrxml";
-	
+	Locale locale = null;
+	private String reportUser = null;
 
 	@Override
-	public List<ScheduleEntryExt> ScheduleReport(String username, CustomReportForm customReportForm, String lang,
-	        HttpServletResponse response) {
-	    String target = IConstants.SUCCESS_KEY;
-	    Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-	    UserEntry user = userOptional
-	            .orElseThrow(() -> new NotFoundException("User not found with the provided username."));
-	    if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-	        throw new UnauthorizedException("User does not have the required roles for this operation.");
-	    }
-	    try {
-	        List<ScheduleEntryExt> reportList = getReportList(customReportForm, username);
-	        if (reportList != null && !reportList.isEmpty()) {
-	            System.out.println("Report Size: " + reportList.size());
-	            // request.setAttribute("report", reportList);
-	            return reportList; // Add this return statement
-	        } else {
-	            target = IConstants.FAILURE_KEY;
-	            throw new NotFoundException("Schedule report not found with username: " + username);
-	        }
-	    } catch (Exception ex) {
-	        logger.error(user.getSystemId(), ex.fillInStackTrace());
-	        target = IConstants.FAILURE_KEY;
-	        throw new InternalServerException(
-	                "Error: Getting error in profit report for view with username: " + username);
-	    }
+	public ResponseEntity<?> ScheduleReport(String username, ScheduleReportRequest customReportForm, String lang) {
+		String target = IConstants.SUCCESS_KEY;
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = userOptional
+				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			throw new UnauthorizedException("User does not have the required roles for this operation.");
+		}
+		try {
+			locale = Customlocale.getLocaleByLanguage(lang);
+			List<ScheduleEntryExt> reportList = getReportList(customReportForm, username, lang);
+			if (reportList != null && !reportList.isEmpty()) {
+				System.out.println("Report Size: " + reportList.size());
+				// request.setAttribute("report", reportList);
+				return ResponseEntity.ok(reportList); // Add this return statement
+			} else {
+				target = IConstants.FAILURE_KEY;
+				throw new NotFoundException("Schedule report not found with username: " + username);
+			}
+		} catch (Exception ex) {
+			logger.error(user.getSystemId(), ex.fillInStackTrace());
+			target = IConstants.FAILURE_KEY;
+			throw new InternalServerException(
+					"Error: Getting error in profit report for view with username: " + username);
+		}
 	}
 
-	private List<ScheduleEntryExt> getReportList(CustomReportForm customReportForm,String username) throws SQLException {
-		
-		//IDatabaseService service = HtiSmsDB.getInstance();
-		
+	private List<ScheduleEntryExt> getReportList(ScheduleReportRequest customReportForm, String username, String lang)
+			throws SQLException {
 		List<ScheduleEntryExt> list = new ArrayList<ScheduleEntryExt>();
-		String sql = "select * from schedule_history where client_time between '" + customReportForm.getSday()
-				+ " 00:00:00' and '" + customReportForm.getEday() + " 23:59:59' ";
+		String sql = "select * from schedule_history where client_time between '" + customReportForm.getStartDate()
+				+ " ' and '" + customReportForm.getEndDate() + "' ";
 		if (customReportForm.getClientId() != null && customReportForm.getClientId().length() > 0) {
 			if (!customReportForm.getClientId().contains("ALL")) {
 				sql += " and username = '" + customReportForm.getClientId() + "' ";
@@ -114,26 +117,23 @@ public class ScheduleReportServiceImpl implements ScheduleReportService {
 		return list;
 	}
 
-	public List<ScheduleEntryExt> getScheduleReport(String sql) throws SQLException {
+	public List<ScheduleEntryExt> getScheduleReport(String sql) {
 		logger.info("Schedule History sql: " + sql);
-		List<ScheduleEntryExt> scheduleList = new ArrayList<ScheduleEntryExt>();
+		List<ScheduleEntryExt> scheduleList = new ArrayList<>();
 		ScheduleEntryExt entryExt = null;
-		Connection con = null;
-		PreparedStatement pStmt = null;
-		ResultSet rs = null;
-		try {
-			con = getConnection();
-			pStmt = con.prepareStatement(sql);
-			rs = pStmt.executeQuery();
+
+		try (Connection con = getConnection();
+				PreparedStatement pStmt = con.prepareStatement(sql);
+				ResultSet rs = pStmt.executeQuery()) {
+
 			while (rs.next()) {
-				// logger.info("<---------- Records getting ------------------------->");
 				int id = rs.getInt("id");
 				int serverId = rs.getInt("server_id");
 				String server_time = rs.getString("server_time");
 				String system_id = rs.getString("username");
 				ScheduleEntry entry = new ScheduleEntry(system_id, server_time, rs.getString("client_gmt"),
 						rs.getString("client_time"), serverId, rs.getString("remarks"), null, rs.getString("repeated"),
-						rs.getString("SchType"), rs.getString("web_id"),system_id);
+						rs.getString("SchType"), rs.getString("web_id"));
 				entry.setId(id);
 				entry.setCreatedOn(rs.getString("createdOn"));
 				entryExt = new ScheduleEntryExt(entry);
@@ -145,25 +145,9 @@ public class ScheduleReportServiceImpl implements ScheduleReportService {
 			}
 			logger.info("Schedule History report: " + scheduleList.size());
 		} catch (SQLException sqle) {
-			logger.error(" ", sqle.fillInStackTrace());
-		} finally {
-			try {
-				if (rs != null) {
-					rs.close();
-					rs = null;
-				}
-				if (pStmt != null) {
-					pStmt.close();
-					pStmt = null;
-				}
-				if (con != null) {
-					//dbCon.releaseConnection(con);
-				}
-			} catch (SQLException sqle) {
-			}
+			logger.error("Error in SQL query", sqle);
 		}
+
 		return scheduleList;
 	}
-	}
-
-
+}

@@ -39,6 +39,8 @@ import org.apache.poi.xssf.usermodel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.database.DataBase;
@@ -46,7 +48,9 @@ import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.request.CustomReportForm;
+import com.hti.smpp.common.request.LookUpReportRequest;
 import com.hti.smpp.common.request.LookupServiceInvoker;
+
 import com.hti.smpp.common.rmi.dto.LookupReport;
 import com.hti.smpp.common.sales.repository.SalesRepository;
 import com.hti.smpp.common.service.LookupReportService;
@@ -97,7 +101,7 @@ public class LookupReportServiceImpl implements LookupReportService {
 	private String template_file = IConstants.FORMAT_DIR + "report//lookupReport.jrxml";
 
 	@Override
-	public List<LookupReport> LookupReportview(String username, CustomReportForm customReportForm, String lang) {
+	public ResponseEntity<?> LookupReportview(String username, LookUpReportRequest customReportForm, String lang) {
 		String target = IConstants.SUCCESS_KEY;
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -120,18 +124,20 @@ public class LookupReportServiceImpl implements LookupReportService {
 				print = getJasperPrint(reportList, false);
 
 				target = IConstants.SUCCESS_KEY;
+			     return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
 				throw new InternalServerException("Error generating report PDF file in LookUpReport");
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new InternalServerException("Error: " + e.getMessage());
 		}
-		return null;
+
 
 	}
 
 	@Override
-	public String LookupReportxls(String username, CustomReportForm customReportForm, String lang,
+	public ResponseEntity<?> LookupReportxls(String username, LookUpReportRequest customReportForm, String lang,
 			HttpServletResponse response) {
 
 		String target = IConstants.FAILURE_KEY;
@@ -205,11 +211,11 @@ public class LookupReportServiceImpl implements LookupReportService {
 		} catch (Exception e) {
 			throw new InternalServerException("Error: " + e.getMessage());
 		}
-		return target;
+		return null;
 	}
 
 	@Override
-	public String LookupReportPdf(String username, CustomReportForm customReportForm, String lang,
+	public ResponseEntity<?> LookupReportPdf(String username, LookUpReportRequest customReportForm, String lang,
 			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -253,11 +259,11 @@ public class LookupReportServiceImpl implements LookupReportService {
 		} catch (Exception e) {
 			throw new InternalServerException("Error: " + e.getMessage());
 		}
-		return target;
+		return null;
 	}
 
 	@Override
-	public String LookupReportDoc(String username, CustomReportForm customReportForm, String lang,
+	public ResponseEntity<?> LookupReportDoc(String username, LookUpReportRequest customReportForm, String lang,
 			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -301,11 +307,11 @@ public class LookupReportServiceImpl implements LookupReportService {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return target;
+		return null;
 	}
 
 	@Override
-	public String LookupReportRecheck(String username, CustomReportForm customReportForm, String lang,
+	public ResponseEntity<?> LookupReportRecheck(String username, LookUpReportRequest customReportForm, String lang,
 			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 		String sql = "select * from lookup_result where status='ACCEPTD' ";
@@ -343,12 +349,12 @@ public class LookupReportServiceImpl implements LookupReportService {
 				} else {
 					sql += "and username='" + customReportForm.getClientId() + "' ";
 				}
-				if (customReportForm.getSday() != null && customReportForm.getEday() != null) {
-					if (customReportForm.getSday().equalsIgnoreCase(customReportForm.getEday())) {
-						sql += "and DATE(createtime) = '" + customReportForm.getSday() + "'";
+				if (customReportForm.getStartDate() != null && customReportForm.getEndDate() != null) {
+					if (customReportForm.getStartDate().equalsIgnoreCase(customReportForm.getEndDate())) {
+						sql += "and DATE(createtime) = '" + customReportForm.getStartDate() + "'";
 					} else {
-						sql += "and DATE(createtime) between '" + customReportForm.getSday() + "' and '"
-								+ customReportForm.getEday() + "'";
+						sql += "and DATE(createtime) between '" + customReportForm.getStartDate() + "' and '"
+								+ customReportForm.getEndDate() + "'";
 					}
 				} else {
 					if (batchid == null) {
@@ -370,7 +376,7 @@ public class LookupReportServiceImpl implements LookupReportService {
 
 		}
 
-		return target;
+		return null;
 	}
 
 	private org.apache.poi.ss.usermodel.Workbook getWorkBook(List reportList) {
@@ -548,7 +554,7 @@ public class LookupReportServiceImpl implements LookupReportService {
 		return sortedlist;
 	}
 
-	private List<LookupReport> getLookupReport(CustomReportForm customReportForm, String role, String username)
+	private List<LookupReport> getLookupReport(LookUpReportRequest customReportForm, String role, String username)
 			throws Exception {
 
 		UserDAService userDAService = new UserDAServiceImpl();
@@ -600,9 +606,9 @@ public class LookupReportServiceImpl implements LookupReportService {
 			} else {
 				params.put("username", customReportForm.getClientId());
 			}
-			if (customReportForm.getSday() != null && customReportForm.getEday() != null) {
-				params.put("time", customReportForm.getSday());
-				params.put("end", customReportForm.getEday());
+			if (customReportForm.getStartDate() != null && customReportForm.getEndDate() != null) {
+				params.put("time", customReportForm.getStartDate());
+				params.put("end", customReportForm.getEndDate());
 			} else {
 				params.put("time", new SimpleDateFormat("yyyy-MM-dd").format(new Date(0)));
 				params.put("end", new SimpleDateFormat("yyyy-MM-dd").format(new Date(0)));

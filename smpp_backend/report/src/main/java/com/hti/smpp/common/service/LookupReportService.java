@@ -2,26 +2,31 @@ package com.hti.smpp.common.service;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
 import com.hti.smpp.common.request.CustomReportForm;
+import com.hti.smpp.common.request.LookUpReportRequest;
+
 import com.hti.smpp.common.rmi.dto.LookupReport;
 
 import jakarta.servlet.http.HttpServletResponse;
-
+@Service
 public interface LookupReportService {
 
-	public List<LookupReport> LookupReportview(String username, CustomReportForm customReportForm, String lang);
+	public ResponseEntity<?>  LookupReportview(String username, LookUpReportRequest customReportForm, String lang);
 
-	public String LookupReportxls(String username, CustomReportForm customReportForm, String lang,
+	public ResponseEntity<?> LookupReportxls(String username, LookUpReportRequest customReportForm, String lang,
 			HttpServletResponse response);
 
-	public String LookupReportPdf(String username, CustomReportForm customReportForm, String lang,
+	public ResponseEntity<?> LookupReportPdf(String username, LookUpReportRequest customReportForm, String lang,
 			HttpServletResponse response);
 
-	public String LookupReportDoc(String username, CustomReportForm customReportForm, String lang,
+	public ResponseEntity<?> LookupReportDoc(String username, LookUpReportRequest customReportForm, String lang,
 			HttpServletResponse response);
 	
 
-	public String LookupReportRecheck(String username, CustomReportForm customReportForm, String lang,
+	public ResponseEntity<?> LookupReportRecheck(String username, LookUpReportRequest customReportForm, String lang,
 			HttpServletResponse response);
 	
 

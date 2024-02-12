@@ -302,4 +302,17 @@ public class DeliveryDTO extends ReportBaseDTO {
 	public void setErrCode(String errCode) {
 		this.errCode = errCode;
 	}
+
+	@Override
+	public String toString() {
+		return "DeliveryDTO [responseId=" + responseId + ", status=" + status + ", deliverOn=" + deliverOn
+				+ ", statusCount=" + statusCount + ", category=" + category + ", bsfmRule=" + bsfmRule + ", ruleCount="
+				+ ruleCount + ", remarks=" + remarks + ", errCode=" + errCode + ", submitted=" + submitted
+				+ ", delivered=" + delivered + ", undelivered=" + undelivered + ", pending=" + pending + ", expired="
+				+ expired + ", others=" + others + ", latency1=" + latency1 + ", latency2=" + latency2 + ", latency3="
+				+ latency3 + ", latency4=" + latency4 + ", latency5=" + latency5 + ", latency6=" + latency6
+				+ ", latencyRange=" + latencyRange + ", latencyCount=" + latencyCount + ", currency=" + currency
+				+ ", consumption=" + consumption + "]";
+	}
+	
 }

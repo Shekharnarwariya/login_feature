@@ -25,6 +25,8 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.hazelcast.query.Predicate;
@@ -35,10 +37,11 @@ import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.network.dto.NetworkEntry;
-import com.hti.smpp.common.request.CustomReportForm;
+import com.hti.smpp.common.request.PerformanceReportRequest;
 import com.hti.smpp.common.response.DeliveryDTO;
 import com.hti.smpp.common.service.PerformanceReportService;
 import com.hti.smpp.common.smsc.dto.SmscEntry;
+import com.hti.smpp.common.smsc.repository.SmscEntryRepository;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
@@ -47,7 +50,6 @@ import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 
 import jakarta.servlet.http.HttpServletResponse;
-import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRExporter;
 import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JRParameter;
@@ -82,12 +84,16 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 	@Autowired
 	private DataSource dataSource;
 
+	@Autowired
+	private SmscEntryRepository smscEntryRepository;
+
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
 	}
 
 	@Override
-	public List<DeliveryDTO> PerformanceReportview(String username, CustomReportForm customReportForm, String lang) {
+	public ResponseEntity<?> PerformanceReportview(String username, PerformanceReportRequest customReportForm,
+			String lang) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
@@ -103,6 +109,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 				System.out.println("Report Size: " + reportList.size());
 				JasperPrint print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
 				target = IConstants.SUCCESS_KEY;
+				return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
 				throw new NotFoundException("performance report not found with username {}" + username);
 			}
@@ -110,13 +117,12 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 			e.printStackTrace();
 			throw new InternalServerException("Error: getting error in performance report with username {}" + username);
 		}
-		return null;
 
 	}
 
 	@Override
-	public String PerformanceReportxls(String username, CustomReportForm customReportForm, String lang,
-			HttpServletResponse response) {
+	public ResponseEntity<?> PerformanceReportxls(String username, PerformanceReportRequest customReportForm,
+			String lang, HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
@@ -162,12 +168,12 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 
 			throw new InternalServerException("Error: getting error in performance report with username {}" + username);
 		}
-		return target;
+		return null;
 	}
 
 	@Override
-	public String PerformanceReportPdf(String username, CustomReportForm customReportForm, String lang,
-			HttpServletResponse response) {
+	public ResponseEntity<?> PerformanceReportPdf(String username, PerformanceReportRequest customReportForm,
+			String lang, HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
@@ -209,12 +215,12 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 			e.printStackTrace();
 			throw new InternalServerException("Error: getting error in performance report with username {}" + username);
 		}
-		return target;
+		return null;
 	}
 
 	@Override
-	public String PerformanceReportDoc(String username, CustomReportForm customReportForm, String lang,
-			HttpServletResponse response) {
+	public ResponseEntity<?> PerformanceReportDoc(String username, PerformanceReportRequest customReportForm,
+			String lang, HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
@@ -256,14 +262,15 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 			e.printStackTrace();
 			throw new InternalServerException("Error: getting error in performance report with username {}" + username);
 		}
-		return target;
+		return null;
 	}
 
-	private List<DeliveryDTO> getReportList(CustomReportForm customReportForm, String username) throws Exception {
+	private List<DeliveryDTO> getReportList(PerformanceReportRequest customReportForm, String username)
+			throws Exception {
 		List<DeliveryDTO> list = null;
 		// int back_day = 1;
-		String start_date = customReportForm.getSday();
-		String last_date = customReportForm.getEday();
+		String start_date = customReportForm.getStartDate();
+		String last_date = customReportForm.getEndDate();
 		String country = customReportForm.getCountry();
 		String operator = customReportForm.getOperator();
 		if (start_date == null || start_date.length() == 0) {
@@ -364,6 +371,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 	private JasperPrint getJasperPrint(List<DeliveryDTO> reportList, boolean paging, String groupBy) throws Exception {
 		System.out.println("Creating Design");
 		Map<String, SmscEntry> smscEntries = list();
+
 		List<DeliveryDTO> pi_chart_list = new ArrayList<DeliveryDTO>();
 		List<DeliveryDTO> bar_chart_list = new ArrayList<DeliveryDTO>();
 		List<DeliveryDTO> final_list = new ArrayList<DeliveryDTO>();
@@ -619,10 +627,12 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 	}
 
 	public Map<String, SmscEntry> list() {
+
 		Map<String, SmscEntry> list = new HashMap<String, SmscEntry>();
-		for (SmscEntry entry : GlobalVars.SmscEntries.values()) {
+		for (SmscEntry entry : smscEntryRepository.findAll()) {
 			list.put(entry.getName(), entry);
 		}
+
 		return list;
 	}
 
