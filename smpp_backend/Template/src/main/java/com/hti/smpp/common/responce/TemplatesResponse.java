@@ -1,10 +1,14 @@
 package com.hti.smpp.common.responce;
 
+import java.util.Date;
+
 public class TemplatesResponse {
 	private int id;
 	private String message;
 	private String masterId;
 	private String title;
+	 private  String createdOn;
+	    private String updatedOn;
 
 	public int getId() {
 		return id;
@@ -37,5 +41,20 @@ public class TemplatesResponse {
 	public void setTitle(String title) {
 		this.title = title;
 	}
+	  public String getCreatedOn() {
+	        return createdOn;
+	    }
 
-}
+	    public void setCreatedOn(String createdOn) {
+	        this.createdOn = createdOn;
+	    }
+
+	    public String getUpdatedOn() {
+	        return updatedOn;
+	    }
+
+	    public void setUpdatedOn(String updatedOn) {
+	        this.updatedOn = updatedOn;
+	    }
+	    
+	}

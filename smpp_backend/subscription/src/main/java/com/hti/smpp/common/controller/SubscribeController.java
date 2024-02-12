@@ -42,13 +42,14 @@ public class SubscribeController {
 	
 	@Operation(summary = "Save Subscription Entry", description = "Save a new subscription entry")
 	@ApiResponses(value = {
-			@ApiResponse(responseCode = "201", description = "SubscribeEntry Saved Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "201", description = "SubscribeEntry Saved Successfully."),
+			@ApiResponse(responseCode = "413", description = "Payload to large."),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) 
 	})
 	@PostMapping(value="/addSubscriptionEntry",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<?> saveSubscribe(@Parameter(description = "SubscribeEntryForm Request", content = @Content(schema = @Schema(implementation = SubscribeEntryForm.class))) @RequestParam(value = "subscribeEntryForm", required = true) String subscribeEntryForm,@RequestPart(value = "Header File", required = true) MultipartFile headerFile,@RequestPart(value = "Footer File", required = true) MultipartFile footerFile, @Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username){
+	public ResponseEntity<?> saveSubscribe(@Parameter(description = "SubscribeEntryForm Request", content = @Content(schema = @Schema(implementation = SubscribeEntryForm.class))) @RequestParam(value = "subscribeEntryForm", required = true) String subscribeEntryForm,@RequestPart(value = "headerFile", required = false) MultipartFile headerFile,@RequestPart(value = "footerFile", required = false) MultipartFile footerFile, @Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username){
 		return this.subscribeService.saveSubscribe(subscribeEntryForm,headerFile,footerFile,username);
 	}
 	
@@ -78,19 +79,20 @@ public class SubscribeController {
 	
 	@Operation(summary = "Update Subscription Entry", description = "Update an existing subscription entry")
 	@ApiResponses(value = {
-			@ApiResponse(responseCode = "201", description = "SubscribeEntry Updated Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "201", description = "SubscribeEntry Updated Successfully."),
+			@ApiResponse(responseCode = "413", description = "Payload to large."),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) 
 	})
 	@PutMapping(value = "/updateSubscribeEntry", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<?> updateSubscribeEntry(@Parameter(description = "SubscribeEntryForm Request", content = @Content(schema = @Schema(implementation = SubscribeEntryForm.class))) @RequestParam(value = "subscribeEntryForm", required = true) String subscribeEntryForm,@RequestPart(value = "Header File", required = true) MultipartFile headerFile,@RequestPart(value = "Footer File", required = true) MultipartFile footerFile, @Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username){
+	public ResponseEntity<?> updateSubscribeEntry(@Parameter(description = "SubscribeEntryForm Request", content = @Content(schema = @Schema(implementation = SubscribeEntryForm.class))) @RequestParam(value = "subscribeEntryForm", required = true) String subscribeEntryForm,@RequestPart(value = "headerFile", required = false) MultipartFile headerFile,@RequestPart(value = "footerFile", required = false) MultipartFile footerFile, @Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username){
 		return this.subscribeService.updateSubscribe(subscribeEntryForm,headerFile,footerFile,username);
 	}
 	
 	@Operation(summary = "Delete Subscription Entry", description = "To delete an existing subscription entry")
 	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "SubscribeEntry Deleted Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "200", description = "SubscribeEntry Deleted Successfully."),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) 

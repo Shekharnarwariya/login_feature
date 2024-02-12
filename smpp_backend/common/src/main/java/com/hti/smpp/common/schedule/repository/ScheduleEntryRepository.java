@@ -12,4 +12,8 @@ public interface ScheduleEntryRepository extends JpaRepository<ScheduleEntry, In
 
 	public List<ScheduleEntry> findByDateAndStatusOrderByIdAsc(String return1, String string);
 
+	public List<ScheduleEntry> findByUsername(String systemId);
+
+	public ScheduleEntry findByFileName(String reqFileName);
+
 }

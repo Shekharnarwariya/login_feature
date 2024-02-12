@@ -12,7 +12,8 @@
 	<groupId>com.hti.smpp.common</groupId>
 	<artifactId>Template</artifactId>
 	<version>0.0.1</version>
-	<name>Template</name>
+	<packaging>jar</packaging>
+	<name>TEMPLATE_SERVICE</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
 		<java.version>17</java.version>
@@ -88,6 +89,7 @@
 
 
 	<build>
+		<finalName>TEMPLATE_SERVICE</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

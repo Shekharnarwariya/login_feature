@@ -21,7 +21,7 @@ import com.hazelcast.cluster.Member;
 @Component
 public class ContextListener {
 	private static final Logger logger = LoggerFactory.getLogger(ContextListener.class);
-	// public static HazelcastInstance hazelInstance;
+
 	// Load properties file during class initialization
 
 	public static Properties property = new Properties();
@@ -55,8 +55,8 @@ public class ContextListener {
 
 		try {
 			ClientConfig config = new ClientConfig();
-//			// Configure Hazelcast client as neede
 			config.getNetworkConfig().setSmartRouting(false);
+			config.getNetworkConfig().addAddress(IConstants.Hazelcast_Client_IP);
 			GlobalVars.hazelInstance = HazelcastClient.newHazelcastClient(config);
 			GlobalVars.hazelInstance.getCluster().addMembershipListener(new MemberEventListener());
 			logClusterMembers();
@@ -65,8 +65,11 @@ public class ContextListener {
 			GlobalVars.SmscGroupEntries = GlobalVars.hazelInstance.getMap("smsc_group");
 			GlobalVars.HttpDlrParam = GlobalVars.hazelInstance.getMap("http_dlr_param");
 			GlobalVars.NetworkEntries = GlobalVars.hazelInstance.getMap("network_entries");
+<<<<<<< HEAD
 			
 			
+=======
+>>>>>>> 4b1adf75719b654fd00348064ec295f4c289c694
 		} catch (Exception e) {
 			logger.error("Error connecting to Hazelcast Cluster", e);
 			// Handle the exception appropriately

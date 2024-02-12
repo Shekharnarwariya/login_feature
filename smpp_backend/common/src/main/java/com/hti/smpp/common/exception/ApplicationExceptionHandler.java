@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 /**
  * Global exception handler for the Spring application. Catches various exceptions
  * and provides appropriate responses.
@@ -182,6 +183,12 @@ public class ApplicationExceptionHandler {
 
 	}
 	
+	@ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<String> handleMaxSizeException(MaxUploadSizeExceededException ex) {
+        return ResponseEntity
+                .status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body("File size exceeds the allowed limit.");
+    }
 	/**
      * Converts the current local time to UTC.
      */

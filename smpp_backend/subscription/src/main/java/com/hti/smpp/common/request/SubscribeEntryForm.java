@@ -13,7 +13,6 @@ public class SubscribeEntryForm {
 	private int smsParts; // Sms Parts
 	private int charCount; // Char Count
 	private int charLimit; // Char limit per sms
-	private String asciiList;//Asciilist
 	private String countryCode;// Country code associated with the subscription
 	private String username;// Username associated with the subscription
 	private String password;// Password associated with the subscription
@@ -85,14 +84,6 @@ public class SubscribeEntryForm {
 
 	public void setMessageType(String messageType) {
 		this.messageType = messageType;
-	}
-
-	public String getAsciiList() {
-		return asciiList;
-	}
-
-	public void setAsciiList(String asciiList) {
-		this.asciiList = asciiList;
 	}
 
 	public String getCountryCode() {

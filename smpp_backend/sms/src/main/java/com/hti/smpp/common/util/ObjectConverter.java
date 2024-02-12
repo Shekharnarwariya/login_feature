@@ -5,6 +5,7 @@ import com.hti.smpp.common.exception.JsonProcessingError;
 import com.hti.smpp.common.request.BulkAutoScheduleRequest;
 import com.hti.smpp.common.request.BulkMmsRequest;
 import com.hti.smpp.common.request.BulkRequest;
+import com.hti.smpp.common.request.SendBulkScheduleRequest;
 
 public class ObjectConverter {
 
@@ -43,5 +44,16 @@ public class ObjectConverter {
 		}
 		return bulkAutoScheduleRequest;
 	}
+	public static SendBulkScheduleRequest jsonMapperSendBulkScheduleRequest(String request) {
 
+		SendBulkScheduleRequest sendBulkScheduleRequest = null;
+		try {
+			sendBulkScheduleRequest = new ObjectMapper().readValue(request, SendBulkScheduleRequest.class);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new JsonProcessingError("error:getting error in json parrsing " + e.getMessage());
+		}
+		return sendBulkScheduleRequest;
+	}
+	
 }

@@ -18,7 +18,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.email.EmailSender;
@@ -34,6 +33,8 @@ import com.hti.smpp.common.request.ProfileUpdateRequest;
 import com.hti.smpp.common.request.SignupRequest;
 import com.hti.smpp.common.response.JwtResponse;
 import com.hti.smpp.common.response.ProfileResponse;
+import com.hti.smpp.common.sales.repository.SalesRepository;
+import com.hti.smpp.common.security.BCryptPasswordEncoder;
 import com.hti.smpp.common.service.LoginService;
 import com.hti.smpp.common.user.dto.BalanceEntry;
 import com.hti.smpp.common.user.dto.DriverInfo;
@@ -50,11 +51,15 @@ import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.user.repository.WebMenuAccessEntryRepository;
 import com.hti.smpp.common.util.Constant;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.EmailValidator;
+import com.hti.smpp.common.util.MessageResourceBundle;
 import com.hti.smpp.common.util.OTPGenerator;
 import com.hti.smpp.common.util.PasswordConverter;
+
 /**
- * Implementation of the LoginService interface for handling user authentication and authorization.
+ * Implementation of the LoginService interface for handling user authentication
+ * and authorization.
  */
 @Service
 public class LoginServiceImpl implements LoginService {
@@ -63,10 +68,13 @@ public class LoginServiceImpl implements LoginService {
 	private AuthenticationManager authenticationManager;
 
 	@Autowired
-	private PasswordEncoder encoder;
+	private BCryptPasswordEncoder encoder;
 
 	@Autowired
 	private JwtUtils jwtUtils;
+	
+	@Autowired
+	private SalesRepository salesRepository;
 
 	@Autowired
 	private UserEntryRepository userEntryRepository;
@@ -101,25 +109,31 @@ public class LoginServiceImpl implements LoginService {
 	@Autowired
 	private EmailSender emailSender;
 
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
+
 	private static final Logger logger = LoggerFactory.getLogger(LoginServiceImpl.class);
 
 	public enum UserRole {
 		ADMIN, SUPERADMIN, SYSTEM, USER
 	}
-/**
- * Authenticates a user based on the provided login credentials.
- * If authentication is successful, generates a JWT token and returns it along with user details.
- */
+
+	/**
+	 * Authenticates a user based on the provided login credentials. If
+	 * authentication is successful, generates a JWT token and returns it along with
+	 * user details.
+	 */
 	@Override
 	public ResponseEntity<?> login(LoginRequest loginRequest) {
 		String username = loginRequest.getUsername();
 
 		try {
-			logger.info("Attempting to authenticate user: {}", username);
+			logger.info(messageResourceBundle.getLogMessage("log.attemptAuth"), username);
 
-			if (!userEntryRepository.existsBySystemId(username)) {
-				logger.error("Authentication failed. User not found: {}", username);
-				throw new AuthenticationExceptionFailed("Authentication failed. Please check your Username");
+			if (!userEntryRepository.existsBySystemId(username) && !salesRepository.existsByUsername(username)) {
+				logger.error(messageResourceBundle.getLogMessage("auth.failed.userNotFound"), username);
+				throw new AuthenticationExceptionFailed(
+						messageResourceBundle.getExMessage(ConstantMessages.AUTHENTICATION_FAILED_USERNAME));
 			}
 
 			Authentication authentication = authenticationManager
@@ -132,26 +146,30 @@ public class LoginServiceImpl implements LoginService {
 			List<String> roles = userDetails.getAuthorities().stream().map(item -> item.getAuthority())
 					.collect(Collectors.toList());
 
-			logger.info("Authentication successful for user: {}", username);
+			logger.info(messageResourceBundle.getLogMessage("auth.successful"), username);
 
 			JwtResponse jwtResponse = new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), roles);
 
 			return ResponseEntity.ok(jwtResponse);
 
-		} catch (BadCredentialsException e) {
-			logger.error("Authentication failed for user: {}", username, e.getMessage());
-			throw new AuthenticationExceptionFailed("Authentication failed. Please check your Password");
+	} 
+			catch (BadCredentialsException e) {
+			logger.error(messageResourceBundle.getLogMessage("auth.failed.password"), username, e.getMessage());
+			throw new AuthenticationExceptionFailed(
+					messageResourceBundle.getExMessage(ConstantMessages.AUTHENTICATION_FAILED_PASSWORD));
 		} catch (AuthenticationExceptionFailed e) {
-			logger.error("Authentication failed for user: {}", username, e.getMessage());
+			logger.error(messageResourceBundle.getLogMessage("auth.failed.userNotFound"), username, e.getMessage());
 			throw new AuthenticationExceptionFailed(e.getMessage());
-		} catch (Exception e) {
-			logger.error("Internal server error during authentication", e.getMessage());
-			throw new InternalServerException("Internal server error" + e.getMessage());
+		}
+			catch (Exception e) {
+			logger.error(messageResourceBundle.getLogMessage("internal.server.error"), e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
 		}
 	}
-/**
- * Retrieves and returns the profile information for the specified user.
- */
+
+	/**
+	 * Retrieves and returns the profile information for the specified user.
+	 */
 	@Override
 	public ResponseEntity<?> profile(String username) {
 		System.out.println("get profile method call username" + username);
@@ -164,7 +182,8 @@ public class LoginServiceImpl implements LoginService {
 
 			// Use map to simplify getting profession entry
 			ProfessionEntry professionEntry = professionEntryRepository.findById(userEntry.getId())
-					.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
+					.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
+
 			ProfileResponse profileResponse = new ProfileResponse();
 			profileResponse.setUserName(userEntry.getSystemId());
 			profileResponse.setBalance(String.valueOf(balanceEntry.getWalletAmount()));
@@ -178,12 +197,13 @@ public class LoginServiceImpl implements LoginService {
 
 			return ResponseEntity.ok(profileResponse);
 		} else {
-			throw new NotFoundException("Error: User not found!");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
-/**
- * Registers a new user based on the provided signup request.
- */
+
+	/**
+	 * Registers a new user based on the provided signup request.
+	 */
 	@Override
 	public ResponseEntity<?> registerUser(SignupRequest signUpRequest) {
 		try {
@@ -220,14 +240,16 @@ public class LoginServiceImpl implements LoginService {
 
 			return ResponseEntity.ok("User registered successfully!");
 		} catch (Exception e) {
-			throw new InternalServerException("Internal server error: " + e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
 		}
 	}
-/**
- * Converts a SignupRequest object to a UserEntry object.
- * @param signUpRequest
- * @return
- */
+
+	/**
+	 * Converts a SignupRequest object to a UserEntry object.
+	 * 
+	 * @param signUpRequest
+	 * @return
+	 */
 	public UserEntry ConvertRequert(SignupRequest signUpRequest) {
 		UserEntry entry = new UserEntry();
 		String strRoles = signUpRequest.getRole().toUpperCase();
@@ -235,7 +257,7 @@ public class LoginServiceImpl implements LoginService {
 			UserRole userRole = UserRole.valueOf(strRoles);
 			entry.setRole(userRole.name());
 		} catch (IllegalArgumentException e) {
-			throw new NotFoundException("Error: Role is not found. " + strRoles);
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ROLE_NOT_FOUND_ERROR + strRoles));
 		}
 		entry.setAccessCountry(String.join(",", signUpRequest.getAccessCountries()));
 		entry.setAccessIp(signUpRequest.getAccessIp());
@@ -274,9 +296,10 @@ public class LoginServiceImpl implements LoginService {
 		entry.setPassword(encoder.encode(signUpRequest.getPassword()));
 		return entry;
 	}
-/**
- * Validates a one-time passcode (OTP) for a given user.
- */
+
+	/**
+	 * Validates a one-time passcode (OTP) for a given user.
+	 */
 	@Override
 	public ResponseEntity<?> validateOtp(String username, String otp) {
 		Optional<OTPEntry> optionalOtp = otpEntryRepository.findBySystemId(username);
@@ -290,17 +313,18 @@ public class LoginServiceImpl implements LoginService {
 					return ResponseEntity.ok("OTP validation successful. Please proceed...........");
 				} else {
 					// OTP has expired
-					throw new InvalidOtpException("Error: OTP has expired. Please request a new OTP.");
+					throw new InvalidOtpException(messageResourceBundle.getExMessage(ConstantMessages.OTP_EXPIRED));
 				}
 			} else {
 				// Invalid OTP
-				throw new InvalidOtpException("Error: Invalid OTP. Please enter the correct OTP.");
+				throw new InvalidOtpException(messageResourceBundle.getExMessage(ConstantMessages.INVALID_OTP));
 			}
 		} else {
 			// User not found
-			throw new NotFoundException("Error: User not found. Please check the username and try again.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
+
 	/**
 	 * Resets the password for a user and sends a notification email.
 	 */
@@ -309,12 +333,12 @@ public class LoginServiceImpl implements LoginService {
 	public ResponseEntity<?> forgotPassword(String newPassword, String username) {
 		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
 		if (userOptional.isEmpty()) {
-			throw new NotFoundException("Error: User Not Found!");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 		}
 		// Update User Password
 		UserEntry user = userOptional.get();
 		ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
-				.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
 
 		String updateQuery = "UPDATE usermaster SET password = ?, editOn = CURRENT_TIMESTAMP, editby = ? WHERE system_id = ?";
 		jdbcTemplate.update(updateQuery, new Object[] { encoder.encode(newPassword), username, username },
@@ -332,9 +356,11 @@ public class LoginServiceImpl implements LoginService {
 
 		return ResponseEntity.ok("Password Reset Successfully!");
 	}
-/**
- * Sends a One-Time Password (OTP) to the user's registered email address for authentication.
- */
+
+	/**
+	 * Sends a One-Time Password (OTP) to the user's registered email address for
+	 * authentication.
+	 */
 	@Override
 	public ResponseEntity<?> sendOTP(String username) {
 		System.out.println("send otp method called  username{}" + username);
@@ -364,7 +390,7 @@ public class LoginServiceImpl implements LoginService {
 				}
 
 				ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
-						.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
+						.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
 				// Send Email with OTP
 				emailSender.sendEmail(professionEntry.getDomainEmail(), Constant.OTP_SUBJECT, Constant.TEMPLATE_PATH,
 						emailSender.createSourceMap(Constant.MESSAGE_FOR_OTP, generateOTP,
@@ -372,18 +398,19 @@ public class LoginServiceImpl implements LoginService {
 								professionEntry.getFirstName() + " " + professionEntry.getLastName()));
 				return ResponseEntity.ok("OTP Sent Successfully!");
 			} else {
-				throw new NotFoundException("Error: User Not Found!");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 			}
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
 			// Handle exceptions, log or return appropriate error response
-			throw new InternalServerException("Error sending OTP: " + e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
-/**
- * Updates the password for the user associated with the given username.
- */
+
+	/**
+	 * Updates the password for the user associated with the given username.
+	 */
 	@Override
 	public ResponseEntity<?> updatePassword(PasswordUpdateRequest passwordUpdateRequest, String username) {
 		System.out.println("called update password username{}" + username);
@@ -404,7 +431,7 @@ public class LoginServiceImpl implements LoginService {
 						new PasswordConverter().convertToDatabaseColumn(passwordUpdateRequest.getNewPassword()),
 						LocalDateTime.now()));
 				ProfessionEntry professionEntry = professionEntryRepository.findById(userEntry.getId())
-						.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
+						.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
 				if (EmailValidator.isEmailValid(professionEntry.getDomainEmail())) {
 					emailSender.sendEmail(professionEntry.getDomainEmail(), Constant.PASSWORD_UPDATE_SUBJECT,
 							Constant.TEMPLATE_PATH,
@@ -414,22 +441,24 @@ public class LoginServiceImpl implements LoginService {
 				}
 				return ResponseEntity.ok("Password Updated Successfully!");
 			} else {
-				throw new InvalidPropertyException("Error: Invalid old password");
+				throw new InvalidPropertyException(
+						messageResourceBundle.getExMessage(ConstantMessages.INVALID_OLD_PASSWORD));
 			}
 		} else {
-			throw new NotFoundException("Error: User Not Found!");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
-/**
- * Updates the user profile information for the specified username.
- */
+
+	/**
+	 * Updates the user profile information for the specified username.
+	 */
 	@Override
 	public ResponseEntity<?> updateUserProfile(String username, ProfileUpdateRequest profileUpdateRequest) {
 		Optional<UserEntry> optionalUser = userEntryRepository.findBySystemId(username);
 		if (optionalUser.isPresent()) {
 			UserEntry user = optionalUser.get();
 			ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
-					.orElseThrow(() -> new NotFoundException("Error:getting error professionEntry.."));
+					.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
 			updateUserData(user, profileUpdateRequest, professionEntry);
 			user.setEditOn(LocalDateTime.now() + "");
 			user.setEditBy(username);
@@ -437,16 +466,19 @@ public class LoginServiceImpl implements LoginService {
 			professionEntryRepository.save(professionEntry);
 			return ResponseEntity.ok("Profile updated successfully");
 		} else {
-			throw new NotFoundException("User not found!");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 		}
 	}
-/**
- * Updates the user-related data (such as email, first name, last name, and contact) based on the
- * provided {@link ProfileUpdateRequest}. Only non-null fields in the request will be updated.
- * @param user
- * @param profileUpdateRequest
- * @param professionEntry
- */
+
+	/**
+	 * Updates the user-related data (such as email, first name, last name, and
+	 * contact) based on the provided {@link ProfileUpdateRequest}. Only non-null
+	 * fields in the request will be updated.
+	 * 
+	 * @param user
+	 * @param profileUpdateRequest
+	 * @param professionEntry
+	 */
 	private void updateUserData(UserEntry user, ProfileUpdateRequest profileUpdateRequest,
 			ProfessionEntry professionEntry) {
 		// Use null checks to update only non-null fields

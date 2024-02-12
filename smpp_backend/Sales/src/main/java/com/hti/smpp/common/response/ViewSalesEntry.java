@@ -2,8 +2,6 @@ package com.hti.smpp.common.response;
 
 import java.util.Collection;
 
-import org.springframework.stereotype.Component;
-
 import com.hti.smpp.common.sales.dto.SalesEntry;
 
 /**
@@ -11,7 +9,6 @@ import com.hti.smpp.common.sales.dto.SalesEntry;
  * Used for displaying sales entry information along with associated manager details.
  */
 
-@Component
 public class ViewSalesEntry {
 	
 	private SalesEntry seller;

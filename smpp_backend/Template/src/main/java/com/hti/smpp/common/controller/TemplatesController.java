@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
+
+
 import com.hti.smpp.common.request.TemplatesRequest;
 import com.hti.smpp.common.service.TemplatesService;
 
@@ -69,8 +72,21 @@ public class TemplatesController {
 			@ApiResponse(responseCode = "401", description = "User unauthorized request") })
 	@GetMapping("/get-all-templates")
 	public ResponseEntity<?> getAllTemplates(
-			@Parameter(description = "Username in header") @RequestHeader("username") String username) {
-		return this.templatesService.getAllTemplates(username);
+
+	    @Parameter(description = "Username in header") @RequestHeader("username") String username,
+	    // Add the new parameters for date range
+	    @Parameter(description = "From date in yyyy-MM-dd format") @RequestParam(name = "fromDate", required = false) String fromDate,
+	    @Parameter(description = "To date in yyyy-MM-dd format") @RequestParam(name = "toDate", required = false) String toDate,
+	    // Add a single parameter for search
+	    @Parameter(description = "Search term") @RequestParam(name = "searchTerm", required = false) String searchTerm) {
+
+	    // Parse the date strings into LocalDate objects
+	    LocalDate fromLocalDate = (fromDate != null && !fromDate.isEmpty()) ? LocalDate.parse(fromDate) : null;
+	    LocalDate toLocalDate = (toDate != null && !toDate.isEmpty()) ? LocalDate.parse(toDate) : null;
+
+	    // Call the service method with the updated parameters
+	    return this.templatesService.getAllTemplates(username, fromLocalDate, toLocalDate, searchTerm);
+		
 	}
 	// Update a template by ID endpoint
 	@Operation(summary = "Update a template by ID", description = "To update a template by id")

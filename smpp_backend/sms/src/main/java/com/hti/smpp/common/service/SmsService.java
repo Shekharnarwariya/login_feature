@@ -7,10 +7,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.hti.smpp.common.request.BulkAutoScheduleRequest;
 import com.hti.smpp.common.request.BulkContactRequest;
-import com.hti.smpp.common.request.BulkEntryForm;
 import com.hti.smpp.common.request.BulkMmsRequest;
 import com.hti.smpp.common.request.BulkRequest;
 import com.hti.smpp.common.request.BulkUpdateRequest;
+import com.hti.smpp.common.request.SendBulkScheduleRequest;
 import com.hti.smpp.common.request.SmsRequest;
 import com.hti.smpp.common.response.BulkResponse;
 import com.hti.smpp.common.response.SmsResponse;
@@ -37,14 +37,30 @@ public interface SmsService {
 	public ResponseEntity<?> autoSchedule(MultipartFile destinationNumberFile, String username,
 			BulkAutoScheduleRequest bulkAutoScheduleRequest);
 
-	public ResponseEntity<?> editBulk(String username, BulkEntryForm bulkEntryForm);
+	public ResponseEntity<?> editBulk(String username, int batchId);
 
-	public ResponseEntity<?> pauseBulk(String username, BulkEntryForm bulkEntryForm);
+	public ResponseEntity<?> pauseBulk(String username, int batchId);
 
-	public ResponseEntity<?> abortBulk(String username, BulkEntryForm bulkEntryForm);
+	public ResponseEntity<?> abortBulk(String username, int batchId);
 
-	public ResponseEntity<?> resumeBulk(String username, BulkEntryForm bulkEntryForm);
+	public ResponseEntity<?> resumeBulk(String username, int batchId);
 
-	public ResponseEntity<?> sendModifiedBulk(String username,BulkUpdateRequest bulkUpdateRequest);
+	public ResponseEntity<?> sendModifiedBulk(String username, BulkUpdateRequest bulkUpdateRequest);
+
+	public ResponseEntity<?> listBulk(String username);
+
+	public ResponseEntity<?> listSchedule(String username);
+
+	public ResponseEntity<?> abortSchedule(String username, int schedule_Id);
+
+	public ResponseEntity<?> editSchedule(String username, int schedule_Id);
+
+	public ResponseEntity<?> sendNowSchedule(String username, SendBulkScheduleRequest sendBulkScheduleRequest,
+			MultipartFile destinationNumberFile);
+
+	public ResponseEntity<?> modifiedSchedule(String username, SendBulkScheduleRequest sendBulkScheduleRequest,
+			MultipartFile destinationNumberFile);
+
+	public ResponseEntity<?> identifyMessage(String username, String message);
 
 }

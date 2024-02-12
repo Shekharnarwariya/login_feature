@@ -3,14 +3,19 @@ package com.hti.smpp.common.service.impl;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Files;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -19,6 +24,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -54,9 +60,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.hazelcast.query.Predicate;
+import com.hazelcast.query.Predicates;
 import com.hti.smpp.common.contacts.dto.GroupDataEntry;
+import com.hti.smpp.common.contacts.dto.GroupEntryDTO;
 import com.hti.smpp.common.contacts.repository.GroupDataEntryRepository;
-import com.hti.smpp.common.dto.BulkMgmtContent;
+import com.hti.smpp.common.contacts.repository.GroupEntryDTORepository;
 import com.hti.smpp.common.dto.SearchCriteria;
 import com.hti.smpp.common.exception.InsufficientBalanceException;
 import com.hti.smpp.common.exception.InternalServerException;
@@ -77,13 +86,15 @@ import com.hti.smpp.common.messages.repository.BulkEntryRepository;
 import com.hti.smpp.common.messages.repository.SummaryReportRepository;
 import com.hti.smpp.common.request.BulkAutoScheduleRequest;
 import com.hti.smpp.common.request.BulkContactRequest;
-import com.hti.smpp.common.request.BulkEntryForm;
 import com.hti.smpp.common.request.BulkMmsRequest;
 import com.hti.smpp.common.request.BulkRequest;
 import com.hti.smpp.common.request.BulkUpdateRequest;
+import com.hti.smpp.common.request.SendBulkScheduleRequest;
 import com.hti.smpp.common.request.SmsRequest;
 import com.hti.smpp.common.response.BulkProccessResponse;
 import com.hti.smpp.common.response.BulkResponse;
+import com.hti.smpp.common.response.MessageIdentiryResponse;
+import com.hti.smpp.common.response.ScheduleEditResponse;
 import com.hti.smpp.common.response.SmsResponse;
 import com.hti.smpp.common.schedule.dto.ScheduleEntry;
 import com.hti.smpp.common.schedule.dto.ScheduleEntryExt;
@@ -95,18 +106,24 @@ import com.hti.smpp.common.session.SessionHandler;
 import com.hti.smpp.common.session.UserSession;
 import com.hti.smpp.common.user.dto.BalanceEntry;
 import com.hti.smpp.common.user.dto.DriverInfo;
+import com.hti.smpp.common.user.dto.User;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
+import com.hti.smpp.common.user.dto.WebMenuAccessEntry;
 import com.hti.smpp.common.user.repository.BalanceEntryRepository;
 import com.hti.smpp.common.user.repository.DriverInfoRepository;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
+import com.hti.smpp.common.user.repository.WebMenuAccessEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.BatchObject;
 import com.hti.smpp.common.util.Body;
+import com.hti.smpp.common.util.ConstantMessages;
+import com.hti.smpp.common.util.GMTmapping;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.GlobalVarsSms;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 import com.hti.smpp.common.util.MultiUtility;
 import com.hti.smpp.common.util.PasswordConverter;
 import com.hti.smpp.common.util.ProgressEvent;
@@ -174,16 +191,26 @@ public class SmsServiceImpl implements SmsService {
 	@Autowired
 	private EntityManager entityManager;
 
+	@Autowired
+	private WebMenuAccessEntryRepository webMenuAccessEntryRepository;
+
+	@Autowired
+	private GroupEntryDTORepository groupEntryDTORepository;
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
+
 	public SmsResponse sendSms(SmsRequest smsRequest, String username) {
 		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
 		UserEntry userEntry = null;
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
+
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		DriverInfo driverInfo = null;
 		Optional<DriverInfo> OptionalDriverInfo = driverInfoRepository.findById(userEntry.getId());
@@ -295,7 +322,7 @@ public class SmsServiceImpl implements SmsService {
 						valid_sch_time = true;
 					} else {
 						logger.error(bulkSessionId + " Scheduled Time is before Current Time");
-						throw new ScheduledTimeException(bulkSessionId + " Scheduled Time is before Current Time");
+						throw new ScheduledTimeException(bulkSessionId + messageResourceBundle.getExMessage(ConstantMessages.SCHEDULED_TIME_BEFORE_CURRENT_TIME_EXCEPTION) );
 					}
 					server_date = schedule_time.split(" ")[0];
 					String server_time = schedule_time.split(" ")[1];
@@ -372,7 +399,7 @@ public class SmsServiceImpl implements SmsService {
 						Optional<UserEntry> masterOptional = userEntryRepository
 								.findBySystemId(userEntry.getMasterId());
 						if (!masterOptional.isPresent()) {
-							throw new NotFoundException("User not found with the provided username.");
+							throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 						}
 						adminCost = routeService.calculateRoutingCost(masterOptional.get().getId(), destinationList,
 								no_of_msg);
@@ -380,33 +407,28 @@ public class SmsServiceImpl implements SmsService {
 						if ((adminWallet >= adminCost)) {
 							if (wallet >= totalcost) {
 								adminWallet = adminWallet - adminCost;
-								masterbalance.setWalletAmount(adminWallet);
-								balanceEntryRepository.save(masterbalance);
 								wallet = wallet - totalcost;
-								balanceEntry.setWalletAmount(wallet);
 								amount = true;
-								balanceEntryRepository.save(balanceEntry);
+
 							} else {
 								logger.error(bulkSessionId + " <-- Insufficient Balance -->");
-								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Balance -->");
+								throw new InsufficientBalanceException( messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION)+bulkSessionId );
 							}
 						} else {
 							// Insufficient Admin balance
 							logger.error(bulkSessionId + " <-- Insufficient Admin(" + userEntry.getMasterId()
 									+ ") Balance -->");
-							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Admin("
-									+ userEntry.getMasterId() + ") Balance -->");
+							throw new InsufficientBalanceException(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_ADMIN_BALANCE_EXCEPTION)+bulkSessionId + 
+									       userEntry.getMasterId());
 						}
 					} else {
 						if (wallet >= totalcost) {
 							wallet = wallet - totalcost;
-							balanceEntry.setWalletAmount(wallet);
 							amount = true;
-							balanceEntryRepository.save(balanceEntry);
 						} else {
 							// Insufficient balance
 							logger.error(bulkSessionId + " <-- Insufficient Balance -->");
-							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Balance -->");
+							throw new InsufficientBalanceException(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION)+bulkSessionId );
 						}
 					}
 					if (amount) {
@@ -453,12 +475,12 @@ public class SmsServiceImpl implements SmsService {
 								} else {
 									// Scheduling Error
 									logger.error("error.singlescheduleError");
-									throw new ScheduledTimeException("Error in single schedule: " + bulkSessionId);
+									throw new ScheduledTimeException(messageResourceBundle.getExMessage(ConstantMessages.SINGLE_SCHEDULE_ERROR_EXCEPTION) + bulkSessionId);
 								}
 							} else {
 								// already Scheduled
 								logger.error("error.duplicateSchedule");
-								throw new ScheduledTimeException("Duplicate schedule error: " + bulkSessionId);
+								throw new ScheduledTimeException(messageResourceBundle.getExMessage(ConstantMessages.DUPLICATE_SCHEDULE_ERROR_EXCEPTION)+ bulkSessionId);
 							}
 						} else {
 							respMsgId = sendSingleMsg(bulkSmsDTO);
@@ -467,11 +489,11 @@ public class SmsServiceImpl implements SmsService {
 								// Submission Error
 								if (respMsgId.contains("SERVER NOT RESPONDING")) {
 									logger.error("error.hostconnection");
-									throw new InternalServerException("Error in host connection: " + bulkSessionId);
+									throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.HOST_CONNECTION_ERROR_EXCEPTION )+ bulkSessionId);
 
 								} else {
 									logger.error("error.smsError");
-									throw new InternalServerException("SMS error: " + bulkSessionId);
+									throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SMS_ERROR_EXCEPTION)+ bulkSessionId);
 
 								}
 							} else {
@@ -493,12 +515,12 @@ public class SmsServiceImpl implements SmsService {
 					} else {
 						// insufficient balance
 						logger.error("error.insufficientWallet");
-						throw new InsufficientBalanceException("Insufficient wallet balance: " + bulkSessionId);
+						throw new InsufficientBalanceException(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_WALLET_BALANCE_EXCEPTION) + bulkSessionId);
 					}
 				} else {
 					// Number File Error
 					logger.error("error.novalidNumber");
-					throw new InternalServerException("No valid numbers found: " + bulkSessionId);
+					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NO_VALID_NUMBERS_FOUND_EXCEPTION) + bulkSessionId);
 
 				}
 			} else if (wallet_flag.equalsIgnoreCase("no")) {
@@ -511,31 +533,28 @@ public class SmsServiceImpl implements SmsService {
 						if (adminCredit >= total_msg) {
 							if (credits >= total_msg) {
 								adminCredit = adminCredit - total_msg;
-								masterbalance.setCredits(adminCredit);
 								credits = credits - total_msg;
-								balanceEntryRepository.save(masterbalance);
-								balanceEntry.setCredits(credits);
 								amount = true;
-								balanceEntryRepository.save(balanceEntry);
+
 							} else {
 								logger.error(bulkSessionId + " <-- Insufficient Credits -->");
-								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Credits -->");
+								throw new InsufficientBalanceException(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION)+bulkSessionId);
 							}
 						} else {
 							logger.error(bulkSessionId + " <-- Insufficient Admin(" + userEntry.getMasterId()
 									+ ") Credits -->");
-							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Admin("
-									+ userEntry.getMasterId() + ") Credits -->");
+							throw new InsufficientBalanceException(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_ADMIN_CREDITS_EXCEPTION)+bulkSessionId 
+									+ userEntry.getMasterId());
 						}
 					} else {
 						if (credits >= total_msg) {
 							credits = credits - total_msg;
-							balanceEntry.setCredits(credits);
+
 							amount = true;
-							balanceEntryRepository.save(balanceEntry);
+
 						} else {
 							logger.error(bulkSessionId + " <-- Insufficient Credits -->");
-							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Credits -->");
+							throw new InsufficientBalanceException(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION)+bulkSessionId);
 						}
 					}
 					if (amount) {
@@ -580,12 +599,11 @@ public class SmsServiceImpl implements SmsService {
 									logger.info("message.scheduleSuccess");
 								} else {
 									logger.error("error.singlescheduleError");
-									throw new ScheduledTimeException("Error in single schedule: " + bulkSessionId);
-
+									throw new  ScheduledTimeException(messageResourceBundle.getExMessage(ConstantMessages.SINGLE_SCHEDULE_ERROR_EXCEPTION) + bulkSessionId);
 								}
 							} else {
 								logger.error("error.duplicateSchedule");
-								throw new ScheduledTimeException("Duplicate schedule error: " + bulkSessionId);
+								throw new ScheduledTimeException(messageResourceBundle.getExMessage(ConstantMessages.DUPLICATE_SCHEDULE_ERROR_EXCEPTION)+ bulkSessionId);
 
 							}
 						} else {
@@ -594,11 +612,11 @@ public class SmsServiceImpl implements SmsService {
 								// Submission Error
 								if (respMsgId.contains("SERVER NOT RESPONDING")) {
 									logger.error("error.hostconnection");
-									throw new InternalServerException("Error in host connection: " + bulkSessionId);
+									throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.HOST_CONNECTION_ERROR_EXCEPTION) + bulkSessionId);
 
 								} else {
 									logger.error("error.smsError");
-									throw new InternalServerException("SMS error: " + bulkSessionId);
+									throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SMS_ERROR_EXCEPTION) + bulkSessionId);
 
 								}
 							} else {
@@ -623,19 +641,19 @@ public class SmsServiceImpl implements SmsService {
 						// Insufficient Credits
 						logger.error("error.insufficientCredit");
 						throw new InsufficientBalanceException(
-								"Insufficient credits to perform the operation" + bulkSessionId);
+								messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_OPERATION_EXCEPTION) + bulkSessionId);
 
 					}
 				} else {
 					// Number File Error
 					logger.error("error.novalidNumber");
-					throw new InternalServerException("No valid numbers found: " + bulkSessionId);
+					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NO_VALID_NUMBERS_FOUND_EXCEPTION) + bulkSessionId);
 				}
 			} else if (wallet_flag.equalsIgnoreCase("MIN")) {
 				// insufficient balance
 				logger.error("error.insufficientWallet");
 				throw new InsufficientBalanceException(
-						"Insufficient wallet balance for minimum transaction" + bulkSessionId);
+						messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_WALLET_BALANCE_TRANSACTION_EXCEPTION) + bulkSessionId);
 
 			}
 		} catch (NotFoundException e) {
@@ -685,7 +703,7 @@ public class SmsServiceImpl implements SmsService {
 			addSummaryReport(backupExt);
 		} catch (Exception ex) {
 			logger.error(user + " Error Adding To Summary Report: " + ex.getMessage());
-			throw new InternalServerException(user + " Error Adding To Summary Report: " + ex.getMessage());
+			throw new InternalServerException(user + messageResourceBundle.getExMessage(ConstantMessages.ERROR_ADDING_TO_SUMMARY_REPORT_EXCEPTION)+ ex.getMessage());
 		}
 		// ---------------- For Summary Report --------------------
 		String messageType;
@@ -1126,17 +1144,18 @@ public class SmsServiceImpl implements SmsService {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		DriverInfo driverInfo = null;
 		Optional<DriverInfo> OptionalDriverInfo = driverInfoRepository.findById(userEntry.getId());
 		if (OptionalDriverInfo.isPresent()) {
 			driverInfo = OptionalDriverInfo.get();
 		} else
-			throw new NotFoundException("drive info  not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.DRIVE_INFO_NOT_FOUND_EXCEPTION));
+
 		WebMasterEntry webEntry = webMasterEntryRepository.findByUserId(userEntry.getId());
 		double totalcost = 0, adminCost = 0;// total_defcost = 0;
 		String unicodeMsg = "";
@@ -1179,6 +1198,8 @@ public class SmsServiceImpl implements SmsService {
 			bulkSmsDTO.setTelemarketerId(bulkRequest.getTelemarketerId());
 		if (bulkRequest.getTemplateId() != null)
 			bulkSmsDTO.setTemplateId(bulkRequest.getTemplateId());
+
+		bulkSmsDTO.setReqType("Bulk");
 		if (bulkRequest.isTracking()) {
 			return BulkTracking(bulkRequest, bulkSmsDTO, webEntry, driverInfo, userEntry, progressEvent,
 					destinationNumberFile);
@@ -1469,8 +1490,8 @@ public class SmsServiceImpl implements SmsService {
 
 						logger.error("error.schedule.time");
 						bulkResponse.setStatus(target);
-						throw new ScheduledTimeException(
-								"Error: getting error in Scheduler bulkSessionId " + bulkSessionId);
+						throw new ScheduledTimeException(messageResourceBundle.getExMessage(ConstantMessages.SCHEDULER_ERROR_EXCEPTION)+ bulkSessionId);
+ 
 						// return bulkResponse;
 					}
 				}
@@ -1485,7 +1506,7 @@ public class SmsServiceImpl implements SmsService {
 							Optional<UserEntry> masterOptional = userEntryRepository
 									.findBySystemId(userEntry.getMasterId());
 							if (!masterOptional.isPresent()) {
-								throw new NotFoundException("User not found with the provided username.");
+								throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 							}
 							adminCost = routeService.calculateRoutingCost(masterOptional.get().getId(), destinationList,
 									no_of_msg);
@@ -1494,34 +1515,28 @@ public class SmsServiceImpl implements SmsService {
 							if ((adminWallet >= adminCost)) {
 								if (wallet >= totalcost) {
 									adminWallet = adminWallet - adminCost;
-									masterbalance.setWalletAmount(adminWallet);
-									balanceEntryRepository.save(masterbalance);
 									wallet = wallet - totalcost;
-									balanceEntry.setWalletAmount(wallet);
-									balanceEntryRepository.save(balanceEntry);
 									amount = true;
 								} else {
 									logger.error(bulkSessionId + " <-- Insufficient Balance -->");
-									throw new InsufficientBalanceException(
-											bulkSessionId + " <-- Insufficient Balance -->");
+									throw new InsufficientBalanceException(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION)+
+											bulkSessionId );
 								}
 							} else {
 								// Insufficient Admin balance
 								logger.error(bulkSessionId + " <-- Insufficient Admin(" + userEntry.getMasterId()
 										+ ") Balance -->");
-								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Admin("
-										+ userEntry.getMasterId() + ") Balance -->");
+								throw new InsufficientBalanceException(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_ADMIN_BALANCE_EXCEPTION)+bulkSessionId 
+										+ userEntry.getMasterId());
 							}
 						} else {
 							if (wallet > 0 && wallet >= totalcost) {
 								wallet = wallet - totalcost;
-								balanceEntry.setWalletAmount(wallet);
-								balanceEntryRepository.save(balanceEntry);
 								amount = true;
 							} else {
 								// Insufficient balance
 								logger.error(bulkSessionId + " <-- Insufficient Balance -->");
-								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Balance -->");
+								throw new InsufficientBalanceException(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION)+bulkSessionId );
 
 							}
 						}
@@ -1570,7 +1585,7 @@ public class SmsServiceImpl implements SmsService {
 										logger.error(
 												"Error: Unable to schedule the task. An error occurred while processing the schedule request.");
 										throw new ScheduledTimeException(
-												"Error: Unable to schedule the task. An error occurred while processing the schedule request for username "
+												messageResourceBundle.getExMessage(ConstantMessages.SINGLE_SCHEDULE_ERROR_EXCEPTION) + "for username "
 														+ username);
 
 									}
@@ -1579,8 +1594,10 @@ public class SmsServiceImpl implements SmsService {
 									logger.error(
 											"Error: The task is already scheduled. Duplicate schedule request received.");
 									throw new ScheduledTimeException(
-											"Error: The task is already scheduled. Duplicate schedule request received for username "
+											messageResourceBundle.getExMessage(ConstantMessages.DUPLICATE_SCHEDULE_ERROR_EXCEPTION)+"for username "
 													+ username);
+									
+									
 								}
 							} else {
 
@@ -1592,8 +1609,7 @@ public class SmsServiceImpl implements SmsService {
 								} else {
 									// Submission Error
 									logger.error("Error sending bulk SMS. Details: " + value);
-									throw new InternalServerException(
-											"Error sending bulk SMS. Please check the details.");
+									throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.BULK_SMS_ERROR_EXCEPTION));
 
 								}
 							}
@@ -1612,7 +1628,7 @@ public class SmsServiceImpl implements SmsService {
 							logger.error(
 									"Error: Insufficient balance to perform the operation. Please add funds to your wallet.");
 							throw new InsufficientBalanceException(
-									"Error: Insufficient balance to perform the operation. Please add funds to your wallet.");
+									messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION));
 
 						}
 					} else {
@@ -1631,11 +1647,9 @@ public class SmsServiceImpl implements SmsService {
 							if (adminCredit >= (destinationList.size() * no_of_msg)) {
 								if (credits >= (destinationList.size() * no_of_msg)) {
 									adminCredit = adminCredit - (destinationList.size() * no_of_msg);
-									masterbalance.setCredits(adminCredit);
-									balanceEntryRepository.save(masterbalance);
+
 									credits = credits - (destinationList.size() * no_of_msg);
-									balanceEntry.setCredits(credits);
-									balanceEntryRepository.save(balanceEntry);
+
 									amount = true;
 								} else {
 									String errorMessage = bulkSessionId + " Error: Insufficient Credits.";
@@ -1651,8 +1665,7 @@ public class SmsServiceImpl implements SmsService {
 						} else {
 							if (credits >= (destinationList.size() * no_of_msg)) {
 								credits = credits - (destinationList.size() * no_of_msg);
-								balanceEntry.setCredits(credits);
-								balanceEntryRepository.save(balanceEntry);
+
 								amount = true;
 							} else {
 								String errorMessage = bulkSessionId + " Error: Insufficient Credits.";
@@ -1742,7 +1755,7 @@ public class SmsServiceImpl implements SmsService {
 							}
 						} else {
 							logger.error("Error: Insufficient Credits.");
-							throw new InsufficientBalanceException("Error: Insufficient Credits.");
+							throw new InsufficientBalanceException(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION));
 
 						}
 					} else {
@@ -1753,7 +1766,7 @@ public class SmsServiceImpl implements SmsService {
 					}
 				} else if (wallet_flag.equalsIgnoreCase("MIN")) {
 					logger.error("Error: Insufficient Wallet Balance.");
-					throw new InsufficientBalanceException("Error: Insufficient Wallet Balance.");
+					throw new InsufficientBalanceException(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_WALLET_BALANCE_EXCEPTION));
 
 				}
 			} catch (InvalidPropertyException e) {
@@ -2070,7 +2083,7 @@ public class SmsServiceImpl implements SmsService {
 				}
 				if (!valid_sch_time) {
 					throw new ScheduledTimeException(
-							"Error: getting error in Scheduler bulkSessionId " + bulkSessionId);
+							messageResourceBundle.getExMessage(ConstantMessages.SINGLE_SCHEDULE_ERROR_EXCEPTION)+ "for bulkSession :" + bulkSessionId);
 				}
 			}
 			// ---------------- url appending & message calculation --------------------
@@ -2170,33 +2183,29 @@ public class SmsServiceImpl implements SmsService {
 						if ((adminWallet >= adminCost)) {
 							if (wallet >= totalcost) {
 								adminWallet = adminWallet - adminCost;
-								masterbalance.setWalletAmount(adminWallet);
 								wallet = wallet - totalcost;
-								balanceEntry.setWalletAmount(wallet);
 								amount = true;
-								balanceEntryRepository.save(masterbalance);
-								balanceEntryRepository.save(balanceEntry);
+
 							} else {
 								logger.error(bulkSessionId + " <-- Insufficient Balance -->");
-								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Balance -->");
+								throw new InsufficientBalanceException( messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION) +  bulkSessionId );
 							}
 						} else {
 							// Insufficient Admin balance
 							logger.error(bulkSessionId + " <-- Insufficient Admin(" + masterOptional.get().getId()
 									+ ") Balance -->");
-							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Admin("
-									+ masterOptional.get().getId() + ") Balance -->");
+							throw new InsufficientBalanceException(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_ADMIN_BALANCE_EXCEPTION) +bulkSessionId
+									+ masterOptional.get().getId() );
 						}
 					} else {
 						if (wallet > 0 && wallet >= totalcost) {
 							wallet = wallet - totalcost;
-							balanceEntry.setWalletAmount(wallet);
 							amount = true;
-							balanceEntryRepository.save(balanceEntry);
+
 						} else {
 							// Insufficient balance
 							logger.info(bulkSessionId + " <-- Insufficient Balance -->");
-							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Balance -->");
+							throw new InsufficientBalanceException( messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION) +  bulkSessionId );
 						}
 					}
 					if (amount) {
@@ -2244,7 +2253,7 @@ public class SmsServiceImpl implements SmsService {
 									logger.error(
 											"Error: Unable to schedule the task. An error occurred while processing the schedule request.");
 									throw new ScheduledTimeException(
-											"Error: Unable to schedule the task. An error occurred while processing the schedule request for username "
+											messageResourceBundle.getExMessage(ConstantMessages.SINGLE_SCHEDULE_ERROR_EXCEPTION)+ "for username "
 													+ userEntry.getSystemId());
 
 								}
@@ -2253,7 +2262,7 @@ public class SmsServiceImpl implements SmsService {
 								logger.error(
 										"Error: The task is already scheduled. Duplicate schedule request received.");
 								throw new ScheduledTimeException(
-										"Error: The task is already scheduled. Duplicate schedule request received for username "
+										messageResourceBundle.getExMessage(ConstantMessages.DUPLICATE_SCHEDULE_ERROR_EXCEPTION) + "for username "
 												+ userEntry.getSystemId());
 							}
 						} else {
@@ -2265,7 +2274,7 @@ public class SmsServiceImpl implements SmsService {
 							} else {
 								// Submission Error
 								logger.error("Error sending bulk SMS. Details: " + value);
-								throw new InternalServerException("Error sending bulk SMS. Please check the details.");
+								throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.BULK_SMS_ERROR_EXCEPTION));
 
 							}
 						}
@@ -2302,31 +2311,27 @@ public class SmsServiceImpl implements SmsService {
 						if (adminCredit >= totalMsg) {
 							if (credits >= totalMsg) {
 								adminCredit = adminCredit - totalMsg;
-								balanceEntry.setCredits(adminCredit);
 								credits = credits - totalMsg;
-								masterbalance.setCredits(credits);
 								amount = true;
-								balanceEntryRepository.save(balanceEntry);
-								balanceEntryRepository.save(masterbalance);
+
 							} else {
 								logger.error(bulkSessionId + " <-- Insufficient Credits -->");
-								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Credits -->");
+								throw new InsufficientBalanceException(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION)+bulkSessionId);
 							}
 						} else {
 							logger.error(bulkSessionId + " <-- Insufficient Admin(" + masterOptional.get().getSystemId()
 									+ ") Credits -->");
-							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Admin("
-									+ masterOptional.get().getSystemId() + ") Credits -->");
+							throw new InsufficientBalanceException(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION)+bulkSessionId + masterOptional.get().getSystemId());
 						}
 					} else {
 						if (credits >= totalMsg) {
 							credits = credits - totalMsg;
-							balanceEntry.setCredits(credits);
+
 							amount = true;
-							balanceEntryRepository.save(balanceEntry);
+
 						} else {
 							logger.error(bulkSessionId + " <-- Insufficient Credits -->");
-							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Credits -->");
+							throw new InsufficientBalanceException(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION)+bulkSessionId);
 
 						}
 					}
@@ -2392,7 +2397,7 @@ public class SmsServiceImpl implements SmsService {
 							} else {
 								// Submission Error
 								logger.error("Error sending bulk SMS. Details: " + value);
-								throw new InternalServerException("Error sending bulk SMS. Please check the details.");
+								throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.BULK_SMS_ERROR_EXCEPTION));
 
 							}
 						}
@@ -2791,9 +2796,9 @@ public class SmsServiceImpl implements SmsService {
 		int upload_percent = 0;
 		try {
 
-			List<BulkMgmtContent> bulkMgmtContentList = new ArrayList<>();
+			List<BulkContentEntry> bulkMgmtContentList = new ArrayList<>();
 			for (BulkContentEntry entry : list) {
-				BulkMgmtContent content = new BulkMgmtContent();
+				BulkContentEntry content = new BulkContentEntry();
 				content.setDestination(entry.getDestination());
 				content.setContent(entry.getContent());
 				content.setFlag(entry.getFlag());
@@ -2812,9 +2817,9 @@ public class SmsServiceImpl implements SmsService {
 		int insertCounter = 0;
 		System.out.println("this is new batch id......" + batch_id);
 		try {
-			List<BulkMgmtContent> bulkMgmtContentList = new ArrayList<>();
+			List<BulkContentEntry> bulkMgmtContentList = new ArrayList<>();
 			for (BulkContentEntry entry : list) {
-				BulkMgmtContent content = new BulkMgmtContent();
+				BulkContentEntry content = new BulkContentEntry();
 				content.setDestination(entry.getDestination());
 				content.setContent(entry.getContent());
 				content.setFlag(entry.getFlag());
@@ -2857,7 +2862,7 @@ public class SmsServiceImpl implements SmsService {
 	}
 
 	@Transactional
-	public boolean createBulkMgmtContentTable(int batchId, List<BulkMgmtContent> bulkMgmtContentList) {
+	public boolean createBulkMgmtContentTable(int batchId, List<BulkContentEntry> bulkMgmtContentList) {
 		try {
 			String tableName = "batch_content_" + batchId;
 			{
@@ -2877,8 +2882,8 @@ public class SmsServiceImpl implements SmsService {
 
 	}
 
-	private void persistEntities(List<BulkMgmtContent> bulkMgmtContentList, String tableName) {
-		for (BulkMgmtContent content : bulkMgmtContentList) {
+	private void persistEntities(List<BulkContentEntry> bulkMgmtContentList, String tableName) {
+		for (BulkContentEntry content : bulkMgmtContentList) {
 			jdbcTemplate.update("CALL InsertDataIntoTable(?, ?, ?, ?)", content.getDestination(), content.getContent(),
 					content.getFlag(), tableName);
 		}
@@ -2892,10 +2897,10 @@ public class SmsServiceImpl implements SmsService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		double totalcost = 0, adminCost = 0;// total_defcost = 0;
@@ -2949,7 +2954,7 @@ public class SmsServiceImpl implements SmsService {
 			if (OptionalDriverInfo.isPresent()) {
 				driverInfo = OptionalDriverInfo.get();
 			} else
-				throw new NotFoundException("drive info  not found with the provided username.");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.DRIVE_INFO_NOT_FOUND_EXCEPTION));
 			bulkSmsDTO.setClientId(user.getSystemId());
 			bulkSmsDTO.setSystemId(user.getSystemId());
 			bulkSmsDTO.setPassword(new PasswordConverter().convertToEntityAttribute(driverInfo.getDriver()));
@@ -3057,7 +3062,7 @@ public class SmsServiceImpl implements SmsService {
 						valid_sch_time = true;
 					} else {
 						logger.error(bulkSessionId + " Scheduled Time is before Current Time");
-						throw new ScheduledTimeException(bulkSessionId + " Scheduled Time is before Current Time");
+						throw new ScheduledTimeException(messageResourceBundle.getExMessage(ConstantMessages.SCHEDULED_TIME_BEFORE_CURRENT_TIME_EXCEPTION)   +bulkSessionId );
 					}
 					String server_date = schedule_time.split(" ")[0];
 					String server_time = schedule_time.split(" ")[1];
@@ -3464,7 +3469,7 @@ public class SmsServiceImpl implements SmsService {
 						if (user.isAdminDepend()) {
 							Optional<UserEntry> masterOptional = userEntryRepository.findBySystemId(user.getMasterId());
 							if (!masterOptional.isPresent()) {
-								throw new NotFoundException("User not found with the provided username.");
+								throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 							}
 							adminCost = routeService.calculateRoutingCost(masterOptional.get().getId(), msgLengthTable);
 							logger.info(bulkSessionId + " Admin[" + masterOptional.get().getId() + "] Balance:"
@@ -3472,35 +3477,30 @@ public class SmsServiceImpl implements SmsService {
 							if ((adminWallet >= adminCost)) {
 								if (wallet >= totalcost) {
 									adminWallet = adminWallet - adminCost;
-									masterbalance.setWalletAmount(adminWallet);
 									wallet = wallet - totalcost;
-									balanceEntry.setWalletAmount(wallet);
 									amount = true;
-									balanceEntryRepository.save(masterbalance);
-									balanceEntryRepository.save(balanceEntry);
+
 								} else {
 									logger.error(bulkSessionId + " <-- Insufficient Balance --> " + wallet);
 									throw new InsufficientBalanceException(
-											bulkSessionId + " <-- Insufficient Balance --> " + wallet);
+											bulkSessionId + messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION) + wallet);
 								}
 							} else {
 								// Insufficient Admin balance
 								logger.error(bulkSessionId + " <-- Insufficient Admin("
 										+ Integer.parseInt(user.getMasterId()) + ") Balance --> " + adminWallet);
-								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Admin("
-										+ Integer.parseInt(user.getMasterId()) + ") Balance --> " + adminWallet);
+								throw new InsufficientBalanceException(bulkSessionId + messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_ADMIN_BALANCE_EXCEPTION)
+										+ Integer.parseInt(user.getMasterId())  + adminWallet);
 							}
 						} else {
 							if (wallet >= totalcost) {
 								wallet = wallet - totalcost;
-								balanceEntry.setWalletAmount(wallet);
-								balanceEntryRepository.save(balanceEntry);
 								amount = true;
 							} else {
 								// Insufficient balance
 								logger.error(bulkSessionId + " <-- Insufficient Balance --> " + wallet);
 								throw new InsufficientBalanceException(
-										bulkSessionId + " <-- Insufficient Balance --> " + wallet);
+										bulkSessionId + messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION) + wallet);
 							}
 						}
 						if (amount) {
@@ -3548,7 +3548,7 @@ public class SmsServiceImpl implements SmsService {
 										logger.error(
 												"Error: Unable to schedule the task. An error occurred during the scheduling process.");
 										throw new ScheduledTimeException(
-												"Error: Unable to schedule the task. An error occurred during the scheduling process.");
+												messageResourceBundle.getExMessage(ConstantMessages.SINGLE_SCHEDULE_ERROR_EXCEPTION));
 
 									}
 								} else {
@@ -3556,7 +3556,7 @@ public class SmsServiceImpl implements SmsService {
 									logger.error(
 											"Error: The task is already scheduled. Duplicate schedule request received.");
 									throw new ScheduledTimeException(
-											"Error: The task is already scheduled. Duplicate schedule request received.");
+											messageResourceBundle.getExMessage(ConstantMessages.DUPLICATE_SCHEDULE_ERROR_EXCEPTION));
 
 								}
 							} else {
@@ -3571,7 +3571,7 @@ public class SmsServiceImpl implements SmsService {
 											"Error: Unable to process batch submission. An error occurred during the submission process. Details: "
 													+ value);
 									throw new InternalServerException(
-											"Error: Unable to process batch submission. An error occurred during the submission process. Details: "
+											messageResourceBundle.getExMessage(ConstantMessages.BATCH_SUBMISSION_ERROR_EXCEPTION)
 													+ value);
 
 								}
@@ -3593,7 +3593,7 @@ public class SmsServiceImpl implements SmsService {
 							logger.error(
 									"Error: Insufficient balance to perform the operation. Please add funds to your wallet.");
 							throw new InsufficientBalanceException(
-									"Error: Insufficient balance to perform the operation. Please add funds to your wallet.");
+									messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION));
 
 						}
 					} // ******************************End Wallet Calculation*********************
@@ -3607,32 +3607,30 @@ public class SmsServiceImpl implements SmsService {
 							if (adminCredit >= totalMsg) {
 								if (credits >= totalMsg) {
 									adminCredit = adminCredit - totalMsg;
-									masterbalance.setCredits(adminCredit);
+
 									credits = credits - totalMsg;
-									balanceEntry.setCredits(credits);
+
 									amount = true;
-									balanceEntryRepository.save(balanceEntry);
-									balanceEntryRepository.save(masterbalance);
+
 								} else {
 									System.out.println(user.getId() + " <-- Insufficient Credits -->");
 									throw new InsufficientBalanceException(
-											user.getId() + " <-- Insufficient Credits -->");
+											user.getId() +  messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION));
 								}
 							} else {
 								System.out.println(user.getId() + " <-- Insufficient Admin(" + user.getMasterId()
 										+ ") Credits -->");
-								throw new InsufficientBalanceException(user.getId() + " <-- Insufficient Admin("
-										+ user.getMasterId() + ") Credits -->");
+								throw new InsufficientBalanceException(user.getId() +  messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_ADMIN_CREDITS_EXCEPTION)
+										+ user.getMasterId() );
 							}
 						} else {
 							if (credits >= totalMsg) {
 								credits = credits - totalMsg;
-								balanceEntry.setCredits(credits);
-								balanceEntryRepository.save(balanceEntry);
+
 								amount = true;
 							} else {
 								System.out.println(user.getId() + " <-- Insufficient Credits -->");
-								throw new InsufficientBalanceException(user.getId() + " <-- Insufficient Credits -->");
+								throw new InsufficientBalanceException(user.getId() +  messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION));
 							}
 						}
 						if (amount) {
@@ -3680,7 +3678,7 @@ public class SmsServiceImpl implements SmsService {
 										logger.error(
 												"Error: Unable to schedule the task. An error occurred during the scheduling process.");
 										throw new ScheduledTimeException(
-												"Error: Unable to schedule the task. An error occurred during the scheduling process.");
+												messageResourceBundle.getExMessage(ConstantMessages.SINGLE_SCHEDULE_ERROR_EXCEPTION));
 
 									}
 								} else {
@@ -3688,7 +3686,7 @@ public class SmsServiceImpl implements SmsService {
 									logger.error(
 											"Error: The task is already scheduled. Duplicate schedule request received.");
 									throw new ScheduledTimeException(
-											"Error: The task is already scheduled. Duplicate schedule request received.");
+											messageResourceBundle.getExMessage(ConstantMessages.DUPLICATE_SCHEDULE_ERROR_EXCEPTION));
 
 								}
 							} else {
@@ -3702,7 +3700,7 @@ public class SmsServiceImpl implements SmsService {
 									logger.error(
 											"Error: Unable to process batch submission. An error occurred during the submission process.");
 									throw new InternalServerException(
-											"Error: Unable to process batch submission. An error occurred during the submission process.");
+											messageResourceBundle.getExMessage(ConstantMessages.BATCH_SUBMISSION_ERROR_EXCEPTION));
 
 								}
 							}
@@ -3723,7 +3721,7 @@ public class SmsServiceImpl implements SmsService {
 							logger.error(
 									"Error: Insufficient credits to perform the operation. Please add more credits.");
 							throw new InsufficientBalanceException(
-									"Error: Insufficient credits to perform the operation. Please add more credits.");
+									messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION));
 
 						}
 					} else if (wallet_flag.equalsIgnoreCase("MIN")) {
@@ -3731,7 +3729,7 @@ public class SmsServiceImpl implements SmsService {
 						logger.error(
 								"Error: Insufficient balance to perform the operation. Please add funds to your wallet.");
 						throw new InsufficientBalanceException(
-								"Error: Insufficient balance to perform the operation. Please add funds to your wallet.");
+								messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION));
 
 					}
 				} else {
@@ -3739,13 +3737,13 @@ public class SmsServiceImpl implements SmsService {
 					logger.error(
 							"Error: No valid numbers found in the provided file. Please check the file and try again.");
 					throw new InternalServerException(
-							"Error: No valid numbers found in the provided file. Please check the file and try again.");
+							messageResourceBundle.getExMessage(ConstantMessages.NO_VALID_NUMBERS_FOUND_FILE_EXCEPTION));
 
 				}
 			} else {
 				// Invalid File Format
 				logger.error("Error: Invalid file format. Please provide a valid file.");
-				throw new InvalidPropertyException("Error: Invalid file format. Please provide a valid file.");
+				throw new InvalidPropertyException(messageResourceBundle.getExMessage(ConstantMessages.INVALID_FILE_FORMAT_EXCEPTION));
 
 			}
 		} catch (InvalidPropertyException e) {
@@ -3779,10 +3777,10 @@ public class SmsServiceImpl implements SmsService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		WebMasterEntry webEntry = webMasterEntryRepository.findByUserId(user.getId());
 		DriverInfo driverInfo = null;
@@ -3790,7 +3788,7 @@ public class SmsServiceImpl implements SmsService {
 		if (OptionalDriverInfo.isPresent()) {
 			driverInfo = OptionalDriverInfo.get();
 		} else
-			throw new NotFoundException("drive info  not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.DRIVE_INFO_NOT_FOUND_EXCEPTION));
 
 		BulkSmsDTO bulkSmsDTO = new BulkSmsDTO();
 		bulkSmsDTO.setUploadedNumbers(bulkContactRequest.getUploadedNumbers());
@@ -3905,12 +3903,12 @@ public class SmsServiceImpl implements SmsService {
 					} catch (Exception e) {
 						logger.error(bulkSessionId, "An error occurred: " + e.getMessage(), e);
 						throw new ScheduledTimeException(
-								"Error: Schedule time not valid. An error occurred during processing."
+								messageResourceBundle.getExMessage(ConstantMessages.SINGLE_SCHEDULE_ERROR_EXCEPTION)
 										+ e.getMessage());
 
 					}
 					if (!valid_sch_time) {
-						throw new ScheduledTimeException("Error: Schedule time not valid.");
+						throw new ScheduledTimeException(messageResourceBundle.getExMessage(ConstantMessages.SCHEDULED_TIME_BEFORE_CURRENT_TIME_EXCEPTION));
 
 					}
 				}
@@ -3930,12 +3928,9 @@ public class SmsServiceImpl implements SmsService {
 						if (amount) {
 							if (inherit) {
 								adminWallet = adminWallet - totalcost;
-								masterbalance.setWalletAmount(adminWallet);
-								balanceEntryRepository.save(masterbalance);
+
 							} else {
 								wallet = wallet - totalcost;
-								balanceEntry.setWalletAmount(wallet);
-								balanceEntryRepository.save(balanceEntry);
 							}
 							// String applicationName = request.getContextPath();
 							bulkSmsDTO.setMsgCount(destinationList.size() * no_of_msg);
@@ -4020,7 +4015,7 @@ public class SmsServiceImpl implements SmsService {
 							// insufficient balance
 							logger.error(bulkSessionId + " <-- Insufficient Balance --> " + wallet);
 							throw new InsufficientBalanceException(
-									bulkSessionId + " <-- Insufficient Balance --> " + wallet);
+									bulkSessionId + messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION) + wallet);
 						}
 					} else {
 						// Number File Error
@@ -4047,12 +4042,10 @@ public class SmsServiceImpl implements SmsService {
 						if (amount) {
 							if (inherit) {
 								adminCredit = adminCredit - (destinationList.size() * no_of_msg);
-								masterbalance.setCredits(adminCredit);
-								balanceEntryRepository.save(masterbalance);
+
 							} else {
 								credits = credits - (destinationList.size() * no_of_msg);
-								balanceEntry.setCredits(credits);
-								balanceEntryRepository.save(balanceEntry);
+
 							}
 							long deductCredits = destinationList.size() * no_of_msg;
 							// String applicationName = request.getContextPath();
@@ -4094,14 +4087,14 @@ public class SmsServiceImpl implements SmsService {
 										logger.info("Task scheduled successfully.");
 									} else {
 										throw new ScheduledTimeException(
-												"Error: Unable to schedule the task. An error occurred during the scheduling process.");
+												messageResourceBundle.getExMessage(ConstantMessages.SINGLE_SCHEDULE_ERROR_EXCEPTION));
 
 									}
 								} else {
 									logger.error(
 											"Error: The task is already scheduled. Duplicate schedule request received.");
 									throw new ScheduledTimeException(
-											"Error: The task is already scheduled. Duplicate schedule request received.");
+											messageResourceBundle.getExMessage(ConstantMessages.DUPLICATE_SCHEDULE_ERROR_EXCEPTION));
 
 								}
 							} else {
@@ -4118,7 +4111,7 @@ public class SmsServiceImpl implements SmsService {
 											"Error: Unable to process batch submission. An error occurred during the submission process.");
 
 									throw new InternalServerException(
-											"Error: Unable to process batch submission. An error occurred during the submission process.");
+											messageResourceBundle.getExMessage(ConstantMessages.BATCH_SUBMISSION_ERROR_EXCEPTION));
 
 								}
 							}
@@ -4138,7 +4131,7 @@ public class SmsServiceImpl implements SmsService {
 							// insufficient Credits
 							logger.error(bulkSessionId + " <-- Insufficient Credits --> " + credits);
 							throw new InsufficientBalanceException(
-									bulkSessionId + " <-- Insufficient Credits --> " + credits);
+									bulkSessionId + messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION)+ credits);
 
 						}
 					} else {
@@ -4146,14 +4139,14 @@ public class SmsServiceImpl implements SmsService {
 						logger.error(
 								"Error: No valid numbers found in the provided data. Please check the data and try again.");
 						throw new InternalServerException(
-								"Error: No valid numbers found in the provided data. Please check the data and try again.");
+								messageResourceBundle.getExMessage(ConstantMessages.NO_VALID_NUMBERS_FOUND_EXCEPTION));
 					}
 				} else if (wallet_flag.equalsIgnoreCase("MIN")) {
 					// Insufficient Balance
 					logger.error(
 							"Error: Insufficient balance to perform the operation. Please add funds to your wallet.");
 					throw new InternalServerException(
-							"Error: Insufficient balance to perform the operation. Please add funds to your wallet.");
+							messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION));
 				}
 			} catch (InvalidPropertyException e) {
 				logger.error(bulkSessionId, e.getMessage());
@@ -4369,7 +4362,7 @@ public class SmsServiceImpl implements SmsService {
 					if (user.isAdminDepend()) {
 
 						if (!masterOptional.isPresent()) {
-							throw new NotFoundException("User not found with the provided username.");
+							throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 						}
 						adminCost = routeService.calculateRoutingCost(masterOptional.get().getId(), msgLengthTable);
 						logger.info(bulkSessionId + " Admin[" + masterOptional.get().getId() + "] Balance:"
@@ -4377,34 +4370,30 @@ public class SmsServiceImpl implements SmsService {
 						if ((adminWallet >= adminCost)) {
 							if (wallet >= totalcost) {
 								adminWallet = adminWallet - adminCost;
-								masterbalance.setWalletAmount(adminWallet);
 								wallet = wallet - totalcost;
-								balanceEntry.setWalletAmount(wallet);
 								amount = true;
-								balanceEntryRepository.save(masterbalance);
-								balanceEntryRepository.save(balanceEntry);
+
 							} else {
 								logger.error(bulkSessionId + " <-- Insufficient Balance -->");
-								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Balance -->");
+								throw new InsufficientBalanceException( messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION) + bulkSessionId );
 
 							}
 						} else {
 							// Insufficient Admin balance
 							logger.error(bulkSessionId + " " + "<-- Insufficient Admin(" + masterOptional.get().getId()
 									+ ") Balance -->");
-							throw new InsufficientBalanceException(bulkSessionId + " " + "<-- Insufficient Admin("
-									+ masterOptional.get().getId() + ") Balance -->");
+							throw new InsufficientBalanceException(bulkSessionId + " " + messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_ADMIN_BALANCE_EXCEPTION)
+									+ masterOptional.get().getId() );
 						}
 					} else {
 						if (wallet > 0 && wallet >= totalcost) {
 							wallet = wallet - totalcost;
-							balanceEntry.setWalletAmount(wallet);
 							amount = true;
-							balanceEntryRepository.save(balanceEntry);
+
 						} else {
 							// Insufficient balance
 							logger.error(bulkSessionId + " <-- Insufficient Balance -->");
-							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Balance -->");
+							throw new InsufficientBalanceException(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION) + bulkSessionId );
 						}
 					}
 					if (amount) {
@@ -4504,32 +4493,31 @@ public class SmsServiceImpl implements SmsService {
 						if (adminCredit >= totalMsg) {
 							if (credits >= totalMsg) {
 								adminCredit = adminCredit - totalMsg;
-								masterbalance.setCredits(adminCredit);
+
 								credits = credits - totalMsg;
-								balanceEntry.setCredits(credits);
+
 								amount = true;
-								balanceEntryRepository.save(masterbalance);
-								balanceEntryRepository.save(balanceEntry);
+
 							} else {
 								logger.error(bulkSessionId + " <-- Insufficient Credits -->");
-								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Credits -->");
+								throw new InsufficientBalanceException( messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION) + bulkSessionId);
 							}
 						} else {
 							logger.info(bulkSessionId + " <-- Insufficient Admin(" + masterOptional.get().getId()
 									+ ") Credits -->");
-							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Admin("
-									+ masterOptional.get().getId() + ") Credits -->");
+							throw new InsufficientBalanceException(bulkSessionId +messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_ADMIN_CREDITS_EXCEPTION)
+									+ masterOptional.get().getId());
 
 						}
 					} else {
 						if (credits >= totalMsg) {
 							credits = credits - totalMsg;
-							balanceEntry.setCredits(credits);
+
 							amount = true;
-							balanceEntryRepository.save(balanceEntry);
+
 						} else {
 							logger.error(bulkSessionId + " <-- Insufficient Credits -->");
-							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Credits -->");
+							throw new InsufficientBalanceException( messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION) + bulkSessionId );
 
 						}
 					}
@@ -4611,21 +4599,21 @@ public class SmsServiceImpl implements SmsService {
 					} else {
 						logger.error("Error: Insufficient credits to perform the operation. Please add more credits.");
 						throw new InsufficientBalanceException(
-								"Error: Insufficient credits to perform the operation. Please add more credits.");
+								messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION));
 					}
 				} else {
 
 					logger.error(
 							"Error: No valid numbers found in the provided file. Please check the file and try again.");
 					throw new InternalServerException(
-							"Error: No valid numbers found in the provided file. Please check the file and try again.");
+							messageResourceBundle.getExMessage(ConstantMessages.NO_VALID_NUMBERS_FOUND_FILE_EXCEPTION));
 
 				}
 			} else if (wallet_flag.equalsIgnoreCase("MIN")) {
 				// Insufficient Balance
 				logger.error("Error: Insufficient balance to perform the operation. Please add funds to your wallet.");
 				throw new InsufficientBalanceException(
-						"Error: Insufficient balance to perform the operation. Please add funds to your wallet.");
+						messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION));
 			}
 		} catch (InvalidPropertyException e) {
 			logger.error(bulkSessionId, e.getMessage());
@@ -4659,10 +4647,10 @@ public class SmsServiceImpl implements SmsService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		WebMasterEntry webEntry = webMasterEntryRepository.findByUserId(user.getId());
 		DriverInfo driverInfo = null;
@@ -4670,7 +4658,7 @@ public class SmsServiceImpl implements SmsService {
 		if (OptionalDriverInfo.isPresent()) {
 			driverInfo = OptionalDriverInfo.get();
 		} else
-			throw new NotFoundException("drive info  not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.DRIVE_INFO_NOT_FOUND_EXCEPTION));
 
 		BulkSmsDTO bulkSmsDTO = new BulkSmsDTO();
 		bulkSmsDTO.setUploadedNumbers(bulkContactRequest.getUploadedNumbers());
@@ -4807,7 +4795,7 @@ public class SmsServiceImpl implements SmsService {
 				}
 				if (!valid_sch_time) {
 					throw new ScheduledTimeException(
-							"Error: getting error in Scheduler bulkSessionId " + bulkSessionId);
+							messageResourceBundle.getExMessage(ConstantMessages.SINGLE_SCHEDULE_ERROR_EXCEPTION) + bulkSessionId);
 				}
 			}
 			// ********************Start Calculating message Length for Each Number
@@ -5043,12 +5031,9 @@ public class SmsServiceImpl implements SmsService {
 					if (amount) {
 						if (inherit) {
 							adminWallet = adminWallet - totalcost;
-							masterbalance.setWalletAmount(adminWallet);
-							balanceEntryRepository.save(masterbalance);
+
 						} else {
 							wallet = wallet - totalcost;
-							balanceEntry.setWalletAmount(wallet);
-							balanceEntryRepository.save(balanceEntry);
 						}
 						// String applicationName = request.getContextPath();
 						bulkSmsDTO.setMsgCount(totalMsg);
@@ -5090,14 +5075,14 @@ public class SmsServiceImpl implements SmsService {
 									logger.info("Task scheduled successfully.");
 								} else {
 									throw new ScheduledTimeException(
-											"Error: Unable to schedule the task. An error occurred during the scheduling process.");
+											messageResourceBundle.getExMessage(ConstantMessages.SINGLE_SCHEDULE_ERROR_EXCEPTION));
 
 								}
 							} else {
 								logger.error(
 										"Error: The task is already scheduled. Duplicate schedule request received.");
 								throw new ScheduledTimeException(
-										"Error: The task is already scheduled. Duplicate schedule request received.");
+										messageResourceBundle.getExMessage(ConstantMessages.DUPLICATE_SCHEDULE_ERROR_EXCEPTION));
 
 							}
 						} else {
@@ -5124,7 +5109,7 @@ public class SmsServiceImpl implements SmsService {
 						// insufficient Credits
 						logger.error(bulkSessionId + " <-- Insufficient Balance --> " + wallet);
 						throw new InsufficientBalanceException(
-								bulkSessionId + " <-- Insufficient Balance --> " + wallet);
+								bulkSessionId +messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION)+ wallet);
 					}
 				} else {
 					// Number File Error
@@ -5150,12 +5135,10 @@ public class SmsServiceImpl implements SmsService {
 				if (amount) {
 					if (inherit) {
 						adminCredit = adminCredit - totalMsg;
-						masterbalance.setCredits(adminCredit);
-						balanceEntryRepository.save(masterbalance);
+
 					} else {
 						credits = credits - totalMsg;
-						balanceEntry.setCredits(credits);
-						balanceEntryRepository.save(balanceEntry);
+
 					}
 					long deductCredits = totalMsg;
 					// String applicationName = request.getContextPath();
@@ -5196,13 +5179,13 @@ public class SmsServiceImpl implements SmsService {
 								logger.info("Task scheduled successfully.");
 							} else {
 								throw new ScheduledTimeException(
-										"Error: Unable to schedule the task. An error occurred during the scheduling process.");
+										messageResourceBundle.getExMessage(ConstantMessages.SINGLE_SCHEDULE_ERROR_EXCEPTION));
 
 							}
 						} else {
 							logger.error("Error: The task is already scheduled. Duplicate schedule request received.");
 							throw new ScheduledTimeException(
-									"Error: The task is already scheduled. Duplicate schedule request received.");
+									messageResourceBundle.getExMessage(ConstantMessages.DUPLICATE_SCHEDULE_ERROR_EXCEPTION));
 
 						}
 					} else {
@@ -5227,7 +5210,7 @@ public class SmsServiceImpl implements SmsService {
 					}
 				} else {
 					logger.error(bulkSessionId + " <-- Insufficient Balance --> " + credits);
-					throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Balance --> " + credits);
+					throw new InsufficientBalanceException(bulkSessionId + messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION) + credits);
 				}
 			}
 			// *****************************End Credit Calculation***********************
@@ -5235,7 +5218,7 @@ public class SmsServiceImpl implements SmsService {
 				// Insufficient Balance
 				logger.error("Error: Insufficient balance to perform the operation. Please add funds to your wallet.");
 				throw new InsufficientBalanceException(
-						"Error: Insufficient balance to perform the operation. Please add funds to your wallet.");
+						messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION));
 			}
 		} catch (InvalidPropertyException e) {
 			logger.error(bulkSessionId, e.getMessage());
@@ -5269,10 +5252,10 @@ public class SmsServiceImpl implements SmsService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		WebMasterEntry webEntry = webMasterEntryRepository.findByUserId(user.getId());
 		DriverInfo driverInfo = null;
@@ -5280,10 +5263,10 @@ public class SmsServiceImpl implements SmsService {
 		if (OptionalDriverInfo.isPresent()) {
 			driverInfo = OptionalDriverInfo.get();
 		} else
-			throw new NotFoundException("drive info  not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.DRIVE_INFO_NOT_FOUND_EXCEPTION));
 		Optional<UserEntry> masterOptional = userEntryRepository.findBySystemId(user.getMasterId());
 		if (!masterOptional.isPresent()) {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		UserEntry master = masterOptional.get();
 		ProgressEvent progressEvent = new ProgressEvent(session);
@@ -5345,7 +5328,7 @@ public class SmsServiceImpl implements SmsService {
 							alertNumbers.add(alertNumber);
 						} catch (Exception ex) {
 							logger.error(systemId + " Invalid Alert Number: " + alertNumber);
-							throw new InternalServerException(systemId + " Invalid Batch Finish Alert Number: "
+							throw new InternalServerException(systemId + messageResourceBundle.getExMessage(ConstantMessages.INVALID_BATCH_FINISH_ALERT_NUMBER_MESSAGE)
 									+ alertNumber + " " + ex.getMessage());
 						}
 					}
@@ -5609,7 +5592,7 @@ public class SmsServiceImpl implements SmsService {
 						valid_sch_time = true;
 					} else {
 						logger.error(bulkSessionId + " Scheduled Time is before Current Time");
-						throw new ScheduledTimeException(bulkSessionId + " Scheduled Time is before Current Time");
+						throw new ScheduledTimeException(bulkSessionId + messageResourceBundle.getExMessage(ConstantMessages.SCHEDULED_TIME_BEFORE_CURRENT_TIME_EXCEPTION));
 					}
 					String server_date = schedule_time.split(" ")[0];
 					String server_time = schedule_time.split(" ")[1];
@@ -5622,7 +5605,7 @@ public class SmsServiceImpl implements SmsService {
 				}
 				if (!valid_sch_time) {
 					logger.error("An error occurred while processing a scheduled task at error.schedule.time");
-					throw new ScheduledTimeException("Error processing scheduled task: Invalid scheduled time");
+					throw new ScheduledTimeException(messageResourceBundle.getExMessage(ConstantMessages.SINGLE_SCHEDULE_ERROR_EXCEPTION));
 				}
 			}
 			if (wallet_flag.equalsIgnoreCase("yes")) {
@@ -5639,32 +5622,29 @@ public class SmsServiceImpl implements SmsService {
 						if ((adminWallet >= adminCost)) {
 							if (wallet >= totalcost) {
 								adminWallet = adminWallet - adminCost;
-								masterbalance.setWalletAmount(adminWallet);
 								wallet = wallet - totalcost;
-								balanceEntry.setWalletAmount(wallet);
 								amount = true;
-								balanceEntryRepository.save(masterbalance);
-								balanceEntryRepository.save(balanceEntry);
+
 							} else {
 								logger.error(bulkSessionId + " <-- Insufficient Balance -->");
-								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Balance -->");
+								throw new InsufficientBalanceException(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION) + bulkSessionId );
 							}
 						} else {
 							// Insufficient Admin balance
 							logger.error(bulkSessionId + " <-- Insufficient Admin(" + master.getId() + ") Balance -->");
 							throw new InsufficientBalanceException(
-									bulkSessionId + " <-- Insufficient Admin(" + master.getId() + ") Balance -->");
+									bulkSessionId + messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_ADMIN_BALANCE_EXCEPTION) + master.getId() );
 						}
 					} else {
 						if (wallet > 0 && wallet >= totalcost) {
 							wallet = wallet - totalcost;
-							balanceEntry.setWalletAmount(wallet);
+
 							amount = true;
-							balanceEntryRepository.save(balanceEntry);
+
 						} else {
 							// Insufficient balance
 							logger.error(bulkSessionId + " <-- Insufficient Balance -->");
-							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Balance -->");
+							throw new InsufficientBalanceException( messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION)  + bulkSessionId );
 						}
 					}
 					if (amount) {
@@ -5711,13 +5691,13 @@ public class SmsServiceImpl implements SmsService {
 								} else {
 									// Scheduling Error
 									logger.error("Error scheduling the task: error.scheduleError");
-									throw new ScheduledTimeException("Error scheduling the task: error.scheduleError");
+									throw new ScheduledTimeException(messageResourceBundle.getExMessage(ConstantMessages.SINGLE_SCHEDULE_ERROR_EXCEPTION));
 								}
 							} else {
 								// already Scheduled
 								logger.error("The task is already scheduled: error.duplicateSchedule");
 								throw new ScheduledTimeException(
-										"The task is already scheduled: error.duplicateSchedule");
+										messageResourceBundle.getExMessage(ConstantMessages.DUPLICATE_SCHEDULE_ERROR_EXCEPTION));
 							}
 						} else {
 							String value = sendBulkMms(bulkSmsDTO, progressEvent, mmsType, caption, webEntry);
@@ -5729,7 +5709,7 @@ public class SmsServiceImpl implements SmsService {
 								// Submission Error
 								logger.error("Error occurred during batch operation: error.batchError");
 								throw new InternalServerException(
-										"Error occurred during batch operation: error.batchError");
+										messageResourceBundle.getExMessage(ConstantMessages.BATCH_SUBMISSION_ERROR_EXCEPTION));
 
 							}
 						}
@@ -5747,13 +5727,13 @@ public class SmsServiceImpl implements SmsService {
 						// insufficient balance
 						logger.error("Error: Insufficient wallet balance for the operation: error.insufficientWallet");
 						throw new InsufficientBalanceException(
-								"Error: Insufficient wallet balance for the operation: error.insufficientWallet");
+								messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION));
 					}
 				} else {
 					// Number File Error
 					logger.error("Error: No valid numbers found in the file: error.noValidNumber");
 					throw new InsufficientBalanceException(
-							"Error: No valid numbers found in the file: error.noValidNumber");
+							messageResourceBundle.getExMessage(ConstantMessages.NO_VALID_NUMBERS_FOUND_FILE_EXCEPTION));
 				}
 			} else if (wallet_flag.equalsIgnoreCase("no")) {
 				bulkSmsDTO.setUserMode("credit");
@@ -5766,30 +5746,29 @@ public class SmsServiceImpl implements SmsService {
 						if (adminCredit >= (destinationList.size() * no_of_msg)) {
 							if (credits >= (destinationList.size() * no_of_msg)) {
 								adminCredit = adminCredit - (destinationList.size() * no_of_msg);
-								masterbalance.setCredits(adminCredit);
+
 								credits = credits - (destinationList.size() * no_of_msg);
-								balanceEntry.setCredits(credits);
+
 								amount = true;
-								balanceEntryRepository.save(balanceEntry);
-								balanceEntryRepository.save(masterbalance);
+
 							} else {
 								logger.error(bulkSessionId + " <-- Insufficient Credits -->");
-								throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Credits -->");
+								throw new InsufficientBalanceException(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION) +bulkSessionId );
 							}
 						} else {
 							logger.error(bulkSessionId + " <-- Insufficient Admin(" + master.getId() + ") Credits -->");
 							throw new InsufficientBalanceException(
-									bulkSessionId + " <-- Insufficient Admin(" + master.getId() + ") Credits -->");
+									bulkSessionId + messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_ADMIN_CREDITS_EXCEPTION) + master.getId() );
 						}
 					} else {
 						if (credits >= (destinationList.size() * no_of_msg)) {
 							credits = credits - (destinationList.size() * no_of_msg);
-							balanceEntry.setCredits(credits);
+
 							amount = true;
-							balanceEntryRepository.save(balanceEntry);
+
 						} else {
 							logger.error(bulkSessionId + " <-- Insufficient Credits -->");
-							throw new InsufficientBalanceException(bulkSessionId + " <-- Insufficient Credits -->");
+							throw new InsufficientBalanceException(messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION) + bulkSessionId );
 						}
 					}
 					if (amount) {
@@ -5833,12 +5812,12 @@ public class SmsServiceImpl implements SmsService {
 									logger.info("Task scheduled successfully: message.scheduleSuccess");
 								} else {
 									logger.error("Error scheduling the task: error.scheduleError");
-									throw new ScheduledTimeException("Error scheduling the task: error.scheduleError");
+									throw new ScheduledTimeException(messageResourceBundle.getExMessage(ConstantMessages.SINGLE_SCHEDULE_ERROR_EXCEPTION));
 								}
 							} else {
 								logger.error("Error: Task is already scheduled: error.duplicateSchedule");
 								throw new ScheduledTimeException(
-										"Error: Task is already scheduled: error.duplicateSchedule");
+										messageResourceBundle.getExMessage(ConstantMessages.DUPLICATE_SCHEDULE_ERROR_EXCEPTION));
 							}
 						} else {
 							String value = sendBulkMms(bulkSmsDTO, progressEvent, mmsType, caption, webEntry);
@@ -5848,7 +5827,7 @@ public class SmsServiceImpl implements SmsService {
 							} else {
 								// Submission Error
 								logger.error("Error during batch submission: error.batchError");
-								throw new InternalServerException("Error during batch submission: error.batchError");
+								throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.BATCH_SUBMISSION_ERROR_EXCEPTION));
 							}
 						}
 						if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY)) {
@@ -5866,18 +5845,18 @@ public class SmsServiceImpl implements SmsService {
 						// insufficient Credits
 						logger.error("Error: Insufficient credit for the operation: error.insufficientCredit");
 						throw new InsufficientBalanceException(
-								"Error: Insufficient credit for the operation: error.insufficientCredit");
+								messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION));
 					}
 				} else {
 					// Number File Error
 					logger.error("Error: No valid numbers found in the file: error.noValidNumber");
-					throw new InternalServerException("Error: No valid numbers found in the file: error.noValidNumber");
+					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NO_VALID_NUMBERS_FOUND_FILE_EXCEPTION));
 				}
 			} else if (wallet_flag.equalsIgnoreCase("MIN")) {
 				// insufficient balance
 				logger.error("Error: Insufficient funds in the wallet for the operation: error.insufficientWallet");
 				throw new InsufficientBalanceException(
-						"Error: Insufficient funds in the wallet for the operation: error.insufficientWallet");
+						messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION));
 			}
 		} catch (InvalidPropertyException e) {
 			logger.error(bulkSessionId, e.getMessage());
@@ -5912,17 +5891,17 @@ public class SmsServiceImpl implements SmsService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		DriverInfo driverInfo = null;
 		Optional<DriverInfo> OptionalDriverInfo = driverInfoRepository.findById(user.getId());
 		if (OptionalDriverInfo.isPresent()) {
 			driverInfo = OptionalDriverInfo.get();
 		} else
-			throw new NotFoundException("drive info  not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.DRIVE_INFO_NOT_FOUND_EXCEPTION));
 
 		Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findBySystemId(user.getSystemId());
 
@@ -6210,57 +6189,72 @@ public class SmsServiceImpl implements SmsService {
 													} else {
 														// Scheduling Error
 														logger.error(entry_number + "<--  Scheduling Error --> ");
-														// message = new ActionMessage("error.scheduleError");
+														throw new ScheduledTimeException(
+																entry_number + "<--  Scheduling Error --> ");
 													}
 												} else {
 													logger.error(
 															entry_number + "<--  Scheduling File Creation Error --> ");
-													// message = new ActionMessage("error.scheduleError");
+													throw new ScheduledTimeException(
+															entry_number + "<--  Scheduling File Creation Error --> ");
 												}
 												// -------- end create schedule ----------------------------
 											} else {
-												logger.info(bulkSessionId + " Invalid Mobile[" + entry[5] + "] Entry: "
+												logger.error(bulkSessionId + " Invalid Mobile[" + entry[5] + "] Entry: "
 														+ entry_number);
+												throw new InternalServerException(bulkSessionId + " Invalid Mobile["
+														+ entry[5] + "] Entry: " + entry_number);
 											}
 										} else {
-											logger.info(bulkSessionId + " Invalid Time[" + entry[4] + "] Entry: "
+											logger.error(bulkSessionId + " Invalid Time[" + entry[4] + "] Entry: "
 													+ entry_number);
+											throw new InternalServerException(bulkSessionId + " Invalid Time["
+													+ entry[4] + "] Entry: " + entry_number);
 										}
 									} else {
-										logger.info(bulkSessionId + " Invalid Day[" + entry[3] + "] Entry: "
+										logger.error(bulkSessionId + " Invalid Day[" + entry[3] + "] Entry: "
 												+ entry_number);
+										throw new InternalServerException(bulkSessionId + " Invalid Day[" + entry[3]
+												+ "] Entry: " + entry_number);
 									}
 								} else {
-									logger.info(
+									logger.error(
+											bulkSessionId + " Invalid Month[" + entry[2] + "] Entry: " + entry_number);
+									throw new InternalServerException(
 											bulkSessionId + " Invalid Month[" + entry[2] + "] Entry: " + entry_number);
 								}
 							} else {
-								logger.info(bulkSessionId + " Invalid Year[" + entry[1] + "] Entry: " + entry_number);
+								logger.error(bulkSessionId + " Invalid Year[" + entry[1] + "] Entry: " + entry_number);
+								throw new InternalServerException(
+										bulkSessionId + " Invalid Year[" + entry[1] + "] Entry: " + entry_number);
 							}
 						} else {
-							logger.info(bulkSessionId + " Invalid Gmt[" + entry[0] + "] Entry: " + entry_number);
+							logger.error(bulkSessionId + " Invalid Gmt[" + entry[0] + "] Entry: " + entry_number);
+							throw new InternalServerException(
+									bulkSessionId + " Invalid Gmt[" + entry[0] + "] Entry: " + entry_number);
 						}
 						entry_number++;
 					}
 					if (!scheduleList.isEmpty()) {
 						target = IConstants.SUCCESS_KEY;
 						logger.info(bulkSessionId + " Total Schedule Created: " + scheduleList.size());
-						// message = new ActionMessage("message.scheduleSuccess");
 
 					} else {
 						logger.info(bulkSessionId + "<-- No Valid Entry Found --> ");
-						// message = new ActionMessage("error.novalidNumber");
+						throw new InternalServerException(bulkSessionId + "<-- No Valid Entry Found --> ");
 					}
+				} catch (ScheduledTimeException e) {
+					logger.error(bulkSessionId, e);
+					throw new ScheduledTimeException(e.getMessage());
 				} catch (Exception e) {
 					logger.error(bulkSessionId, e);
-					// message = new ActionMessage("error.processError");
+					throw new InternalServerException(e.getMessage());
 				}
 			} else {
-				logger.info(bulkSessionId + "<-- No Valid Entry Found --> ");
-				// message = new ActionMessage("error.novalidNumber");
+				logger.error(bulkSessionId + "<-- No Valid Entry Found --> ");
 			}
 		} else {
-			// message = new ActionMessage("error.fileFormat");
+			throw new InternalServerException("please put valid file format...");
 		}
 		return ResponseEntity.ok(scheduleList);
 	}
@@ -6758,10 +6752,19 @@ public class SmsServiceImpl implements SmsService {
 
 //================================edit=================================
 	@Override
-	public ResponseEntity<?> editBulk(String username, BulkEntryForm bulkForm) {
+	public ResponseEntity<?> editBulk(String username, int batchId) {
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
+			}
+		} else {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+		}
 		BulkProccessResponse bulkProccessResponse = new BulkProccessResponse();
 		String target = IConstants.FAILURE_KEY;
-		int batchId = bulkForm.getId();
 		logger.info("Edit Request For BatchId: " + batchId);
 		try {
 			BatchObject batch = GlobalVars.BatchQueue.get(batchId);
@@ -6817,10 +6820,19 @@ public class SmsServiceImpl implements SmsService {
 	}
 
 	@Override
-	public ResponseEntity<?> pauseBulk(String username, BulkEntryForm bulkForm) {
-		int batchId = bulkForm.getId();
+	public ResponseEntity<?> pauseBulk(String username, int batchId) {
 		String target = IConstants.FAILURE_KEY;
 
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
+			}
+		} else {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+		}
 		try {
 			logger.info("Pause Request For BatchId: " + batchId);
 			BatchObject batch = GlobalVars.BatchQueue.get(batchId);
@@ -6830,7 +6842,7 @@ public class SmsServiceImpl implements SmsService {
 				GlobalVars.BatchQueue.replace(batchId, batch);
 				logger.info("Batch Paused: " + batchId);
 				logger.info("Paused batch successfully.");
-				target = "abort";
+				target = "Paused";
 			} else {
 				logger.warn("Batch Not Found: " + batchId);
 				throw new NotFoundException("Batch Not Found: " + batchId);
@@ -6847,8 +6859,17 @@ public class SmsServiceImpl implements SmsService {
 	}
 
 	@Override
-	public ResponseEntity<?> abortBulk(String username, BulkEntryForm bulkForm) {
-		int batchId = bulkForm.getId();
+	public ResponseEntity<?> abortBulk(String username, int batchId) {
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
+			}
+		} else {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+		}
 		String target = IConstants.FAILURE_KEY;
 
 		try {
@@ -6877,8 +6898,17 @@ public class SmsServiceImpl implements SmsService {
 	}
 
 	@Override
-	public ResponseEntity<?> resumeBulk(String username, BulkEntryForm bulkForm) {
-		int batchId = bulkForm.getId();
+	public ResponseEntity<?> resumeBulk(String username, int batchId) {
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
+			}
+		} else {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+		}
 		String target = IConstants.FAILURE_KEY;
 
 		try {
@@ -6910,6 +6940,16 @@ public class SmsServiceImpl implements SmsService {
 
 	@Override
 	public ResponseEntity<?> sendModifiedBulk(String username, BulkUpdateRequest bulkUpdateRequest) {
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
+			}
+		} else {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+		}
 		String target = IConstants.SUCCESS_KEY;
 
 		int id = bulkUpdateRequest.getId();
@@ -6947,7 +6987,7 @@ public class SmsServiceImpl implements SmsService {
 				entry.setContent(unicodeMsg);
 				entry.setFlag("F");
 			}
-			// GlobalVars.bulkService.updateContent(id, list);
+			UpdateContent(list, "batch_content_" + id);
 			BatchObject batch = GlobalVars.BatchQueue.get(id);
 			if (!batch.isActive()) {
 				batch.setActive(true);
@@ -6958,12 +6998,13 @@ public class SmsServiceImpl implements SmsService {
 			logger.error("FileId: " + id, ex.fillInStackTrace());
 		}
 		if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY)) {
-			// message = new ActionMessage("message.batchSuccess");
+			logger.info("message.batchSuccess");
 		} else {
-			// message = new ActionMessage("error.processError");
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR_INSIDE_BATCH_PROCESS));
+
 		}
 
-		return null;// mapping.findForward(target);
+		return ResponseEntity.ok(target);
 	}
 
 	private List<BulkContentEntry> listContent(int id) {
@@ -6986,5 +7027,1314 @@ public class SmsServiceImpl implements SmsService {
 		}
 		return bulkContentEntries;
 
+	}
+
+	private void UpdateContent(List<BulkContentEntry> bulkMgmtContentList, String tableName) {
+		for (BulkContentEntry content : bulkMgmtContentList) {
+			jdbcTemplate.update("CALL UpdateDataIntoTable(?, ?,?,?, ?)", content.getDestination(), content.getContent(),
+					content.getFlag(), content.getId(), tableName);
+		}
+	}
+
+	@Override
+	public ResponseEntity<?> listBulk(String username) {
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
+			}
+		} else {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+		}
+		Optional<WebMenuAccessEntry> webOptional = webMenuAccessEntryRepository.findById(user.getId());
+		if (!webOptional.isPresent()) {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEB_MENU_ACCESS_NOT_FOUND)
+ + username);
+		}
+		List<BulkEntry> reportList = null;
+		String target = null;
+		if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem") || webOptional.get().isUtility()) {
+			Collection<BatchObject> list = null;
+			if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
+				list = GlobalVars.BatchQueue.values();
+			} else {
+				Predicate<Integer, BatchObject> predicate = Predicates.equal("systemId", user.getSystemId());
+				list = GlobalVars.BatchQueue.values(predicate);
+			}
+			// Collection statusList = dbService.getUploadedStatusbulk(clientId, role, opt);
+			if (list.isEmpty()) {
+				target = IConstants.FAILURE_KEY;
+				logger.error(username + "[" + user.getRole() + "]" + " <- Failed to retrieve batch list ->");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NO_BATCHES_AVAILABLE_FOR_PROCESSING));
+
+			} else {
+				System.out.println(list);
+				reportList = new ArrayList<BulkEntry>();
+				BulkEntry entry = null;
+				long count = 0;
+				for (BatchObject batch : list) {
+					entry = bulkEntryRepository.findById(batch.getId()).get();
+					count = rowCount(batch.getId());
+					long processed = entry.getTotal() - count;
+					entry.setProcessed(processed);
+					entry.setActive(batch.isActive());
+					reportList.add(entry);
+				}
+				target = IConstants.SUCCESS_KEY;
+
+			}
+		} else {
+			logger.error(username + "[" + user.getRole() + "]" + " <- Invalid Request ->");
+			target = "invalidRequest";
+			throw new InternalServerException(username + "[" + user.getRole() + "]" + " <- Invalid Request ->");
+		}
+		return ResponseEntity.ok(reportList);
+	}
+
+	private long rowCount(int id) {
+		String queryString = "SELECT COUNT(*) FROM batch_content_" + id;
+		Query nativeQuery = entityManager.createNativeQuery(queryString);
+
+		// Execute the query and retrieve the result
+		Object result = nativeQuery.getSingleResult();
+
+		long rowCount;
+
+		if (result instanceof BigInteger) {
+			rowCount = ((BigInteger) result).longValue();
+		} else if (result instanceof Long) {
+			rowCount = (Long) result;
+		} else {
+			// Handle other cases or throw an exception if needed
+			throw new InternalServerException("Unexpected result type: " + result.getClass().getName());
+		}
+
+		return rowCount;
+	}
+
+	@Override
+	public ResponseEntity<?> listSchedule(String username) {
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
+			}
+		} else {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+		}
+		Optional<WebMenuAccessEntry> webOptional = webMenuAccessEntryRepository.findById(user.getId());
+		if (!webOptional.isPresent()) {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEB_MENU_ACCESS_NOT_FOUND) + username);
+		}
+		List<ScheduleEntryExt> scheduleList = null;
+		String target = IConstants.FAILURE_KEY;
+		logger.info(username + "[" + user.getRole() + "] " + "Schedule List Request.");
+		if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem") || webOptional.get().isUtility()) {
+			scheduleList = new ArrayList<ScheduleEntryExt>();
+			try {
+				ScheduleEntry entry = null;
+				BulkSmsDTO bulkSmsDTO = null;
+				String filename = "";
+				List<ScheduleEntry> tempList = getScheduleList(user.getSystemId(), user.getRole());
+				Iterator<ScheduleEntry> iterator = tempList.iterator();
+				while (iterator.hasNext()) {
+					entry = iterator.next();
+					filename = IConstants.WEBSMPP_EXT_DIR + "schedule//" + entry.getFileName().trim();
+					// tempPath = filePath + filename;
+					System.out.println(entry.getUsername() + "[" + entry.getId() + "] Scheduled File: " + filename);
+					ObjectInputStream objectInputStream = null;
+					try {
+						objectInputStream = new ObjectInputStream(new FileInputStream(filename));
+						bulkSmsDTO = (BulkSmsDTO) objectInputStream.readObject();
+						ScheduleEntryExt ext = new ScheduleEntryExt(entry);
+						ext.setMessageType(bulkSmsDTO.getMessageType());
+						ext.setTotalNumbers(bulkSmsDTO.getDestinationList().size());
+						ext.setSenderId(bulkSmsDTO.getSenderId());
+						ext.setCustomContent(bulkSmsDTO.isCustomContent());
+						ext.setCampaign(bulkSmsDTO.getCampaignName());
+						ext.setFirstNum(bulkSmsDTO.getDestinationList().get(0));
+						ext.setDate(entry.getDate());
+						scheduleList.add(ext);
+					}catch (FileNotFoundException fnfe) {
+						logger.info(filename, fnfe);
+					} finally {
+						if (objectInputStream != null) {
+							try {
+								objectInputStream.close();
+							} catch (IOException ioe) {
+							}
+						}
+					}
+				}
+				if (scheduleList.size() > 0) {
+					target = IConstants.SUCCESS_KEY;
+
+				} else {
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NO_VALID_NUMBERS_FOUND_FILE_EXCEPTION) + filename);
+				}
+			} catch (NotFoundException ex) {
+				logger.error(username + "[" + user.getRole() + "] ", ex.getCause());
+				throw new NotFoundException(username + "[" + user.getRole() + "] " + ex.getLocalizedMessage());
+			} catch (Exception ex) {
+				logger.error(username + "[" + user.getRole() + "] ", ex.getCause());
+				throw new InternalServerException(username + "[" + user.getRole() + "] " + ex.getLocalizedMessage());
+			}
+			logger.info(user.getSystemId() + "[" + user.getRole() + "] " + "Schedule List[" + scheduleList + "] Target:"
+					+ target);
+		} else {
+			logger.error(user.getSystemId() + "[" + user.getRole() + "]" + " <- Invalid Request ->");
+			target = "invalidRequest";
+			throw new InternalServerException(
+					user.getSystemId() + "[" + user.getRole() + "]" + " <- Invalid Request ->");
+		}
+
+		return ResponseEntity.ok(scheduleList);
+	}
+
+	private List<ScheduleEntry> getScheduleList(String systemId, String role) {
+		if (Access.isAuthorized(role, "isAuthorizedSuperAdminAndSystem")) {
+			return scheduleEntryRepository.findAll();
+		} else {
+			return scheduleEntryRepository.findByUsername(systemId);
+		}
+	}
+
+	@Override
+	public ResponseEntity<?> abortSchedule(String username, int schedule_Id) {
+
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
+			}
+		} else {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+		}
+		String master = user.getSystemId();
+		String role = user.getRole();
+		logger.info(master + "[" + role + "] " + "Schedule Abort Request For: " + schedule_Id);
+		String target = IConstants.FAILURE_KEY;
+		boolean deleted = false;
+		File file = null;
+		boolean proceed = true;
+
+		if (!scheduleEntryRepository.existsById(schedule_Id)) {
+			throw new ScheduledTimeException(messageResourceBundle.getExMessage(ConstantMessages.SCHEDULE_NOT_FOUND) + schedule_Id);
+		}
+		try {
+			ScheduleEntry schedule = scheduleEntryRepository.findById(schedule_Id).get();
+			if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
+			} else {
+				if (!schedule.getUsername().equalsIgnoreCase(master)) {
+					target = "invalidRequest";
+					proceed = false;
+					logger.error(
+							master + "[" + role + "] Not Authourized To Abort Schedule Of " + schedule.getUsername());
+				}
+			}
+			if (proceed) {
+				String filename = schedule.getFileName();
+				file = new File(IConstants.WEBSMPP_EXT_DIR + "schedule//" + filename);
+				if (file.exists()) {
+					System.out.println(" Deleting Scheduled File -> " + file.getName());
+					if (file.delete()) {
+						System.out.println(" Scheduled File Deleted -> " + file.getName());
+						deleted = true;
+					}
+				} else {
+					throw new ScheduledTimeException(messageResourceBundle.getExMessage(ConstantMessages.SCHEDULE_REMOVAL_FAILURE));
+
+				}
+				scheduleEntryRepository.deleteById(schedule_Id);
+				String schedule_time = schedule.getServerTime();
+				System.out.println("Schedule[" + schedule_Id + "] Time: " + schedule_time);
+				if (GlobalVarsSms.ScheduledBatches.containsKey(schedule_time)) {
+					Set<Integer> set = GlobalVarsSms.ScheduledBatches.get(schedule_time);
+					System.out.println("Time: " + schedule_time + " Schedules: " + set);
+					if (set.contains(schedule_Id)) {
+						set.remove(schedule_Id);
+					}
+				}
+				System.out.println("Today's Schedules:" + GlobalVarsSms.ScheduledBatches);
+			}
+		} catch (ScheduledTimeException ioex) {
+			throw new ScheduledTimeException(ioex.getMessage());
+		} catch (Exception ioex) {
+			throw new InternalServerException(ioex.getMessage());
+		}
+		target = IConstants.SUCCESS_KEY;
+		logger.info(master + "[" + role + "] " + "Schedule Abort [" + schedule_Id + "] Target: " + target);
+		return ResponseEntity.ok(target);
+	}
+
+	@Override
+	public ResponseEntity<?> editSchedule(String username, int schedule_Id) {
+
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
+			}
+		} else {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+		}
+		if (!scheduleEntryRepository.existsById(schedule_Id)) {
+			throw new ScheduledTimeException(messageResourceBundle.getExMessage(ConstantMessages.SCHEDULE_NOT_FOUND) + schedule_Id);
+		}
+		String master = user.getSystemId();
+		String role = user.getRole();
+		logger.info(master + "[" + role + "] " + "Schedule Edit Request For: " + schedule_Id);
+		String target = IConstants.FAILURE_KEY;
+		String destination_no = "";
+		String gmtValue = "";
+		String clientId = null;
+		String filename = null;
+		ScheduleEditResponse scheduleEditResponse = new ScheduleEditResponse();
+		try {
+			ScheduleEntry schedule = scheduleEntryRepository.findById(schedule_Id).get();
+			if (schedule != null) {
+				clientId = schedule.getUsername();
+				filename = schedule.getFileName();
+				if (clientId.equalsIgnoreCase(master)) {
+					BulkSmsDTO upload = null;
+					boolean proceed = false;
+					File sch_file = new File(IConstants.WEBSMPP_EXT_DIR + "schedule//" + filename);
+					// System.out.println("Edit File Exist: " + sch_file.exists());
+					if (sch_file.exists()) {
+						logger.info(clientId + "[" + schedule_Id + "] Schedule File Found: " + filename);
+						ObjectInputStream ois = null;
+						try {
+							ois = new ObjectInputStream(new FileInputStream(sch_file));
+							upload = (BulkSmsDTO) ois.readObject();
+							proceed = true;
+						} catch (Exception ex) {
+							logger.error(filename, ex);
+						} finally {
+							if (ois != null) {
+								try {
+									ois.close();
+								} catch (IOException ioe) {
+									System.out.println("Error: Unable To Close File: " + filename);
+								}
+							}
+						}
+					} else {
+						logger.error(clientId + "[" + schedule_Id + "] Schedule File Not Found: " + filename);
+					}
+					if (proceed) {
+						// BulkListInfo listInfo = new BulkListInfo();
+						List<String> list = upload.getDestinationList();
+						long listSize = (long) list.size();
+						String listSizeStr = Long.toString(listSize);
+						List<String> templist = new ArrayList<String>();
+						for (int i = 0; i < list.size(); i++) {
+							destination_no = (String) list.get(i);
+							templist.add(destination_no);
+						}
+						System.out.println("Org: " + upload.getOrigMessage());
+						clientId = upload.getUsername();
+						String msg = null;
+						if (upload.getMessageType().equalsIgnoreCase("SpecialChar")) {
+							msg = SmsConverter.hexCodePointsToCharMsg(upload.getOrigMessage());
+						} else {
+							String unicodemsg = SmsConverter.getUTF8toHex(upload.getMessage());
+							msg = SmsConverter.hexCodePointsToCharMsg(unicodemsg);
+						}
+						if (upload.getReqType().equalsIgnoreCase("contact")) {
+							List<GroupEntryDTO> groupList = groupEntryDTORepository.findByMasterId(clientId);
+							scheduleEditResponse.setGroupList(groupList);
+						}
+						String gmt = upload.getGmt();
+						gmtValue = GMTmapping.getGMT(gmt);
+						scheduleEditResponse.setListSizeStr(listSizeStr);
+						scheduleEditResponse.setTempList(templist);
+						scheduleEditResponse.setGmt(gmt);
+						scheduleEditResponse.setGmtValue(gmtValue);
+						scheduleEditResponse.setSchaduleTime(schedule.getClientTime());
+						scheduleEditResponse.setMsg(msg);
+						scheduleEditResponse.setSenderId(upload.getSenderId());
+						scheduleEditResponse.setReqType(upload.getReqType());
+						scheduleEditResponse.setFilename(filename);
+						scheduleEditResponse.setDelay(upload.getDelay() + "");
+						scheduleEditResponse.setRepeat(upload.getRepeat());
+						scheduleEditResponse.setUsername(upload.getSystemId());
+						scheduleEditResponse.setExpiry(upload.getExpiryHour() + "");
+
+						target = IConstants.SUCCESS_KEY;
+					} else {
+						logger.error("File not found: {filename}", filename = "your_file_name.txt");
+						throw new NotFoundException("File not found: {filename}" + filename + "=.txt");
+					}
+				} else {
+					target = "invalidRequest";
+					logger.info(master + " mismatched Schedule[" + schedule_Id + "]" + clientId);
+					throw new InternalServerException(master + " mismatched Schedule[" + schedule_Id + "]" + clientId);
+
+				}
+			} else {
+				logger.error("File not found: {filename}", filename = "your_file_name.txt");
+				throw new NotFoundException("File not found: {filename}" + filename + "=.txt");
+			}
+		} catch (NotFoundException ex) {
+			logger.error(clientId + "[" + filename + "]", ex.fillInStackTrace());
+			throw new NotFoundException(ex.getMessage());
+		} catch (Exception ex) {
+			logger.error(clientId + "[" + filename + "]", ex.fillInStackTrace());
+			throw new InternalServerException(ex.getMessage());
+		}
+		return ResponseEntity.ok(scheduleEditResponse);
+	}
+
+	@Override
+	public ResponseEntity<?> sendNowSchedule(String username, SendBulkScheduleRequest sendBulkScheduleRequest,
+			MultipartFile destinationNumberFile) {
+		BulkResponse bulkResponse = new BulkResponse();
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
+			}
+		} else {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+		}
+		WebMasterEntry webEntry = webMasterEntryRepository.findByUserId(user.getId());
+		SendSmsService service = new SendSmsService();
+		String uploadedNumbers = "";
+		long count = 0;
+		double totalcost = 0;
+		String contactList = "";
+		boolean contactListExist = true;
+		boolean numListExist = true;
+		String target = IConstants.FAILURE_KEY;
+		BulkListInfo listInfo = new BulkListInfo();
+		double wallet = 0;
+		BulkSmsDTO bulkSmsDTO = new BulkSmsDTO();
+		bulkSmsDTO.setReqType(sendBulkScheduleRequest.getReqType());
+		bulkSmsDTO.setReCheck(sendBulkScheduleRequest.getReCheck());
+		bulkSmsDTO.setUploadedNumbers(sendBulkScheduleRequest.getUploadedNumbers());
+		bulkSmsDTO.setTotalNumbers(sendBulkScheduleRequest.getTotalNumbers());
+		bulkSmsDTO.setFileName(sendBulkScheduleRequest.getFileName());
+		bulkSmsDTO.setAlert(sendBulkScheduleRequest.isAlert());
+		bulkSmsDTO.setCharCount(sendBulkScheduleRequest.getCharCount());
+		bulkSmsDTO.setSmscount(sendBulkScheduleRequest.getSmscount());
+		bulkSmsDTO.setUsername(username);
+		bulkSmsDTO.setUploadedNumbers(sendBulkScheduleRequest.getUploadedNumbers());
+		bulkSmsDTO.setSmsParts(sendBulkScheduleRequest.getSmsParts());
+		bulkSmsDTO.setSenderId(sendBulkScheduleRequest.getSenderId());
+		bulkSmsDTO.setCharLimit(sendBulkScheduleRequest.getCharLimit());
+		bulkSmsDTO.setExpiryHour(sendBulkScheduleRequest.getExpiryHour());
+		bulkSmsDTO.setDelay(sendBulkScheduleRequest.getDelay());
+		bulkSmsDTO.setFrom(sendBulkScheduleRequest.getFrom());
+		if (sendBulkScheduleRequest.getDestinationNumber() != null)
+			bulkSmsDTO.setDestinationNumber(sendBulkScheduleRequest.getDestinationNumber());
+
+		if (sendBulkScheduleRequest.getPeId() != null)
+			bulkSmsDTO.setPeId(sendBulkScheduleRequest.getPeId());
+		if (sendBulkScheduleRequest.getTelemarketerId() != null)
+			bulkSmsDTO.setTelemarketerId(sendBulkScheduleRequest.getTelemarketerId());
+		if (sendBulkScheduleRequest.getTemplateId() != null)
+			bulkSmsDTO.setTemplateId(sendBulkScheduleRequest.getTemplateId());
+		String reCheck = bulkSmsDTO.getReCheck();
+		boolean formFileExist = false;
+		if ((bulkSmsDTO.getReqType().equalsIgnoreCase("bulk"))) {
+			if (reCheck.equalsIgnoreCase("yes")) {
+				try {
+					if ((destinationNumberFile) != null) {
+						formFileExist = true;
+					}
+				} catch (Exception ex) {
+					formFileExist = false;
+					System.out.println("Exception in FormFile ::" + ex);
+				}
+			}
+		}
+		if ((bulkSmsDTO.getReqType().equalsIgnoreCase("mobiledb"))) {
+			formFileExist = false;
+//			if (reCheck.equalsIgnoreCase("yes")) {
+//				String session_Query = (String) session.getAttribute("session_query");
+//				session.removeAttribute("session_query");
+//				if (session_Query == null) {
+//					numListExist = false;
+//				} else {
+//					boolean b_count = false;
+//					ArrayList newList = new MobileDBServices().getMobileRecords(session_Query, b_count);
+//					if (newList.size() > 0) {
+//						Iterator iterator = newList.iterator();
+//						while (iterator.hasNext()) {
+//							uploadedNumbers += (String) iterator.next() + "\n";
+//							count++;
+//						}
+//						bulkSmsDTO.setUploadedNumbers(uploadedNumbers);
+//						bulkSmsDTO.setTotalNumbers(count + "");
+//					} else {
+//						numListExist = false;
+//					}
+//				}
+//			}
+		}
+		if (bulkSmsDTO.getReqType().equalsIgnoreCase("contact")) {
+			formFileExist = false;
+			contactList = bulkSmsDTO.getUploadedNumbers();
+			if (contactList == null || contactList.equalsIgnoreCase("")) {
+				contactListExist = false;
+			}
+		}
+		if (numListExist && contactListExist) {
+			DriverInfo driverInfo = null;
+			Optional<DriverInfo> OptionalDriverInfo = driverInfoRepository.findById(user.getId());
+			if (OptionalDriverInfo.isPresent()) {
+				driverInfo = OptionalDriverInfo.get();
+			} else
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.DRIVE_INFO_NOT_FOUND_EXCEPTION));
+			String systemId = user.getSystemId();
+			bulkSmsDTO.setClientId(systemId);
+			bulkSmsDTO.setSystemId(systemId);
+			bulkSmsDTO.setPassword(new PasswordConverter().convertToEntityAttribute(driverInfo.getDriver()));
+			String bulkSessionId = systemId + Long.toString(System.currentTimeMillis());
+			// String appPath = request.getPathTranslated();
+			boolean update = false;
+			String reqFileName = bulkSmsDTO.getFileName();
+			if (reqFileName != null && reqFileName.length() > 0) {
+				update = true;
+				reqFileName = reqFileName.trim();
+			}
+			try {
+				Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findBySystemId(user.getSystemId());
+				Optional<BalanceEntry> masterbalanceOptional = balanceEntryRepository
+						.findBySystemId(user.getMasterId());
+				String wallet_flag = null;
+				BalanceEntry balanceEntry = null;
+				BalanceEntry masterbalanceEntry = null;
+				double adminWallet = 0;
+				if (balanceOptional.isPresent()) {
+					balanceEntry = balanceOptional.get();
+					wallet_flag = balanceEntry.getWalletFlag();
+					wallet = balanceEntry.getWalletAmount();
+				}
+				if (masterbalanceOptional.isPresent()) {
+					masterbalanceEntry = masterbalanceOptional.get();
+					adminWallet = masterbalanceEntry.getWalletAmount();
+				}
+				int no_of_msg = bulkSmsDTO.getSmsParts();
+
+				if (sendBulkScheduleRequest.getMessageType().equalsIgnoreCase("Unicode")) {
+					bulkSmsDTO.setMessage(UTF16(sendBulkScheduleRequest.getMessage()));
+					bulkSmsDTO.setOrigMessage(UTF16(sendBulkScheduleRequest.getMessage()));
+					bulkSmsDTO.setDistinct("yes");
+				} else {
+					String sp_msg = sendBulkScheduleRequest.getMessage();
+					String hexValue = getHexValue(sp_msg);
+					String unicodeMsg = SmsConverter.getContent(hexValue.toCharArray());
+					bulkSmsDTO.setMessage(unicodeMsg);
+					bulkSmsDTO.setMessageType("SpecialChar");
+					bulkSmsDTO.setOrigMessage(UTF16(sendBulkScheduleRequest.getMessage()));
+				}
+
+				System.out.println("message " + bulkSmsDTO.getMessage());
+				System.out.println(" No of Parts ::::::::" + no_of_msg);
+				List<String> destinationList = null;
+				if (formFileExist) {
+					destinationList = getDestinationList(bulkSmsDTO, listInfo, destinationNumberFile);
+				} else {
+					destinationList = bulkSmsDTO.getDestinationList2(listInfo);
+				}
+				if (wallet_flag.equalsIgnoreCase("yes")) {
+					bulkSmsDTO.setUserMode("wallet");
+					totalcost = routeService.calculateRoutingCost(user.getId(), destinationList, no_of_msg);
+					if (destinationList.size() > 0) {
+						boolean amount = false;
+						boolean inherit = false;
+						if (user.isAdminDepend() && (adminWallet >= totalcost)) {
+							amount = true;
+							inherit = true;
+						} else if (wallet >= totalcost) {
+							amount = true;
+						}
+						if (amount) {
+							// ****************** Delete Schedule File ***********
+							ScheduleEntry entry = scheduleEntryRepository.findByFileName(reqFileName);// dbService.getScheduleInfo(reqFileName);
+							if (update) {
+								scheduleEntryRepository.deleteById(entry.getId());
+								if (!scheduleEntryRepository.existsById(entry.getId())) {
+									System.out.println("Deleted File :" + reqFileName + " From DB");
+								}
+								String schedPath = IConstants.WEBSMPP_EXT_DIR + "schedule//";
+								String path = schedPath + reqFileName;
+								File delFile = new File(path);
+								try {
+									if (delFile.exists()) {
+										boolean removed = delFile.delete();
+										if (removed) {
+											System.out.println("Deleted File :" + reqFileName + " From DIRECTORY");
+										}
+									}
+								} catch (Exception ex) {
+									logger.error("Exception in Delete Schedule File :" + path);
+									throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.DELETE_SCHEDULE_FILE_EXCEPTION)+ path);
+								}
+								String schedule_time = entry.getServerTime();
+								System.out.println("Schedule[" + entry.getId() + "] Time: " + schedule_time);
+								if (GlobalVarsSms.ScheduledBatches.containsKey(schedule_time)) {
+									Set<Integer> set = GlobalVarsSms.ScheduledBatches.get(schedule_time);
+									System.out.println("Time: " + schedule_time + " Schedules: " + set);
+									if (set.contains(entry.getId())) {
+										set.remove(entry.getId());
+									}
+								}
+							}
+							// ********************* Delete Schedule File ***********
+							if (inherit) {
+								adminWallet = adminWallet - totalcost;
+
+							} else {
+								wallet = wallet - totalcost;
+
+							}
+							// String applicationName = request.getContextPath();
+							bulkSmsDTO.setMsgCount(destinationList.size() * no_of_msg);
+							bulkSmsDTO.setTotalCost(totalcost);
+							String value = sendBulkMsg(bulkSmsDTO, webEntry.isBulkOnApprove(), user.getId());
+							if (!value.contains("Error")) {
+								target = IConstants.SUCCESS_KEY;
+								logger.info("Batch submission successfully completed: message.batchSuccess");
+							} else {
+								// Batch Submission Error
+								logger.error("Error occurred during batch submission: error.batchError");
+								throw new InternalServerException(
+										messageResourceBundle.getExMessage(ConstantMessages.BATCH_SUBMISSION_ERROR_EXCEPTION));
+							}
+							if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY)) {
+								bulkResponse.setBulkListInfo(listInfo);
+								bulkResponse.setBulkSessionId(bulkSessionId);
+								bulkResponse.setCredits(new DecimalFormat("0.00000").format(wallet));
+								bulkResponse.setDeductcredits(new DecimalFormat("0.00000").format(totalcost));
+							}
+						} else {
+							// Insufficient Balance Error
+							logger.error(
+									"Error: Insufficient balance to process the transaction. Error code: error.insufficientWallet");
+							throw new InsufficientBalanceException(
+									messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION));
+						}
+					} else {
+						// Invalid Number File Error
+						logger.error("Error: The provided number file is not valid. Error code: error.novalidNumber");
+						throw new InternalServerException(
+								messageResourceBundle.getExMessage(ConstantMessages.INVALID_FILE_FORMAT_EXCEPTION));
+					}
+				} else if (wallet_flag.equalsIgnoreCase("no")) {
+					bulkSmsDTO.setUserMode("credit");
+					if (destinationList.size() > 0) {
+						long credits = balanceEntry.getCredits();
+						long adminCredit = masterbalanceEntry.getCredits();
+						boolean amount = false;
+						boolean inherit = false;
+						if (user.isAdminDepend() && (adminCredit > (destinationList.size() * no_of_msg))) {
+							amount = true;
+							inherit = true;
+						} else if (credits > (destinationList.size() * no_of_msg)) {
+							amount = true;
+						}
+						if (amount) {
+							// ****************** Delete Schedule File ***********
+
+							ScheduleEntry entry = scheduleEntryRepository.findByFileName(reqFileName);
+							if (update) {
+								scheduleEntryRepository.deleteById(entry.getId());// (entry.getId());
+								if (!scheduleEntryRepository.existsById(entry.getId())) {
+									System.out.println("Deleted File :" + reqFileName + " From DB");
+								}
+								String schedPath = IConstants.WEBSMPP_EXT_DIR + "schedule//";
+								String path = schedPath + reqFileName;
+								File delFile = new File(path);
+								try {
+									if (delFile.exists()) {
+										boolean removed = delFile.delete();
+										if (removed) {
+											System.out.println("Deleted File :" + reqFileName + " From DIRECTORY");
+										}
+									}
+								} catch (Exception ex) {
+									logger.error("Exception in Delete Schedule File :" + path);
+									throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.DELETE_SCHEDULE_FILE_EXCEPTION) + path);
+								}
+								String schedule_time = entry.getServerTime().split(" ")[1];
+								System.out.println(
+										"Schedule[" + sendBulkScheduleRequest.getId() + "] Time: " + schedule_time);
+								if (GlobalVarsSms.ScheduledBatches.containsKey(schedule_time)) {
+									Set<Integer> set = GlobalVarsSms.ScheduledBatches.get(schedule_time);
+									System.out.println("Time: " + schedule_time + " Schedules: " + set);
+									if (set.contains(sendBulkScheduleRequest.getId())) {
+										set.remove(sendBulkScheduleRequest.getId());
+									}
+								}
+							}
+							// *********************End Delete Schedule File ***********
+							if (inherit) {
+								adminCredit = adminCredit - (destinationList.size() * no_of_msg);
+							} else {
+								credits = credits - (destinationList.size() * no_of_msg);
+
+							}
+							long deductCredits = destinationList.size() * no_of_msg;
+							bulkSmsDTO.setMsgCount(deductCredits);
+							String value = sendBulkMsg(bulkSmsDTO, webEntry.isBulkOnApprove(), user.getId());
+							if (!value.contains("Error")) {
+								target = IConstants.SUCCESS_KEY;
+								// Batch Submission Success
+								logger.info("Batch submission successfully completed: message.batchSuccess");
+							} else {
+								// Batch Submission Error
+								logger.error("Error occurred during batch submission: error.batchError");
+								throw new InternalServerException(
+										messageResourceBundle.getExMessage(ConstantMessages.BATCH_SUBMISSION_ERROR_EXCEPTION));
+							}
+							if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY)) {
+								bulkResponse.setBulkListInfo(listInfo);
+								bulkResponse.setBulkSessionId(bulkSessionId);
+								bulkResponse.setCredits(Long.toString(credits));
+								bulkResponse.setDeductcredits(deductCredits + "");
+							}
+						} else {
+							// Insufficient Credits Error
+							logger.error(
+									"Error: Insufficient credits to process the transaction. Error code: error.insufficientCredit");
+							throw new InsufficientBalanceException(
+									messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION));
+						}
+					} else {
+						// Invalid Number File Error
+						logger.error("Error: The provided number file is not valid. Error code: error.novalidNumber");
+						throw new InternalServerException(
+								messageResourceBundle.getExMessage(ConstantMessages.INVALID_FILE_FORMAT_EXCEPTION));
+					}
+				} else if (wallet_flag.equalsIgnoreCase("MIN")) {
+					// Insufficient Wallet Balance Error
+					logger.error(
+							"Error: Insufficient balance in the wallet to complete the transaction. Error code: error.insufficientWallet");
+					throw new InsufficientBalanceException(
+							messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION));
+				}
+			} catch (NotFoundException e) {
+				logger.error(bulkSessionId, e.getMessage());
+				throw new NotFoundException(e.getMessage());
+			} catch (InsufficientBalanceException e) {
+				logger.error(bulkSessionId, e.getMessage());
+				throw new InsufficientBalanceException(e.getMessage());
+			} catch (Exception e) {
+				logger.error(bulkSessionId, e);
+				throw new InternalServerException(e.getMessage());
+			}
+		} else {
+			target = IConstants.FAILURE_KEY;
+			// Invalid Number File Error
+			logger.error(
+					"Error: The provided number file is not valid. Please check the format and content. Error code: error.novalidNumber");
+			throw new InternalServerException(
+					messageResourceBundle.getExMessage(ConstantMessages.INVALID_FILE_FORMAT_EXCEPTION));
+		}
+		bulkResponse.setStatus(target);
+		return ResponseEntity.ok(bulkResponse);
+	}
+
+	public List<String> getDestinationList(BulkSmsDTO bulkSmsDTO, BulkListInfo listInfo, MultipartFile file)
+			throws FileNotFoundException, IOException {
+		List<String> destinationList = bulkSmsDTO.getDestinationList();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		InputStream stream = file.getInputStream();
+		int bytesRead = 0;
+		byte[] buffer = new byte[8192];
+		while ((bytesRead = stream.read(buffer, 0, 8192)) != -1) {
+			baos.write(buffer, 0, bytesRead);
+		}
+		String data = new String(baos.toByteArray());
+		List<String> noList = new ArrayList<String>();
+		StringTokenizer st = new StringTokenizer(data, "\n");
+		int tot = st.countTokens();
+		listInfo.setTotal(st.countTokens());
+		int invalidCount = 0;
+		while (st.hasMoreTokens()) {
+			String destinationNumber = (String) st.nextToken();
+			destinationNumber = destinationNumber.trim();
+			if ((destinationNumber != null) && (destinationNumber.contains(";"))) {
+				if (bulkSmsDTO.getReqType().equalsIgnoreCase("groupDataBulk")) {
+					String number = destinationNumber.substring(0, destinationNumber.indexOf(";"));
+					if (number != null && number.startsWith("+")) {
+						number = number.substring(1, number.length());
+					}
+					try {
+						long num = Long.parseLong(number);
+						number = String.valueOf(num);
+						noList.add(number);
+					} catch (NumberFormatException ne) {
+						System.out.println("INVALID DESTINATION NUMBER(1): " + number);
+						invalidCount++;
+					}
+				} else {
+					String name = destinationNumber.substring(0, destinationNumber.indexOf(";"));
+					String number = destinationNumber.substring(destinationNumber.indexOf(";") + 1,
+							destinationNumber.length());
+					if (number != null && number.startsWith("+")) {
+						number = number.substring(1, number.length());
+					}
+					try {
+						long num = Long.parseLong(number);
+						destinationNumber = name + ";" + String.valueOf(num);
+						noList.add(destinationNumber);
+					} catch (NumberFormatException ne) {
+						System.out.println("INVALID DESTINATION NUMBER(2): " + number);
+						invalidCount++;
+					}
+				}
+			} else if (destinationNumber == null) {
+				invalidCount++;
+			} else if (destinationNumber.equalsIgnoreCase("")) {
+				invalidCount++;
+			} else if (destinationNumber.length() == 0) {
+				invalidCount++;
+			} else {
+				try {
+					long num = Long.parseLong(destinationNumber);
+					noList.add(String.valueOf(num));
+				} catch (NumberFormatException nfe) {
+					System.out.println("INVALID DESTINATION NUMBER(3): " + destinationNumber);
+					invalidCount++;
+				}
+			} // else closed
+		}
+		Set<String> hashSet = new HashSet<String>(noList);
+		destinationList = new ArrayList<String>(hashSet);
+		Collections.sort(destinationList);
+		// --------------------------------------------------------
+		listInfo.setValidCount(destinationList.size());
+		listInfo.setInvalidCount(invalidCount);
+		int dup = tot - destinationList.size() - invalidCount;
+		// System.out.println("duplicate===="+dup);
+		listInfo.setDuplicate(dup);
+		bulkSmsDTO.setDestinationList(destinationList);
+		return destinationList;
+	}
+
+	@Override
+	public ResponseEntity<?> modifiedSchedule(String username, SendBulkScheduleRequest sendBulkScheduleRequest,
+			MultipartFile destinationNumberFile) {
+		BulkResponse bulkResponse = new BulkResponse();
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
+			}
+		} else {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+		}
+		Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findBySystemId(user.getSystemId());
+		Optional<BalanceEntry> masterbalanceOptional = balanceEntryRepository.findBySystemId(user.getMasterId());
+		if (balanceOptional.isEmpty()) {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.BALANCE_INFO_NOT_FOUND_EXCEPTION) + user.getSystemId());
+		}
+		if (masterbalanceOptional.isEmpty()) {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.BALANCE_INFO_NOT_FOUND_EXCEPTION) + user.getMasterId());
+		}
+		BalanceEntry balanceEntry = balanceOptional.get();
+		BalanceEntry masterbalanceEntry = masterbalanceOptional.get();
+		DriverInfo driverInfo = null;
+		Optional<DriverInfo> OptionalDriverInfo = driverInfoRepository.findById(user.getId());
+		if (OptionalDriverInfo.isPresent()) {
+			driverInfo = OptionalDriverInfo.get();
+		} else
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.DRIVE_INFO_NOT_FOUND_EXCEPTION));
+		String target = IConstants.FAILURE_KEY;
+		SendSmsService service = new SendSmsService();
+		BulkListInfo listInfo = new BulkListInfo();
+		String uploadedNumbers = "";
+		long count = 0;
+		double totalcost = 0;
+		String contactList = "";
+		boolean contactListExist = true;
+		boolean numListExist = true;
+		BulkSmsDTO smsDTO = new BulkSmsDTO();
+		smsDTO.setReqType(sendBulkScheduleRequest.getReqType());
+		smsDTO.setReCheck(sendBulkScheduleRequest.getReCheck());
+		smsDTO.setUploadedNumbers(sendBulkScheduleRequest.getUploadedNumbers());
+		smsDTO.setTotalNumbers(sendBulkScheduleRequest.getTotalNumbers());
+		smsDTO.setFileName(sendBulkScheduleRequest.getFileName());
+		smsDTO.setAlert(sendBulkScheduleRequest.isAlert());
+		smsDTO.setCharCount(sendBulkScheduleRequest.getCharCount());
+		smsDTO.setSmscount(sendBulkScheduleRequest.getSmscount());
+		smsDTO.setUsername(username);
+		smsDTO.setUploadedNumbers(sendBulkScheduleRequest.getUploadedNumbers());
+		smsDTO.setSmsParts(sendBulkScheduleRequest.getSmsParts());
+		smsDTO.setSenderId(sendBulkScheduleRequest.getSenderId());
+		smsDTO.setCharLimit(sendBulkScheduleRequest.getCharLimit());
+		smsDTO.setExpiryHour(sendBulkScheduleRequest.getExpiryHour());
+		smsDTO.setGmt(sendBulkScheduleRequest.getGmt());
+		smsDTO.setDelay(sendBulkScheduleRequest.getDelay());
+		smsDTO.setMessageType(sendBulkScheduleRequest.getMessageType());
+		smsDTO.setFrom(sendBulkScheduleRequest.getFrom());
+		smsDTO.setTimestart(sendBulkScheduleRequest.getSchedTime());
+		smsDTO.setReCheck(sendBulkScheduleRequest.getReCheck());
+		smsDTO.setRepeat(sendBulkScheduleRequest.getRepeat());
+		if (sendBulkScheduleRequest.getDestinationNumber() != null)
+			smsDTO.setDestinationNumber(sendBulkScheduleRequest.getDestinationNumber());
+
+		if (sendBulkScheduleRequest.getPeId() != null)
+			smsDTO.setPeId(sendBulkScheduleRequest.getPeId());
+		if (sendBulkScheduleRequest.getTelemarketerId() != null)
+			smsDTO.setTelemarketerId(sendBulkScheduleRequest.getTelemarketerId());
+		if (sendBulkScheduleRequest.getTemplateId() != null)
+			smsDTO.setTemplateId(sendBulkScheduleRequest.getTemplateId());
+		// String sheduleType = smsDTO.getSchType();
+		String reCheck = smsDTO.getReCheck();
+		boolean formFileExist = false;
+		if ((smsDTO.getReqType().equalsIgnoreCase("bulk"))) {
+			if (reCheck.equalsIgnoreCase("yes")) {
+				try {
+					if ((destinationNumberFile) != null) {
+						formFileExist = true;
+					}
+				} catch (Exception ex) {
+					formFileExist = false;
+					System.out.println("Exception in FormFile ::" + ex);
+				}
+			}
+		}
+		if ((smsDTO.getReqType().equalsIgnoreCase("mobiledb"))) {
+//			if (reCheck.equalsIgnoreCase("yes")) {
+//				String session_Query = (String) session.getAttribute("session_query");
+//				session.removeAttribute("session_query");
+//				if (session_Query == null) {
+//					numListExist = false;
+//				} else {
+//					ArrayList newList = new MobileDBServices().getMobileRecords(session_Query, false);
+//					if (newList.size() > 0) {
+//						Iterator iterator = newList.iterator();
+//						while (iterator.hasNext()) {
+//							uploadedNumbers += (String) iterator.next() + "\n";
+//							count++;
+//						}
+//						smsDTO.setUploadedNumbers(uploadedNumbers);
+//						smsDTO.setTotalNumbers(count + "");
+//					} else {
+//						numListExist = false;
+//					}
+//				}
+//			}
+		}
+		if (smsDTO.getReqType().equalsIgnoreCase("contact")) {
+			formFileExist = false;
+			contactList = smsDTO.getUploadedNumbers();
+			if (contactList == null || contactList.equalsIgnoreCase("")) {
+				contactListExist = false;
+			}
+		}
+		if (numListExist && contactListExist) {
+			smsDTO.setSystemId(username);
+			smsDTO.setPassword(new PasswordConverter().convertToEntityAttribute(driverInfo.getDriver()));
+			String reqFileName = smsDTO.getFileName();
+			boolean update = false;
+			if (reqFileName != null && reqFileName.length() > 0) {
+				update = true;
+				reqFileName = reqFileName.trim();
+			}
+			String client_time = smsDTO.getTimestart();
+			String client_gmt = smsDTO.getGmt();
+			SimpleDateFormat client_formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+			client_formatter.setTimeZone(TimeZone.getTimeZone(client_gmt));
+			SimpleDateFormat local_formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+			String schedule_time = null;
+			try {
+				schedule_time = local_formatter.format(client_formatter.parse(client_time));
+				System.out.println(user.getSystemId() + " client_gmt: " + client_gmt + " client_time: " + client_time
+						+ " server_time: " + schedule_time);
+				String server_date = schedule_time.split(" ")[0];
+				String server_time = schedule_time.split(" ")[1];
+				smsDTO.setDate(
+						server_date.split("-")[2] + "-" + server_date.split("-")[1] + "-" + server_date.split("-")[0]);
+				smsDTO.setTime(server_time.split(":")[0] + "" + server_time.split(":")[1]);
+			} catch (Exception e) {
+				logger.error(user.getSystemId(), e);
+			}
+			try {
+				String userExparyDate = (user.getExpiry()).toString();
+				String adminId = user.getMasterId();
+				String wallet_flag = balanceEntry.getWalletFlag();
+				smsDTO.setUserMode(wallet_flag);
+				double wallet = balanceEntry.getWalletAmount();
+				double adminWallet = masterbalanceEntry.getWalletAmount();
+				int no_of_msg = smsDTO.getSmsParts();
+				String unicodeMsg = "";
+				if (sendBulkScheduleRequest.getMessageType().equalsIgnoreCase("Unicode")) {
+					smsDTO.setMessage(UTF16(sendBulkScheduleRequest.getMessage()));
+					smsDTO.setOrigMessage(UTF16(sendBulkScheduleRequest.getMessage()));
+					smsDTO.setDistinct("yes");
+				} else {
+					String sp_msg = sendBulkScheduleRequest.getMessage();
+					String hexValue = getHexValue(sp_msg);
+					unicodeMsg = SmsConverter.getContent(hexValue.toCharArray());
+					smsDTO.setMessage(unicodeMsg);
+					smsDTO.setMessageType("SpecialChar");
+					smsDTO.setOrigMessage(UTF16(sendBulkScheduleRequest.getMessage()));
+				}
+				System.out.println(" No of Parts ::::::::" + no_of_msg);
+				List<String> destinationList = null;
+				if (formFileExist) {
+					destinationList = getDestinationList(smsDTO, listInfo, destinationNumberFile);
+				} else {
+					destinationList = smsDTO.getDestinationList2(listInfo);
+				}
+				if (wallet_flag.equalsIgnoreCase("yes")) {
+					smsDTO.setUserMode("wallet");
+					totalcost = routeService.calculateRoutingCost(user.getId(), destinationList, no_of_msg);
+					if (destinationList.size() > 0) {
+						boolean amount = false;
+						boolean inherit = false;
+						if (user.isAdminDepend() && (adminWallet >= totalcost)) {
+							amount = true;
+							inherit = true;
+						} else if (wallet >= totalcost) {
+							amount = true;
+						}
+						if (amount) {
+							// ****************** Delete Schedule File ***********
+							ScheduleEntry entry = scheduleEntryRepository.findByFileName(reqFileName);
+							if (update) {
+								scheduleEntryRepository.deleteById(entry.getId());
+								if (!scheduleEntryRepository.existsById(entry.getId())) {
+									System.out.println("Deleted File :" + reqFileName + " From DB");
+								}
+								String schedPath = IConstants.WEBSMPP_EXT_DIR + "schedule//";
+								String path = schedPath + reqFileName;
+								File delFile = new File(path);
+								System.out.println("File Exist => " + delFile.exists());
+								try {
+									System.out.println("File Deleted => " + Files.deleteIfExists(delFile.toPath()));
+								} catch (Exception ex) {
+									System.out.println("Unable To Delete File => " + path);
+								}
+								System.out.println("Before: " + GlobalVarsSms.ScheduledBatches);
+								String pre_schedule_time = entry.getServerTime();
+								System.out.println("Schedule[" + entry.getId() + "] Time: " + pre_schedule_time);
+								if (GlobalVarsSms.ScheduledBatches.containsKey(pre_schedule_time)) {
+									Set<Integer> set = GlobalVarsSms.ScheduledBatches.get(pre_schedule_time);
+									System.out.println("Time: " + pre_schedule_time + " Schedules: " + set);
+									if (set.contains(entry.getId())) {
+										set.remove(entry.getId());
+									}
+								}
+								System.out.println("After: " + GlobalVarsSms.ScheduledBatches);
+							}
+							// ********************* Delete Schedule File ***********
+							if (inherit) {
+								adminWallet = adminWallet - totalcost;
+
+							} else {
+								wallet = wallet - totalcost;
+							}
+							smsDTO.setMsgCount(destinationList.size() * no_of_msg);
+							smsDTO.setTotalCost(totalcost);
+							smsDTO.setTotalWalletCost(totalcost);
+							String filename = service.createScheduleFile(smsDTO);
+							int generated_id = 0;
+							if (filename != null) {
+								ScheduleEntry sch = new ScheduleEntry();
+								sch.setClientGmt(smsDTO.getGmt());
+								sch.setClientTime(smsDTO.getTimestart());
+								sch.setFileName(filename);
+								sch.setRepeated(smsDTO.getRepeat());
+								sch.setScheduleType(smsDTO.getReqType());
+								sch.setServerId(IConstants.SERVER_ID);
+								sch.setServerTime(smsDTO.getTime());
+								sch.setStatus("false");
+								sch.setUsername(smsDTO.getSystemId());
+								sch.setDate(smsDTO.getDate());
+								sch.setWebId(entry.getWebId());
+								generated_id = scheduleEntryRepository.save(sch).getId();
+								if (generated_id > 0) {
+									String today = Validation.getTodayDateFormat();
+									if (today.equalsIgnoreCase(smsDTO.getDate().trim())) {
+										Set<Integer> set = null;
+										if (GlobalVarsSms.ScheduledBatches.containsKey(smsDTO.getTime())) {
+											set = GlobalVarsSms.ScheduledBatches.get(smsDTO.getTime());
+										} else {
+											set = new LinkedHashSet<Integer>();
+										}
+										set.add(generated_id);
+										GlobalVarsSms.ScheduledBatches.put(smsDTO.getTime(), set);
+									}
+									if (!smsDTO.getRepeat().equalsIgnoreCase("no")) {
+										GlobalVarsSms.RepeatedSchedules.add(generated_id);
+									}
+									target = IConstants.SUCCESS_KEY;
+									logger.info("message.scheduleSuccess");
+								} else {
+									// Scheduling Error
+									logger.error("Updated error message: error.scheduleError");
+									throw new ScheduledTimeException(messageResourceBundle.getExMessage(ConstantMessages.SINGLE_SCHEDULE_ERROR_EXCEPTION));
+								}
+							} else {
+								// already Scheduled
+								logger.error("Updated error message: error.duplicateSchedule");
+								throw new ScheduledTimeException(messageResourceBundle.getExMessage(ConstantMessages.DUPLICATE_SCHEDULE_ERROR_EXCEPTION));
+							}
+							if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY)) {
+								bulkResponse.setBulkListInfo(listInfo);
+								bulkResponse.setCredits(new DecimalFormat("0.00000").format(wallet));
+								bulkResponse.setDeductcredits(new DecimalFormat("0.00000").format(totalcost));
+							}
+						} else {
+							// insufficient balance
+							logger.error("Insufficient funds in the wallet. Transaction failed.");
+							throw new InsufficientBalanceException(
+									messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION));
+
+						}
+					} else {
+						// Number File Error
+						logger.error("Invalid number provided. Please enter a valid numerical value.");
+						throw new InternalServerException(
+								messageResourceBundle.getExMessage(ConstantMessages.NO_VALID_NUMBERS_FOUND_EXCEPTION));
+					}
+				} else if (wallet_flag.equalsIgnoreCase("no")) {
+					smsDTO.setUserMode("credit");
+					if (destinationList.size() > 0) {
+						long credits = balanceEntry.getCredits();
+						long adminCredit = masterbalanceEntry.getCredits();
+						boolean amount = false;
+						boolean inherit = false;
+						if (user.isAdminDepend() && (adminCredit > (destinationList.size() * no_of_msg))) {
+							amount = true;
+							inherit = true;
+						} else if (credits > (destinationList.size() * no_of_msg)) {
+							amount = true;
+						}
+						if (amount) {
+
+							ScheduleEntry entry = scheduleEntryRepository.findByFileName(reqFileName);
+							if (update) {
+								scheduleEntryRepository.deleteById(entry.getId());
+								if (!scheduleEntryRepository.existsById(entry.getId())) {
+									System.out.println("Deleted File :" + reqFileName + " From DB");
+								}
+								String schedPath = IConstants.WEBSMPP_EXT_DIR + "schedule//";
+								String path = schedPath + reqFileName;
+								File delFile = new File(path);
+								try {
+									if (delFile.exists()) {
+										boolean removed = delFile.delete();
+										if (removed) {
+											System.out.println("Deleted File :" + reqFileName + " From DIRECTORY");
+										}
+									}
+								} catch (Exception ex) {
+									System.out.println("Exception in Delete Schedule File :" + path);
+									ex.printStackTrace();
+								}
+								System.out.println("Before: " + GlobalVarsSms.ScheduledBatches);
+								String pre_schedule_time = entry.getServerTime().split(" ")[1];
+								System.out.println("Schedule[" + entry.getId() + "] Time: " + pre_schedule_time);
+								if (GlobalVarsSms.ScheduledBatches.containsKey(pre_schedule_time)) {
+									Set<Integer> set = GlobalVarsSms.ScheduledBatches.get(pre_schedule_time);
+									System.out.println("Time: " + pre_schedule_time + " Schedules: " + set);
+									if (set.contains(entry.getId())) {
+										set.remove(entry.getId());
+									}
+								}
+								System.out.println("After: " + GlobalVarsSms.ScheduledBatches);
+							}
+							// *********************End Delete Schedule File ***********
+							if (inherit) {
+								adminCredit = adminCredit - (destinationList.size() * no_of_msg);
+							} else {
+								credits = credits - (destinationList.size() * no_of_msg);
+							}
+							long deductCredits = destinationList.size() * no_of_msg;
+							smsDTO.setMsgCount(deductCredits);
+							String filename = service.createScheduleFile(smsDTO);
+							int generated_id = 0;
+							if (filename != null) {
+								ScheduleEntry sch = new ScheduleEntry();
+								sch.setClientGmt(smsDTO.getGmt());
+								sch.setClientTime(smsDTO.getTimestart());
+								sch.setFileName(filename);
+								sch.setRepeated(smsDTO.getRepeat());
+								sch.setScheduleType(smsDTO.getReqType());
+								sch.setServerId(IConstants.SERVER_ID);
+								sch.setServerTime(smsDTO.getTime());
+								sch.setStatus("false");
+								sch.setUsername(smsDTO.getSystemId());
+								sch.setDate(smsDTO.getDate());
+								sch.setWebId(entry.getWebId());
+								generated_id = scheduleEntryRepository.save(sch).getId();
+								if (generated_id > 0) {
+									String today = Validation.getTodayDateFormat();
+									if (today.equalsIgnoreCase(smsDTO.getDate().trim())) {
+										Set<Integer> set = null;
+										if (GlobalVarsSms.ScheduledBatches.containsKey(smsDTO.getTime())) {
+											set = GlobalVarsSms.ScheduledBatches.get(smsDTO.getTime());
+										} else {
+											set = new LinkedHashSet<Integer>();
+										}
+										set.add(generated_id);
+										GlobalVarsSms.ScheduledBatches.put(smsDTO.getTime(), set);
+									}
+									if (!smsDTO.getRepeat().equalsIgnoreCase("no")) {
+										GlobalVarsSms.RepeatedSchedules.add(generated_id);
+									}
+									target = IConstants.SUCCESS_KEY;
+									logger.info(
+											"Scheduled task successfully. The schedule was processed without errors.");
+								} else {
+									logger.error(
+											"Error during scheduling: Unable to process the schedule due to an unexpected error.");
+									throw new ScheduledTimeException(
+											messageResourceBundle.getExMessage(ConstantMessages.SINGLE_SCHEDULE_ERROR_EXCEPTION));
+								}
+							} else {
+								logger.error(
+										"Error: Unable to schedule task. A duplicate schedule was detected. Please choose a different schedule.");
+							}
+							if (target.equalsIgnoreCase(IConstants.SUCCESS_KEY)) {
+								bulkResponse.setBulkListInfo(listInfo);
+								bulkResponse.setCredits(Long.toString(credits));
+								bulkResponse.setDeductcredits(deductCredits + "");
+							}
+						} else {
+							// insufficient Credits
+							logger.error(
+									"Error: Insufficient credit. The transaction or operation could not be completed due to insufficient funds or credit.");
+							throw new InsufficientBalanceException(
+									messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION));
+						}
+					} else {
+						// Number File Error
+						logger.error(
+								"Error: Invalid number provided. Please enter a valid numerical value for the operation to proceed.");
+						throw new InternalServerException(
+								messageResourceBundle.getExMessage(ConstantMessages.NO_VALID_NUMBERS_FOUND_EXCEPTION));
+					}
+				} else if (wallet_flag.equalsIgnoreCase("MIN")) {
+					// insufficient balance
+					logger.error(
+							"Error: Insufficient funds in the wallet. The requested operation cannot be completed due to insufficient balance.");
+					throw new InsufficientBalanceException(
+							messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION));
+				}
+			} catch (InvalidPropertyException e) {
+				logger.error(username, e.getMessage());
+				throw new InvalidPropertyException(e.getMessage());
+			} catch (NotFoundException e) {
+				logger.error(username, e.getMessage());
+				throw new NotFoundException(e.getMessage());
+			} catch (InsufficientBalanceException e) {
+				logger.error(username, e.getMessage());
+				throw new InsufficientBalanceException(e.getMessage());
+			} catch (InternalServerException e) {
+				logger.error(username, e.getMessage());
+				throw new InternalServerException(e.getMessage());
+			} catch (ScheduledTimeException e) {
+				logger.error(username, e.getMessage());
+				throw new ScheduledTimeException(e.getMessage());
+			} catch (Exception e) {
+				logger.error(username, e);
+				throw new InternalServerException(e.getMessage());
+			}
+		} else {
+			// Destination Number Error
+			logger.error(
+					"Error: Invalid number provided. Please ensure that you enter a valid numerical value for the intended operation.");
+			throw new InternalServerException(
+					messageResourceBundle.getExMessage(ConstantMessages.NO_VALID_NUMBERS_FOUND_EXCEPTION));
+		}
+		bulkResponse.setStatus(target);
+		return ResponseEntity.ok(bulkResponse);
+	}
+
+	@Override
+	public ResponseEntity<?> identifyMessage(String username, String msg) {
+		MessageIdentiryResponse messageIdentiryResponse = new MessageIdentiryResponse();
+		Optional<User> userOptional = userEntryRepository.getUsers(username);
+		User user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
+			}
+		} else {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+		}
+		String messageType = null;
+		int charCount = 0;
+		int charLimit = 0;
+		int smsParts = 0;
+		String regexpPattern = "^[A-Za-z0-9 \\r\\n@£$¥èéùìòÇØøÅå\u0394_\u03A6\u0393\u039B\u03A9\u03A0\u03A8\u00A4\u03A3\u0398\u039EÆæßÉ!\"#$%&'()*+,\\-./:;<=>?¡ÄÖÑÜ§¿äöñüà^{}\\\\\\[~\\]|\u20AC]*$";
+		java.util.regex.Pattern regexp = java.util.regex.Pattern.compile(regexpPattern);
+
+		if (regexp.matcher(msg).matches()) {
+			messageType = "SpecialChar";
+		} else {
+			messageType = "Unicode";
+		}
+
+		int count = 0;
+		if (msg != null && !msg.isEmpty()) {
+			for (int i = 0; i < msg.length(); i++) {
+				int asciiNum = (int) msg.charAt(i);
+				if (asciiNum == 12 || asciiNum == 94 || asciiNum == 123 || asciiNum == 125 || asciiNum == 91
+						|| asciiNum == 92 || asciiNum == 126 || asciiNum == 93 || asciiNum == 124 || asciiNum == 8364) {
+					count++;
+				}
+			}
+		}
+		charCount = msg.length() + count;
+
+		if ("SpecialChar".equals(messageType)) {
+			if (charCount <= 160) {
+				smsParts = 1;
+				charLimit = 160;
+			} else {
+				double x = (double) charCount / 153;
+				double remainder = charCount % 153;
+				if (x > 0) {
+					if (remainder > 0) {
+						x = x + 1;
+					}
+				}
+				smsParts = (int) x;
+				charLimit = 153;
+			}
+		} else {
+			if (charCount <= 70) {
+				smsParts = 1;
+				charLimit = 70;
+			} else {
+				double x = (double) charCount / 67;
+				double remainder = charCount % 67;
+				if (x > 0) {
+					if (remainder > 0) {
+						x = x + 1;
+					}
+				}
+				smsParts = (int) x;
+				charLimit = 67;
+			}
+		}
+		messageIdentiryResponse.setMessage(msg);
+		messageIdentiryResponse.setCharCount(charCount);
+		messageIdentiryResponse.setCharLimit(charLimit);
+		messageIdentiryResponse.setMessageType(messageType);
+		messageIdentiryResponse.setSmscount(smsParts);
+		return ResponseEntity.ok(messageIdentiryResponse);
 	}
 }

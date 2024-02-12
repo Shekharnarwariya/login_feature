@@ -28,7 +28,7 @@ public class EmailSender {
 	private final TemplateEngine templateEngine;
 	private final Logger log = LoggerFactory.getLogger(EmailSender.class);
 
-	@Value("${username}")
+	@Value("${spring.mail.username}")
 	private String username;
 
 	@Autowired

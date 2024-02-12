@@ -1,15 +1,15 @@
 package com.hti.smpp.common.response;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 /**
  * Represents the response object for BSFM-related operations.
  */
 public class BSFMResponse {
 
-	private Map<Integer, String> smscList;
+	private Collection<String> smscList;
 
-	private Map<Integer, String> userlist;
+	private Collection<String> userlist;
 
 	private Map<Integer, String> groupDetail;
 
@@ -17,29 +17,19 @@ public class BSFMResponse {
 
 	private Map<Integer, String> operatormap;
 
-	private List<String> users;
-//Getter and Setter
-	public List<String> getUsers() {
-		return users;
-	}
-
-	public void setUsers(List<String> users) {
-		this.users = users;
-	}
-
-	public Map<Integer, String> getSmscList() {
+	public Collection<String> getSmscList() {
 		return smscList;
 	}
 
-	public void setSmscList(Map<Integer, String> smscList) {
+	public void setSmscList(Collection<String> smscList) {
 		this.smscList = smscList;
 	}
 
-	public Map<Integer, String> getUserlist() {
+	public Collection<String> getUserlist() {
 		return userlist;
 	}
 
-	public void setUserlist(Map<Integer, String> userlist) {
+	public void setUserlist(Collection<String> userlist) {
 		this.userlist = userlist;
 	}
 

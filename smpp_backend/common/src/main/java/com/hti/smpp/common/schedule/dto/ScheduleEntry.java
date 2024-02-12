@@ -1,5 +1,7 @@
 package com.hti.smpp.common.schedule.dto;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -43,7 +45,7 @@ public class ScheduleEntry {
 	private String scheduleType;
 
 	@Column(name = "createdOn")
-	private String createdOn;
+	private String createdOn = LocalDate.now() + "";
 
 	@Column(name = "web_id")
 	private String webId;

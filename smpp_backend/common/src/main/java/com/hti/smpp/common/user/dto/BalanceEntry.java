@@ -34,9 +34,6 @@ public class BalanceEntry implements Serializable {
 	@Column(name = "credits")
 	private Long credits;
 
-	@Column(name = "last_updated")
-	private Date lastUpdated;
-
 	@Transient
 	private boolean active;
 
@@ -80,14 +77,6 @@ public class BalanceEntry implements Serializable {
 		this.credits = credits;
 	}
 
-	public Date getLastUpdated() {
-		return lastUpdated;
-	}
-
-	public void setLastUpdated(Date lastUpdated) {
-		this.lastUpdated = lastUpdated;
-	}
-
 	public boolean isActive() {
 		return active;
 	}
@@ -98,8 +87,8 @@ public class BalanceEntry implements Serializable {
 
 	@Override
 	public String toString() {
-		return "BalanceEntry{" + "userId=" + userId + ", systemId='" + systemId + '\'' + ", walletFlag='" + walletFlag
-				+ '\'' + ", walletAmount=" + walletAmount + ", credits=" + credits + ", lastUpdated=" + lastUpdated
-				+ ", active=" + active + '}';
+		return "BalanceEntry [userId=" + userId + ", systemId=" + systemId + ", walletFlag=" + walletFlag
+				+ ", walletAmount=" + walletAmount + ", credits=" + credits + ", active=" + active + "]";
 	}
+
 }

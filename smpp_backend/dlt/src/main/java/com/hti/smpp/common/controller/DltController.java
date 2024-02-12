@@ -55,7 +55,7 @@ public class DltController {
 	@ApiResponse(responseCode = "201", description = "DLT added successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = DltRequest.class))),
 	@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 	@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	@PostMapping("/addDlt")
+	@PostMapping("/add-dlt")
 	public ResponseEntity<?> saveDltEntry(@Valid @RequestBody DltRequest entry, @RequestHeader("username") String username) {
 
 		return this.dltService.saveDltEntry(entry, username);
@@ -70,7 +70,7 @@ public class DltController {
 	@ApiResponse(responseCode = "200", description = "DLT Template Saved successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = DltTempRequest.class))),
 	@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 	@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	@PostMapping(value = "/addDltTemplate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PostMapping(value = "/add-dlt-template", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<?> addDltTemplate(@Valid @RequestParam(value = "entry" , required = false) String entry,
 			@RequestPart(value = "file", required = false) MultipartFile file, @RequestHeader("username") String username) {
 		
@@ -86,7 +86,7 @@ public class DltController {
 	@ApiResponse(responseCode = "200", description = "Data fetched successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = DltRequest.class))),
 	@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 	@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	@PostMapping("/listDlt")
+	@PostMapping("/list-dlt")
 	public ResponseEntity<List<DltResponse>> listDltEntry(@RequestHeader("username") String username) {
 		return this.dltService.listDltEntry(username);
 
@@ -101,7 +101,7 @@ public class DltController {
 	@ApiResponse(responseCode = "200", description = "data fetched successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = DltTempRequest.class))),
 	@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 	@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	@PostMapping("/listDltTemp")
+	@PostMapping("/list-dlt-temp")
 	public ResponseEntity<List<DltTempResponse>> listDltTemplate(@RequestHeader("username") String username) {
 		return this.dltService.listDltTemplate(username);
 
@@ -116,7 +116,7 @@ public class DltController {
 	@ApiResponse(responseCode = "200", description = "Entry Updated successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = DltRequest.class))),
 	@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 	@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	@PutMapping("/updateDlt")
+	@PutMapping("/update-dlt")
 	public ResponseEntity<?> updateDltEntry(@RequestBody DltRequest entry, @RequestHeader("username") String username) {
 
 		return this.dltService.updateDltEntry(entry, username);
@@ -131,7 +131,7 @@ public class DltController {
 	@ApiResponse(responseCode = "200", description = "DLT template Update successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = DltTempRequest.class))),
 	@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 	@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	@PutMapping("/updateDltTemp")
+	@PutMapping("/update-dlt-temp")
 	public ResponseEntity<?> updateDltTemplate(@RequestBody DltTempRequest entry,
 			@RequestHeader("username") String username) {
 
@@ -149,7 +149,7 @@ public class DltController {
 	@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 	@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
 
-	@DeleteMapping("/deleteDlt/{id}")
+	@DeleteMapping("/delete-dlt/{id}")
 	public ResponseEntity<?> deleteDltEntry(@PathVariable Integer id, @RequestHeader("username") String username) {
 
 		return	this.dltService.deleteDltEntry(id, username);
@@ -168,7 +168,7 @@ public class DltController {
 	@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 	@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
 
-	@DeleteMapping("/deleteDltTemp/{id}")
+	@DeleteMapping("/delete-dlt-temp/{id}")
 	public ResponseEntity<?> deleteDltTemplate(@PathVariable Integer id, @RequestHeader("username") String username) {
 
 		return this.dltService.deleteDltTemplate(id, username);
@@ -187,7 +187,7 @@ public class DltController {
 	@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 	@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 	@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	@GetMapping("/getDlt/{id}")
+	@GetMapping("/get-dlt/{id}")
 	public DltResponse getDltEntry( @PathVariable Integer id, @RequestHeader("username") String username) {
 
 		return this.dltService.getDltEntry(id, username);
@@ -203,7 +203,7 @@ public class DltController {
 	@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 	@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 	@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	@GetMapping("/getDltTemp/{id}")
+	@GetMapping("/get-dlt-temp/{id}")
 	public DltTempResponse getDltTemplate(@PathVariable Integer id, @RequestHeader("username") String username) {
 
 		return this.dltService.getDltTemplate(id, username);

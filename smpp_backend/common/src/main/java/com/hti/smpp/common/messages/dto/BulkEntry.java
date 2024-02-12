@@ -1,6 +1,7 @@
 package com.hti.smpp.common.messages.dto;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -43,7 +44,7 @@ public class BulkEntry implements Serializable {
 	@Column(name = "expiry_hour")
 	private long expiryHour;
 	@Column(name = "createdOn", updatable = false)
-	private String createdOn;
+	private String createdOn = LocalDate.now() + "";
 	@Column(name = "totalnum")
 	private long total;
 	@Column(name = "firstnum")

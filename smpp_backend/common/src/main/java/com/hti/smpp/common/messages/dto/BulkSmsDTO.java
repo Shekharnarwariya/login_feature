@@ -913,6 +913,7 @@ public class BulkSmsDTO implements Serializable {
 				+ ", campaignName=" + campaignName + ", campaignType=" + campaignType + ", peId=" + peId
 				+ ", templateId=" + templateId + ", telemarketerId=" + telemarketerId + "]";
 	}
+
 	public List<String> getDestinationList2(BulkListInfo listInfo) {
 		// Generate ArrayList
 		List<String> noList = new ArrayList<String>();
@@ -958,7 +959,7 @@ public class BulkSmsDTO implements Serializable {
 		}
 		if (!excludeSet.isEmpty()) {
 			try {
-			MultiUtility.writeExcludeNumbers(username, String.join("\n", excludeSet));
+				MultiUtility.writeExcludeNumbers(username, String.join("\n", excludeSet));
 			} catch (Exception ex) {
 				System.out.println(username + " " + ex);
 			}
@@ -1006,4 +1007,5 @@ public class BulkSmsDTO implements Serializable {
 		// System.out.println("Destination No list size is :" + destinationList.size());
 		return destinationList;
 	}
+
 }

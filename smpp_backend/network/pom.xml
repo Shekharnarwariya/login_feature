@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.1.5</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.hti.smpp.common</groupId>
 	<artifactId>network</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>network</name>
+	<packaging>jar</packaging>
+	<name>NETWORK_SERVICE</name>
 	<description>SMPP network service</description>
 	<properties>
 		<java.version>17</java.version>
@@ -27,22 +29,22 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 		<dependency>
-	        <groupId>net.sourceforge.jexcelapi</groupId>
-	        <artifactId>jxl</artifactId>
-	        <version>2.6.12</version> <!-- Use the latest version available -->
-    	</dependency>
+			<groupId>net.sourceforge.jexcelapi</groupId>
+			<artifactId>jxl</artifactId>
+			<version>2.6.12</version> <!-- Use the latest version available -->
+		</dependency>
 		<dependency>
 			<groupId>com.hti.smpp</groupId>
 			<artifactId>common</artifactId>
 			<version>1.0</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>2.2.0</version>
 		</dependency>
-		
+
 		<!-- Apache POI -->
 		<dependency>
 			<groupId>org.apache.poi</groupId>
@@ -75,9 +77,9 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
-		
+
 	</dependencies>
-	
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -91,6 +93,7 @@
 	</dependencyManagement>
 
 	<build>
+		<finalName>NETWORK_SERVICE</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

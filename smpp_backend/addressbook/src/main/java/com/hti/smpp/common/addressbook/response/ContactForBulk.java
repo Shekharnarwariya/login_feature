@@ -13,7 +13,7 @@ import com.hti.smpp.common.templates.dto.TemplatesDTO;
  */
 public class ContactForBulk {
 
-	private String uploadedNumbers;
+	private List<Long> uploadedNumbers;
 	private int totalNumbers;
 	private List<TemplatesDTO> templates;
 	private Set<String> senders;
@@ -34,7 +34,7 @@ public class ContactForBulk {
 	}
 //Constructor for the ContactForBulk class.
 
-	public ContactForBulk(String uploadedNumbers, int totalNumbers, List<TemplatesDTO> templates, Set<String> senders,
+	public ContactForBulk(List<Long> uploadedNumbers, int totalNumbers, List<TemplatesDTO> templates, Set<String> senders,
 			String status, int groupId) {
 		super();
 		this.uploadedNumbers = uploadedNumbers;
@@ -53,14 +53,12 @@ public class ContactForBulk {
 		this.status = status;
 	}
 
-	public String getUploadedNumbers() {
+	public List<Long> getUploadedNumbers() {
 		return uploadedNumbers;
 	}
-
-	public void setUploadedNumbers(String uploadedNumbers) {
+	public void setUploadedNumbers(List<Long> uploadedNumbers) {
 		this.uploadedNumbers = uploadedNumbers;
 	}
-
 	public int getTotalNumbers() {
 		return totalNumbers;
 	}

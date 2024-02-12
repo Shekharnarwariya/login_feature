@@ -12,8 +12,9 @@
 	<groupId>com.hti.smpp.common</groupId>
 	<artifactId>Sales</artifactId>
 	<version>0.0.1</version>
-	<name>Sales</name>
-	<description>this is sales application </description>
+	<packaging>jar</packaging>
+	<name>SALES_SERVICE</name>
+	<description>Sales Service For SMPP</description>
 	<properties>
 		<java.version>17</java.version>
 		<spring-cloud.version>2022.0.4</spring-cloud.version>
@@ -73,6 +74,7 @@
 		</dependencies>
 	</dependencyManagement>
 	<build>
+		<finalName>SALES_SERVICE</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

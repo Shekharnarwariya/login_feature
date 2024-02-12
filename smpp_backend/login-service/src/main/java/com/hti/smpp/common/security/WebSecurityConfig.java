@@ -11,7 +11,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -21,6 +20,7 @@ import com.hti.smpp.common.jwt.AuthTokenFilter;
 import com.hti.smpp.common.service.impl.UserDetailsServiceImpl;
 
 import jakarta.servlet.http.HttpServletRequest;
+
 /**
  * Configuration class for Web Security settings.
  */
@@ -37,26 +37,24 @@ public class WebSecurityConfig {
 
 	@Autowired
 	private AuthTokenFilter jwtAuthFilter;
-/**
- * Bean method to create an instance of BCryptPasswordEncoder.
- * @return
- */
-	@Bean
-	public BCryptPasswordEncoder bCryptPasswordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
-/**
- * An array of public URLs that are accessible without authentication.
- */
+
+	@Autowired
+	private BCryptPasswordEncoder passwordEncoder;
+
+	/**
+	 * An array of public URLs that are accessible without authentication.
+	 */
 	private final String[] PUBLIC_URL = { "/swagger-ui/**", "/webjars/**", "/swagger-resources/**", "/v3/api-docs/**",
-			"/login/jwt", "/login/register", "/login/user/data", "login/status","/login/sendOTP",
-			"/login/forgotPassword", "/login/validateOtp", "/login/updatePassword","/login/forgotPassword" };
-/**
- * Configures the security filter chain for handling HTTP security.
- * @param http
- * @return
- * @throws Exception
- */
+			"/login/jwt", "/login/register", "/login/user/data", "login/status", "/login/sendOTP",
+			"/login/forgotPassword", "/login/validateOtp", "/login/updatePassword", "/login/forgotPassword" };
+
+	/**
+	 * Configures the security filter chain for handling HTTP security.
+	 * 
+	 * @param http
+	 * @return
+	 * @throws Exception
+	 */
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
@@ -79,30 +77,33 @@ public class WebSecurityConfig {
 
 		DefaultSecurityFilterChain defaultSecurityFilterChain = http.build();
 
-		
 		return defaultSecurityFilterChain;
 
 	}
-/**
- * Configures and provides the AuthenticationManager bean.
- * @param authenticationConfiguration
- * @return
- * @throws Exception
- */
+
+	/**
+	 * Configures and provides the AuthenticationManager bean.
+	 * 
+	 * @param authenticationConfiguration
+	 * @return
+	 * @throws Exception
+	 */
 	@Bean
 	public AuthenticationManager authenticationManagerBean(AuthenticationConfiguration authenticationConfiguration)
 			throws Exception {
 		return authenticationConfiguration.getAuthenticationManager();
 	}
-/**
- * Configures and provides a DaoAuthenticationProvider bean
- * @return
- */
+
+	/**
+	 * Configures and provides a DaoAuthenticationProvider bean
+	 * 
+	 * @return
+	 */
 	@Bean
 	public DaoAuthenticationProvider authenticationProvider() {
 		DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
 		daoAuthenticationProvider.setUserDetailsService(this.userDetailsService);
-		daoAuthenticationProvider.setPasswordEncoder(bCryptPasswordEncoder());
+		daoAuthenticationProvider.setPasswordEncoder(passwordEncoder);
 		return daoAuthenticationProvider;
 	}
 

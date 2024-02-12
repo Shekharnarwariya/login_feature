@@ -1,6 +1,8 @@
 package com.hti.smpp.common.service;
 
 
+import java.time.LocalDate;
+
 import org.springframework.http.ResponseEntity;
 import com.hti.smpp.common.request.TemplatesRequest;
 //Service interface for handling template-related operations
@@ -10,12 +12,14 @@ public interface TemplatesService {
 	 // Method for retrieving a template by ID
 	public ResponseEntity<?> getTemplateById(int id, String userName);
 	 // Method for retrieving all templates
-	public ResponseEntity<?> getAllTemplates(String userName);
+//	public ResponseEntity<?> getAllTemplates(String userName);
 	   // Method for updating a template by ID
 	public ResponseEntity<?> updateTemplate(int id, TemplatesRequest request,String userName);
 	 // Method for deleting a template by ID
 	public ResponseEntity<?> deleteTemplate(int id, String userName);
 	// Method for retrieving recently used template
 	public ResponseEntity<?> RecentUseTemplate(String username);
+//	ResponseEntity<?> getAllTemplates(String username, LocalDate fromDate, LocalDate toDate);
+	ResponseEntity<?> getAllTemplates(String username, LocalDate fromDate, LocalDate toDate, String search);
 
 }

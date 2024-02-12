@@ -1,19 +1,20 @@
 package com.hti.smpp.common.request;
 
 import jakarta.validation.constraints.NotBlank;
+
 /**
  * Represents a login request in the application.
  */
 public class LoginRequest {
-/**
- * Represents a login request in the application.
- */
-	@NotBlank(message = "PLEASE ENTER USER NAME")
+	/**
+	 * Represents a login request in the application.
+	 */
+	@NotBlank(message = "Please enter a username. It cannot be blank.")
 	private String username;
 
-	@NotBlank(message = "PLEASE ENTER  PASSWORD")
+	@NotBlank(message = "Please enter a password. It cannot be blank.")
 	private String password;
-//Getter and Setter
+
 	public String getUsername() {
 		return username;
 	}
@@ -34,5 +35,5 @@ public class LoginRequest {
 	public String toString() {
 		return "LoginRequest [username=" + username + ", password=" + password + "]";
 	}
-	
+
 }
