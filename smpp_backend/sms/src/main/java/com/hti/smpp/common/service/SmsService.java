@@ -3,6 +3,7 @@ package com.hti.smpp.common.service;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.hti.smpp.common.request.BulkAutoScheduleRequest;
@@ -17,6 +18,7 @@ import com.hti.smpp.common.response.SmsResponse;
 
 import jakarta.servlet.http.HttpSession;
 
+@Service
 public interface SmsService {
 
 	public SmsResponse sendSms(SmsRequest smsRequest, String username);

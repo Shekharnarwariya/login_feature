@@ -1,6 +1,5 @@
 package com.hti.smpp.common.service.impl;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -18,13 +17,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.hti.smpp.common.database.DataBase;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.messages.dto.BulkEntry;
 import com.hti.smpp.common.request.AbortBatchReportRequest;
-import com.hti.smpp.common.request.CustomReportForm;
 import com.hti.smpp.common.service.AbortBatchReportService;
 import com.hti.smpp.common.service.UserDAService;
 import com.hti.smpp.common.user.dto.UserEntry;
@@ -32,19 +29,14 @@ import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
-import com.hti.smpp.common.util.Converter;
 import com.hti.smpp.common.util.Converters;
 import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.IConstants;
 
-import jakarta.persistence.EntityManager;
 import jakarta.ws.rs.BadRequestException;
-import net.sf.jasperreports.engine.JRException;
 
 @Service
 public class AbortBatchReportServiceImpl implements AbortBatchReportService {
-	@Autowired
-	private DataBase dataBase;
 
 	@Autowired
 	private UserEntryRepository userRepository;
@@ -53,8 +45,6 @@ public class AbortBatchReportServiceImpl implements AbortBatchReportService {
 
 	@Autowired
 	private DataSource dataSource;
-	@Autowired
-	private EntityManager entityManager;
 
 	Locale locale = null;
 	private static final Logger logger = LoggerFactory.getLogger(ReportServiceImpl.class);
@@ -89,18 +79,19 @@ public class AbortBatchReportServiceImpl implements AbortBatchReportService {
 				throw new NotFoundException("Abort batch report not found : " + username);
 			}
 		} catch (NotFoundException e) {
-	        // Log NotFoundException
-	        logger.error("SMS Latency report not found for username: {}", username, e);
-	        throw new NotFoundException(e.getMessage());
-	        } catch (IllegalArgumentException e) {
-	        // Log IllegalArgumentException
-	        logger.error("Invalid argument: {}", e.getMessage(), e);
-	        throw new BadRequestException("Invalid argument: " + e.getMessage());
-	        } catch (Exception e) {
-	        // Log other exceptions
-	        logger.error("Unexpected error occurred: {}", e.getMessage(), e);
-	        throw new InternalServerException("Error: No AbortBatch report data found for username " + username + " within the specified date range.");
-	        }
+			// Log NotFoundException
+			logger.error("SMS Latency report not found for username: {}", username, e);
+			throw new NotFoundException(e.getMessage());
+		} catch (IllegalArgumentException e) {
+			// Log IllegalArgumentException
+			logger.error("Invalid argument: {}", e.getMessage(), e);
+			throw new BadRequestException("Invalid argument: " + e.getMessage());
+		} catch (Exception e) {
+			// Log other exceptions
+			logger.error("Unexpected error occurred: {}", e.getMessage(), e);
+			throw new InternalServerException("Error: No AbortBatch report data found for username " + username
+					+ " within the specified date range.");
+		}
 	}
 
 	private List<BulkEntry> getReportList(AbortBatchReportRequest customReportForm, int id) throws SQLException {
@@ -123,8 +114,8 @@ public class AbortBatchReportServiceImpl implements AbortBatchReportService {
 		sql += "batch_id,system_id,sender_id,totalNum,pending,firstNum,delay,reqType,server_id,ston ,snpi ,alert,alert_number,expiry_hour,content,msg_type,campaign_name from batch_unprocess where";
 		if (to_gmt != null) {
 			sql += " createdOn between CONVERT_TZ('" + customReportForm.getStartDate() + " 00:00:00','" + to_gmt + "','"
-					+ from_gmt + "')and CONVERT_TZ('" + customReportForm.getEndDate() + " 23:59:59','"
-					+ to_gmt + "','" + from_gmt + "')";
+					+ from_gmt + "')and CONVERT_TZ('" + customReportForm.getEndDate() + " 23:59:59','" + to_gmt + "','"
+					+ from_gmt + "')";
 		} else {
 			if (customReportForm.getStartDate().equalsIgnoreCase(customReportForm.getEndDate())) {
 				sql += " DATE(createdOn)= '" + customReportForm.getSenderId() + "'";

@@ -33,19 +33,14 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		
 		if(userEntryRepository.existsBySystemId(username)) {
-			System.out.println("user");
 		User user = userEntryRepository.getUsers(username)
 				.orElseThrow(() -> new UsernameNotFoundException((
 						messageResourceBundle.getExMessage(ConstantMessages.AUTHENTICATION_FAILED_USERNAME + username))));
 		    return UserDetailsImpl.build(user);
 		}else {
-			System.out.println("seller");
 			User user = salesRepository.getUsers(username)
 					.orElseThrow(() -> new UsernameNotFoundException((
 							messageResourceBundle.getExMessage(ConstantMessages.AUTHENTICATION_FAILED_USERNAME + username))));
-			System.out.println("treu of false "+salesRepository.existsByUsername(user.getSystemId()));
-			System.out.println("username "+user.getSystemId());
-			System.out.println("password "+user.getPassword());
 			return UserDetailsImpl.build(user);
 		}
 	}
