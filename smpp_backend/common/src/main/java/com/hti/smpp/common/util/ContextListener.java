@@ -54,17 +54,20 @@ public class ContextListener {
 		logger.info("Connecting to Hazelcast Cluster");
 
 		try {
+
+			System.out.println(property.getProperty("hazelcast.cluster.address"));
 			ClientConfig config = new ClientConfig();
 			config.getNetworkConfig().setSmartRouting(false);
-			config.getNetworkConfig().addAddress(IConstants.Hazelcast_Client_IP);
+			config.getNetworkConfig().addAddress(property.getProperty("hazelcast.cluster.address"));
 			GlobalVars.hazelInstance = HazelcastClient.newHazelcastClient(config);
 			GlobalVars.hazelInstance.getCluster().addMembershipListener(new MemberEventListener());
-			logClusterMembers();
 			GlobalVars.BatchQueue = GlobalVars.hazelInstance.getMap("batch_queue");
 			GlobalVars.HlrBatchQueue = GlobalVars.hazelInstance.getMap("hlr_batch_queue");
 			GlobalVars.SmscGroupEntries = GlobalVars.hazelInstance.getMap("smsc_group");
 			GlobalVars.HttpDlrParam = GlobalVars.hazelInstance.getMap("http_dlr_param");
 			GlobalVars.NetworkEntries = GlobalVars.hazelInstance.getMap("network_entries");
+			logClusterMembers();
+
 		} catch (Exception e) {
 			logger.error("Error connecting to Hazelcast Cluster", e);
 			// Handle the exception appropriately
@@ -93,10 +96,11 @@ public class ContextListener {
 	private static void logMemberDetails(Member member, int memberIndex) {
 		int memberId = Integer.parseInt(member.getAttribute("member-id"));
 		logger.info("Member {}: {} Id: {} Address: {}:{} DB_CLUSTER: {}", memberIndex,
-				(memberId == IConstants.SERVER_ID) ? "(Master)" : "", memberId, member.getAddress().getHost(),
-				member.getAddress().getPort(), member.getAttribute("db-cluster"));
+				(memberId == Integer.parseInt(ContextListener.property.getProperty("load.serverid"))) ? "(Master)" : "",
+				memberId, member.getAddress().getHost(), member.getAddress().getPort(),
+				member.getAttribute("db-cluster"));
 
-		if (memberId == IConstants.SERVER_ID) {
+		if (memberId == Integer.parseInt(ContextListener.property.getProperty("load.serverid"))) {
 			GlobalVars.MASTER_CLIENT = true;
 			logger.info("Marked as Master Client");
 		}
