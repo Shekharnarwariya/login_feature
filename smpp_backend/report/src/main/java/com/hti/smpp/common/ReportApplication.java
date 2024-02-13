@@ -15,14 +15,11 @@ import jakarta.annotation.PreDestroy;
 @SpringBootApplication
 @EnableDiscoveryClient
 public class ReportApplication {
-
     private final static Logger logger = LoggerFactory.getLogger(ReportApplication.class);
-
     @PostConstruct
     public void postConstruct() {
         logger.info("Report Application is about to start.");
     }
-
     @PreDestroy
     public void preDestroy() {
     	 GlobalVars.hazelInstance.shutdown();

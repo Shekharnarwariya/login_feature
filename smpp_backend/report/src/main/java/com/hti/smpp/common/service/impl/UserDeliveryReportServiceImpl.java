@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -23,6 +24,10 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.hazelcast.query.Predicate;
@@ -30,10 +35,14 @@ import com.hazelcast.query.PredicateBuilder.EntryObject;
 import com.hazelcast.query.impl.PredicateBuilderImpl;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
+import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.network.dto.NetworkEntry;
-import com.hti.smpp.common.request.CustomReportForm;
+import com.hti.smpp.common.request.UserDeliveryForm;
 import com.hti.smpp.common.response.DeliveryDTO;
 import com.hti.smpp.common.service.UserDeliveryReportService;
+import com.hti.smpp.common.user.dto.UserEntry;
+import com.hti.smpp.common.user.repository.UserEntryRepository;
+import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
@@ -44,6 +53,7 @@ import net.sf.jasperreports.engine.JRExporter;
 import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
@@ -60,55 +70,70 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 
 	private String template_file = IConstants.FORMAT_DIR + "report//UserDeliveryStatus.jrxml";
 	private Logger logger = LoggerFactory.getLogger(UserDeliveryReportServiceImpl.class);
-	Locale locale = new Locale("en", "US"); 
+	Locale locale = new Locale("en", "US");
 
 	@Autowired
 	private DataSource dataSource;
+	@Autowired
+	private UserEntryRepository userRepository;
 
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
 	}
-	
 
 	@Override
-	public List<DeliveryDTO> UserDeliveryReportView(String username, CustomReportForm customReportForm,String lang) {
+	public ResponseEntity<?> UserDeliveryReportView(String username, UserDeliveryForm customReportForm, String lang) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang); ;
-			
-			List<DeliveryDTO> reportList = getReportList(customReportForm);
-			if (!reportList.isEmpty()) {
-				System.out.println("Report Size: " + reportList.size());
+			locale = Customlocale.getLocaleByLanguage(lang);
+			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+			UserEntry user = userOptional
+					.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
+			if (reportList != null && !reportList.isEmpty()) {
+				logger.info(user.getSystemId() + " ReportSize[View]:" + reportList.size());
+				JasperPrint print = getJasperPrint(reportList, false);
+				logger.info(user.getSystemId() + " <-- Report Finished --> ");
 				target = IConstants.SUCCESS_KEY;
-				return reportList;
+				return new ResponseEntity<>(reportList, HttpStatus.OK);
+				// Return the file in the ResponseEntity
+				//return new ResponseEntity<>(pdfReport, headers, HttpStatus.OK);
+				
 			} else {
-				throw new NotFoundException("user delivery report not found with username {}" + username);
+				throw new Exception("No data found for the UserDelivery Not report");
 			}
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
-			throw new InternalServerException("Error: getting error in delivery report with username {}" + username);
+			throw new InternalServerException("Error: No delivery report data found for username " + username + " within the specified date range.");
+
 		}
 	}
 
 	@Override
-	public String UserDeliveryReportxls(String username, CustomReportForm customReportForm,
-			HttpServletResponse response,String lang) {
+	public ResponseEntity<?> UserDeliveryReportxls(String username, UserDeliveryForm customReportForm,
+			HttpServletResponse response, String lang) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang); ;
-			
-			List<DeliveryDTO> reportList = getReportList(customReportForm);
+			locale = Customlocale.getLocaleByLanguage(lang);
+
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
 				JasperPrint print = getJasperPrint(reportList, false);
-				System.out.println("<-- Preparing Outputstream --> ");
-				String reportName = "UserDlr_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".xlsx";
-				response.setContentType("text/html; charset=utf-8");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				System.out.println("<-- Creating XLS --> ");
+
+				// Update content type for Excel file
+				response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+				response.setHeader("Content-Disposition", "attachment; filename=UserDlr_"
+						+ new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".xlsx");
+
 				OutputStream out = response.getOutputStream();
 				JRExporter exporter = new JRXlsxExporter();
 				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
@@ -116,14 +141,17 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 				exporter.setParameter(JRXlsExporterParameter.IS_ONE_PAGE_PER_SHEET, Boolean.FALSE);
 				exporter.setParameter(JRXlsExporterParameter.MAXIMUM_ROWS_PER_SHEET, 60000);
 				exporter.exportReport();
+
+				// Close the output stream
 				if (out != null) {
 					try {
+						out.flush(); // Flush before closing
 						out.close();
 					} catch (IOException ioe) {
 						System.out.println("XLS OutPutSream Closing Error");
 					}
 				}
-				System.out.println("<-- Finished --> ");
+
 				target = IConstants.SUCCESS_KEY;
 			} else {
 				throw new NotFoundException("user delivery report not found with username {}" + username);
@@ -133,83 +161,92 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 		} catch (Exception e) {
 			throw new InternalServerException("Error: getting error in delivery report with username {}" + username);
 		}
-		return target;
-
+		return ResponseEntity.ok(target);
 	}
 
 	@Override
-	public String UserDeliveryReportPdf(String username, CustomReportForm customReportForm,
-			HttpServletResponse response,String lang) {
-		String target = IConstants.FAILURE_KEY;
+		public ResponseEntity<?> UserDeliveryReportPdf(String username, UserDeliveryForm customReportForm,
+				HttpServletResponse response, String lang) {
+			String target = IConstants.FAILURE_KEY;
 
-		try {
-			locale = Customlocale.getLocaleByLanguage(lang); ;
-			
-			List<DeliveryDTO> reportList = getReportList(customReportForm);
-			if (!reportList.isEmpty()) {
-				System.out.println("Report Size: " + reportList.size());
-				JasperPrint print = getJasperPrint(reportList, false);
-				System.out.println("<-- Preparing Outputstream --> ");
-				String reportName = "UserDlr_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".pdf";
-				response.setContentType("text/html; charset=utf-8");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				System.out.println("<-- Creating PDF --> ");
-				OutputStream out = response.getOutputStream();
-				JRExporter exporter = new JRPdfExporter();
-				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-				exporter.exportReport();
-				if (out != null) {
-					try {
-						out.close();
-					} catch (IOException ioe) {
-						System.out.println("PDF OutPutSream Closing Error");
+			try {
+				locale = Customlocale.getLocaleByLanguage(lang);
+
+				List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
+				if (!reportList.isEmpty()) {
+					System.out.println("Report Size: " + reportList.size());
+					JasperPrint print = getJasperPrint(reportList, false);
+
+					// Update content type for PDF file
+					response.setContentType("application/pdf");
+					response.setHeader("Content-Disposition", "attachment; filename=UserDlr_" +
+							new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".pdf");
+
+					System.out.println("<-- Creating PDF --> ");
+					OutputStream out = response.getOutputStream();
+					JRExporter exporter = new JRPdfExporter();
+					exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
+					exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
+					exporter.exportReport();
+
+					// Close the output stream
+					if (out != null) {
+						try {
+							out.flush(); // Flush before closing
+							out.close();
+						} catch (IOException ioe) {
+							System.out.println("PDF OutPutSream Closing Error");
+						}
 					}
+
+					target = IConstants.SUCCESS_KEY;
+				} else {
+					throw new NotFoundException("user delivery report not found with username {}" + username);
 				}
-				System.out.println("<-- Finished --> ");
-				target = IConstants.SUCCESS_KEY;
-			} else {
-				throw new NotFoundException("user delivery report not found with username {}" + username);
+			} catch (NotFoundException e) {
+				throw new NotFoundException(e.getMessage());
+			} catch (Exception e) {
+				throw new InternalServerException("Error: getting error in delivery report with username {}" + username);
 			}
-		} catch (NotFoundException e) {
-			throw new NotFoundException(e.getMessage());
-		} catch (Exception e) {
-			throw new InternalServerException("Error: getting error in delivery report with username {}" + username);
+			return ResponseEntity.ok(target);
 		}
-		return target;
-	}
+
 
 	@Override
-	public String UserDeliveryReportDoc(String username, CustomReportForm customReportForm,
-			HttpServletResponse response,String lang) {
+	public ResponseEntity<?> UserDeliveryReportDoc(String username, UserDeliveryForm customReportForm,
+			HttpServletResponse response, String lang) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang); ;
-			
-			List<DeliveryDTO> reportList = getReportList(customReportForm);
+			locale = Customlocale.getLocaleByLanguage(lang);
+
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
 				JasperPrint print = getJasperPrint(reportList, false);
-				System.out.println("<-- Preparing Outputstream --> ");
-				String reportName = "UserDlr_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".doc";
-				response.setContentType("text/html; charset=utf-8");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				System.out.println("<-- Creating DOC --> ");
+
+				// Update content type for DOCX file
+				response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+				response.setHeader("Content-Disposition", "attachment; filename=UserDlr_" +
+						new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".docx");
+
+				System.out.println("<-- Creating DOCX --> ");
 				OutputStream out = response.getOutputStream();
 				JRExporter exporter = new JRDocxExporter();
 				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
 				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
 				exporter.exportReport();
+
+				// Close the output stream
 				if (out != null) {
 					try {
+						out.flush(); // Flush before closing
 						out.close();
 					} catch (IOException ioe) {
-						System.out.println("DOC OutPutSream Closing Error");
-						throw new NotFoundException("user delivery report not found with username {}" + username);
+						System.out.println("DOCX OutPutSream Closing Error");
 					}
 				}
-				System.out.println("<-- Finished --> ");
+
 				target = IConstants.SUCCESS_KEY;
 			} else {
 				throw new NotFoundException("user delivery report not found with username {}" + username);
@@ -219,8 +256,9 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 		} catch (Exception e) {
 			throw new InternalServerException("Error: getting error in delivery report with username {}" + username);
 		}
-		return target;
+		return ResponseEntity.ok(target);
 	}
+
 
 	private JasperPrint getJasperPrint(List<DeliveryDTO> reportList, boolean paging) throws JRException {
 		System.out.println("Creating Design");
@@ -274,14 +312,15 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 		return print;
 	}
 
-	private List<DeliveryDTO> getReportList(CustomReportForm customReportForm) throws Exception {
+	private List<DeliveryDTO> getReportList(UserDeliveryForm customReportForm, String username, String lang)
+			throws Exception {
 		List<DeliveryDTO> list = null;
 		// int back_day = 1;
-		String start_date = customReportForm.getSday();
-		String last_date = customReportForm.getEday();
+		String start_date = customReportForm.getStartDate();
+		String last_date = customReportForm.getEndDate();
 		String country = customReportForm.getCountry();
 		String operator = customReportForm.getOperator();
-		String usernames = String.join("','", customReportForm.getUsernames());
+		// String username = String.join("','", customReportForm.getUsername());
 		if (start_date == null || start_date.length() == 0) {
 			start_date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
 		}
@@ -289,7 +328,7 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 			last_date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
 		}
 		String sql = "select total as count,username,oprCountry,sender,status,cost from report_summary where username in('"
-				+ usernames + "') and time ";
+				+ username + "') and time ";
 		if (start_date.equalsIgnoreCase(last_date)) {
 			sql += "='" + start_date + "' ";
 		} else {
@@ -319,7 +358,7 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 		return list;
 	}
 
-	public List getUserDeliveryReport(String query) {
+	public List getUserDeliveryReport(String sql) {
 		List list = new ArrayList();
 		Connection con = null;
 		PreparedStatement pStmt = null;
@@ -327,7 +366,7 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 		DeliveryDTO report = null;
 		try {
 			con = getConnection();
-			pStmt = con.prepareStatement(query);
+			pStmt = con.prepareStatement(sql);
 			rs = pStmt.executeQuery();
 			while (rs.next()) {
 				// String date = rs.getString("date");
@@ -389,5 +428,7 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 		List<DeliveryDTO> sortedlist = personStream.collect(Collectors.toList());
 		return sortedlist;
 	}
+
+	
 
 }

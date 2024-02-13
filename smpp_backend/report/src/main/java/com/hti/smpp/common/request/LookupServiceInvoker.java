@@ -15,16 +15,16 @@ public class LookupServiceInvoker {
 
 //	public LookupServiceInvoker() throws RemoteException, NotBoundException {
 //		// Connect HLR Server on port 1098
-//		Registry myRegistry = LocateRegistry.getRegistry("127.0.0.1", 1098);
+//		java.rmi.registry.Registry myRegistry = LocateRegistry.getRegistry("127.0.0.1", 1098);
 //		// search for service
-//		impl = (LookupService) myRegistry.lookup("lookupService");
+//		impl = (LookupService) ((java.rmi.registry.Registry) myRegistry).lookup("lookupService");
 //	}
-
+			
 	public List<LookupReport> getLookupReport(Map<String, String> params) throws RemoteException {
 		System.out.println("LookupReport Params: " + params);
 		return impl.getLookupReport(params);
 	}
-
+			
 	public int reCheckStatus(String sql) throws RemoteException {
 		return impl.reCheckStatus(sql);
 	}

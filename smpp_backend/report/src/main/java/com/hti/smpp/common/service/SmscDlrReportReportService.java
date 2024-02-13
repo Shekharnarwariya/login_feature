@@ -2,22 +2,24 @@ package com.hti.smpp.common.service;
 
 import java.util.List;
 
-import com.hti.smpp.common.request.CustomReportForm;
-import com.hti.smpp.common.response.DeliveryDTO;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import com.hti.smpp.common.request.SmscDlrReportRequest;
 
 import jakarta.servlet.http.HttpServletResponse;
-
+@Service
 public interface SmscDlrReportReportService {
 
-	public List<DeliveryDTO> SmscDlrReportview(String username, CustomReportForm customReportForm, String lang);
+	public ResponseEntity<?>  SmscDlrReportview(String username, SmscDlrReportRequest customReportForm, String lang);
 
-	public List<DeliveryDTO> SmscDlrReportvxls(String username, CustomReportForm customReportForm, String lang,
+	public ResponseEntity<?>  SmscDlrReportxls(String username, SmscDlrReportRequest customReportForm, String lang,
 			HttpServletResponse response);
 
-	public List<DeliveryDTO> SmscDlrReportvpdf(String username, CustomReportForm customReportForm, String lang,
+	public ResponseEntity<?>  SmscDlrReportpdf(String username, SmscDlrReportRequest customReportForm, String lang,
 			HttpServletResponse response);
 
-	public List<DeliveryDTO> SmscDlrReportdoc(String username, CustomReportForm customReportForm, String lang,
+	public ResponseEntity<?>  SmscDlrReportdoc(String username, SmscDlrReportRequest customReportForm, String lang,
 			HttpServletResponse response);
 
 }

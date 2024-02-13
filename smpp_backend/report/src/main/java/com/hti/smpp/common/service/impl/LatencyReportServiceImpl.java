@@ -1,6 +1,8 @@
 package com.hti.smpp.common.service.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -21,10 +23,13 @@ import java.util.stream.Stream;
 
 import javax.sql.DataSource;
 
-import org.apache.catalina.Globals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.hazelcast.query.Predicate;
@@ -32,8 +37,9 @@ import com.hazelcast.query.PredicateBuilder.EntryObject;
 import com.hazelcast.query.impl.PredicateBuilderImpl;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
+import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.network.dto.NetworkEntry;
-import com.hti.smpp.common.request.CustomReportForm;
+import com.hti.smpp.common.request.LetencyReportRequest;
 import com.hti.smpp.common.response.DeliveryDTO;
 import com.hti.smpp.common.sales.dto.SalesEntry;
 import com.hti.smpp.common.sales.repository.SalesRepository;
@@ -43,19 +49,19 @@ import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
+import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
-import com.logica.smpp.Session;
-
-import java.io.OutputStream;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.BadRequestException;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRExporter;
 import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
@@ -72,7 +78,8 @@ import net.sf.jasperreports.engine.xml.JRXmlLoader;
 @Service
 public class LatencyReportServiceImpl implements LatencyReportService {
 
-	private String template_file = IConstants.FORMAT_DIR + "report//UserDeliveryStatus.jrxml";
+	// private String template_file = IConstants.FORMAT_DIR +
+	// "report//UserDeliveryStatus.jrxml";
 	private Logger logger = LoggerFactory.getLogger(LatencyReportServiceImpl.class);
 	Locale locale = new Locale("en", "US");
 
@@ -83,163 +90,30 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 	private SalesRepository salesRepository;
 	@Autowired
 	private UserDAService userService;
+
 	@Autowired
 	private UserEntryRepository userRepository;
+
 	@Autowired
 	private WebMasterEntryRepository webMasterEntryRepository;
-
 	String to_gmt;
 	String from_gmt;
 
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
-
 	}
 
-	@Override
-	public List<DeliveryDTO> LatencyReportView(String username, CustomReportForm customReportForm,String lang) {
-		String target = IConstants.FAILURE_KEY;
-		try {
-			List<DeliveryDTO> reportList = null;
-			if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
-				reportList = getSmscReportList(customReportForm, username);
-			} else {
-				reportList = getReportList(customReportForm, username);
-			}
-			if (reportList != null && !reportList.isEmpty()) {
-				System.out.println("Report Size: " + reportList.size());
-				JasperPrint print = null;
-				if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
-					print = getJasperPrint(reportList, false,
-							IConstants.FORMAT_DIR + "report//SmscLatencyReport.jrxml");
-				} else {
-					print = getJasperPrint(reportList, false, IConstants.FORMAT_DIR + "report//LatencyReport.jrxml");
-				}
-
-			} else {
-
-				throw new NotFoundException("user delivery report not found with username {}" + username);
-			}
-		} catch (NotFoundException e) {
-			throw new NotFoundException(e.getMessage());
-		} catch (Exception e) {
-			throw new InternalServerException("Error: getting error in delivery report with username {}" + username);
-		}
-		return null;
-
-	}
-
-	@Override
-	public String LatencyReportxls(String username, CustomReportForm customReportForm, HttpServletResponse response,String lang) {
-		String target = IConstants.FAILURE_KEY;
-		try {
-			 locale =locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList = null;
-			if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
-				reportList = getSmscReportList(customReportForm, username);
-			} else {
-				reportList = getReportList(customReportForm, username);
-			}
-			if (reportList != null && !reportList.isEmpty()) {
-				System.out.println("Report Size: " + reportList.size());
-				JasperPrint print = null;
-				if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
-					print = getJasperPrint(reportList, false,
-							IConstants.FORMAT_DIR + "report//SmscLatencyReport.jrxml");
-				} else {
-					print = getJasperPrint(reportList, false, IConstants.FORMAT_DIR + "report//LatencyReport.jrxml");
-				}
-				System.out.println("<-- Preparing Outputstream --> ");
-				String reportName = "latency_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".xlsx";
-				response.setContentType("text/html; charset=utf-8");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				System.out.println("<-- Creating XLS --> ");
-				OutputStream out = response.getOutputStream();
-				JRExporter exporter = new JRXlsxExporter();
-				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-				exporter.setParameter(JRXlsExporterParameter.IS_ONE_PAGE_PER_SHEET, Boolean.FALSE);
-				exporter.exportReport();
-				if (out != null) {
-					try {
-						out.close();
-					} catch (IOException ioe) {
-						System.out.println("XLS OutPutSream Closing Error");
-					}
-				}
-			} else {
-
-				throw new NotFoundException("user delivery report not found with username {}" + username);
-			}
-		} catch (Exception e) {
-			throw new InternalServerException("Error: getting error in delivery report with username {}" + username);
-		}
-		return target;
-
-	}
-
-	@Override
-	public String LatencyReportpdf(String username, CustomReportForm customReportForm, HttpServletResponse response,String lang) {
-		String target = IConstants.FAILURE_KEY;
-		try {
-			 locale = locale = Customlocale.getLocaleByLanguage(lang); ;
-			List<DeliveryDTO> reportList = null;
-			if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
-				reportList = getSmscReportList(customReportForm, username);
-			} else {
-				reportList = getReportList(customReportForm, username);
-			}
-			if (reportList != null && !reportList.isEmpty()) {
-				System.out.println("Report Size: " + reportList.size());
-				JasperPrint print = null;
-				if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
-					print = getJasperPrint(reportList, false,
-							IConstants.FORMAT_DIR + "report//SmscLatencyReport.jrxml");
-				} else {
-					print = getJasperPrint(reportList, false, IConstants.FORMAT_DIR + "report//LatencyReport.jrxml");
-				}
-				System.out.println("<-- Preparing Outputstream --> ");
-				String reportName = "latency_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".pdf";
-				response.setContentType("text/html; charset=utf-8");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				System.out.println("<-- Creating PDF --> ");
-				OutputStream out = response.getOutputStream();
-				JRExporter exporter = new JRPdfExporter();
-				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-				exporter.exportReport();
-				if (out != null) {
-					try {
-						out.close();
-					} catch (IOException ioe) {
-						System.out.println("PDF OutPutSream Closing Error");
-					}
-				}
-			} else {
-				throw new NotFoundException("user delivery report not found with username {}" + username);
-			}
-		} catch (NotFoundException e) {
-			throw new NotFoundException(e.getMessage());
-		} catch (Exception e) {
-			throw new InternalServerException("Error: getting error in delivery report with username {}" + username);
-		}
-		return target;
-	}
-
-	@Override
-	public String LatencyReportdoc(String username, CustomReportForm customReportForm, HttpServletResponse response,
+	public ResponseEntity<?> LatencyReportView(String username, LetencyReportRequest customReportForm,
 			String lang) {
-		String target = IConstants.FAILURE_KEY;
-
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
 			List<DeliveryDTO> reportList = null;
 			if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
-				reportList = getSmscReportList(customReportForm, username);
+				reportList = getSmscReportList(customReportForm, username, lang);
 			} else {
-				reportList = getReportList(customReportForm, username);
+				reportList = getReportList(customReportForm, username, lang);
 			}
-			if (reportList != null && !reportList.isEmpty()) {
+			if(reportList != null && !reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
 				JasperPrint print = null;
 				if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
@@ -248,91 +122,36 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 				} else {
 					print = getJasperPrint(reportList, false, IConstants.FORMAT_DIR + "report//LatencyReport.jrxml");
 				}
-				System.out.println("<-- Preparing Outputstream --> ");
-				String reportName = "latency_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".doc";
-				response.setContentType("text/html; charset=utf-8");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				System.out.println("<-- Creating DOC --> ");
-				OutputStream out = response.getOutputStream();
-				JRExporter exporter = new JRDocxExporter();
-				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-				exporter.exportReport();
-				if (out != null) {
-					try {
-						out.close();
-					} catch (IOException ioe) {
-						System.out.println("DOC OutPutSream Closing Error");
-					}
-				}
+				// Convert JasperPrint to byte array (PDF)
+				byte[] pdfBytes = JasperExportManager.exportReportToPdf(print);
+				HttpHeaders headers = new HttpHeaders();
+				headers.setContentType(MediaType.APPLICATION_PDF);
+				headers.setContentDispositionFormData("attachment", "LatencyReport.pdf");
+				//return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+				return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
-				throw new NotFoundException("user delivery report not found with username {}" + username);
+				throw new NotFoundException("SMS Latency report not found with username: " + username);
 			}
 		} catch (NotFoundException e) {
-			throw new NotFoundException(e.getMessage());
-		} catch (Exception e) {
-			throw new InternalServerException("Error: getting error in delivery report with username {}" + username);
-		}
-		return target;
-
+        // Log NotFoundException
+        logger.error("SMS Latency report not found for username: {}", username, e);
+        throw new NotFoundException(e.getMessage());
+        } catch (IllegalArgumentException e) {
+        // Log IllegalArgumentException
+        logger.error("Invalid argument: {}", e.getMessage(), e);
+        throw new BadRequestException("Invalid argument: " + e.getMessage());
+        } catch (JRException e) {
+        // Log JRException
+        logger.error("JasperReports Exception occurred: {}", e.getMessage(), e);
+        throw new InternalServerException("Error generating Jasper report: " + e.getMessage());
+        } catch (Exception e) {
+        // Log other exceptions
+        logger.error("Unexpected error occurred: {}", e.getMessage(), e);
+        throw new InternalServerException("Error: No Latency report data found for username " + username + " within the specified date range.");
+        }
 	}
 
-	private JasperPrint getJasperPrint(List<DeliveryDTO> reportList, boolean paging, String template_file)
-			throws JRException {
-		System.out.println("<-- Creating Design ---> ");
-		JasperDesign design = JRXmlLoader.load(template_file);
-		System.out.println("<-- Compiling Source Format file ---> ");
-		JasperReport report = JasperCompileManager.compileReport(design);
-		System.out.println("<-- Preparing Chart Data ---> ");
-		List<DeliveryDTO> chart_list = new ArrayList<DeliveryDTO>();
-		Map<String, Integer> chart_map = new HashMap<>();
-		chart_map.put("0-5", 0);
-		chart_map.put("6-15", 0);
-		chart_map.put("16-30", 0);
-		chart_map.put("31-45", 0);
-		chart_map.put("46-60", 0);
-		chart_map.put("> 60", 0);
-		for (DeliveryDTO chartDTO : reportList) {
-			int count = chart_map.get("0-5");
-			count = count + chartDTO.getLatency1();
-			chart_map.put("0-5", count);
-			count = chart_map.get("6-15");
-			count = count + chartDTO.getLatency2();
-			chart_map.put("6-15", count);
-			count = chart_map.get("16-30");
-			count = count + chartDTO.getLatency3();
-			chart_map.put("16-30", count);
-			count = chart_map.get("31-45");
-			count = count + chartDTO.getLatency4();
-			chart_map.put("31-45", count);
-			count = chart_map.get("46-60");
-			count = count + chartDTO.getLatency5();
-			chart_map.put("46-60", count);
-			count = chart_map.get("> 60");
-			count = count + chartDTO.getLatency6();
-			chart_map.put("> 60", count);
-		}
-		for (Map.Entry<String, Integer> entry : chart_map.entrySet()) {
-			chart_list.add(new DeliveryDTO(entry.getValue(), entry.getKey()));
-		}
-		JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(reportList);
-		JRBeanCollectionDataSource piechartDataSource = new JRBeanCollectionDataSource(chart_list);
-		Map parameters = new HashMap();
-		parameters.put("piechartDataSource", piechartDataSource);
-		if (reportList.size() > 20000) {
-			JRSwapFileVirtualizer virtualizer = new JRSwapFileVirtualizer(1000,
-					new JRSwapFile(IConstants.WEBAPP_DIR + "temp//", 2048, 1024));
-			parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
-		}
-		parameters.put(JRParameter.IS_IGNORE_PAGINATION, paging);
-		ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);
-		parameters.put("REPORT_RESOURCE_BUNDLE", bundle);
-		JasperPrint print = JasperFillManager.fillReport(report, parameters, beanColDataSource);
-		return print;
-	}
-
-	private List<DeliveryDTO> getReportList(CustomReportForm customReportForm, String username) {
-
+	private List<DeliveryDTO> getReportList(LetencyReportRequest customReportForm, String username, String lang) throws SQLException {
 		UserDAService userDAService = new UserDAServiceImpl();
 		if (customReportForm.getClientId() == null) {
 			return null;
@@ -341,7 +160,6 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		if (!usersOptional.isPresent()) {
 			throw new NotFoundException("user not fout with system id" + username);
 		}
-
 		UserEntry user = usersOptional.get();
 		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
 		if (webMasterEntry == null) {
@@ -350,15 +168,14 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		if (customReportForm.getClientId() == null) {
 			return null;
 		}
-		logger.info(username + " Report Based On Criteria");
+		logger.info(user.getSystemId() + " Report Based On Criteria");
 		List<String> users = null;
 		String query = null;
-		// IDatabaseService dbService = HtiSmsDB.getInstance();
 		String senderId = customReportForm.getSenderId();
 		String country = customReportForm.getCountry();
 		String operator = customReportForm.getOperator();
-		String startDate = customReportForm.getSday();
-		String endDate = customReportForm.getEday();
+		String startDate = customReportForm.getStartDate();
+		String endDate = customReportForm.getEndDate();
 		List<DeliveryDTO> list = null;
 		List<DeliveryDTO> final_list = new ArrayList<DeliveryDTO>();
 		if (!webMasterEntry.getGmt().equalsIgnoreCase(IConstants.DEFAULT_GMT)) {
@@ -370,21 +187,24 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 			if (role.equalsIgnoreCase("superadmin") || role.equalsIgnoreCase("system")) {
 				users = new ArrayList<String>(userService.listUsers().values());
 			} else if (role.equalsIgnoreCase("admin")) {
-				users = new ArrayList<String>(userService.listUsersUnderMaster(user.getSystemId()).values());
-				users.add(username);
-				Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject()
-						.get("secondaryMaster").equal(username);
+				users = new ArrayList<String>(
+						userService.listUsersUnderMaster(user.getSystemId()).values());
+				users.add(user.getSystemId());
+				Predicate<Integer,WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject().get("secondaryMaster")
+						.equal(user.getSystemId());
 				for (WebMasterEntry webEntry : GlobalVars.WebmasterEntries.values(p)) {
 					UserEntry userEntry = GlobalVars.UserEntries.get(webEntry.getUserId());
 					users.add(userEntry.getSystemId());
 				}
 			} else if (role.equalsIgnoreCase("seller")) {
-				users = new ArrayList<String>(userService.listUsersUnderSeller(user.getId()).values());
+				users = new ArrayList<String>(
+					userService.listUsersUnderSeller(user.getId()).values());
 			} else if (role.equalsIgnoreCase("manager")) {
 				// SalesDAService salesService = new SalesDAServiceImpl();
-				listUsernamesUnderManager(user.getSystemId()).values();
+				users = new ArrayList<String>(
+						listUsernamesUnderManager(user.getSystemId()).values());
 			}
-			logger.info(username + " Under Users: " + users.size());
+			logger.info(user + " Under Users: " + users.size());
 		} else {
 			users = new ArrayList<String>();
 			users.add(customReportForm.getClientId());
@@ -392,7 +212,7 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		if (users != null && !users.isEmpty()) {
 			while (!users.isEmpty()) {
 				String report_user = (String) users.remove(0);
-				logger.info(username + " Checking Report For " + report_user);
+				logger.info(user.getSystemId() + " Checking Report For " + report_user);
 				query = "select count(msg_id) as count,source_no,oprcountry,status,TIME_TO_SEC(TIMEDIFF(deliver_time,submitted_time)) as latency from mis_"
 						+ report_user + " where status not like 'ATES' and ";
 				if (to_gmt != null) {
@@ -436,13 +256,9 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 						end_msg_id = end_msg_id.replaceAll(":", "");
 						end_msg_id += "0000000";
 						/*
-						 * String[] end_date = endDate.split("-"); Calendar calendar =
-						 * Calendar.getInstance(); calendar.set(Calendar.DATE,
-						 * Integer.parseInt(end_date[2])); calendar.set(Calendar.MONTH,
-						 * (Integer.parseInt(end_date[1])) - 1); calendar.set(Calendar.YEAR,
-						 * Integer.parseInt(end_date[0])); calendar.add(Calendar.DATE, 1); String
-						 * end_msg_id = new SimpleDateFormat("yyMMdd").format(calendar.getTime()) +
-						 * "0000000000000";
+						 * String[] end_date = endDate.split("-"); Calendar calendar = Calendar.getInstance(); calendar.set(Calendar.DATE, Integer.parseInt(end_date[2])); calendar.set(Calendar.MONTH,
+						 * (Integer.parseInt(end_date[1])) - 1); calendar.set(Calendar.YEAR, Integer.parseInt(end_date[0])); calendar.add(Calendar.DATE, 1); String end_msg_id = new
+						 * SimpleDateFormat("yyMMdd").format(calendar.getTime()) + "0000000000000";
 						 */
 						query += "msg_id between " + start_msg_id + " and " + end_msg_id + "";
 					}
@@ -455,7 +271,7 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 					}
 				}
 				if (country != null && country.length() > 0) {
-					Predicate<Integer, NetworkEntry> p = null;
+					Predicate<Integer,NetworkEntry> p = null;
 					String oprCountry = "";
 					if (operator.equalsIgnoreCase("All")) {
 						p = new PredicateBuilderImpl().getEntryObject().get("mcc").equal(country);
@@ -472,13 +288,10 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 					}
 				}
 				query += " group by source_no,oprcountry,status,latency";
-				logger.info(username + " ReportSQL:" + query);
-				try {
-					list = getLatencyReport(report_user, query);
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-				logger.info(username + " list:" + list.size());
+				logger.info(user.getSystemId() + " ReportSQL:" + query);
+				////throw sql exception
+				list = getLatencyReport(report_user, query);
+				logger.info(user.getSystemId() + " list:" + list.size());
 				if (list != null && !list.isEmpty()) {
 					System.out.println(report_user + " Report List Size --> " + list.size());
 					final_list.addAll(sortList(list));
@@ -486,20 +299,21 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 				}
 			}
 		}
-		logger.info(username + " End Based On Criteria. Final Report Size: " + final_list.size());
+		logger.info(
+				user.getSystemId() + " End Based On Criteria. Final Report Size: " + final_list.size());
 		return final_list;
 	}
 
-	public List<DeliveryDTO> getLatencyReport(String username, String sql) throws SQLException {
+	public List<DeliveryDTO> getLatencyReport(String report_user, String query) throws SQLException {
 		Connection con = null;
 		PreparedStatement pStmt = null;
 		ResultSet rs = null;
 		DeliveryDTO report = null;
-		System.out.println("SQL: " + sql);
+		System.out.println("SQL: " + query);
 		Map<String, DeliveryDTO> mapping = new HashMap<String, DeliveryDTO>();
 		try {
 			con = getConnection();
-			pStmt = con.prepareStatement(sql, java.sql.ResultSet.TYPE_FORWARD_ONLY,
+			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
 					java.sql.ResultSet.CONCUR_READ_ONLY);
 			pStmt.setFetchSize(Integer.MIN_VALUE);
 			rs = pStmt.executeQuery();
@@ -514,7 +328,7 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 							report = mapping.get(senderId + "#" + oprCountry);
 						} else {
 							report = new DeliveryDTO();
-							report.setUsername(username);
+							report.setUsername(report_user);
 							report.setSender(senderId);
 							int network_id = 0;
 							try {
@@ -556,12 +370,11 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 						logger.error("", sqle.fillInStackTrace());
 					}
 				}
-				// logger.info(username + " Report List Final Count:--> " +
-				// customReport.size());
+		//	logger.info(username + " Report List Final Count:--> " + report.size());
 			}
 		} catch (SQLException ex) {
 			if (ex.getMessage().contains("Table") && ex.getMessage().contains("doesn't exist")) {
-				logger.info("<-- " + username + " Mis & Content Table Doesn't Exist -->");
+				logger.info("<-- " + report_user + " Mis & Content Table Doesn't Exist -->");
 			} else {
 				logger.error(" ", ex.fillInStackTrace());
 			}
@@ -574,7 +387,7 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 					rs.close();
 				}
 				if (con != null) {
-					// dbCon.releaseConnection(con);
+				con.close();
 				}
 			} catch (SQLException sqle) {
 			}
@@ -582,31 +395,7 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		return new ArrayList<DeliveryDTO>(mapping.values());
 	}
 
-	public Map<Integer, String> listUsernamesUnderManager(String mgrId) {
-		Map<Integer, String> map = listNamesUnderManager(mgrId);
-		Map<Integer, String> users = new HashMap<Integer, String>();
-		for (Integer seller_id : map.keySet()) {
-			users.putAll(userService.listUsersUnderSeller(seller_id));
-		}
-		return users;
-	}
-
-	public Map<Integer, String> listNamesUnderManager(String mgrId) {
-		Map<Integer, String> map = new HashMap<Integer, String>();
-		List<SalesEntry> list = (List) listSellersUnderManager(mgrId);
-		for (SalesEntry entry : list) {
-			map.put(entry.getId(), entry.getUsername());
-		}
-		return map;
-	}
-
-	public List<SalesEntry> listSellersUnderManager(String mgrId) {
-		return salesRepository.findByMasterIdAndRole(mgrId, "seller");
-	}
-
-	private List<DeliveryDTO> getSmscReportList(CustomReportForm customReportForm, String username)
-			throws SQLException {
-
+	private List<DeliveryDTO> getSmscReportList(LetencyReportRequest customReportForm, String username, String lang) throws SQLException {
 		UserDAService userDAService = new UserDAServiceImpl();
 		if (customReportForm.getClientId() == null) {
 			return null;
@@ -615,21 +404,22 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		if (!usersOptional.isPresent()) {
 			throw new NotFoundException("user not fout with system id" + username);
 		}
-
 		UserEntry user = usersOptional.get();
 		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
 		if (webMasterEntry == null) {
 			throw new NotFoundException("web MasterEntry  not fount username {}" + user.getId());
 		}
-		logger.info(username + " Report Based On Criteria");
+		if (customReportForm.getClientId() == null) {
+			return null;
+		}
+		logger.info(user.getSystemId() + " Report Based On Criteria");
 		List<String> users = null;
 		String query = null;
-		// IDatabaseService dbService = HtiSmsDB.getInstance();
 		String senderId = customReportForm.getSenderId();
 		String country = customReportForm.getCountry();
 		String operator = customReportForm.getOperator();
-		String startDate = customReportForm.getSday();
-		String endDate = customReportForm.getEday();
+		String startDate = customReportForm.getStartDate();
+		String endDate = customReportForm.getEndDate();
 		List<DeliveryDTO> list = null;
 		List<DeliveryDTO> final_list = new ArrayList<DeliveryDTO>();
 		if (!webMasterEntry.getGmt().equalsIgnoreCase(IConstants.DEFAULT_GMT)) {
@@ -638,11 +428,11 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		}
 		// String role = userSessionObject.getRole();
 		users = new ArrayList<String>(userService.listUsers().values());
-		logger.info(username + " Report Users: " + users.size());
+		logger.info(user + " Report Users: " + users.size());
 		if (users != null && !users.isEmpty()) {
 			while (!users.isEmpty()) {
-				String report_user = (String) users.remove(0);
-				logger.info(username + " Checking Report For " + report_user);
+				String report_user = "testUser1";//(String) users.remove(0);
+				logger.info(user.getSystemId() + " Checking Report For " + report_user);
 				query = "select count(msg_id) as count,route_to_smsc,source_no,oprcountry,status,TIME_TO_SEC(TIMEDIFF(deliver_time,submitted_time)) as latency from mis_"
 						+ report_user + " where status not like 'ATES' and ";
 				if (to_gmt != null) {
@@ -686,13 +476,9 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 						end_msg_id = end_msg_id.replaceAll(":", "");
 						end_msg_id += "0000000";
 						/*
-						 * String[] end_date = endDate.split("-"); Calendar calendar =
-						 * Calendar.getInstance(); calendar.set(Calendar.DATE,
-						 * Integer.parseInt(end_date[2])); calendar.set(Calendar.MONTH,
-						 * (Integer.parseInt(end_date[1])) - 1); calendar.set(Calendar.YEAR,
-						 * Integer.parseInt(end_date[0])); calendar.add(Calendar.DATE, 1); String
-						 * end_msg_id = new SimpleDateFormat("yyMMdd").format(calendar.getTime()) +
-						 * "0000000000000";
+						 * String[] end_date = endDate.split("-"); Calendar calendar = Calendar.getInstance(); calendar.set(Calendar.DATE, Integer.parseInt(end_date[2])); calendar.set(Calendar.MONTH,
+						 * (Integer.parseInt(end_date[1])) - 1); calendar.set(Calendar.YEAR, Integer.parseInt(end_date[0])); calendar.add(Calendar.DATE, 1); String end_msg_id = new
+						 * SimpleDateFormat("yyMMdd").format(calendar.getTime()) + "0000000000000";
 						 */
 						query += "msg_id between " + start_msg_id + " and " + end_msg_id + "";
 					}
@@ -706,7 +492,7 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 					}
 				}
 				if (country != null && country.length() > 0) {
-					Predicate<Integer, NetworkEntry> p = null;
+					Predicate<Integer,NetworkEntry> p = null;
 					String oprCountry = "";
 					if (operator.equalsIgnoreCase("All")) {
 						p = new PredicateBuilderImpl().getEntryObject().get("mcc").equal(country);
@@ -723,9 +509,10 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 					}
 				}
 				query += " group by route_to_smsc,source_no,oprcountry,status,latency";
-				logger.info(username + " ReportSQL:" + query);
-				list = getLatencyReport(report_user, query, true);
-				logger.info(username + " list:" + list.size());
+				logger.info(user.getSystemId() + " ReportSQL:" + query);
+				
+				list = getLatencyReport(username, query, true);
+				logger.info(user.getSystemId() + " list:" + list.size());
 				if (list != null && !list.isEmpty()) {
 					System.out.println(report_user + " Report List Size --> " + list.size());
 					final_list.addAll(sortList(list));
@@ -733,31 +520,21 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 				}
 			}
 		}
-		logger.info(username + " End Based On Criteria. Final Report Size: " + final_list.size());
+		logger.info(
+			user.getSystemId() + " End Based On Criteria. Final Report Size: " + final_list.size());
 		return final_list;
-
 	}
 
-	private List<DeliveryDTO> sortList(List<DeliveryDTO> list) {
-		Comparator<DeliveryDTO> comparator = null;
-		comparator = Comparator.comparing(DeliveryDTO::getSender).thenComparing(DeliveryDTO::getCountry)
-				.thenComparing(DeliveryDTO::getOperator);
-		Stream<DeliveryDTO> personStream = list.stream().sorted(comparator);
-		List<DeliveryDTO> sortedlist = personStream.collect(Collectors.toList());
-		return sortedlist;
-	}
-
-	public List<DeliveryDTO> getLatencyReport(String username, String sql, boolean smsc) throws SQLException {
+	public List<DeliveryDTO> getLatencyReport(String username, String query, boolean smsc) throws SQLException {
 		Connection con = null;
 		PreparedStatement pStmt = null;
 		ResultSet rs = null;
 		DeliveryDTO report = null;
-		System.out.println("SQL: " + sql);
+		System.out.println("SQL: " + query);
 		Map<String, DeliveryDTO> mapping = new HashMap<String, DeliveryDTO>();
 		try {
-
 			con = getConnection();
-			pStmt = con.prepareStatement(sql, java.sql.ResultSet.TYPE_FORWARD_ONLY,
+			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
 					java.sql.ResultSet.CONCUR_READ_ONLY);
 			pStmt.setFetchSize(Integer.MIN_VALUE);
 			rs = pStmt.executeQuery();
@@ -816,8 +593,7 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 						logger.error("", sqle.fillInStackTrace());
 					}
 				}
-				// logger.info(username + " Report List Final Count:--> " +
-				// customReport.size());
+				// logger.info(username + " Report List Final Count:--> " + customReport.size());
 			}
 		} catch (SQLException ex) {
 			if (ex.getMessage().contains("Table") && ex.getMessage().contains("doesn't exist")) {
@@ -834,12 +610,246 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 					rs.close();
 				}
 				if (con != null) {
-					// dbCon.releaseConnection(con);
+				con.close();
 				}
 			} catch (SQLException sqle) {
 			}
 		}
 		return new ArrayList<DeliveryDTO>(mapping.values());
 	}
+
+	@Override
+	public ResponseEntity<?> LatencyReportxls(String username, LetencyReportRequest customReportForm,
+			HttpServletResponse response, String lang) {
+		String target = IConstants.FAILURE_KEY;
+
+		try {
+			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+			UserEntry user = userOptional
+					.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+			locale = Customlocale.getLocaleByLanguage(lang);
+			List<DeliveryDTO> reportList = null;
+			if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
+				reportList = getSmscReportList(customReportForm, username, lang);
+			} else {
+				reportList = getReportList(customReportForm, username, lang);
+			}
+			if (reportList != null && !reportList.isEmpty()) {
+				JasperPrint print = null;
+				if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
+					print = getJasperPrint(reportList, false,
+							IConstants.FORMAT_DIR + "report//SmscLatencyReport.jrxml");
+				} else {
+					print = getJasperPrint(reportList, false, IConstants.FORMAT_DIR + "report//LatencyReport.jrxml");
+				}
+
+				String reportName = "latency_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".xlsx";
+				ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+				JRExporter exporter = new JRXlsxExporter();
+				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
+				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, byteArrayOutputStream);
+				exporter.setParameter(JRXlsExporterParameter.IS_ONE_PAGE_PER_SHEET, Boolean.FALSE);
+				exporter.exportReport();
+				HttpHeaders headers = new HttpHeaders();
+				headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+				headers.setContentDispositionFormData(reportName, reportName);
+
+				return new ResponseEntity<>(byteArrayOutputStream.toByteArray(), headers, HttpStatus.OK);
+			} else {
+				throw new NotFoundException("sms Latency report not found with username {}" + username);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new InternalServerException("Error: getting error in Latency report with username {}" + username);
+		}
+	}
+
+	@Override
+	public ResponseEntity<?> LatencyReportpdf(String username, LetencyReportRequest customReportForm,
+			HttpServletResponse response, String lang) {
+		try {
+			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+			UserEntry user = userOptional
+					.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+			locale = Customlocale.getLocaleByLanguage(lang);
+			List<DeliveryDTO> reportList = null;
+			if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
+				reportList = getSmscReportList(customReportForm, username, lang);
+			} else {
+				reportList = getReportList(customReportForm, username, lang);
+			}
+			if (reportList != null && !reportList.isEmpty()) {
+				System.out.println("Report Size: " + reportList.size());
+				JasperPrint print = null;
+				if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
+					print = getJasperPrint(reportList, false,
+							IConstants.FORMAT_DIR + "report//SmscLatencyReport.jrxml");
+				} else {
+					print = getJasperPrint(reportList, false, IConstants.FORMAT_DIR + "report//LatencyReport.jrxml");
+				}
+
+// Convert JasperPrint to byte array (PDF)
+				byte[] pdfBytes = JasperExportManager.exportReportToPdf(print);
+
+				HttpHeaders headers = new HttpHeaders();
+				headers.setContentType(MediaType.APPLICATION_PDF);
+				String reportName = "latency_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".pdf";
+				headers.setContentDispositionFormData("attachment", reportName);
+
+				return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+			} else {
+				throw new NotFoundException("SMS Latency report not found with username: " + username);
+			}
+		} catch (NotFoundException e) {
+			throw new NotFoundException(e.getMessage());
+		} catch (Exception e) {
+			throw new InternalServerException("Error: getting error in Latency report with username: " + username);
+		}
+	}
+
+	@Override
+	public ResponseEntity<?> LatencyReportdoc(String username, LetencyReportRequest customReportForm,
+			HttpServletResponse response, String lang) {
+		String target = IConstants.FAILURE_KEY;
+
+		try {
+			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+			UserEntry user = userOptional
+					.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
+			}
+			locale = Customlocale.getLocaleByLanguage(lang);
+			List<DeliveryDTO> reportList = null;
+
+			System.out.println("Report Size: " + reportList.size());
+			JasperPrint print = null;
+			if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
+				print = getJasperPrint(reportList, false, IConstants.FORMAT_DIR + "report//SmscLatencyReport.jrxml");
+			} else {
+				print = getJasperPrint(reportList, false, IConstants.FORMAT_DIR + "report//LatencyReport.jrxml");
+			}
+			System.out.println("<-- Preparing Outputstream --> ");
+			String reportName = "latency_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".doc";
+			response.setContentType("text/html; charset=utf-8");
+			response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			JRExporter exporter = new JRDocxExporter();
+			exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
+			exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, outputStream);
+			exporter.exportReport();
+
+			// Close the output stream
+			outputStream.close();
+
+			// Convert ByteArrayOutputStream to byte array
+			byte[] content = outputStream.toByteArray();
+
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
+			headers.setContentDispositionFormData("attachment", "latency_report.docx");
+
+			return new ResponseEntity<>(content, headers, HttpStatus.OK);
+		} catch (NotFoundException e) {
+			throw new NotFoundException(e.getMessage());
+		} catch (Exception e) {
+			throw new InternalServerException("Error: getting error in Latency report with username {}" + username);
+		}
+
+	}
+
+	private JasperPrint getJasperPrint(List<DeliveryDTO> reportList, boolean paging, String template_file)
+			throws JRException {
+		System.out.println("<-- Creating Design ---> ");
+		JasperDesign design = JRXmlLoader.load(template_file);
+		System.out.println("<-- Compiling Source Format file ---> ");
+		JasperReport report = JasperCompileManager.compileReport(design);
+		System.out.println("<-- Preparing Chart Data ---> ");
+		List<DeliveryDTO> chart_list = new ArrayList<DeliveryDTO>();
+		Map<String, Integer> chart_map = new HashMap<>();
+		chart_map.put("0-5", 0);
+		chart_map.put("6-15", 0);
+		chart_map.put("16-30", 0);
+		chart_map.put("31-45", 0);
+		chart_map.put("46-60", 0);
+		chart_map.put("> 60", 0);
+		for (DeliveryDTO chartDTO : reportList) {
+			int count = chart_map.get("0-5");
+			count = count + chartDTO.getLatency1();
+			chart_map.put("0-5", count);
+			count = chart_map.get("6-15");
+			count = count + chartDTO.getLatency2();
+			chart_map.put("6-15", count);
+			count = chart_map.get("16-30");
+			count = count + chartDTO.getLatency3();
+			chart_map.put("16-30", count);
+			count = chart_map.get("31-45");
+			count = count + chartDTO.getLatency4();
+			chart_map.put("31-45", count);
+			count = chart_map.get("46-60");
+			count = count + chartDTO.getLatency5();
+			chart_map.put("46-60", count);
+			count = chart_map.get("> 60");
+			count = count + chartDTO.getLatency6();
+			chart_map.put("> 60", count);
+		}
+		for (Map.Entry<String, Integer> entry : chart_map.entrySet()) {
+			chart_list.add(new DeliveryDTO(entry.getValue(), entry.getKey()));
+		}
+		JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(reportList);
+		JRBeanCollectionDataSource piechartDataSource = new JRBeanCollectionDataSource(chart_list);
+		Map parameters = new HashMap();
+		parameters.put("piechartDataSource", piechartDataSource);
+		if (reportList.size() > 20000) {
+			JRSwapFileVirtualizer virtualizer = new JRSwapFileVirtualizer(1000,
+					new JRSwapFile(IConstants.WEBAPP_DIR + "temp//", 2048, 1024));
+			parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
+		}
+		parameters.put(JRParameter.IS_IGNORE_PAGINATION, paging);
+		ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);
+		parameters.put("REPORT_RESOURCE_BUNDLE", bundle);
+		JasperPrint print = JasperFillManager.fillReport(report, parameters, beanColDataSource);
+		return print;
+	}
+
+
+	public Map<Integer, String> listUsernamesUnderManager(String mgrId) {
+		Map<Integer, String> map = listNamesUnderManager(mgrId);
+		Map<Integer, String> users = new HashMap<Integer, String>();
+		for (Integer seller_id : map.keySet()) {
+			users.putAll(userService.listUsersUnderSeller(seller_id));
+		}
+		return users;
+	}
+
+	public Map<Integer, String> listNamesUnderManager(String mgrId) {
+		Map<Integer, String> map = new HashMap<Integer, String>();
+		List<SalesEntry> list = (List) listSellersUnderManager(mgrId);
+		for (SalesEntry entry : list) {
+			map.put(entry.getId(), entry.getUsername());
+		}
+		return map;
+	}
+
+	public List<SalesEntry> listSellersUnderManager(String mgrId) {
+		return salesRepository.findByMasterIdAndRole(mgrId, "seller");
+	}
+
+
+	private List<DeliveryDTO> sortList(List<DeliveryDTO> list) {
+		Comparator<DeliveryDTO> comparator = null;
+		comparator = Comparator.comparing(DeliveryDTO::getSender).thenComparing(DeliveryDTO::getCountry)
+				.thenComparing(DeliveryDTO::getOperator);
+		Stream<DeliveryDTO> personStream = list.stream().sorted(comparator);
+		List<DeliveryDTO> sortedlist = personStream.collect(Collectors.toList());
+		return sortedlist;
+	}
+
 
 }

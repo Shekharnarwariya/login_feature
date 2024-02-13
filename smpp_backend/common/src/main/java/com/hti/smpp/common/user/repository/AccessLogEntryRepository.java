@@ -8,4 +8,5 @@ import com.hti.smpp.common.user.dto.AccessLogEntry;
 @Repository
 public interface AccessLogEntryRepository extends JpaRepository<AccessLogEntry, Integer> {
 
+	
 }

@@ -236,7 +236,7 @@ public class ScheduleEntry {
 	}
 
 	public ScheduleEntry(String username, String serverTime, String clientGmt, String clientTime, int serverId,
-			String status, String fileName, String repeated, String scheduleType, String createdOn, String webId) {
+			String status, String fileName, String repeated, String scheduleType, String createdOn) {
 		super();
 		this.username = username;
 		this.serverTime = serverTime;

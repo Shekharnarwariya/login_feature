@@ -2,9 +2,11 @@ package com.hti.smpp.common.service;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.request.CustomReportForm;
+import com.hti.smpp.common.request.UserDeliveryForm;
 import com.hti.smpp.common.response.DeliveryDTO;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,13 +14,13 @@ import jakarta.servlet.http.HttpServletResponse;
 @Service
 public interface UserDeliveryReportService {
 
-	public List<DeliveryDTO> UserDeliveryReportView(String username, CustomReportForm customReportForm,String lang);
+	public ResponseEntity<?> UserDeliveryReportView(String username, UserDeliveryForm customReportForm,String lang);
 
-	public String UserDeliveryReportxls(String username, CustomReportForm customReportForm, HttpServletResponse response,String lang);
+	public ResponseEntity<?> UserDeliveryReportxls(String username, UserDeliveryForm customReportForm, HttpServletResponse response,String lang);
 
-	public String UserDeliveryReportPdf(String username, CustomReportForm customReportForm, HttpServletResponse response,String lang);
+	public ResponseEntity<?> UserDeliveryReportPdf(String username, UserDeliveryForm customReportForm, HttpServletResponse response,String lang);
 
-	public String UserDeliveryReportDoc(String username, CustomReportForm customReportForm, HttpServletResponse response,String lang);
+	public ResponseEntity<?> UserDeliveryReportDoc(String username, UserDeliveryForm customReportForm, HttpServletResponse response,String lang);
 	
 	///////////////////////////DownloadAPI//////////////////
 	

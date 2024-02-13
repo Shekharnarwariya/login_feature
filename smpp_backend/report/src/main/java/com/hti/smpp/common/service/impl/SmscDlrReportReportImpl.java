@@ -3,6 +3,7 @@ package com.hti.smpp.common.service.impl;
 import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
@@ -48,7 +49,12 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import com.hazelcast.internal.util.collection.ArrayUtils;
 import com.hazelcast.query.Predicate;
@@ -60,6 +66,7 @@ import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.request.CustomReportForm;
+import com.hti.smpp.common.request.SmscDlrReportRequest;
 import com.hti.smpp.common.response.DeliveryDTO;
 
 import com.hti.smpp.common.service.SmscDlrReportReportService;
@@ -117,7 +124,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 	private final String summary_template_file = IConstants.FORMAT_DIR + "report//SmscDlrSummaryReport.jrxml";
 
 	@Override
-	public List<DeliveryDTO> SmscDlrReportview(String username, CustomReportForm customReportForm, String lang) {
+	public ResponseEntity<?> SmscDlrReportview(String username, SmscDlrReportRequest customReportForm, String lang) {
 		List<DeliveryDTO> target = new ArrayList<>();
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
@@ -129,12 +136,9 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 		if (webMasterEntry == null) {
 			throw new NotFoundException("web MasterEntry not found for username: " + user.getId());
 		}
-
 		try {
-
 			locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList = getReportList(customReportForm, username, webMasterEntry);
-
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username, webMasterEntry, lang);
 			if (!reportList.isEmpty()) {
 				System.out.println(user.getSystemId() + " Report Size: " + reportList.size());
 				JasperPrint print = null;
@@ -144,7 +148,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 				} else {
 					print = getJasperPrint(reportList, false, username, webMasterEntry);
 				}
-				target = reportList;
+				return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
 				throw new NotFoundException("SmscDlr  report not found with username: " + username);
 			}
@@ -152,11 +156,11 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 			e.printStackTrace();
 			throw new InternalServerException("Error: " + e.getMessage());
 		}
-		return target;
+
 	}
 
 	@Override
-	public List<DeliveryDTO> SmscDlrReportvxls(String username, CustomReportForm customReportForm, String lang,
+	public ResponseEntity<?> SmscDlrReportxls(String username, SmscDlrReportRequest customReportForm, String lang,
 			HttpServletResponse response) {
 
 		List<DeliveryDTO> target = null;
@@ -170,17 +174,16 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 		if (webMasterEntry == null) {
 			throw new NotFoundException("web MasterEntry not found for username: " + user.getId());
 		}
-
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList = getReportList(customReportForm, username, webMasterEntry);
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username, webMasterEntry, lang);
 			Map<String, DeliveryDTO> map = new LinkedHashMap<String, DeliveryDTO>();
 			if (isSummary) {
 				Iterator itr = reportList.iterator();
 				DeliveryDTO reportDTO = null;
 				DeliveryDTO tempDTO = null;
 				while (itr.hasNext()) {
-					
+
 					reportDTO = (DeliveryDTO) itr.next();
 					String key = reportDTO.getDate() + "#" + reportDTO.getRoute() + "#" + reportDTO.getCountry() + "#"
 							+ reportDTO.getOperator() + "#" + reportDTO.getStatus();
@@ -275,67 +278,72 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 			throw new InternalServerException("Error: " + e.getMessage());
 
 		}
-		return target;
+		return (ResponseEntity<?>) target;
 	}
 
 	@Override
-	public List<DeliveryDTO> SmscDlrReportvpdf(String username, CustomReportForm customReportForm, String lang,
+	public ResponseEntity<?> SmscDlrReportpdf(String username, SmscDlrReportRequest customReportForm, String lang,
 			HttpServletResponse response) {
 		List<DeliveryDTO> target = null;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
 				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
+
 		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
+
 		if (webMasterEntry == null) {
-			throw new NotFoundException("web MasterEntry not found for username: " + user.getId());
+			throw new NotFoundException("Web MasterEntry not found for username: " + user.getId());
 		}
+
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList = getReportList(customReportForm, username, webMasterEntry);
-			if (!reportList.isEmpty()) {
-				System.out.println("Report Size: " + reportList.size());
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username, webMasterEntry, lang);
+			if (reportList != null && !reportList.isEmpty()) {
+				logger.info(user.getSystemId() + " ReportSize[pdf]:" + reportList.size());
 				JasperPrint print = null;
-				if (isSummary) {
-					print = getSummaryJasperPrint(reportList, false,username);
-				} else {
-					print = getJasperPrint(reportList, false,username,webMasterEntry);
-				}
-				System.out.println("<-- Preparing Outputstream --> ");
-				String reportName = "SmscDlr_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".pdf";
+				print = getSummaryJasperPrint(reportList, false, username);
+				logger.info(user.getSystemId() + " <-- Preparing Outputstream --> ");
+				String reportName = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".pdf";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				System.out.println("<-- Creating PDF --> ");
+				logger.info(user.getSystemId() + " <-- Creating PDF --> ");
 				OutputStream out = response.getOutputStream();
-				JRExporter exporter = new JRPdfExporter();
-				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-				exporter.exportReport();
-				if (out != null) {
-					try {
-						out.close();
-					} catch (Exception e) {
-						System.out.println("PDF OutPutSream Closing Error");
-					}
-				}
-				System.out.println("<-- Finished --> ");
+				
+				 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+			        JRExporter exporter = new JRPdfExporter();
+			        exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
+			        exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, byteArrayOutputStream);
+			        exporter.exportReport();
+
+			        // Set up the response headers
+			        HttpHeaders headers = new HttpHeaders();
+			        headers.setContentType(MediaType.APPLICATION_PDF);
+			        headers.setContentDispositionFormData("attachment", "delivery_report.pdf");
+
+			        // Return the byte array as ResponseEntity
+			        return ResponseEntity.ok()
+			                .headers(headers)
+			                .contentLength(byteArrayOutputStream.size())
+			                .body(byteArrayOutputStream.toByteArray());
 			} else {
 				throw new NotFoundException("SmscDlr  report not found with username: " + username);
 			}
 		} catch (Exception e) {
-			logger.error(username, e.fillInStackTrace());
-			throw new InternalServerException("Error: " + e.getMessage());
+			e.printStackTrace();
 		}
-		return target;
-	}
-	
-	@Override
-	public List<DeliveryDTO> SmscDlrReportdoc(String username, CustomReportForm customReportForm, String lang,
-			HttpServletResponse response) {
-List<DeliveryDTO> target = null;
+		return null;
 		
+	}
+
+	@Override
+	public ResponseEntity<?> SmscDlrReportdoc(String username, SmscDlrReportRequest customReportForm, String lang,
+			HttpServletResponse response) {
+		List<DeliveryDTO> target = null;
+
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
 				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
@@ -348,14 +356,14 @@ List<DeliveryDTO> target = null;
 		}
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList =getReportList(customReportForm, username, webMasterEntry);
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username, webMasterEntry, lang);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
 				JasperPrint print = null;
 				if (isSummary) {
-					print = getSummaryJasperPrint(reportList, false,username);
+					print = getSummaryJasperPrint(reportList, false, username);
 				} else {
-					print = getJasperPrint(reportList, false,username,webMasterEntry);
+					print = getJasperPrint(reportList, false, username, webMasterEntry);
 				}
 				System.out.println("<-- Preparing Outputstream --> ");
 				String reportName = "SmscDlr_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".doc";
@@ -375,7 +383,7 @@ List<DeliveryDTO> target = null;
 					}
 				}
 				System.out.println("<-- Finished --> ");
-				//target = IConstants.SUCCESS_KEY;
+				return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
 				throw new NotFoundException("SmscDlr  report not found with username: " + username);
 			}
@@ -383,10 +391,7 @@ List<DeliveryDTO> target = null;
 			logger.error(username, e.fillInStackTrace());
 			throw new InternalServerException("Error: " + e.getMessage());
 		}
-		return target;
 	}
-	
-	
 
 	private Workbook getWorkBook(List reportList, String username, WebMasterEntry webMasterEntry) {
 		logger.info(username + " <-- Creating WorkBook --> ");
@@ -834,8 +839,8 @@ List<DeliveryDTO> target = null;
 		return print;
 	}
 
-	private List<DeliveryDTO> getReportList(CustomReportForm customReportForm, String username,
-			WebMasterEntry webMasterEntry) throws Exception {
+	private List<DeliveryDTO> getReportList(SmscDlrReportRequest customReportForm, String username,
+			WebMasterEntry webMasterEntry, String lang) throws Exception {
 		List<DeliveryDTO> list = null;
 
 		// int back_day = 1;
@@ -847,17 +852,17 @@ List<DeliveryDTO> target = null;
 		String operator = customReportForm.getOperator();
 		String senderId = customReportForm.getSenderId();
 		String smscnames = String.join("','", customReportForm.getSmscnames());
-		String startDate = customReportForm.getSday();
-		String endDate = customReportForm.getEday();
-		if (customReportForm.getSday() == null || customReportForm.getSday().length() == 0) {
+		String startDate = customReportForm.getStartDate();
+		String endDate = customReportForm.getEndDate();
+		if (customReportForm.getStartDate() == null || customReportForm.getStartDate().length() == 0) {
 			start_date = new SimpleDateFormat("yyyy-MM-dd").format(new Date(0));
 		} else {
-			start_date = customReportForm.getSday().split(" ")[0];
+			start_date = customReportForm.getStartDate().split(" ")[0];
 		}
-		if (customReportForm.getEday() == null || customReportForm.getEday().length() == 0) {
+		if (customReportForm.getEndDate() == null || customReportForm.getEndDate().length() == 0) {
 			last_date = new SimpleDateFormat("yyyy-MM-dd").format(new Date(0));
 		} else {
-			last_date = customReportForm.getEday().split(" ")[0];
+			last_date = customReportForm.getEndDate().split(" ")[0];
 		}
 		String report_sql = "select distinct(username) from report where smsc in('" + smscnames + "')";
 		String summary_sql = "select distinct(username) from report_summary where smsc in('" + smscnames + "') and ";
@@ -1531,7 +1536,5 @@ List<DeliveryDTO> target = null;
 		}
 		return customReport;
 	}
-
-	
 
 }

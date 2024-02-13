@@ -25,7 +25,6 @@ public class ApigatewayApplication {
 
 		logger.info(" Apigateway Application is about to stop.");
 	}
-
 	public static void main(String[] args) {
 		SpringApplication.run(ApigatewayApplication.class, args);
 		logger.info("Apigateway Application started successfully.");

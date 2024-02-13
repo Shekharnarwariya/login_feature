@@ -28,6 +28,8 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.sql.DataSource;
+
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -40,13 +42,13 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 
-
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -61,8 +63,13 @@ import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.messages.dto.BulkEntry;
 import com.hti.smpp.common.messages.dto.BulkMapEntry;
 import com.hti.smpp.common.network.dto.NetworkEntry;
+import com.hti.smpp.common.request.BalanceReportRequest;
+import com.hti.smpp.common.request.CampaignReportRequest;
+import com.hti.smpp.common.request.ContentReportRequest;
 import com.hti.smpp.common.request.CustomReportDTO;
 import com.hti.smpp.common.request.CustomReportForm;
+import com.hti.smpp.common.request.CustomizedReportRequest;
+import com.hti.smpp.common.request.DlrSummaryReport;
 import com.hti.smpp.common.response.DeliveryDTO;
 import com.hti.smpp.common.sales.dto.SalesEntry;
 import com.hti.smpp.common.sales.repository.SalesRepository;
@@ -72,11 +79,13 @@ import com.hti.smpp.common.service.impl.UserDAServiceImpl;
 import com.hti.smpp.common.user.dto.BalanceEntry;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
+import com.hti.smpp.common.user.repository.BalanceEntryRepository;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.Converter;
 import com.hti.smpp.common.util.Converters;
+import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.dto.SevenBitChar;
@@ -130,12 +139,32 @@ public class DataBase {
 	@Autowired
 	private WebMasterEntryRepository webMasterEntryRepository;
 
-	public List<BulkEntry> getReportList(CustomReportForm customReportForm, int id) {
+	@Autowired
+	private DataSource dataSource;
+
+	@Autowired
+	private BalanceEntryRepository balanceEntryRepository;
+
+	public Connection getConnection() throws SQLException {
+		return dataSource.getConnection();
+	}
+
+	public List<DeliveryDTO> getReportList(ContentReportRequest customReportForm, String username, String lang) {
 		UserDAService userDAService = new UserDAServiceImpl();
-		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(id);
-		if (webMasterEntry == null) {
-			throw new NotFoundException("web MasterEntry  not fount username {}" + id);
+		if (customReportForm.getClientId() == null) {
+			return null;
 		}
+		Optional<UserEntry> usersOptional = userRepository.findBySystemId(username);
+		if (!usersOptional.isPresent()) {
+			throw new NotFoundException("user not fout with system id" + username);
+		}
+
+		UserEntry user = usersOptional.get();
+		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
+		if (webMasterEntry == null) {
+			throw new NotFoundException("web MasterEntry  not fount username {}" + user.getId());
+		}
+
 		String to_gmt = null;
 		String from_gmt = null;
 		String sql = "select ";
@@ -181,11 +210,13 @@ public class DataBase {
 			}
 		}
 		System.out.println("SQL: " + sql);
-		List<BulkEntry> list = entityManager.createNativeQuery(sql, BulkEntry.class).getResultList();
+		List<DeliveryDTO> list = entityManager.createNativeQuery(sql, BulkEntry.class).getResultList();
 		return list;
 	}
 
-	public Map<String, List<DeliveryDTO>> getBalanceReportList(CustomReportForm customReportForm, String username) {
+//////////////////////////////
+	public Map<String, List<DeliveryDTO>> getBalanceReportList(BalanceReportRequest customReportForm, String username,
+			String lang) {
 		UserDAService userDAService = new UserDAServiceImpl();
 		if (customReportForm.getClientId() == null) {
 			return null;
@@ -206,8 +237,8 @@ public class DataBase {
 		String query = null;
 		String country = customReportForm.getCountry();
 		String operator = customReportForm.getOperator();
-		String startDate = customReportForm.getSday();
-		String endDate = customReportForm.getEday();
+		String startDate = customReportForm.getStartDate();
+		String endDate = customReportForm.getEndDate();
 		if (customReportForm.getReportType().equalsIgnoreCase("Summary")) {
 			summary = true;
 		}
@@ -257,6 +288,7 @@ public class DataBase {
 					client_formatter.setTimeZone(TimeZone.getTimeZone(webMasterEntry.getGmt()));
 					SimpleDateFormat local_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 					try {
+						System.out.println("praper");
 						String start_msg_id = local_formatter.format(client_formatter.parse(startDate));
 						String end_msg_id = local_formatter.format(client_formatter.parse(endDate));
 						start_msg_id = start_msg_id.replaceAll("-", "");
@@ -304,6 +336,7 @@ public class DataBase {
 						query += "msg_id between " + start_msg_id + " and " + end_msg_id + "";
 					}
 				}
+
 				if (country != null && country.length() > 0) {
 					Predicate<Integer, NetworkEntry> p = null;
 					String oprCountry = "";
@@ -321,9 +354,11 @@ public class DataBase {
 						query += " and oprCountry in (" + oprCountry + ")";
 					}
 				}
+
 				if (summary) {
 					logger.info(user.getSystemId() + " ReportSQL:" + query);
 					list = getConsumptionSummaryReport(query, report_user);
+					System.out.println("343");
 				} else {
 					query += " group by time,oprcountry";
 					logger.info(user.getSystemId() + " ReportSQL:" + query);
@@ -335,6 +370,7 @@ public class DataBase {
 					map.put(report_user, list);
 				}
 			}
+
 			logger.info(user.getSystemId() + " <- Checking For Unprocessed ->");
 			String unproc_query = null;
 			if (summary) {
@@ -514,6 +550,7 @@ public class DataBase {
 	public List<DeliveryDTO> getConsumptionReport(String query, String reportUser) {
 		List<DeliveryDTO> list = new ArrayList<>();
 		try {
+			System.out.println("this is final query " + query);
 			list = jdbcTemplate.query(query, (rs, rowNum) -> {
 				DeliveryDTO entry = new DeliveryDTO();
 				entry.setUsername(reportUser);
@@ -617,7 +654,7 @@ public class DataBase {
 		return map;
 	}
 
-	public Map<String, List<DeliveryDTO>> getReportListFile(String username, CustomReportForm customReportForm) {
+	public Map<String, List<DeliveryDTO>> getReportListFile(String username, BalanceReportRequest customReportForm) {
 		if (customReportForm.getClientId() == null) {
 			return null;
 		}
@@ -637,8 +674,8 @@ public class DataBase {
 		String query = null;
 		String country = customReportForm.getCountry();
 		String operator = customReportForm.getOperator();
-		String startDate = customReportForm.getSday();
-		String endDate = customReportForm.getEday();
+		String startDate = customReportForm.getStartDate();
+		String endDate = customReportForm.getEndDate();
 		if (customReportForm.getReportType().equalsIgnoreCase("Summary")) {
 			summary = true;
 		}
@@ -905,7 +942,7 @@ public class DataBase {
 			for (String system_id : reportList.keySet()) {
 				UserEntry userEntry = userRepository.findBySystemId(system_id).get();
 				if (userEntry != null) {
-					BalanceEntry balanceEntry = GlobalVars.BalanceEntries.get(userEntry.getId());
+					BalanceEntry balanceEntry = balanceEntryRepository.findByUserId(userEntry.getId()).get();
 					DeliveryDTO value = new DeliveryDTO();
 					value.setUsername(system_id);
 					value.setCurrency(userEntry.getCurrency());
@@ -924,7 +961,7 @@ public class DataBase {
 			for (String system_id : reportList.keySet()) {
 				UserEntry userEntry = userRepository.findBySystemId(system_id).get();
 				if (userEntry != null) {
-					BalanceEntry balanceEntry = GlobalVars.BalanceEntries.get(userEntry.getId());
+					BalanceEntry balanceEntry = balanceEntryRepository.findByUserId(userEntry.getId()).get();
 					keyValue = new HashMap<String, DeliveryDTO>();
 					for (DeliveryDTO inner : reportList.get(system_id)) {
 						DeliveryDTO value = null;
@@ -966,389 +1003,13 @@ public class DataBase {
 
 	private List<DeliveryDTO> sortList(List<DeliveryDTO> list) {
 		Comparator<DeliveryDTO> comparator = null;
-		comparator = Comparator.comparing(DeliveryDTO::getUsername).thenComparing(DeliveryDTO::getTime)
-				.thenComparing(DeliveryDTO::getCountry).thenComparing(DeliveryDTO::getOperator);
+		comparator = Comparator.comparing(DeliveryDTO::getDate).thenComparing(DeliveryDTO::getCampaign);
 		Stream<DeliveryDTO> personStream = list.stream().sorted(comparator);
 		List<DeliveryDTO> sortedlist = personStream.collect(Collectors.toList());
 		return sortedlist;
 	}
 
-	public JasperPrint getJasperPrint(List<DeliveryDTO> reportList, boolean paging, String username)
-			throws JRException {
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (userOptional.isEmpty()) {
-			throw new NotFoundException("user not found username{}" + username);
-		}
-		JasperPrint print = null;
-		JasperReport report = null;
-		Map parameters = new HashMap();
-		JasperDesign design = JRXmlLoader.load(template_file);
-		report = JasperCompileManager.compileReport(design);
-		// ---------- Sorting list ----------------------------
-		reportList = sortListByMessageId(reportList);
-		// ------------- Preparing databeancollection for chart ------------------
-		logger.info(username + " <-- Preparing Charts --> ");
-		// Iterator itr = reportList.iterator();
-		Map<String, Integer> temp_chart = new HashMap<String, Integer>();
-		for (DeliveryDTO chartDTO : reportList) {
-			// System.out.println("Cost: " + chartDTO.getCost());
-			String bsfmRule = chartDTO.getBsfmRule();
-			int counter = 0;
-			if (temp_chart.containsKey(bsfmRule)) {
-				counter = temp_chart.get(bsfmRule);
-			}
-			temp_chart.put(bsfmRule, ++counter);
-		}
-		List<DeliveryDTO> chart_list = new ArrayList<DeliveryDTO>();
-		if (!temp_chart.isEmpty()) {
-			for (Map.Entry<String, Integer> entry : temp_chart.entrySet()) {
-				DeliveryDTO chartDTO = new DeliveryDTO();
-				chartDTO.setBsfmRule(entry.getKey());
-				chartDTO.setRuleCount(entry.getValue());
-				chart_list.add(chartDTO);
-			}
-		}
-		JRBeanCollectionDataSource piechartDataSource = new JRBeanCollectionDataSource(chart_list);
-		parameters.put("piechartDataSource", piechartDataSource);
-		logger.info(username + " <-- Finished Charts --> ");
-		// -----------------------------------------------------------------------
-		JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(reportList);
-		if (reportList.size() > 20000) {
-			logger.info(username + " <-- Creating Virtualizer --> ");
-			JRSwapFileVirtualizer virtualizer = new JRSwapFileVirtualizer(100,
-					new JRSwapFile(IConstants.WEBAPP_DIR + "temp//", 1024, 512));
-			parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
-		}
-		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(userOptional.get().getId());
-		logger.info(username + " DisplayCost: " + webMasterEntry.isDisplayCost());
-		parameters.put("displayCost", webMasterEntry.isDisplayCost());
-		parameters.put(JRParameter.IS_IGNORE_PAGINATION, paging);
-		ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);
-		parameters.put("REPORT_RESOURCE_BUNDLE", bundle);
-		logger.info(username + " <-- Filling Report Data --> ");
-		print = JasperFillManager.fillReport(report, parameters, beanColDataSource);
-		logger.info(username + " <-- Filling Completed --> ");
-		return print;
-	}
-
-	// block report
-	public List<DeliveryDTO> getReportList(CustomReportForm customReportForm, String username) throws Exception {
-		logger.info(username + " Creating Report list");
-		CustomReportDTO customReportDTO = new CustomReportDTO();
-//		BeanUtils.copyProperties(customReportForm, customReportDTO);
-		org.springframework.beans.BeanUtils.copyProperties(customReportForm, customReportDTO);
-		String startDate = customReportDTO.getSday();
-		String endDate = customReportDTO.getEday();
-		String report_user = customReportDTO.getClientId();
-		String destination = customReportDTO.getDestinationNumber();// "9926870493";
-																	// //customReportDTO.getDestinationNumber();
-		String senderId = customReportDTO.getSenderId();// "%"; //customReportDTO.getSenderId();
-		String country = customReportDTO.getCountry();
-		String operator = customReportDTO.getOperator();
-		// String query = null;
-		String block_query = null;
-		List<String> report_user_list = null;
-		List<DeliveryDTO> finallist = new ArrayList<DeliveryDTO>();
-		if (report_user != null) {
-			report_user_list = new ArrayList<String>();
-			report_user_list.add(report_user);
-		} else {
-			String distinct_user_sql = "select distinct(username) from report_spam A where ";
-			if (senderId != null && senderId.trim().length() > 0) {
-				if (senderId.contains("%")) {
-					distinct_user_sql += "A.sender like \"" + senderId + "\" and ";
-				} else {
-					distinct_user_sql += "A.sender =\"" + senderId + "\" and ";
-				}
-			}
-			if (destination != null && destination.trim().length() > 0) {
-				if (destination.contains("%")) {
-					distinct_user_sql += "A.destination like '" + destination + "' and ";
-				} else {
-					distinct_user_sql += "A.destination ='" + destination + "' and ";
-				}
-			} else {
-				if (country != null && country.length() > 0) {
-					Predicate<Integer, NetworkEntry> p = null;
-					String oprCountry = "";
-					if (operator.equalsIgnoreCase("All")) {
-						p = new PredicateBuilderImpl().getEntryObject().get("mcc").equal(country);
-					} else {
-						EntryObject e = new PredicateBuilderImpl().getEntryObject();
-						p = e.get("mcc").equal(country).and(e.get("mnc").equal(operator));
-					}
-					// Coll<Integer, Network> networkmap = dbService.getNetworkRecord(country,
-					// operator);
-					for (int cc : GlobalVars.NetworkEntries.keySet(p)) {
-						oprCountry += "'" + cc + "',";
-					}
-					if (oprCountry.length() > 0) {
-						oprCountry = oprCountry.substring(0, oprCountry.length() - 1);
-						distinct_user_sql += "A.oprCountry in (" + oprCountry + ") and ";
-					}
-				}
-			}
-			if (customReportForm.getBsfmRule() > 0) {
-				distinct_user_sql += "A.profile_id = " + customReportForm.getBsfmRule() + " and ";
-			}
-			if (startDate.equalsIgnoreCase(endDate)) {
-				String start_msg_id = startDate.substring(2);
-				start_msg_id = start_msg_id.replaceAll("-", "");
-				start_msg_id = start_msg_id.replaceAll(":", "");
-				start_msg_id = start_msg_id.replaceAll(" ", "");
-				distinct_user_sql += "A.msg_id like '" + start_msg_id + "%'";
-			} else {
-				String start_msg_id = startDate.substring(2);
-				start_msg_id = start_msg_id.replaceAll("-", "");
-				start_msg_id = start_msg_id.replaceAll(":", "");
-				start_msg_id = start_msg_id.replaceAll(" ", "");
-				start_msg_id += "0000000";
-				String end_msg_id = endDate.substring(2);
-				end_msg_id = end_msg_id.replaceAll("-", "");
-				end_msg_id = end_msg_id.replaceAll(":", "");
-				end_msg_id = end_msg_id.replaceAll(" ", "");
-				end_msg_id += "0000000";
-				distinct_user_sql += "A.msg_id between " + start_msg_id + " and " + end_msg_id + ";";
-			}
-			logger.info("Distinct User Sql: " + distinct_user_sql);
-			report_user_list = distinctSpamUser(distinct_user_sql);
-		}
-		for (String spamUser : report_user_list) {
-			try {
-				block_query = "select A.msg_id,A.username,A.smsc,A.oprCountry,A.cost,A.time,A.sender,A.destination,A.remarks,B.profilename,B.reverse,C.country,C.operator,"
-						+ "D.dcs,D.content,D.esm from report_spam A,bsfmaster B,network C,content_" + spamUser
-						+ " D where ";
-				if (senderId != null && senderId.trim().length() > 0) {
-					if (senderId.contains("%")) {
-						block_query += "A.sender like \"" + senderId + "\" and ";
-					} else {
-						block_query += "A.sender =\"" + senderId + "\" and ";
-					}
-				}
-				if (destination != null && destination.trim().length() > 0) {
-					if (destination.contains("%")) {
-						block_query += "A.destination like '" + destination + "' and ";
-					} else {
-						block_query += "A.destination ='" + destination + "' and ";
-					}
-				} else {
-					if (country != null && country.length() > 0) {
-						Predicate<Integer, NetworkEntry> p = null;
-						String oprCountry = "";
-						if (operator.equalsIgnoreCase("All")) {
-							p = new PredicateBuilderImpl().getEntryObject().get("mcc").equal(country);
-						} else {
-							EntryObject e = new PredicateBuilderImpl().getEntryObject();
-							p = e.get("mcc").equal(country).and(e.get("mnc").equal(operator));
-						}
-						// Coll<Integer, Network> networkmap = dbService.getNetworkRecord(country,
-						// operator);
-						for (int cc : GlobalVars.NetworkEntries.keySet(p)) {
-							oprCountry += "'" + cc + "',";
-						}
-						if (oprCountry.length() > 0) {
-							oprCountry = oprCountry.substring(0, oprCountry.length() - 1);
-							block_query += "A.oprCountry in (" + oprCountry + ") and ";
-						}
-					}
-				}
-				if (customReportForm.getBsfmRule() > 0) {
-					block_query += "A.profile_id = " + customReportForm.getBsfmRule() + " and ";
-				}
-				if (startDate.equalsIgnoreCase(endDate)) {
-					String start_msg_id = startDate.substring(2);
-					start_msg_id = start_msg_id.replaceAll("-", "");
-					start_msg_id = start_msg_id.replaceAll(":", "");
-					start_msg_id = start_msg_id.replaceAll(" ", "");
-					block_query += "A.msg_id like '" + start_msg_id + "%'";
-				} else {
-					String start_msg_id = startDate.substring(2);
-					start_msg_id = start_msg_id.replaceAll("-", "");
-					start_msg_id = start_msg_id.replaceAll(":", "");
-					start_msg_id = start_msg_id.replaceAll(" ", "");
-					start_msg_id += "0000000";
-					String end_msg_id = endDate.substring(2);
-					end_msg_id = end_msg_id.replaceAll("-", "");
-					end_msg_id = end_msg_id.replaceAll(":", "");
-					end_msg_id = end_msg_id.replaceAll(" ", "");
-					end_msg_id += "0000000";
-					block_query += "A.msg_id between " + start_msg_id + " and " + end_msg_id + " and ";
-				}
-				block_query += "A.msg_id=D.msg_id and A.profile_id=B.id and A.oprCountry=C.id order by A.msg_id,A.destination";
-				logger.info("SQL: " + block_query);
-				List<DeliveryDTO> list = blockedReport(block_query);
-				finallist.addAll(list);
-			} catch (Exception ex) {
-				logger.error(spamUser, ex.fillInStackTrace());
-			}
-		}
-		return finallist;
-	}
-
-	public List<DeliveryDTO> blockedReport(String sql) {
-		List<DeliveryDTO> list = new ArrayList<DeliveryDTO>();
-		PreparedStatement pStmt = null;
-		ResultSet rs = null;
-		Session openSession = null;
-		Connection con = null;
-		Map<String, Map<Integer, String>> content_map = new HashMap<String, Map<Integer, String>>();
-		try {
-			con = entityManager.unwrap(Connection.class);
-			pStmt = con.prepareStatement(sql, java.sql.ResultSet.TYPE_FORWARD_ONLY,
-					java.sql.ResultSet.CONCUR_READ_ONLY);
-			pStmt.setFetchSize(Integer.MIN_VALUE);
-			rs = pStmt.executeQuery();
-			while (rs.next()) {
-				String msg_id = rs.getString("A.msg_id");
-				int esm = rs.getInt("D.esm");
-				int dcs = rs.getInt("D.dcs");
-				String content = rs.getString("D.content").trim();
-				String destination = rs.getString("A.destination");
-				String submit_time = rs.getString("time");
-				String date = submit_time.substring(0, 10);
-				String time = submit_time.substring(10, submit_time.length());
-				String sender = rs.getString("A.sender");
-				String report_user = rs.getString("A.username");
-				String smsc = rs.getString("A.smsc");
-				String remarks = rs.getString("A.remarks");
-				String rulename = rs.getString("B.profilename");
-				String country = rs.getString("C.country");
-				String operator = rs.getString("C.operator");
-				double cost = rs.getDouble("A.cost");
-				String msg_type = "English";
-				if (dcs == 8) {
-					msg_type = "Unicode";
-				}
-				// logger.info(msg_id + " " + esm + " " + dcs + " " + destination + " " +
-				// msg_type);
-				if (esm == Data.SM_UDH_GSM || esm == 0x43) { // multipart
-					String reference_number = "0";
-					int part_number = 0;
-					int total_parts = 0;
-					try {
-						int header_length = 0;
-						if (dcs == 8) {
-							header_length = Integer.parseInt(content.substring(0, 2));
-						} else {
-							header_length = Integer.parseInt(content.substring(0, 4));
-						}
-						if (dcs == 8) {
-							if (header_length == 5) {
-								reference_number = content.substring(6, 8);
-								total_parts = Integer.parseInt(content.substring(8, 10));
-								part_number = Integer.parseInt(content.substring(10, 12));
-								content = content.substring(12, content.length());
-							} else if (header_length == 6) {
-								reference_number = content.substring(8, 10);
-								total_parts = Integer.parseInt(content.substring(10, 12));
-								part_number = Integer.parseInt(content.substring(12, 14));
-								content = content.substring(14, content.length());
-							}
-						} else {
-							if (header_length == 5) {
-								reference_number = content.substring(12, 16);
-								total_parts = Integer.parseInt(content.substring(16, 20));
-								part_number = Integer.parseInt(content.substring(20, 24));
-								content = content.substring(24, content.length());
-							} else if (header_length == 6) {
-								reference_number = content.substring(16, 20);
-								total_parts = Integer.parseInt(content.substring(20, 24));
-								part_number = Integer.parseInt(content.substring(24, 28));
-								content = content.substring(28, content.length());
-							}
-						}
-						Map<Integer, String> part_content = null;
-						if (content_map.containsKey(destination + "#" + reference_number + "#" + dcs)) {
-							part_content = content_map.get(destination + "#" + reference_number + "#" + dcs);
-						} else {
-							part_content = new TreeMap<Integer, String>();
-						}
-						part_content.put(part_number, msg_id + "#" + cost + "#" + content);
-						if (part_content.size() == total_parts) { // all parts found
-							DeliveryDTO reportDTO = new DeliveryDTO();
-							reportDTO.setSender(sender);
-							reportDTO.setDestination(destination);
-							reportDTO.setDate(date);
-							reportDTO.setTime(time);
-							reportDTO.setMsgType(msg_type);
-							reportDTO.setUsername(report_user);
-							reportDTO.setCountry(country);
-							reportDTO.setOperator(operator);
-							reportDTO.setRoute(smsc);
-							reportDTO.setBsfmRule(rulename);
-							reportDTO.setRemarks(remarks);
-							String combined_msg_id = "";
-							String combined_content = "";
-							double combined_cost = 0;
-							int msgParts = 0;
-							for (String message : part_content.values()) {
-								String[] value = message.split("#");
-								combined_msg_id += value[0] + " \n";
-								combined_cost += Double.valueOf(value[1]);
-								combined_content += hexCodePointsToCharMsg(value[2]);
-								msgParts++;
-							}
-							reportDTO.setCost(combined_cost);
-							reportDTO.setMsgParts(msgParts);
-							reportDTO.setMsgid(combined_msg_id);
-							reportDTO.setContent(combined_content);
-							list.add(reportDTO);
-						} else {
-							content_map.put(destination + "#" + reference_number + "#" + dcs, part_content);
-						}
-					} catch (Exception une) {
-						logger.error(msg_id + ": " + content, une.fillInStackTrace());
-					}
-				} else {
-					DeliveryDTO reportDTO = new DeliveryDTO();
-					reportDTO.setSender(sender);
-					reportDTO.setDestination(destination);
-					reportDTO.setDate(date);
-					reportDTO.setTime(time);
-					reportDTO.setMsgType(msg_type);
-					reportDTO.setUsername(report_user);
-					reportDTO.setMsgParts(1);
-					reportDTO.setCountry(country);
-					reportDTO.setOperator(operator);
-					reportDTO.setRoute(smsc);
-					reportDTO.setBsfmRule(rulename);
-					reportDTO.setRemarks(remarks);
-					String message = null;
-					try {
-						/*
-						 * if (content.contains("0000")) { content = content.replaceAll("0000", "0040");
-						 * }
-						 */
-						message = hexCodePointsToCharMsg(content);
-					} catch (Exception ex) {
-						message = "Conversion Failed";
-					}
-					reportDTO.setCost(cost);
-					reportDTO.setContent(message);
-					reportDTO.setMsgid(msg_id);
-					list.add(reportDTO);
-				}
-			}
-		} catch (Exception sqle) {
-			if (sqle.getMessage().contains("doesn't exist")) {
-			}
-			throw new InternalServerException("contentWiseDlrReport()" + sqle.getMessage());
-		} finally {
-			try {
-				if (pStmt != null) {
-					pStmt.close();
-				}
-				if (rs != null) {
-					rs.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException sqle) {
-			}
-		}
-		return list;
-	}
+	
 
 	public String hexCodePointsToCharMsg(String msg) {
 		// logger.info("got request ");
@@ -1393,23 +1054,7 @@ public class DataBase {
 		return msg;
 	}
 
-	public List<String> distinctSpamUser(String sql) {
-		List<String> list = new ArrayList<>();
-		try (Connection con = jdbcTemplate.getDataSource().getConnection();
-				PreparedStatement pStmt = con.prepareStatement(sql);
-				ResultSet rs = pStmt.executeQuery()) {
-
-			while (rs.next()) {
-				list.add(rs.getString("username"));
-			}
-		} catch (SQLException sqle) {
-			// Handle or log the exception
-			throw new InternalServerException("distinctSpamUser()" + sqle.getMessage());
-		}
-
-		return list;
-	}
-
+	
 	private <K, V extends Comparable<? super V>> Map<K, V> sortMapByDscValue(Map<K, V> map, int limit) {
 		Map<K, V> result = new LinkedHashMap<>();
 		Stream<Map.Entry<K, V>> st = map.entrySet().stream();
@@ -1418,7 +1063,7 @@ public class DataBase {
 		return result;
 	}
 
-	private List sortListByMessageId(List list) {
+	public List sortListByMessageId(List list) {
 		// logger.info(userSessionObject.getSystemId() + " sortListBySender ");
 		Comparator<DeliveryDTO> comparator = Comparator.comparing(DeliveryDTO::getMsgid);
 		Stream<DeliveryDTO> personStream = list.stream().sorted(comparator);
@@ -1426,7 +1071,6 @@ public class DataBase {
 		return sortedlist;
 	}
 
-	
 	public Workbook getWorkBook(List reportList, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isEmpty()) {
@@ -1543,11 +1187,9 @@ public class DataBase {
 		return workbook;
 	}
 
-	public JasperPrint getCampaignReportList(CustomReportForm customReportForm, String username, boolean paging)
-			throws JRException {
-		// private JasperPrint getReportList(CustomReportForm customReportForm, boolean
-		// paging)
-		// throws SQLException, JRException {
+	public JasperPrint getCampaignReportList(CampaignReportRequest customReportForm, String username, boolean paging,
+			String lang) throws JRException {
+		locale = Customlocale.getLocaleByLanguage(lang);
 		if (customReportForm.getClientId() == null) {
 			return null;
 		}
@@ -1560,9 +1202,8 @@ public class DataBase {
 		List<DeliveryDTO> final_list = new ArrayList<DeliveryDTO>();
 		List<DeliveryDTO> chart_list = new ArrayList<DeliveryDTO>();
 		int final_pending = 0, final_deliv = 0, final_undeliv = 0, final_expired = 0, final_others = 0;
-		// IDatabaseService dbService = HtiSmsDB.getInstance();
-		String[] start_date = customReportForm.getSday().split("-");
-		String[] end_date = customReportForm.getEday().split("-");
+		String[] start_date = customReportForm.getStartDate().split("-");
+		String[] end_date = customReportForm.getEndDate().split("-");
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(Calendar.DATE, Integer.parseInt(end_date[2]));
 		calendar.set(Calendar.MONTH, (Integer.parseInt(end_date[1])) - 1);
@@ -1571,6 +1212,7 @@ public class DataBase {
 		String end_date_str = new SimpleDateFormat("yyMMdd").format(calendar.getTime()) + "0000000000000";
 		String start_date_str = (start_date[0].substring(2)) + "" + start_date[1] + "" + start_date[2]
 				+ "0000000000000";
+
 		List<String> users = null;
 		if (customReportForm.getClientId().equalsIgnoreCase("All")) {
 			String role = userEntry2.getRole();
@@ -1599,6 +1241,7 @@ public class DataBase {
 		logger.info(userEntry2.getSystemId() + " <-- preparing Report Data --> ");
 		List<BulkMapEntry> list = list(users.toArray(new String[users.size()]), Long.parseLong(start_date_str),
 				Long.parseLong(end_date_str));
+		System.out.println("this is bulk map entry " + list);
 		if (customReportForm.getGroupBy().equalsIgnoreCase("name")) {
 			Map<String, Map<String, List<String>>> filtered_map = new HashMap<String, Map<String, List<String>>>();
 			for (BulkMapEntry entry : list) {
@@ -1676,32 +1319,43 @@ public class DataBase {
 						logger.info(userEntry2.getSystemId() + " Checking Report For " + report_user);
 						String sql = "select msg_id,DATE(submitted_time) as date,source_no,status from mis_"
 								+ report_user + " where msg_id between " + start_date_str + " and " + end_date_str;
+						System.out.println(sql);
 						List<DeliveryDTO> part_list = getCampaignReport(sql);
+						System.out.println(part_list);
 						logger.info(report_user + " Start Processing Entries: " + part_list.size());
 						Map<String, Map<String, Map<String, DeliveryDTO>>> date_wise_map = new HashMap<String, Map<String, Map<String, DeliveryDTO>>>();
 						// int total_submitted = 0;
 						for (DeliveryDTO dlrEntry : part_list) {
+							System.out.println("1703");
 							if (campaign_map.containsKey(dlrEntry.getMsgid())) {
+								System.out.println("1705");
 								dlrEntry.setCampaign(campaign_map.get(dlrEntry.getMsgid()));
 							} else {
+								System.out.println("1708");
 								dlrEntry.setCampaign("-");
 							}
 							Map<String, Map<String, DeliveryDTO>> campaign_wise_map = null;
 							if (date_wise_map.containsKey(dlrEntry.getDate())) {
+								System.out.println("1713");
 								campaign_wise_map = date_wise_map.get(dlrEntry.getDate());
 							} else {
+								System.out.println("1716");
 								campaign_wise_map = new HashMap<String, Map<String, DeliveryDTO>>();
 							}
 							Map<String, DeliveryDTO> source_wise_map = null;
 							if (campaign_wise_map.containsKey(dlrEntry.getCampaign())) {
+								System.out.println("1721");
 								source_wise_map = campaign_wise_map.get(dlrEntry.getCampaign());
 							} else {
+								System.out.println("1724");
 								source_wise_map = new HashMap<String, DeliveryDTO>();
 							}
 							DeliveryDTO dlrDTO = null;
 							if (source_wise_map.containsKey(dlrEntry.getSender())) {
+								System.out.println("1729");
 								dlrDTO = source_wise_map.get(dlrEntry.getSender());
 							} else {
+								System.out.println("1732");
 								dlrDTO = new DeliveryDTO();
 								dlrDTO.setCampaign(dlrEntry.getCampaign());
 								dlrDTO.setSender(dlrEntry.getSender());
@@ -1709,31 +1363,40 @@ public class DataBase {
 								dlrDTO.setUsername(report_user);
 							}
 							if (dlrEntry.getStatus() != null) {
+								System.out.println("1740");
 								if (dlrEntry.getStatus().toLowerCase().startsWith("deliv")) {
+									System.out.println("1742");
 									dlrDTO.setDelivered(dlrDTO.getDelivered() + 1);
 									final_deliv++;
 								} else if (dlrEntry.getStatus().toLowerCase().startsWith("undel")) {
+									System.out.println("1746");
 									dlrDTO.setUndelivered(dlrDTO.getUndelivered() + 1);
 									final_undeliv++;
 								} else if (dlrEntry.getStatus().toLowerCase().startsWith("expir")) {
+									System.out.println("1750");
 									dlrDTO.setExpired(dlrDTO.getExpired() + 1);
 									final_expired++;
 								} else if (dlrEntry.getStatus().toLowerCase().startsWith("ates")) {
+									System.out.println("1754");
 									dlrDTO.setPending(dlrDTO.getPending() + 1);
 									final_pending++;
 								} else {
+									System.out.println("1758");
 									dlrDTO.setOthers(dlrDTO.getOthers() + 1);
 									final_others++;
 								}
 							} else {
+								System.out.println("1763");
 								dlrDTO.setOthers(dlrDTO.getOthers() + 1);
 								final_others++;
 							}
+							System.out.println("1767");
 							dlrDTO.setSubmitted(dlrDTO.getSubmitted() + 1);
 							// total_submitted++;
 							source_wise_map.put(dlrDTO.getSender(), dlrDTO);
 							campaign_wise_map.put(dlrDTO.getCampaign(), source_wise_map);
 							date_wise_map.put(dlrDTO.getDate(), campaign_wise_map);
+							System.out.println("this is data wise map" + date_wise_map);
 						}
 						logger.info(report_user + " <- End Processing Entries -> ");
 						if (!date_wise_map.isEmpty()) {
@@ -1743,6 +1406,7 @@ public class DataBase {
 										.getValue().entrySet()) {
 									for (Map.Entry<String, DeliveryDTO> source_wise_entry : campaign_wise_entry
 											.getValue().entrySet()) {
+										System.out.println("this is source wise entry " + source_wise_entry.getValue());
 										final_list.add(source_wise_entry.getValue());
 									}
 								}
@@ -1759,6 +1423,8 @@ public class DataBase {
 		chart_list.add(new DeliveryDTO("EXPIRED", final_expired));
 		chart_list.add(new DeliveryDTO("PENDING", final_pending));
 		chart_list.add(new DeliveryDTO("OTHERS", final_others));
+		System.out.println("this is chart" + chart_list);
+		System.out.println("this is final list" + final_list);
 		JasperPrint print = null;
 		if (!final_list.isEmpty()) {
 			logger.info(userEntry2.getSystemId() + " Prepared List: " + final_list.size());
@@ -1785,31 +1451,47 @@ public class DataBase {
 		} else {
 			logger.info(userEntry2.getSystemId() + " <-- No Report Data Found --> ");
 		}
-
 		return print;
 	}
 
-	public List<DeliveryDTO> getCampaignReport(String sql) {
-		List<DeliveryDTO> deliveryList = new ArrayList<>();
-
+	public List<DeliveryDTO> getCampaignReport(String sql) throws SQLException {
+		List<DeliveryDTO> list = new ArrayList<DeliveryDTO>();
+		Connection con = null;
+		PreparedStatement pStmt = null;
+		ResultSet rs = null;
 		try {
-			Query query = entityManager.createNativeQuery(sql, DeliveryDTO.class);
-			List<Object[]> resultList = query.getResultList();
-
-			for (Object[] result : resultList) {
-				DeliveryDTO delivery = new DeliveryDTO();
-				delivery.setMsgid((String) result[0]);
-				delivery.setSender((String) result[1]);
-				delivery.setDate((String) result[2]);
-				delivery.setStatus((String) result[3]);
-				deliveryList.add(delivery);
+			con = getConnection();
+			pStmt = con.prepareStatement(sql);
+			// pStmt.setString(1, String.join(",", msg_id_list));
+			rs = pStmt.executeQuery();
+			DeliveryDTO deliver = null;
+			while (rs.next()) {
+				deliver = new DeliveryDTO();
+				deliver.setMsgid(rs.getString("msg_id"));
+				deliver.setSender(rs.getString("source_no"));
+				deliver.setDate(rs.getString("date"));
+				deliver.setStatus(rs.getString("status"));
+				list.add(deliver);
 			}
-		} catch (Exception e) {
-			// Handle exception appropriately
-			e.printStackTrace();
+		} catch (SQLException sqle) {
+			throw new SQLException(sqle);
+		} finally {
+			try {
+				if (rs != null) {
+					rs.close();
+					rs = null;
+				}
+				if (pStmt != null) {
+					pStmt.close();
+					pStmt = null;
+				}
+				if (con != null) {
+					con.close();
+				}
+			} catch (SQLException sqle) {
+			}
 		}
-
-		return deliveryList;
+		return list;
 	}
 
 	public Map<String, Map<String, Map<String, Integer>>> getCampaignReport(String username, List<String> msg_id_list) {
@@ -1870,569 +1552,11 @@ public class DataBase {
 		return list;
 	}
 
-	public List<DeliveryDTO> getContentReportList(CustomReportForm customReportForm, String username) {
-
-		UserDAService userDAService = new UserDAServiceImpl();
-		if (customReportForm.getClientId() == null) {
-			return null;
-		}
-		Optional<UserEntry> usersOptional = userRepository.findBySystemId(username);
-		if (!usersOptional.isPresent()) {
-			throw new NotFoundException("user not fout with system id" + username);
-		}
-
-		UserEntry user = usersOptional.get();
-		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
-		if (webMasterEntry == null) {
-			throw new NotFoundException("web MasterEntry  not fount username {}" + user.getId());
-		}
-
-		logger.info(user.getSystemId() + " Creating Report list");
-		CustomReportDTO customReportDTO = new CustomReportDTO();
-		BeanUtils.copyProperties(customReportDTO, customReportForm);
-		String startDate = customReportForm.getSday();
-		String endDate = customReportForm.getEday();
-		// IDatabaseService dbService = HtiSmsDB.getInstance();
-		String report_user = customReportDTO.getClientId();
-		String destination = customReportDTO.getDestinationNumber();// "9926870493";
-																	// //customReportDTO.getDestinationNumber();
-		String senderId = customReportDTO.getSenderId();// "%"; //customReportDTO.getSenderId();
-		String country = customReportDTO.getCountry();
-		String operator = customReportDTO.getOperator();
-		String query = null;
-		String unproc_query = null;
-		String to_gmt = null, from_gmt = null;
-		// logger.info(userSessionObject.getSystemId() + " Content Checked ------> " +
-		// customReportForm.getCheck_F());
-		// logger.info("USER_GMT: " + userSessionObject.getDefaultGmt() + " DEFAULT_GMT:
-		// " + IConstants.DEFAULT_GMT);
-		if (!webMasterEntry.getGmt().equalsIgnoreCase(IConstants.DEFAULT_GMT)) {
-			to_gmt = webMasterEntry.getGmt().replace("GMT", "");
-			from_gmt = IConstants.DEFAULT_GMT.replace("GMT", "");
-		}
-		logger.info(user.getSystemId() + " To_gmt: " + to_gmt + " From_gmt: " + from_gmt);
-		// logger.info(userSessionObject.getSystemId() + " Content Report Based On
-		// Criteria");
-		if (to_gmt != null) {
-			query = "select CONVERT_TZ(A.submitted_time,'" + from_gmt + "','" + to_gmt + "') as submitted_time,";
-			unproc_query = "select CONVERT_TZ(A.time,'" + from_gmt + "','" + to_gmt + "') as time,";
-		} else {
-			query = "select A.submitted_time as submitted_time,";
-			unproc_query = "select A.time as time,";
-		}
-		if (to_gmt != null) {
-			query += "CONVERT_TZ(A.deliver_time,'" + from_gmt + "','" + to_gmt + "') as deliver_time,";
-		} else {
-			query += "A.deliver_time as deliver_time,";
-		}
-		query += "A.msg_id,A.source_no,A.dest_no,A.status,A.cost,B.dcs,B.content,B.esm from mis_" + report_user
-				+ " A,content_" + report_user + " B where A.msg_id = B.msg_id and ";
-		unproc_query += "A.msg_id,A.source_no,A.destination_no,A.s_flag,A.cost,B.dcs,B.content,B.esm from table_name A,content_"
-				+ report_user + " B where A.msg_id = B.msg_id and ";
-		if (senderId != null && senderId.trim().length() > 0) {
-			if (senderId.contains("%")) {
-				query += "A.source_no like \"" + senderId + "\" and ";
-				unproc_query += "A.source_no like \"" + senderId + "\" and ";
-			} else {
-				query += "A.source_no =\"" + senderId + "\" and ";
-				unproc_query += "A.source_no =\"" + senderId + "\" and ";
-			}
-		}
-		if (destination != null && destination.trim().length() > 0) {
-			if (destination.contains("%")) {
-				query += "A.dest_no like '" + destination + "' and ";
-				unproc_query += "A.destination_no like '" + destination + "' and ";
-			} else {
-				query += "A.dest_no ='" + destination + "' and ";
-				unproc_query += "A.destination_no ='" + destination + "' and ";
-			}
-		} else {
-			if (country != null && country.length() > 0) {
-				Predicate<Integer, NetworkEntry> p = null;
-				String oprCountry = "";
-				if (operator.equalsIgnoreCase("All")) {
-					p = new PredicateBuilderImpl().getEntryObject().get("mcc").equal(country);
-				} else {
-					EntryObject e = new PredicateBuilderImpl().getEntryObject();
-					p = e.get("mcc").equal(country).and(e.get("mnc").equal(operator));
-				}
-				// Coll<Integer, Network> networkmap = dbService.getNetworkRecord(country,
-				// operator);
-				for (int cc : GlobalVars.NetworkEntries.keySet(p)) {
-					oprCountry += "'" + cc + "',";
-				}
-				if (oprCountry.length() > 0) {
-					oprCountry = oprCountry.substring(0, oprCountry.length() - 1);
-					query += "A.oprCountry in (" + oprCountry + ") and ";
-					unproc_query += "A.oprCountry in (" + oprCountry + ") and ";
-				}
-			}
-		}
-		if (to_gmt != null) {
-			SimpleDateFormat client_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			client_formatter.setTimeZone(TimeZone.getTimeZone(webMasterEntry.getGmt()));
-			SimpleDateFormat local_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			try {
-				String start_msg_id = local_formatter.format(client_formatter.parse(startDate));
-				String end_msg_id = local_formatter.format(client_formatter.parse(endDate));
-				start_msg_id = start_msg_id.replaceAll("-", "");
-				start_msg_id = start_msg_id.replaceAll(":", "");
-				start_msg_id = start_msg_id.replaceAll(" ", "");
-				start_msg_id = start_msg_id.substring(2);
-				start_msg_id += "0000000";
-				end_msg_id = end_msg_id.replaceAll("-", "");
-				end_msg_id = end_msg_id.replaceAll(":", "");
-				end_msg_id = end_msg_id.replaceAll(" ", "");
-				end_msg_id = end_msg_id.substring(2);
-				end_msg_id += "0000000";
-				query += "A.msg_id between " + start_msg_id + " and " + end_msg_id;
-				unproc_query += "A.msg_id between " + start_msg_id + " and " + end_msg_id;
-			} catch (Exception e) {
-				query += "A.submitted_time between CONVERT_TZ('" + startDate + "','" + to_gmt + "','" + from_gmt
-						+ "') and CONVERT_TZ('" + endDate + "','" + to_gmt + "','" + from_gmt + "')";
-				unproc_query += "A.time between CONVERT_TZ('" + startDate + "','" + to_gmt + "','" + from_gmt
-						+ "') and CONVERT_TZ('" + endDate + "','" + to_gmt + "','" + from_gmt + "')";
-			}
-		} else {
-			if (startDate.equalsIgnoreCase(endDate)) {
-				String start_msg_id = startDate.substring(2);
-				start_msg_id = start_msg_id.replaceAll("-", "");
-				start_msg_id = start_msg_id.replaceAll(":", "");
-				start_msg_id = start_msg_id.replaceAll(" ", "");
-				query += "A.msg_id like '" + start_msg_id + "%'";
-				unproc_query += "A.msg_id like '" + start_msg_id + "%'";
-			} else {
-				String start_msg_id = startDate.substring(2);
-				start_msg_id = start_msg_id.replaceAll("-", "");
-				start_msg_id = start_msg_id.replaceAll(":", "");
-				start_msg_id = start_msg_id.replaceAll(" ", "");
-				start_msg_id += "0000000";
-				String end_msg_id = endDate.substring(2);
-				end_msg_id = end_msg_id.replaceAll("-", "");
-				end_msg_id = end_msg_id.replaceAll(":", "");
-				end_msg_id = end_msg_id.replaceAll(" ", "");
-				end_msg_id += "0000000";
-				query += "A.msg_id between " + start_msg_id + " and " + end_msg_id
-						+ " order by A.msg_id,A.dest_no,A.source_no;";
-				unproc_query += "A.msg_id between " + start_msg_id + " and " + end_msg_id
-						+ " order by A.msg_id,A.destination_no,A.source_no;";
-			}
-		}
-		logger.info(user.getSystemId() + " ReportSQL:" + query);
-		List<DeliveryDTO> list = contentWiseDlrReport(query, report_user, webMasterEntry.isHideNum());
-		// logger.info(userSessionObject.getSystemId() + " ReportSQL:" + query);
-		List<DeliveryDTO> unproc_list_1 = contentWiseUprocessedReport(unproc_query.replaceAll("table_name", "smsc_in"),
-				report_user, webMasterEntry.isHideNum());
-		list.addAll(unproc_list_1);
-		// logger.info(userSessionObject.getSystemId() + " ReportSQL:" + query);
-		List<DeliveryDTO> unproc_list_2 = contentWiseUprocessedReport(
-				unproc_query.replaceAll("table_name", "unprocessed"), report_user, webMasterEntry.isHideNum());
-		list.addAll(unproc_list_2);
-		logger.info(user.getSystemId() + " End Based On Criteria. Final Report Size: " + list.size());
-		return list;
-	}
-
-	public List<DeliveryDTO> contentWiseUprocessedReport(String sql, String report_user, boolean hidenumber) {
-		logger.info(report_user + " SQL: " + sql);
-		List<DeliveryDTO> list = new ArrayList<DeliveryDTO>();
-		Connection con = null;
-		PreparedStatement pStmt = null;
-		ResultSet rs = null;
-		Map<String, Map<Integer, String>> content_map = new HashMap<String, Map<Integer, String>>();
-		try {
-			// Connection connection = entityManager.unwrap(Connection.class);
-			Connection conn = entityManager.unwrap(Connection.class);
-
-			// con = dbCon.getConnection();
-			pStmt = con.prepareStatement(sql, java.sql.ResultSet.TYPE_FORWARD_ONLY,
-					java.sql.ResultSet.CONCUR_READ_ONLY);
-			pStmt.setFetchSize(Integer.MIN_VALUE);
-			rs = pStmt.executeQuery();
-			while (rs.next()) {
-				String msg_id = rs.getString("A.msg_id");
-				int esm = rs.getInt("B.esm");
-				int dcs = rs.getInt("B.dcs");
-				String content = rs.getString("B.content").trim();
-				String destination = rs.getString("A.destination_no");
-				String submit_time = rs.getString("time");
-				String date = submit_time.substring(0, 10);
-				String time = submit_time.substring(10, submit_time.length());
-				String status = rs.getString("A.s_flag");
-				String sender = rs.getString("A.source_no");
-				double cost = rs.getDouble("A.cost");
-				if (status != null) {
-					if (status.equalsIgnoreCase("B")) {
-						status = "BLOCKED";
-					} else if (status.equalsIgnoreCase("M")) {
-						status = "MINCOST";
-					} else if (status.equalsIgnoreCase("F")) {
-						status = "NONRESP";
-					} else if (status.equalsIgnoreCase("Q")) {
-						status = "QUEUED";
-					} else {
-						status = "UNPROCD";
-					}
-				}
-				String msg_type = "English";
-				if (dcs == 8) {
-					msg_type = "Unicode";
-				}
-				// logger.info(msg_id + " " + esm + " " + dcs + " " + destination + " " +
-				// msg_type);
-				if (esm == Data.SM_UDH_GSM || esm == 0x43) { // multipart
-					String reference_number = "0";
-					int part_number = 0;
-					int total_parts = 0;
-					try {
-						int header_length = 0;
-						if (dcs == 8) {
-							header_length = Integer.parseInt(content.substring(0, 2));
-						} else {
-							header_length = Integer.parseInt(content.substring(0, 4));
-						}
-						if (dcs == 8) {
-							if (header_length == 5) {
-								reference_number = content.substring(6, 8);
-								try {
-									total_parts = Integer.parseInt(content.substring(8, 10));
-								} catch (Exception e) {
-									total_parts = Integer.parseInt(content.substring(8, 10), 16);
-								}
-								try {
-									part_number = Integer.parseInt(content.substring(10, 12));
-								} catch (Exception e) {
-									part_number = Integer.parseInt(content.substring(10, 12), 16);
-								}
-								content = content.substring(12, content.length());
-							} else if (header_length == 6) {
-								reference_number = content.substring(8, 10);
-								try {
-									total_parts = Integer.parseInt(content.substring(10, 12));
-								} catch (Exception e) {
-									total_parts = Integer.parseInt(content.substring(10, 12), 16);
-								}
-								try {
-									part_number = Integer.parseInt(content.substring(12, 14));
-								} catch (Exception e) {
-									part_number = Integer.parseInt(content.substring(12, 14), 16);
-								}
-								content = content.substring(14, content.length());
-							}
-						} else {
-							if (header_length == 5) {
-								reference_number = content.substring(12, 16);
-								try {
-									total_parts = Integer.parseInt(content.substring(16, 20));
-								} catch (Exception e) {
-									total_parts = Integer.parseInt(content.substring(18, 20), 16);
-								}
-								try {
-									part_number = Integer.parseInt(content.substring(20, 24));
-								} catch (Exception e) {
-									part_number = Integer.parseInt(content.substring(22, 24), 16);
-								}
-								content = content.substring(24, content.length());
-							} else if (header_length == 6) {
-								reference_number = content.substring(16, 20);
-								try {
-									total_parts = Integer.parseInt(content.substring(20, 24));
-								} catch (Exception e) {
-									total_parts = Integer.parseInt(content.substring(22, 24), 16);
-								}
-								try {
-									part_number = Integer.parseInt(content.substring(24, 28));
-								} catch (Exception e) {
-									part_number = Integer.parseInt(content.substring(26, 28), 16);
-								}
-								content = content.substring(28, content.length());
-							}
-						}
-						Map<Integer, String> part_content = null;
-						if (content_map.containsKey(destination + "#" + reference_number + "#" + dcs)) {
-							part_content = content_map.get(destination + "#" + reference_number + "#" + dcs);
-						} else {
-							part_content = new TreeMap<Integer, String>();
-						}
-						part_content.put(part_number, msg_id + "#" + cost + "#" + content);
-						if (part_content.size() == total_parts) { // all parts found
-							DeliveryDTO reportDTO = new DeliveryDTO();
-							reportDTO.setStatus(status);
-							reportDTO.setSender(sender);
-							if (hidenumber) {
-								String dest_sub = destination.substring(0, destination.length() - 2);
-								dest_sub += "**";
-								reportDTO.setDestination(dest_sub);
-							} else {
-								reportDTO.setDestination(destination);
-							}
-							reportDTO.setDate(date);
-							reportDTO.setTime(time);
-							reportDTO.setDeliverOn("-");
-							reportDTO.setMsgType(msg_type);
-							reportDTO.setUsername(report_user);
-							String combined_msg_id = "";
-							String combined_content = "";
-							double combined_cost = 0;
-							int msgParts = 0;
-							for (String message : part_content.values()) {
-								String[] value = message.split("#");
-								combined_msg_id += value[0] + " \n";
-								combined_cost += Double.valueOf(value[1]);
-								combined_content += hexCodePointsToCharMsg(value[2]);
-								msgParts++;
-							}
-							reportDTO.setCost(combined_cost);
-							reportDTO.setMsgParts(msgParts);
-							reportDTO.setMsgid(combined_msg_id);
-							reportDTO.setContent(combined_content);
-							list.add(reportDTO);
-						} else {
-							content_map.put(destination + "#" + reference_number + "#" + dcs, part_content);
-						}
-					} catch (Exception une) {
-						logger.error(msg_id + ": " + content, une.fillInStackTrace());
-					}
-				} else {
-					DeliveryDTO reportDTO = new DeliveryDTO();
-					reportDTO.setStatus(status);
-					reportDTO.setSender(sender);
-					if (hidenumber) {
-						String dest_sub = destination.substring(0, destination.length() - 2);
-						dest_sub += "**";
-						reportDTO.setDestination(dest_sub);
-					} else {
-						reportDTO.setDestination(destination);
-					}
-					reportDTO.setDate(date);
-					reportDTO.setTime(time);
-					reportDTO.setDeliverOn("-");
-					reportDTO.setMsgType(msg_type);
-					reportDTO.setUsername(report_user);
-					reportDTO.setMsgParts(1);
-					String message = null;
-					try {
-						/*
-						 * if (content.contains("0000")) { content = content.replaceAll("0000", "0040");
-						 * }
-						 */
-						message = hexCodePointsToCharMsg(content);
-					} catch (Exception ex) {
-						message = "Conversion Failed";
-					}
-					reportDTO.setCost(cost);
-					reportDTO.setContent(message);
-					reportDTO.setMsgid(msg_id);
-					list.add(reportDTO);
-				}
-			}
-		} catch (Exception sqle) {
-			logger.error(report_user, sqle);
-			throw new InternalServerException("contentWiseUnprocessed" + sqle.getMessage());
-		}
-
-		logger.info(report_user + " report_list: " + list.size());
-		return list;
-	}
-
-	@Transactional
-	public List<DeliveryDTO> contentWiseDlrReport(String sql, String report_user, boolean hidenumber) {
-		List<DeliveryDTO> list = new ArrayList<DeliveryDTO>();
-		Connection con = null;
-		// private DBConnection dbCon = null;
-		PreparedStatement pStmt = null;
-		Connection db_con = null;
-		ResultSet rs = null;
-		Map<String, Map<Integer, String>> content_map = new HashMap<String, Map<Integer, String>>();
-		try {
-			Connection conn = entityManager.unwrap(Connection.class);
-			// Session session = (Session)entityManager.getDelegate();
-			// Connection conn = session.connection();
-
-			// Connection conn = entityManager.unwrap(Session.class).connection();
-
-			// con = dbCon.getConnection();
-			pStmt = conn.prepareStatement(sql, java.sql.ResultSet.TYPE_FORWARD_ONLY,
-					java.sql.ResultSet.CONCUR_READ_ONLY);
-			pStmt.setFetchSize(Integer.MIN_VALUE);
-			rs = pStmt.executeQuery();
-			while (rs.next()) {
-				String msg_id = rs.getString("A.msg_id");
-				int esm = rs.getInt("B.esm");
-				int dcs = rs.getInt("B.dcs");
-				String content = rs.getString("B.content").trim();
-				String destination = rs.getString("A.dest_no");
-				String submit_time = rs.getString("submitted_time");
-				String deliver_time = rs.getString("deliver_time");
-				String date = submit_time.substring(0, 10);
-				String time = submit_time.substring(10, submit_time.length());
-				String status = rs.getString("A.status");
-				String sender = rs.getString("A.source_no");
-				double cost = rs.getDouble("A.cost");
-				String msg_type = "English";
-				if (dcs == 8) {
-					msg_type = "Unicode";
-				}
-				// logger.info(msg_id + " " + esm + " " + dcs + " " + destination + " " +
-				// msg_type);
-				if (esm == Data.SM_UDH_GSM || esm == 0x43) { // multipart
-					String reference_number = "0";
-					int part_number = 0;
-					int total_parts = 0;
-					try {
-						int header_length = 0;
-						if (dcs == 8) {
-							header_length = Integer.parseInt(content.substring(0, 2));
-						} else {
-							header_length = Integer.parseInt(content.substring(0, 4));
-						}
-						if (dcs == 8) {
-							if (header_length == 5) {
-								reference_number = content.substring(6, 8);
-								try {
-									total_parts = Integer.parseInt(content.substring(8, 10));
-								} catch (Exception ex) {
-									total_parts = Integer.parseInt(content.substring(8, 10), 16);
-								}
-								try {
-									part_number = Integer.parseInt(content.substring(10, 12));
-								} catch (Exception ex) {
-									part_number = Integer.parseInt(content.substring(10, 12), 16);
-								}
-								content = content.substring(12, content.length());
-							} else if (header_length == 6) {
-								reference_number = content.substring(8, 10);
-								try {
-									total_parts = Integer.parseInt(content.substring(10, 12));
-								} catch (Exception e) {
-									total_parts = Integer.parseInt(content.substring(10, 12), 16);
-								}
-								try {
-									part_number = Integer.parseInt(content.substring(12, 14));
-								} catch (Exception e) {
-									part_number = Integer.parseInt(content.substring(12, 14), 16);
-								}
-								content = content.substring(14, content.length());
-							}
-						} else {
-							if (header_length == 5) {
-								reference_number = content.substring(12, 16);
-								try {
-									total_parts = Integer.parseInt(content.substring(18, 20));
-								} catch (Exception e) {
-									total_parts = Integer.parseInt(content.substring(18, 20), 16);
-								}
-								try {
-									part_number = Integer.parseInt(content.substring(22, 24));
-								} catch (Exception e) {
-									part_number = Integer.parseInt(content.substring(22, 24), 16);
-								}
-								content = content.substring(24, content.length());
-							} else if (header_length == 6) {
-								reference_number = content.substring(16, 20);
-								try {
-									total_parts = Integer.parseInt(content.substring(22, 24));
-								} catch (Exception e) {
-									total_parts = Integer.parseInt(content.substring(22, 24), 16);
-								}
-								try {
-									part_number = Integer.parseInt(content.substring(26, 28));
-								} catch (Exception e) {
-									part_number = Integer.parseInt(content.substring(26, 28), 16);
-								}
-								content = content.substring(28, content.length());
-							}
-						}
-						Map<Integer, String> part_content = null;
-						if (content_map.containsKey(destination + "#" + reference_number + "#" + dcs)) {
-							part_content = content_map.get(destination + "#" + reference_number + "#" + dcs);
-						} else {
-							part_content = new TreeMap<Integer, String>();
-						}
-						part_content.put(part_number, msg_id + "#" + cost + "#" + content);
-						if (part_content.size() == total_parts) { // all parts found
-							DeliveryDTO reportDTO = new DeliveryDTO();
-							reportDTO.setStatus(status);
-							reportDTO.setSender(sender);
-							if (hidenumber) {
-								String dest_sub = destination.substring(0, destination.length() - 2);
-								dest_sub += "**";
-								reportDTO.setDestination(dest_sub);
-							} else {
-								reportDTO.setDestination(destination);
-							}
-							reportDTO.setDate(date);
-							reportDTO.setTime(time);
-							reportDTO.setMsgType(msg_type);
-							reportDTO.setUsername(report_user);
-							reportDTO.setDeliverOn(deliver_time);
-							String combined_msg_id = "";
-							String combined_content = "";
-							double combined_cost = 0;
-							int msgParts = 0;
-							for (String message : part_content.values()) {
-								String[] value = message.split("#");
-								combined_msg_id += value[0] + " \n";
-								combined_cost += Double.valueOf(value[1]);
-								combined_content += hexCodePointsToCharMsg(value[2]);
-								msgParts++;
-							}
-							reportDTO.setCost(combined_cost);
-							reportDTO.setMsgParts(msgParts);
-							reportDTO.setMsgid(combined_msg_id);
-							reportDTO.setContent(combined_content);
-							list.add(reportDTO);
-						} else {
-							content_map.put(destination + "#" + reference_number + "#" + dcs, part_content);
-						}
-					} catch (Exception une) {
-						logger.error(msg_id + ": " + content, une.fillInStackTrace());
-					}
-				} else {
-					DeliveryDTO reportDTO = new DeliveryDTO();
-					reportDTO.setStatus(status);
-					reportDTO.setSender(sender);
-					if (hidenumber) {
-						String dest_sub = destination.substring(0, destination.length() - 2);
-						dest_sub += "**";
-						reportDTO.setDestination(dest_sub);
-					} else {
-						reportDTO.setDestination(destination);
-					}
-					reportDTO.setDate(date);
-					reportDTO.setTime(time);
-					reportDTO.setMsgType(msg_type);
-					reportDTO.setUsername(report_user);
-					reportDTO.setDeliverOn(deliver_time);
-					reportDTO.setMsgParts(1);
-					String message = null;
-					try {
-						/*
-						 * if (content.contains("0000")) { content = content.replaceAll("0000", "0040");
-						 * }
-						 */
-						message = hexCodePointsToCharMsg(content);
-					} catch (Exception ex) {
-						message = "Conversion Failed";
-					}
-					reportDTO.setCost(cost);
-					reportDTO.setContent(message);
-					reportDTO.setMsgid(msg_id);
-					list.add(reportDTO);
-				}
-			}
-		} catch (Exception sqle) {
-			logger.error(report_user, sqle);
-			throw new InternalServerException("contentWiseUnprocessed" + sqle.getMessage());
-		}
-		return list;
-	}
-
-	public Workbook getContentWorkBook(List<DeliveryDTO> reportList, String username) {
+	public Workbook getContentWorkBook(List<DeliveryDTO> reportList, String username, String lang) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isEmpty()) {
 			throw new NotFoundException("username not found username{}" + username);
 		}
-
 		logger.info(username + " <-- Creating WorkBook --> ");
 		SXSSFWorkbook workbook = new SXSSFWorkbook();
 		int records_per_sheet = 400000;
@@ -2544,8 +1668,8 @@ public class DataBase {
 		return workbook;
 	}
 
-	public List<DeliveryDTO> getCustomizedReportList(CustomReportForm customReportForm, String username)
-			throws Exception {
+	public List<DeliveryDTO> getCustomizedReportList(CustomizedReportRequest customReportForm, String username,
+			String lang) throws Exception {
 		String target = IConstants.FAILURE_KEY;
 		String groupby = "country";
 		String reportUser = null;
@@ -2567,9 +1691,10 @@ public class DataBase {
 		List final_list = new ArrayList();
 		CustomReportDTO customReportDTO = new CustomReportDTO();
 		groupby = customReportForm.getGroupBy();
-		BeanUtils.copyProperties(customReportDTO, customReportForm);
-		String startDate = customReportForm.getSday();
-		String endDate = customReportForm.getEday();
+		BeanUtils.copyProperties(customReportForm, customReportDTO);
+		System.out.println(customReportDTO.getCampaign());
+		String startDate = customReportForm.getStartDate();
+		String endDate = customReportForm.getEndDate();
 		BulkDAService bulkService = null;
 		// IDatabaseService dbService = HtiSmsDB.getInstance();
 		reportUser = customReportDTO.getClientId();
@@ -2594,7 +1719,6 @@ public class DataBase {
 		}
 		to_gmt = null;
 		from_gmt = null;
-
 		logger.info(user.getSystemId() + ": " + webMasterEntry.getGmt() + " Default: " + IConstants.DEFAULT_GMT);
 		if (!webMasterEntry.getGmt().equalsIgnoreCase(IConstants.DEFAULT_GMT)) {
 			to_gmt = webMasterEntry.getGmt().replace("GMT", "");
@@ -2604,11 +1728,12 @@ public class DataBase {
 			if (criteria_type.equalsIgnoreCase("messageid")) {
 				logger.info(user.getSystemId() + " Report Based On MessageId: " + messageId);
 				if (messageId != null && messageId.trim().length() > 0) {
-
 				}
+				System.out.println("run 2618");
 				isSummary = false;
 				String userQuery = "select username from mis_table where msg_id ='" + messageId + "'";
 				List userSet = getDistinctMisUser(userQuery);
+				System.out.println("run 2622" + userSet);
 				if (!userSet.isEmpty()) {
 					reportUser = (String) userSet.remove(0);
 					if (to_gmt != null) {
@@ -2617,10 +1742,11 @@ public class DataBase {
 					} else {
 						query = "select submitted_time,";
 					}
-					query += "msg_id,oprCountry,source_no,dest_no,cost,status,deliver_time,err_code from mis_"
+					query += "msg_id,oprCountry,source_no,dest_no,cost,status,deliver_time,err_code,Route_to_SMSC from mis_"
 							+ reportUser + " where msg_id ='" + messageId + "'";
 					logger.info(user.getSystemId() + " ReportSQL:" + query);
 					if (isContent) {
+						System.out.println("run 2633");
 						Map map = getDlrReport(reportUser, query, webMasterEntry.isHideNum());
 						if (!map.isEmpty()) {
 							try {
@@ -2630,14 +1756,15 @@ public class DataBase {
 							}
 						}
 					} else {
+						System.out.println("run 2644");
 						list = (List) getCustomizedReport(reportUser, query, webMasterEntry.isHideNum());
 					}
 				}
+
 				final_list.addAll(list);
 				logger.info(user.getSystemId() + " End Based On MessageId. Final Report Size: " + final_list.size());
 			} else {
 				logger.info(user.getSystemId() + " Invalid MessageId");
-				return null;
 			}
 		} else if (criteria_type.equalsIgnoreCase("campaign")) {
 			logger.info(user.getSystemId() + " Report Based On Campaign: " + campaign);
@@ -2740,6 +1867,7 @@ public class DataBase {
 						}
 					}
 					// -------------- report fetching ---------------------------------------
+
 					isSummary = false;
 					Set<String> unprocessed_set = new java.util.HashSet<String>();
 					for (Map.Entry<String, List<String>> entry : user_bulk_mapping.entrySet()) {
@@ -3237,9 +2365,7 @@ public class DataBase {
 		Statement pStmt = null;
 		ResultSet rs = null;
 		try {
-			Connection connection = jdbcTemplate.getDataSource().getConnection();
-
-			// con = dbCon.getConnection();
+			con = getConnection();
 			pStmt = con.createStatement();
 			rs = pStmt.executeQuery(userQuery);
 			while (rs.next()) {
@@ -3525,9 +2651,7 @@ public class DataBase {
 		System.out.println("SQL: " + query);
 		String msg_id = null;
 		try {
-			Connection connection = jdbcTemplate.getDataSource().getConnection();
-
-			// con = dbCon.getConnection();
+			con = getConnection();
 			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
 					java.sql.ResultSet.CONCUR_READ_ONLY);
 			pStmt.setFetchSize(Integer.MIN_VALUE);
@@ -3561,7 +2685,7 @@ public class DataBase {
 								rs.getDouble("cost"), time[0], time[1], rs.getString("status"));
 						report.setDeliverOn(rs.getString("deliver_time"));
 						report.setUsername(username);
-						report.setRoute(rs.getString("route_to_smsc"));
+						report.setRoute(rs.getString("Route_to_SMSC"));
 						report.setErrCode(rs.getString("err_code"));
 						customReport.add(report);
 						/*
@@ -3818,17 +2942,14 @@ public class DataBase {
 		return report;
 	}
 
-	public JasperPrint getSummaryJasperPrint(List reportList, boolean paging, String username) throws JRException {
+	public JasperPrint getSummaryJasperPrint(List reportList, boolean paging, String username, String lang)
+			throws JRException {
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
 				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
-
-		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
-		}
-
+		locale = Customlocale.getLocaleByLanguage(lang);
 		JasperPrint print = null;
 		JasperReport report = null;
 		JasperDesign design = null;
@@ -3847,6 +2968,7 @@ public class DataBase {
 		} else {
 			design = JRXmlLoader.load(summary_sender_file);
 		}
+
 		report = JasperCompileManager.compileReport(design);
 		if (groupby.equalsIgnoreCase("country")) {
 			reportList = sortListByCountry(reportList);
@@ -4005,20 +3127,20 @@ public class DataBase {
 		return sortedlist;
 	}
 
-	public JasperPrint getCustomizedJasperPrint(List<DeliveryDTO> reportList, boolean paging, String username)
-			throws Exception {
+	public JasperPrint getCustomizedJasperPrint(List<DeliveryDTO> reportList, boolean paging, String username,
+			String lang) throws Exception {
 		final String template_file = IConstants.FORMAT_DIR + "report//dlrReport.jrxml";
 		String template_sender_file = IConstants.FORMAT_DIR + "report//dlrReportSender.jrxml";
 		String template_content_file = IConstants.FORMAT_DIR + "report//dlrContentReport.jrxml";
 		String template_content_sender_file = IConstants.FORMAT_DIR + "report//dlrContentWithSender.jrxml";
 		String summary_template_file = IConstants.FORMAT_DIR + "report//dlrSummaryReport.jrxml";
 		String summary_sender_file = IConstants.FORMAT_DIR + "report//dlrSummarySender.jrxml";
-
+		locale = Customlocale.getLocaleByLanguage(lang);
 		JasperPrint print = null;
 		JasperReport report = null;
 		JasperDesign design = null;
 		String groupby = "country";
-
+		locale = Customlocale.getLocaleByLanguage(lang);
 		boolean isContent = false;
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -4420,262 +3542,6 @@ public class DataBase {
 		return workbook;
 	}
 
-	public List<DeliveryDTO> getDlrReportList(CustomReportForm customReportForm, String username) throws Exception {
-		UserDAService userDAService = new UserDAServiceImpl();
-		if (customReportForm.getClientId() == null) {
-			return null;
-		}
-		Optional<UserEntry> usersOptional = userRepository.findBySystemId(username);
-		if (!usersOptional.isPresent()) {
-			throw new NotFoundException("user not fout with system id" + username);
-		}
-
-		UserEntry user = usersOptional.get();
-		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
-		if (webMasterEntry == null) {
-			throw new NotFoundException("web MasterEntry  not fount username {}" + user.getId());
-		}
-
-		logger.info(username + " Creating Report list");
-		List list = null;
-		List final_list = new ArrayList();
-		CustomReportDTO customReportDTO = new CustomReportDTO();
-		BeanUtils.copyProperties(customReportDTO, customReportForm);
-		String startDate = customReportForm.getSday();
-		String endDate = customReportForm.getEday();
-//			IDatabaseService dbService = HtiSmsDB.getInstance();
-//			reportUser = customReportDTO.getClientId();
-		String campaign = customReportForm.getCampaign();
-		// String messageStatus = customReportDTO.getMessageStatus();// "PENDING";
-		// //customReportDTO.getMessageStatus();
-		String destination = customReportDTO.getDestinationNumber();// "9926870493";
-																	// //customReportDTO.getDestinationNumber();
-		String senderId = customReportDTO.getSenderId();// "%"; //customReportDTO.getSenderId();
-		String country = customReportDTO.getCountry();
-		String operator = customReportDTO.getOperator();
-		String query = null;
-		if (webMasterEntry.getGmt().equalsIgnoreCase(IConstants.DEFAULT_GMT)) {
-			to_gmt = webMasterEntry.getGmt().replace("GMT", "");
-			from_gmt = IConstants.DEFAULT_GMT.replace("GMT", "");
-		}
-		logger.info(username + " " + customReportDTO);
-		logger.info(username + " Report Based On Criteria");
-		List<String> users = null;
-		if (customReportDTO.getClientId().equalsIgnoreCase("All")) {
-			String role = user.getRole();
-			if (role.equalsIgnoreCase("superadmin") || role.equalsIgnoreCase("system")) {
-				users = new ArrayList<String>(userService.listUsers().values());
-			} else if (role.equalsIgnoreCase("admin")) {
-				users = new ArrayList<String>(userService.listUsersUnderMaster(username).values());
-				users.add(username);
-				Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject()
-						.get("secondaryMaster").equal(username);
-				for (WebMasterEntry webEntry : GlobalVars.WebmasterEntries.values(p)) {
-					UserEntry userEntry = GlobalVars.UserEntries.get(webEntry.getUserId());
-					users.add(userEntry.getSystemId());
-				}
-			} else if (role.equalsIgnoreCase("seller")) {
-				users = new ArrayList<String>(userService.listUsersUnderSeller(user.getId()).values());
-			} else if (role.equalsIgnoreCase("manager")) {
-				// SalesDAService salesService = new SalesDAServiceImpl();
-				users = new ArrayList<String>(listUsernamesUnderManager(username).values());
-			}
-			logger.info(username + ": Under Users: " + users.size());
-		} else {
-			users = new ArrayList<String>();
-			users.add(customReportDTO.getClientId());
-		}
-		if (users != null && !users.isEmpty()) {
-			for (String report_user : users) {
-				logger.info(username + " Checking Report For " + report_user);
-				query = "select count(msg_id) as count,date(submitted_time) as datet,HOUR(submitted_time) as hours,status from mis_"
-						+ report_user + " where ";
-				if (senderId != null && senderId.trim().length() > 0) {
-					if (senderId.contains("%")) {
-						query += "source_no like \"" + senderId + "\" and ";
-					} else {
-						query += "source_no =\"" + senderId + "\" and ";
-					}
-				}
-				if (destination != null && destination.trim().length() > 0) {
-					if (destination.contains("%")) {
-						query += "dest_no like '" + destination + "' and ";
-					} else {
-						query += "dest_no ='" + destination + "' and ";
-					}
-				} else {
-					if (country != null && country.length() > 0) {
-						Predicate<Integer, NetworkEntry> p = null;
-						String oprCountry = "";
-						if (operator.equalsIgnoreCase("All")) {
-							p = new PredicateBuilderImpl().getEntryObject().get("mcc").equal(country);
-						} else {
-							EntryObject e = new PredicateBuilderImpl().getEntryObject();
-							p = e.get("mcc").equal(country).and(e.get("mnc").equal(operator));
-						}
-						// Coll<Integer, Network> networkmap = dbService.getNetworkRecord(country,
-						// operator);
-						for (int cc : GlobalVars.NetworkEntries.keySet(p)) {
-							oprCountry += "'" + cc + "',";
-						}
-						if (oprCountry.length() > 0) {
-							oprCountry = oprCountry.substring(0, oprCountry.length() - 1);
-							query += "oprCountry in (" + oprCountry + ") and ";
-						}
-					}
-				}
-				if (to_gmt != null) {
-					SimpleDateFormat client_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-					client_formatter.setTimeZone(TimeZone.getTimeZone(webMasterEntry.getGmt()));
-					SimpleDateFormat local_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-					try {
-						String start_msg_id = local_formatter.format(client_formatter.parse(startDate));
-						String end_msg_id = local_formatter.format(client_formatter.parse(endDate));
-						start_msg_id = start_msg_id.replaceAll("-", "");
-						start_msg_id = start_msg_id.replaceAll(":", "");
-						start_msg_id = start_msg_id.replaceAll(" ", "");
-						start_msg_id = start_msg_id.substring(2);
-						start_msg_id += "0000000";
-						end_msg_id = end_msg_id.replaceAll("-", "");
-						end_msg_id = end_msg_id.replaceAll(":", "");
-						end_msg_id = end_msg_id.replaceAll(" ", "");
-						end_msg_id = end_msg_id.substring(2);
-						end_msg_id += "0000000";
-						query += "msg_id between " + start_msg_id + " and " + end_msg_id;
-					} catch (Exception e) {
-						query += "submitted_time between CONVERT_TZ('" + startDate + "','" + to_gmt + "','" + from_gmt
-								+ "') and CONVERT_TZ('" + endDate + "','" + to_gmt + "','" + from_gmt + "')";
-					}
-				} else {
-					if (startDate.equalsIgnoreCase(endDate)) {
-						String start_msg_id = startDate.substring(2);
-						start_msg_id = start_msg_id.replaceAll("-", "");
-						start_msg_id = start_msg_id.replaceAll(":", "");
-						start_msg_id = start_msg_id.replaceAll(" ", "");
-						query += "msg_id like '" + start_msg_id + "%'";
-					} else {
-						String start_msg_id = startDate.substring(2);
-						start_msg_id = start_msg_id.replaceAll("-", "");
-						start_msg_id = start_msg_id.replaceAll(":", "");
-						start_msg_id = start_msg_id.replaceAll(" ", "");
-						start_msg_id += "0000000";
-						String end_msg_id = endDate.substring(2);
-						end_msg_id = end_msg_id.replaceAll("-", "");
-						end_msg_id = end_msg_id.replaceAll(":", "");
-						end_msg_id = end_msg_id.replaceAll(" ", "");
-						end_msg_id += "0000000";
-						query += "msg_id between " + start_msg_id + " and " + end_msg_id + "";
-					}
-				}
-				query += " group by datet,hours,status order by datet,hours,status";
-				logger.info(username + " ReportSQL:" + query);
-				list = (List) getDlrSummaryReport(report_user, query);
-				logger.info(username + " list:" + list.size());
-				if (list != null && !list.isEmpty()) {
-					// System.out.println(report_user + " Report List Size --> " + list.size());
-					final_list.addAll(list);
-					list.clear();
-				}
-			}
-			// check for unprocessed/Blocked/M/F entries
-			String cross_unprocessed_query = "";
-			cross_unprocessed_query = "select count(msg_id) as count,date(time) as datet,HOUR(time) as hours,s_flag from table_name where ";
-			cross_unprocessed_query += "username in('" + String.join("','", users) + "') and ";
-			if (senderId != null && senderId.trim().length() > 0) {
-				if (senderId.contains("%")) {
-					cross_unprocessed_query += "source_no like \"" + senderId + "\" and ";
-				} else {
-					cross_unprocessed_query += "source_no =\"" + senderId + "\" and ";
-				}
-			}
-			if (destination != null && destination.trim().length() > 0) {
-				if (destination.contains("%")) {
-					cross_unprocessed_query += "destination_no like '" + destination + "' and ";
-				} else {
-					cross_unprocessed_query += "destination_no ='" + destination + "' and ";
-				}
-			} else {
-				if (country != null && country.length() > 0) {
-					Predicate<Integer, NetworkEntry> p = null;
-					String oprCountry = "";
-					if (operator.equalsIgnoreCase("All")) {
-						p = new PredicateBuilderImpl().getEntryObject().get("mcc").equal(country);
-					} else {
-						EntryObject e = new PredicateBuilderImpl().getEntryObject();
-						p = e.get("mcc").equal(country).and(e.get("mnc").equal(operator));
-					}
-					// Coll<Integer, Network> networkmap = dbService.getNetworkRecord(country,
-					// operator);
-					for (int cc : GlobalVars.NetworkEntries.keySet(p)) {
-						oprCountry += "'" + cc + "',";
-					}
-					if (oprCountry.length() > 0) {
-						oprCountry = oprCountry.substring(0, oprCountry.length() - 1);
-						cross_unprocessed_query += "oprCountry in (" + oprCountry + ") and ";
-					}
-				}
-			}
-			if (to_gmt != null) {
-				SimpleDateFormat client_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				client_formatter.setTimeZone(TimeZone.getTimeZone(webMasterEntry.getGmt()));
-				SimpleDateFormat local_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				try {
-					String start_msg_id = local_formatter.format(client_formatter.parse(startDate));
-					String end_msg_id = local_formatter.format(client_formatter.parse(endDate));
-					start_msg_id = start_msg_id.replaceAll("-", "");
-					start_msg_id = start_msg_id.replaceAll(":", "");
-					start_msg_id = start_msg_id.replaceAll(" ", "");
-					start_msg_id = start_msg_id.substring(2);
-					start_msg_id += "0000000";
-					end_msg_id = end_msg_id.replaceAll("-", "");
-					end_msg_id = end_msg_id.replaceAll(":", "");
-					end_msg_id = end_msg_id.replaceAll(" ", "");
-					end_msg_id = end_msg_id.substring(2);
-					end_msg_id += "0000000";
-					cross_unprocessed_query += "msg_id between " + start_msg_id + " and " + end_msg_id;
-				} catch (Exception e) {
-					cross_unprocessed_query += "time between CONVERT_TZ('" + startDate + "','" + to_gmt + "','"
-							+ from_gmt + "') and CONVERT_TZ('" + endDate + "','" + to_gmt + "','" + from_gmt + "')";
-				}
-			} else {
-				if (startDate.equalsIgnoreCase(endDate)) {
-					String start_msg_id = startDate.substring(2);
-					start_msg_id = start_msg_id.replaceAll("-", "");
-					start_msg_id = start_msg_id.replaceAll(":", "");
-					start_msg_id = start_msg_id.replaceAll(" ", "");
-					cross_unprocessed_query += "msg_id like '" + start_msg_id + "%'";
-				} else {
-					String start_msg_id = startDate.substring(2);
-					start_msg_id = start_msg_id.replaceAll("-", "");
-					start_msg_id = start_msg_id.replaceAll(":", "");
-					start_msg_id = start_msg_id.replaceAll(" ", "");
-					start_msg_id += "0000000";
-					String end_msg_id = endDate.substring(2);
-					end_msg_id = end_msg_id.replaceAll("-", "");
-					end_msg_id = end_msg_id.replaceAll(":", "");
-					end_msg_id = end_msg_id.replaceAll(" ", "");
-					end_msg_id += "0000000";
-					cross_unprocessed_query += "msg_id between " + start_msg_id + " and " + end_msg_id + "";
-				}
-			}
-			cross_unprocessed_query += " group by datet,hours,s_flag order by datet,hours,s_flag";
-			List unproc_list = (List) getdlrUnprocessedSummary(
-					cross_unprocessed_query.replaceAll("table_name", "unprocessed"));
-			if (unproc_list != null && !unproc_list.isEmpty()) {
-				final_list.addAll(unproc_list);
-			}
-			unproc_list = (List) getdlrUnprocessedSummary(cross_unprocessed_query.replaceAll("table_name", "smsc_in"));
-			if (unproc_list != null && !unproc_list.isEmpty()) {
-				final_list.addAll(unproc_list);
-			}
-			// logger.info(userSessionObject.getSystemId() + " ReportSQL: " +
-			// cross_unprocessed_query);
-			// end check for unprocessed/Blocked/M/F entries
-		}
-		logger.info(username + " End Based On Criteria. Final Report Size: " + final_list.size());
-		return final_list;
-	}
-
 	public List getdlrUnprocessedSummary(String query) throws Exception {
 		List customReport = new ArrayList();
 		Connection con = null;
@@ -4686,7 +3552,7 @@ public class DataBase {
 		try {
 			Connection connection = jdbcTemplate.getDataSource().getConnection();
 
-			// con = dbCon.getConnection();
+			con = getConnection();
 			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
 					java.sql.ResultSet.CONCUR_READ_ONLY);
 			pStmt.setFetchSize(Integer.MIN_VALUE);
@@ -4745,141 +3611,4 @@ public class DataBase {
 		return customReport;
 	}
 
-	public List getDlrSummaryReport(String username, String query) throws Exception {
-		List customReport = new ArrayList();
-		Connection con = null;
-		PreparedStatement pStmt = null;
-		ResultSet rs = null;
-		DeliveryDTO report = null;
-		try {
-
-			Connection connection = jdbcTemplate.getDataSource().getConnection();
-			// con = dbCon.getConnection();
-			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
-					java.sql.ResultSet.CONCUR_READ_ONLY);
-			pStmt.setFetchSize(Integer.MIN_VALUE);
-			rs = pStmt.executeQuery();
-			if (rs != null) {
-				while (rs.next()) {
-					try {
-						String date = rs.getString("datet");
-						String hours = rs.getString("hours");
-						report = new DeliveryDTO(null, null, 0, date, rs.getString("status"), rs.getInt("count"));
-						report.setUsername(username);
-						report.setTime(hours);
-						customReport.add(report);
-					} catch (Exception sqle) {
-						logger.error(" ", sqle.fillInStackTrace());
-					}
-				}
-			}
-		} catch (SQLException ex) {
-			if (ex.getMessage().contains("Table") && ex.getMessage().contains("doesn't exist")) {
-				logger.error("<-- " + username + " Mis & Content Table Doesn't Exist -->");
-				// createMisTable(username);
-				// createContentTable(username);
-			} else {
-				logger.error(" ", ex.fillInStackTrace());
-			}
-		} finally {
-			try {
-				if (pStmt != null) {
-					pStmt.close();
-				}
-				if (rs != null) {
-					rs.close();
-				}
-				if (con != null) {
-					// dbCon.releaseConnection(con);
-				}
-			} catch (SQLException sqle) {
-			}
-		}
-		return customReport;
-	}
-
-	public JasperPrint getdlrSummaryJasperPrint(List reportList, boolean paging, String username) throws Exception {
-		JasperPrint print = null;
-		JasperReport report = null;
-		JasperDesign design = null;
-		Map parameters = new HashMap();
-		design = JRXmlLoader.load(template_file);
-		report = JasperCompileManager.compileReport(design);
-		reportList = sortListByTime(reportList);
-		logger.info(username + " <-- Preparing Charts --> ");
-		// ------------- Preparing databeancollection for chart ------------------
-		Iterator itr = reportList.iterator();
-		Map temp_chart = new HashMap();
-		Map<String, DeliveryDTO> prepared_list = new HashMap<String, DeliveryDTO>();
-		while (itr.hasNext()) {
-			DeliveryDTO chartDTO = (DeliveryDTO) itr.next();
-			String status = chartDTO.getStatus();
-			int counter = 0;
-			if (temp_chart.containsKey(status)) {
-				counter = (Integer) temp_chart.get(status);
-			}
-			counter = counter + chartDTO.getStatusCount();
-			temp_chart.put(status, counter);
-			// --------------- prepared list -------------------
-			DeliveryDTO prepared_dto = null;
-			if (prepared_list.containsKey(chartDTO.getDate() + " " + chartDTO.getTime())) {
-				prepared_dto = prepared_list.get(chartDTO.getDate() + " " + chartDTO.getTime());
-			} else {
-				prepared_dto = new DeliveryDTO();
-				prepared_dto.setDate(chartDTO.getDate());
-				prepared_dto.setTime(chartDTO.getTime());
-			}
-			if (status.startsWith("DELIV")) {
-				prepared_dto.setDelivered(prepared_dto.getDelivered() + chartDTO.getStatusCount());
-			} else if (status.startsWith("UNDEL")) {
-				prepared_dto.setUndelivered(prepared_dto.getUndelivered() + chartDTO.getStatusCount());
-			} else if (status.startsWith("EXPIR")) {
-				prepared_dto.setExpired(prepared_dto.getExpired() + chartDTO.getStatusCount());
-			} else if (status.startsWith("ATES")) {
-				prepared_dto.setPending(prepared_dto.getPending() + chartDTO.getStatusCount());
-			} else {
-				prepared_dto.setOthers(prepared_dto.getOthers() + chartDTO.getStatusCount());
-			}
-			prepared_dto.setSubmitted(prepared_dto.getSubmitted() + chartDTO.getStatusCount());
-			prepared_list.put(chartDTO.getDate() + " " + chartDTO.getTime(), prepared_dto);
-		}
-		List<DeliveryDTO> chart_list = new ArrayList();
-		if (!temp_chart.isEmpty()) {
-			itr = temp_chart.entrySet().iterator();
-			while (itr.hasNext()) {
-				Map.Entry entry = (Map.Entry) itr.next();
-				DeliveryDTO chartDTO = new DeliveryDTO((String) entry.getKey(), (Integer) entry.getValue());
-				chart_list.add(chartDTO);
-			}
-		}
-		JRBeanCollectionDataSource piechartDataSource = new JRBeanCollectionDataSource(chart_list);
-		parameters.put("piechartDataSource", piechartDataSource);
-		logger.info(username + " <-- Preparing report --> ");
-		JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(
-				sortListByTime(new ArrayList<DeliveryDTO>(prepared_list.values())));
-		if (reportList.size() > 20000) {
-			logger.info(username + " <-- Creating Virtualizer --> ");
-			JRSwapFileVirtualizer virtualizer = new JRSwapFileVirtualizer(1000,
-					new JRSwapFile(IConstants.WEBAPP_DIR + "temp//", 2048, 1024));
-			parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
-		}
-		parameters.put(JRParameter.IS_IGNORE_PAGINATION, paging);
-		ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);
-		parameters.put("REPORT_RESOURCE_BUNDLE", bundle);
-		logger.info(username + " <-- Filling Report Data --> ");
-		print = JasperFillManager.fillReport(report, parameters, beanColDataSource);
-		logger.info(username + " <-- Filling Finished --> ");
-		return print;
-	}
-
-	private List sortListByTime(List list) {
-
-		// logger.info(username + " sortListByTime ");
-		Comparator<DeliveryDTO> comparator = null;
-		comparator = Comparator.comparing(DeliveryDTO::getDate).thenComparing(DeliveryDTO::getTime)
-				.thenComparing(DeliveryDTO::getStatus);
-		Stream<DeliveryDTO> personStream = list.stream().sorted(comparator);
-		List<DeliveryDTO> sortedlist = personStream.collect(Collectors.toList());
-		return sortedlist;
-	}
 }

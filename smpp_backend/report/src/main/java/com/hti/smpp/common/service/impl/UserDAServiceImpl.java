@@ -9,17 +9,22 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.service.UserDAService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
+import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.GlobalVars;
 
 @Service
 public class UserDAServiceImpl implements UserDAService {
 
 	private Logger logger = LoggerFactory.getLogger(UserDAServiceImpl.class);
+
+	@Autowired
+	private UserEntryRepository userEntryRepository;
 
 	public UserDAServiceImpl() {
 		GlobalVars.UserEntries = GlobalVars.hazelInstance.getMap("user_entries");
@@ -34,8 +39,7 @@ public class UserDAServiceImpl implements UserDAService {
 		logger.info("ProfessionEntries: " + GlobalVars.ProfessionEntries.size());
 		logger.info("WebmasterEntries: " + GlobalVars.WebmasterEntries.size());
 		logger.info("DlrSettingEntries: " + GlobalVars.DlrSettingEntries.size());
-		
-		
+
 	}
 
 //	@Override
@@ -214,7 +218,7 @@ public class UserDAServiceImpl implements UserDAService {
 //		}
 //	}
 //
-	
+
 	public UserEntry getUserEntry(int userid) {
 		logger.debug("getUserEntry(" + userid + ")");
 		if (GlobalVars.UserEntries.containsKey(userid)) {
@@ -240,7 +244,7 @@ public class UserDAServiceImpl implements UserDAService {
 	public Map<Integer, String> listUsers() {
 		logger.debug("listUsers()");
 		Map<Integer, String> map = new HashMap<Integer, String>();
-		for (UserEntry entry : GlobalVars.UserEntries.values()) {
+		for (UserEntry entry : userEntryRepository.findAll()) {
 			map.put(entry.getId(), entry.getSystemId());
 		}
 		Map<Integer, String> sortedMap = map.entrySet().stream()
@@ -310,8 +314,6 @@ public class UserDAServiceImpl implements UserDAService {
 				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 		return sortedMap;
 	}
-
-
 
 	// ----------- list Entries -----------------------
 //	@Override

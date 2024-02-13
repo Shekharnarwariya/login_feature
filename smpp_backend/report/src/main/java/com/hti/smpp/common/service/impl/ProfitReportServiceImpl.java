@@ -1,5 +1,6 @@
 package com.hti.smpp.common.service.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.Date;
@@ -7,6 +8,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.time.DateTimeException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -23,9 +26,14 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.hibernate.persister.collection.mutation.RowMutationOperations.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.database.DataBase;
@@ -35,6 +43,7 @@ import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.report.dto.ProfitReportEntry;
 import com.hti.smpp.common.report.dto.ReportCriteria;
 import com.hti.smpp.common.request.CustomReportForm;
+import com.hti.smpp.common.request.ProfitReportRequest;
 import com.hti.smpp.common.service.ProfitReportService;
 import com.hti.smpp.common.service.UserDAService;
 import com.hti.smpp.common.user.dto.UserEntry;
@@ -44,11 +53,13 @@ import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.servlet.http.HttpServletResponse;
 import net.sf.jasperreports.engine.JRExporter;
 import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
@@ -69,6 +80,7 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 
 	@Autowired
 	private UserEntryRepository userRepository;
+
 	@Autowired
 	private UserDAService userService;
 	private Logger logger = LoggerFactory.getLogger(UserDeliveryReportServiceImpl.class);
@@ -80,16 +92,16 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 		return dataSource.getConnection();
 	}
 
-	String template_file_smsc = IConstants.FORMAT_DIR + "report//perform_smsc.jrxml";
-	String template_file_opr = IConstants.FORMAT_DIR + "report//perform_operator.jrxml";
-	String template_file_cat = IConstants.FORMAT_DIR + "report//perform_category.jrxml";
 	private String template_file_user = IConstants.FORMAT_DIR + "report//profit_report_user.jrxml";
 	private String template_file_network = IConstants.FORMAT_DIR + "report//profit_report_network.jrxml";
 
 	Locale locale = null;
+	@Autowired
+	private ReportDAOImpl reportDAOImpl;
 
 	@Override
-	public JasperPrint ProfitReportview(String username, CustomReportForm customReportForm, String lang) {
+	public ResponseEntity<?> ProfitReportview(String username, ProfitReportRequest customReportForm, String lang) {
+		System.out.println(username);
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
@@ -97,15 +109,25 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
+		System.out.println(user);
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
-			JasperPrint print = getProfitReportList(customReportForm, false, username);
-
-			if (print != null) {
-				// Perform any additional operations if needed
-				// For example: session.setAttribute("profitprint", print);
-				// request.setAttribute("page", "1");
-				return print; // Return the JasperPrint object
+			List<ProfitReportEntry> print = getProfitReportList(customReportForm, false, user, lang);
+//			if (print != null) {
+//				byte[] pdfReport = JasperExportManager.exportReportToPdf(print);
+//
+//				HttpHeaders headers = new HttpHeaders();
+//				headers.setContentType(MediaType.APPLICATION_PDF);
+//				headers.setContentDispositionFormData("attachment", "profit.pdf");
+//
+//				// Return the file in the ResponseEntity
+//				return new ResponseEntity<>(pdfReport, headers, HttpStatus.OK);
+			if (print != null && !print.isEmpty()) {
+				logger.info(user.getSystemId() + " ReportSize[View]:" + print.size());
+				// JasperPrint print = dataBase.getJasperPrint(reportList, false, username);
+				logger.info(user.getSystemId() + " <-- Report Finished --> ");
+			return new ResponseEntity<>(print, HttpStatus.OK);
+			
 			} else {
 				throw new NotFoundException("Profit report not found with username: " + username);
 			}
@@ -117,20 +139,21 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 	}
 
 	@Override
-	public String ProfitReportxls(String username, CustomReportForm customReportForm, String lang,
+	public ResponseEntity<?> ProfitReportxls(String username, ProfitReportRequest customReportForm, String lang,
 			HttpServletResponse response) {
 
 		String target = IConstants.FAILURE_KEY;
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
-			JasperPrint print = getProfitReportList(customReportForm, false, username);
+			JasperPrint print = null;// getProfitReportList(customReportForm, false, lang, username);
 			if (print != null) {
 				System.out.println("<-- Preparing Outputstream --> ");
 				String reportName = "Profit_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".xlsx";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
 				System.out.println("<-- Creating XLS --> ");
-				OutputStream out = response.getOutputStream();
+				// OutputStream out = response.getOutputStream();
+				ByteArrayOutputStream out = new ByteArrayOutputStream();
 				JRExporter exporter = new JRXlsxExporter();
 				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
 				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
@@ -146,6 +169,7 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 				}
 				System.out.println("<-- Finished --> ");
 				target = IConstants.SUCCESS_KEY;
+				return ResponseEntity.ok().body(out.toByteArray());
 			} else {
 				throw new NotFoundException("Profit report xls not found with username: " + username);
 			}
@@ -154,18 +178,18 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 			throw new InternalServerException(
 					"Error: Getting error in profit report in xls with username: " + username);
 		}
-		return target;
+//		return target;
 	}
 
 	@Override
-	public String ProfitReportpdf(String username, CustomReportForm customReportForm, String lang,
+	public ResponseEntity<?> ProfitReportpdf(String username, ProfitReportRequest customReportForm, String lang,
 			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
 
-			JasperPrint print = getProfitReportList(customReportForm, false, username);
+			JasperPrint print = null;// getProfitReportList(customReportForm, false, lang, username);
 			if (print != null) {
 				System.out.println("<-- Preparing Outputstream --> ");
 				String reportName = "profit_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".pdf";
@@ -186,25 +210,27 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 				}
 				System.out.println("<-- Finished --> ");
 				target = IConstants.SUCCESS_KEY;
+				// return new ResponseEntity<>(response, out, HttpStatus.OK);
 			} else {
 				throw new NotFoundException("Profit report pdf not found with username: " + username);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new InternalServerException("Error: Getting error in profit report in pdf with username: " + username);
+			throw new InternalServerException(
+					"Error: Getting error in profit report in pdf with username: " + username);
 
 		}
-		return target;
+		return null;
 	}
 
 	@Override
-	public String ProfitReportdoc(String username, CustomReportForm customReportForm, String lang,
+	public ResponseEntity<?> ProfitReportdoc(String username, ProfitReportRequest customReportForm, String lang,
 			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
-			JasperPrint print = getProfitReportList(customReportForm, false, username);
+			JasperPrint print = null;// getProfitReportList(customReportForm, false, lang, username);
 			if (print != null) {
 				System.out.println("<-- Preparing Outputstream --> ");
 				String reportName = "profit_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".doc";
@@ -230,25 +256,19 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new InternalServerException("Error: Getting error in profit report in pdf with username: " + username);
+			throw new InternalServerException(
+					"Error: Getting error in profit report in pdf with username: " + username);
 
 		}
-		
-		return target;
+
+		return null;
 	}
 
-	private JasperPrint getProfitReportList(CustomReportForm customReportForm, boolean paging, String username)
-			throws Exception {
-
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
-		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
-		}
+	private List<ProfitReportEntry> getProfitReportList(ProfitReportRequest customReportForm, boolean paging, UserEntry user,
+			String lang) throws Exception {
 		// List<DeliveryDTO> final_list = new ArrayList<DeliveryDTO>();
-		String[] start_date = customReportForm.getSday().split("-");
-		String[] end_date = customReportForm.getEday().split("-");
+		String[] start_date = customReportForm.getStartDate().split("-");
+		String[] end_date = customReportForm.getEndDate().split("-");
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(Calendar.DATE, Integer.parseInt(end_date[2]));
 		calendar.set(Calendar.MONTH, (Integer.parseInt(end_date[1])) - 1);
@@ -268,77 +288,89 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 				rc.setUserId(Integer.parseInt(customReportForm.getClientId()));
 			}
 		}
+
 		List<ProfitReportEntry> list = listProfitReport(rc);
 		if (list.isEmpty()) {
 			logger.info(user.getSystemId() + " <-- No Report Data Found --> ");
 			return null;
 		}
+				
+//		List<ProfitReportEntry> print = null;
+//		JasperDesign design = null;
+//		JRBeanCollectionDataSource piechartDataSource = null;
+//		List<ProfitReportEntry> chart_list = new ArrayList<ProfitReportEntry>();
+//		logger.info(user.getSystemId() + " <-- preparing Report Data --> ");
+//		Map<String, Double> profit_map = new HashMap<String, Double>();
+//		if (customReportForm.getGroupBy().equalsIgnoreCase("username")) {
+//			design = JRXmlLoader.load(template_file_user);
+//			list = sortListByUser(list);
+//			for (ProfitReportEntry entry : list) {
+//				double profit = 0;
+//				if (profit_map.containsKey(entry.getUsername())) {
+//					profit = profit_map.get(entry.getUsername());
+//				}
+//				profit += entry.getProfit();
+//				profit_map.put(entry.getUsername(), profit);
+//			}
+//			profit_map = sortByDscValue(profit_map, 10);
+//			for (Map.Entry<String, Double> map_entry : profit_map.entrySet()) {
+//				ProfitReportEntry chartEntry = new ProfitReportEntry();
+//				System.out.println("Chart: " + map_entry.getKey() + " " + map_entry.getValue());
+//				chartEntry.setUsername(map_entry.getKey());
+//				chartEntry.setProfit(map_entry.getValue());
+//				chart_list.add(chartEntry);
+//
+//			}
+//		} else {
+//			design = JRXmlLoader.load(template_file_network);
+//			list = sortListByNetwork(list);
+//			System.out.println("list" + list);
+//			for (ProfitReportEntry entry : list) {
+//				double profit = 0;
+//				if (profit_map.containsKey(entry.getCountry())) {
+//					profit = profit_map.get(entry.getCountry());
+//				}
+//				profit += entry.getProfit();
+//				profit_map.put(entry.getCountry(), profit);
+//			}
+//			
+//			profit_map = sortByDscValue(profit_map, 10);
+//			for (Map.Entry<String, Double> map_entry : profit_map.entrySet()) {
+//				ProfitReportEntry chartEntry = new ProfitReportEntry();
+//				chartEntry.setCountry(map_entry.getKey());
+//				chartEntry.setProfit(map_entry.getValue());
+//				chart_list.add(chartEntry);
+//			}
+//		}
+//		System.out.println(chart_list);
+//		piechartDataSource = new JRBeanCollectionDataSource(chart_list);
+//		logger.info(user.getSystemId() + " Prepared List: " + list.size());
+//		JasperReport jasperreport = JasperCompileManager.compileReport(design);
+//		Map parameters = new HashMap();
+//		parameters.put("piechartDataSource", piechartDataSource);
+//		JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(list);
+//		if (list.size() > 20000) {
+//			logger.info(user.getSystemId() + " <-- Creating Virtualizer --> ");
+//			JRSwapFileVirtualizer virtualizer = new JRSwapFileVirtualizer(1000,
+//					new JRSwapFile(IConstants.WEBAPP_DIR + "temp//", 2048, 1024));
+//			parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
+//		}
+//		parameters.put(JRParameter.IS_IGNORE_PAGINATION, paging);
+//		ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);
+//		parameters.put("REPORT_RESOURCE_BUNDLE", bundle);
+//		logger.info(user.getSystemId() + " <-- Filling Report Data --> ");
+//		print = JasperFillManager.fillReport(jasperreport, parameters, beanColDataSource);
+//		logger.info(user.getSystemId() + " <-- Filling Finished --> ");
+		return list;
+	}
 
-		JasperPrint print = null;
-		JasperDesign design = null;
-		JRBeanCollectionDataSource piechartDataSource = null;
-		List<ProfitReportEntry> chart_list = new ArrayList<ProfitReportEntry>();
-		logger.info(user.getSystemId() + " <-- preparing Report Data --> ");
-		Map<String, Double> profit_map = new HashMap<String, Double>();
-		if (customReportForm.getGroupBy().equalsIgnoreCase("username")) {
-			design = JRXmlLoader.load(template_file_user);
-			list = sortListByUser(list);
-			for (ProfitReportEntry entry : list) {
-				double profit = 0;
-				if (profit_map.containsKey(entry.getUsername())) {
-					profit = profit_map.get(entry.getUsername());
-				}
-				profit += entry.getProfit();
-				profit_map.put(entry.getUsername(), profit);
-			}
-			profit_map = sortByDscValue(profit_map, 10);
-			for (Map.Entry<String, Double> map_entry : profit_map.entrySet()) {
-				ProfitReportEntry chartEntry = new ProfitReportEntry();
-				// System.out.println("Chart: " + map_entry.getKey() + " " +
-				// map_entry.getValue());
-				chartEntry.setUsername(map_entry.getKey());
-				chartEntry.setProfit(map_entry.getValue());
-				chart_list.add(chartEntry);
-			}
-		} else {
-			design = JRXmlLoader.load(template_file_network);
-			list = sortListByNetwork(list);
-			for (ProfitReportEntry entry : list) {
-				double profit = 0;
-				if (profit_map.containsKey(entry.getCountry())) {
-					profit = profit_map.get(entry.getCountry());
-				}
-				profit += entry.getProfit();
-				profit_map.put(entry.getCountry(), profit);
-			}
-			profit_map = sortByDscValue(profit_map, 10);
-			for (Map.Entry<String, Double> map_entry : profit_map.entrySet()) {
-				ProfitReportEntry chartEntry = new ProfitReportEntry();
-				chartEntry.setCountry(map_entry.getKey());
-				chartEntry.setProfit(map_entry.getValue());
-				chart_list.add(chartEntry);
-			}
+	private static boolean isValidDate(int year, int month, int day) {
+		try {
+			LocalDate.of(year, month, day);
+			return true;
+		} catch (DateTimeException e) {
+			return false;
 		}
-		// System.out.println(chart_list);
-		piechartDataSource = new JRBeanCollectionDataSource(chart_list);
-		logger.info(user.getSystemId() + " Prepared List: " + list.size());
-		JasperReport jasperreport = JasperCompileManager.compileReport(design);
-		Map parameters = new HashMap();
-		parameters.put("piechartDataSource", piechartDataSource);
-		JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(list);
-		if (list.size() > 20000) {
-			logger.info(user.getSystemId() + " <-- Creating Virtualizer --> ");
-			JRSwapFileVirtualizer virtualizer = new JRSwapFileVirtualizer(1000,
-					new JRSwapFile(IConstants.WEBAPP_DIR + "temp//", 2048, 1024));
-			parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
-		}
-		parameters.put(JRParameter.IS_IGNORE_PAGINATION, paging);
-		ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);
-		parameters.put("REPORT_RESOURCE_BUNDLE", bundle);
-		logger.info(user.getSystemId() + " <-- Filling Report Data --> ");
-		print = JasperFillManager.fillReport(jasperreport, parameters, beanColDataSource);
-		logger.info(user.getSystemId() + " <-- Filling Finished --> ");
-		return print;
 	}
 
 	private <K, V extends Comparable<? super V>> Map<K, V> sortByDscValue(Map<K, V> map, int limit) {
@@ -359,25 +391,28 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 	}
 
 	private List<ProfitReportEntry> sortListByNetwork(List<ProfitReportEntry> list) {
-
-		// logger.info(user.getSystemId() + " sortListByNetwork ");
+		
+		System.out.println(list);
 		Comparator<ProfitReportEntry> comparator = null;
 		comparator = Comparator.comparing(ProfitReportEntry::getCountry).thenComparing(ProfitReportEntry::getOperator);
 		Stream<ProfitReportEntry> personStream = list.stream().sorted(comparator);
 		List<ProfitReportEntry> sortedlist = personStream.collect(Collectors.toList());
+		System.out.println("sortedlist" + sortedlist);
+
 		return sortedlist;
 	}
 
 	public List<ProfitReportEntry> listProfitReport(ReportCriteria rc) {
-		List<ProfitReportEntry> list = listProfitReport(rc);
+		List<ProfitReportEntry> list = reportDAOImpl.listProfitReport(rc);
 		for (ProfitReportEntry entry : list) {
 			if (GlobalVars.NetworkEntries.containsKey(entry.getNetworkId())) {
 				entry.setCountry(GlobalVars.NetworkEntries.get(entry.getNetworkId()).getCountry());
 				entry.setOperator(GlobalVars.NetworkEntries.get(entry.getNetworkId()).getOperator());
 			}
-			UserEntry userEntry = userService.getUserEntry(entry.getUserId());
+			UserEntry userEntry = userRepository.findById(entry.getUserId()).get();
 			if (userEntry != null) {
-				entry.setUsername(userService.getUserEntry(entry.getUserId()).getSystemId());
+				entry.setUsername(userEntry.getSystemId());
+
 			} else {
 				String username = getRemovedUsername(entry.getUserId());
 				if (username != null) {
@@ -387,7 +422,9 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 				}
 			}
 		}
+		
 		return list;
+
 	}
 
 	public String getRemovedUsername(int userId) {
@@ -418,7 +455,7 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 					pStmt = null;
 				}
 				if (con != null) {
-					// dbCon.releaseConnection(con);
+					con.close();
 				}
 			} catch (SQLException sqle) {
 			}
