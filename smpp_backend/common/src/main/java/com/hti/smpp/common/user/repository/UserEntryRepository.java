@@ -19,4 +19,6 @@ public interface UserEntryRepository extends JpaRepository<UserEntry, Integer> {
 	public Optional<User> getUsers(@Param("systemId") String systemId);
 
 	public boolean existsBySystemId(String username);
+	
+	public UserEntry findByRole(String role);
 }

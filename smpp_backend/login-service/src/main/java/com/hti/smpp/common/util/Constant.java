@@ -5,8 +5,10 @@ package com.hti.smpp.common.util;
  */
 public class Constant {
 
+	public static final String LOGIN_SUBJECT = "Login alert for SMPP";
+	public static final String GENERAL_TEMPLATE_PATH = "/template";
+	public static final String LOGIN_TEMPLATE_PATH = "/loginalert";
     public static final String OTP_SUBJECT = "OTP Confirmation Alert for Your SMPP Account";
-
     public static final String TEMPLATE_PATH = "/index";
     public static final String MESSAGE_FOR_OTP = "Dear User,\n\n"
             + "It seems you're having trouble logging into your Dashboard. We received a request for password recovery. "

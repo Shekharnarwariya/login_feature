@@ -12,7 +12,6 @@
 			background-color: #f4f4f4;
 			padding: 20px;
 		}
-		
 		.header {
             display: flex;
             justify-content: center;
@@ -60,10 +59,11 @@
 		<div class="banner">
 			<img src="cid:htiLogo" alt="hti company Logo">
 			<h2>Welcome to SMPP!</h2>
-			<p><b th:text="${message}"></b></p>
-			<p><b th:text="${otp}"></b></p>
-			<p><b th:text="${username}"></b></p>
-			<p><b th:text="${password}"></b></p>
+			<p>Hello <b th:text="${username}"></b>,</p>
+			<p>This is an informational email to let you know that we have identified a login to your account at <b th:text="${gateway}"></b> from the IP address <b th:text="${ipaddress}"></b> time on <b th:text="${date}"></b> (<b th:text="${gmt}"></b>).</p>
+			<p>If this was not you,please contact support immediately.Otherwise you may safely ignore this email.</p>
+			<p>Kind Regards</p>
+			<p>Support Team SMPP.</p>
 			<p>If you have any questions or need assistance, feel free to contact us at .</p>
 			<p><span class="contact-email">contact:- smpp99999@gmail.com</span></p>
 		</div>

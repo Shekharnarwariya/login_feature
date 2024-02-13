@@ -28,4 +28,8 @@ public interface LoginService {
 	public ResponseEntity<?> updatePassword(PasswordUpdateRequest passwordUpdateRequest,String username);
 	
 	public ResponseEntity<?> updateUserProfile(String username,ProfileUpdateRequest profileUpdateRequest);
+	
+	public ResponseEntity<?> validateUserIpAccess(LoginRequest loginRequest, String language);
+	
+	public ResponseEntity<?> sellerValidation(String username, String password);
 }
