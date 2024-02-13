@@ -143,5 +143,14 @@ public class EmailSender {
 		return sourceMap;
 
 	}
-
+	
+	public Map<String, String> createCustomSourceMap(String username, String gateway, String ipaddress, String date, String gmt) {
+		Map<String, String> sourceMap = new HashMap<String, String>();
+		sourceMap.put("username", username);
+		sourceMap.put("gateway", gateway);
+		sourceMap.put("ipaddress",ipaddress);
+		sourceMap.put("date", date);
+		sourceMap.put("gmt", gmt);
+		return sourceMap;
+	}
 }

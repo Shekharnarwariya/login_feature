@@ -18,6 +18,7 @@ import com.hti.smpp.common.request.PasswordUpdateRequest;
 import com.hti.smpp.common.request.ProfileUpdateRequest;
 import com.hti.smpp.common.request.SignupRequest;
 import com.hti.smpp.common.response.JwtResponse;
+import com.hti.smpp.common.response.LoginResponse;
 import com.hti.smpp.common.response.ProfileResponse;
 import com.hti.smpp.common.service.LoginService;
 
@@ -218,6 +219,18 @@ public class LoginController {
 	public ResponseEntity<?> updateUserProfile(@RequestHeader(value = "username", required = true) String username,
 			@RequestBody @Valid ProfileUpdateRequest profileUpdateRequest) {
 		return loginService.updateUserProfile(username, profileUpdateRequest);
+	}
+	
+	@PostMapping("/validate/user-ip")
+	@Operation(summary = "Validate User Ip", description = "Endpoint to validate user ip address and send otp in sms and email if user is enabled to get otp else the user will be notified by email alert when the user logged in.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "User ip authenticated successfully. JWT token generated.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponse.class))),
+			@ApiResponse(responseCode = "400", description = "Invalid or malformed request. Unable to authenticate user.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "500", description = "Internal server error during authentication process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class)))
+	})
+	public ResponseEntity<?> validateIpAccess(@Valid @RequestBody LoginRequest loginRequest,@RequestParam(value = "language") String language){
+		return this.loginService.validateUserIpAccess(loginRequest, language);
 	}
 
 }
