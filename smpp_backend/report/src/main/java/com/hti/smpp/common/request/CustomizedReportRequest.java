@@ -21,6 +21,7 @@ public class CustomizedReportRequest {
 	private String emonth;
 	private String eyear;
 	private String senderId;
+	
 	private String destinationNumber;
 
 	@NotBlank(message = "ReportType must not be blank")
