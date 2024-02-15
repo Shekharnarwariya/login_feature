@@ -177,4 +177,18 @@ public class ConstantMessages {
     public static final String ADDBOOK_GROUP_SAVED = "addbook.group.save.success";
     public static final String ADDBOOK_GROUP_UPDATED = "addbook.group.update.success";
     public static final String ADDBOOK_GROUP_DELETED = "addbook.group.delete.success";
+    
+    //hlr-smsc exception message
+    public static final String HLR_SMSC_SAVE_ERROR = "hlr.smsc.save.error";
+    public static final String HLR_SMSC_CONVERT_ERROR = "hlr.smsc.convert.error";
+    public static final String HLR_SMSC_ENTRY_NOT_FOUND = "hlr.smsc.entry.notfound";
+    public static final String HLR_SMSC_DATA_ACCESS_ERROR = "hlr.smsc.data.access.error";
+    public static final String HLR_SMSC_UPDATE_ERROR = "hlr.smsc.update.error";
+    public static final String HLR_SMSC_NOT_FOUND = "hlr.smsc.notfound";
+    
+    //hlr-smsc success message
+    public static final String HLR_SMSC_DELETE_SUCCESS = "hlr.smsc.delete.success";
+    public static final String HLR_SMSC_UPDATED_SUCCESS = "hlr.smsc.update.success";
+    public static final String HLR_SMSC_SAVED_SUCCESS = "hlr.smsc.add.success";
+    
 }

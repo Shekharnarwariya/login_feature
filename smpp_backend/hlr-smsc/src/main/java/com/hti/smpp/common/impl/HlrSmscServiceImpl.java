@@ -1,6 +1,5 @@
 package com.hti.smpp.common.impl;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.hti.smpp.common.exception.DataAccessError;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
@@ -22,6 +22,8 @@ import com.hti.smpp.common.service.HlrSmscService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 @Service
 public class HlrSmscServiceImpl implements HlrSmscService {
@@ -34,111 +36,135 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 	@Autowired
 	private UserEntryRepository userRepository;
 
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
+
 	// Method to save a new HLR SMS entry
 	@Override
-	public ResponseEntity<HlrSmscEntry> save(HlrSmscEntryRequest hlrSmscEntryRequest, String username) {
-		   // Fetch user information
-		
+	public ResponseEntity<?> save(HlrSmscEntryRequest hlrSmscEntryRequest, String username) {
+		// Fetch user information
+
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			
-			 // Check if user has required authorization
+			// Check if user has required authorization
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 		try {
-			 // Convert and save the HLR SMS entry
+			// Convert and save the HLR SMS entry
 			HlrSmscEntry entry = convertToHlrSmscEntry(hlrSmscEntryRequest);
 			entry.setSystemId(String.valueOf(user.getSystemId()));
 			entry.setSystemType(user.getSystemType());
 
 			HlrSmscEntry savedEntry = hlrSmscRepository.save(entry);
-			logger.info("HlrSmscEntry saved successfully with ID: {}", savedEntry.getId());
-			return ResponseEntity.ok(savedEntry);
+			logger.info(messageResourceBundle.getLogMessage("hlr.smsc.saved.successfully.info"), savedEntry.getId());
+			return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.HLR_SMSC_SAVED_SUCCESS, new Object[] {savedEntry.getId()}),HttpStatus.CREATED);
 		} catch (Exception e) {
-			String errorMessage = "Error occurred while saving HlrSmscEntry: " + e.getMessage();
-			logger.error(errorMessage, e);
-			throw new InternalServerException("Error occurred while saving HlrSmscEntry: " + e.getMessage());
+			logger.error(messageResourceBundle.getLogMessage("hlr.smsc.save.error"), e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.HLR_SMSC_SAVE_ERROR,
+					new Object[] { e.getMessage() }));
 		}
 	}
 
 	// Method to update an existing HLR SMS entry
 	@Override
-	public ResponseEntity<HlrSmscEntry> update(int id, HlrSmscEntryRequest hlrSmscEntryRequest, String username) {
+	public ResponseEntity<?> update(int id, HlrSmscEntryRequest hlrSmscEntryRequest, String username) {
 		// Fetch user information
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		try {
 			// Check if the HLR SMS entry exists
 			Optional<HlrSmscEntry> existingEntry = hlrSmscRepository.findByIdAndSystemId(id, username);
 			if (existingEntry.isEmpty()) {
-				logger.warn("HlrSmscEntry with ID {} and systemId {} not found", id, username);
-				return ResponseEntity.notFound().build();
+				logger.warn(messageResourceBundle.getLogMessage("hlr.smsc.not.found.warn"), id, username);
+				throw new NotFoundException(messageResourceBundle
+						.getExMessage(ConstantMessages.HLR_SMSC_ENTRY_NOT_FOUND, new Object[] { id, username }));
 			}
-
-			  // Update and save the HLR SMS entry
+			
+			// Update and save the HLR SMS entry
 			HlrSmscEntry updatedEntry = convertToHlrSmscEntry(hlrSmscEntryRequest);
 			updatedEntry.setId(id);
+			updatedEntry.setSystemId(String.valueOf(user.getSystemId()));
+			updatedEntry.setSystemType(user.getSystemType());
+			
 			hlrSmscRepository.save(updatedEntry);
-			logger.info("HlrSmscEntry updated successfully with ID: {}", id);
-			return ResponseEntity.ok(updatedEntry);
+			logger.info(messageResourceBundle.getLogMessage("hlr.smsc.updated.successfully.info"), id);
+			return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.HLR_SMSC_UPDATED_SUCCESS, new Object[] {id}),HttpStatus.CREATED);
 		} catch (DataAccessException e) {
-			logger.error("DataAccessError occurred while updating HlrSmscEntry with ID {}: {}", id, e.getMessage());
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+			logger.error(messageResourceBundle.getLogMessage("hlr.smsc.update.data.access.error"), id, e.getMessage());
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.HLR_SMSC_DATA_ACCESS_ERROR,
+					new Object[] { id, e.getMessage() }));
+		} catch (NotFoundException e) {
+			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
-			logger.error("Error occurred while updating HlrSmscEntry with ID {}: {}", id, e.getMessage());
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+			logger.error(messageResourceBundle.getLogMessage("hlr.smsc.update.error"), id, e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.HLR_SMSC_UPDATE_ERROR,
+					new Object[] { id, e.getMessage() }));
 		}
+
 	}
 
-	  // Method to delete an existing HLR SMS entry
+	// Method to delete an existing HLR SMS entry
 	@Override
-	public ResponseEntity<Void> delete(int id, String username) {
+	public ResponseEntity<?> delete(int id, String username) {
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 		try {
-			
+
 			String systemId = user.getSystemId();
 			Optional<HlrSmscEntry> existingEntry = hlrSmscRepository.findByIdAndSystemId(id, systemId);
 			if (existingEntry.isEmpty()) {
-				logger.warn("HlrSmscEntry with ID {} and systemId {} not found", id, systemId);
-				return ResponseEntity.notFound().build();
+				logger.warn(messageResourceBundle.getLogMessage("hlr.smsc.not.found.warn"), id, username);
+				throw new NotFoundException(messageResourceBundle
+						.getExMessage(ConstantMessages.HLR_SMSC_ENTRY_NOT_FOUND, new Object[] { id, username }));
 			}
 
-			   // Delete the HLR SMS entry
+			// Delete the HLR SMS entry
 			hlrSmscRepository.deleteById(id);
-			logger.info("HlrSmscEntry with ID {} deleted successfully", id);
-			return ResponseEntity.noContent().build();
+			logger.info(messageResourceBundle.getLogMessage("hlr.smsc.deleted.successfully.info"), id);
+
+			return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.HLR_SMSC_DELETE_SUCCESS, new Object[] {id}),HttpStatus.OK);
 		} catch (DataAccessException e) {
-			logger.error("DataAccessError occurred while deleting HlrSmscEntry with ID {}: {}", id, e.getMessage());
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+			logger.error(messageResourceBundle.getLogMessage("hlr.smsc.update.data.access.error"), id, e.getMessage());
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.HLR_SMSC_DATA_ACCESS_ERROR,
+					new Object[] { id, e.getMessage() }));
+		} catch (NotFoundException e) {
+			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
-			logger.error("Error occurred while deleting HlrSmscEntry with ID {}: {}", id, e.getMessage());
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+			logger.error(messageResourceBundle.getLogMessage("hlr.smsc.update.error"), id, e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.HLR_SMSC_UPDATE_ERROR,
+					new Object[] { id, e.getMessage() }));
 		}
+
 	}
 
 	// Method to get details of a specific HLR SMS entry
@@ -149,30 +175,37 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 		try {
 			String systemId = user.getSystemId();
 
 			Optional<HlrSmscEntry> existingEntry = hlrSmscRepository.findByIdAndSystemId(id, systemId);
 			if (existingEntry.isEmpty()) {
-				logger.warn("HlrSmscEntry with ID {} and systemId {} not found", id, systemId);
-				return ResponseEntity.notFound().build();
+				logger.warn(messageResourceBundle.getLogMessage("hlr.smsc.not.found.warn"), id, username);
+				throw new NotFoundException(messageResourceBundle
+						.getExMessage(ConstantMessages.HLR_SMSC_ENTRY_NOT_FOUND, new Object[] { id, username }));
 			}
 
 			return ResponseEntity.ok(existingEntry.get());
 		} catch (DataAccessException e) {
-			logger.error("DataAccessError occurred while fetching HlrSmscEntry with ID {}: {}", id, e.getMessage());
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+			logger.error(messageResourceBundle.getLogMessage("hlr.smsc.update.data.access.error"), id, e.getMessage());
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.HLR_SMSC_DATA_ACCESS_ERROR,
+					new Object[] { id, e.getMessage() }));
+		} catch (NotFoundException e) {
+			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
-			logger.error("Error occurred while fetching HlrSmscEntry with ID {}: {}", id, e.getMessage());
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+			logger.error(messageResourceBundle.getLogMessage("hlr.smsc.update.error"), id, e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.HLR_SMSC_UPDATE_ERROR,
+					new Object[] { id, e.getMessage() }));
 		}
 	}
-	 // Method to list all HLR SMS entries for a user
+	// Method to list all HLR SMS entries for a user
 
 	@Override
 	public List<HlrSmscEntry> list(String username) {
@@ -182,27 +215,38 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		try {
 			String systemId = user.getSystemId();
 
 			List<HlrSmscEntry> existingEntries = hlrSmscRepository.findBySystemId(systemId);
-			return existingEntries;
+			if(!existingEntries.isEmpty()) {
+				return existingEntries;
+			} else {
+				throw new NotFoundException("No HLR SMSC Found!");
+			}
+			
 		} catch (DataAccessException e) {
-			logger.error("DataAccessError occurred while listing HlrSmscEntries for systemId {}: {}", username,
-					e.getMessage());
-			return Collections.emptyList();
+			logger.error(messageResourceBundle.getLogMessage("hlr.smsc.update.data.access.error"), username, e.getMessage());
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.HLR_SMSC_DATA_ACCESS_ERROR,
+					new Object[] { username, e.getMessage() }));
+		} catch (NotFoundException e) {
+			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
-			logger.error("Error occurred while listing HlrSmscEntries for systemId {}: {}", username, e.getMessage());
-			return Collections.emptyList();
+			logger.error(messageResourceBundle.getLogMessage("hlr.smsc.update.error"), username, e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.HLR_SMSC_UPDATE_ERROR,
+					new Object[] { username, e.getMessage() }));
 		}
+
 	}
-	
+
 	// Helper method to convert HlrSmscEntryRequest to HlrSmscEntry
 
 	private HlrSmscEntry convertToHlrSmscEntry(HlrSmscEntryRequest request) {
@@ -215,11 +259,12 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 			entry.setPassword(request.getPassword());
 			entry.setPort(request.getPort());
 			entry.setSleep(request.getSleep());
-			logger.info("Converted HlrSmscEntryRequest to HlrSmscEntry successfully");
+			logger.info(messageResourceBundle.getLogMessage("hlr.smsc.convert.success"));
 			return entry;
 		} catch (Exception e) {
-			logger.error("Error occurred while converting HlrSmscEntryRequest to HlrSmscEntry: {}", e.getMessage());
-			throw new RuntimeException("Error occurred while converting HlrSmscEntryRequest to HlrSmscEntry", e);
+			logger.error(messageResourceBundle.getLogMessage("hlr.smsc.convert.error"), e.getMessage());
+			throw new InternalServerException(
+					messageResourceBundle.getExMessage(ConstantMessages.HLR_SMSC_CONVERT_ERROR));
 		}
 	}
 
