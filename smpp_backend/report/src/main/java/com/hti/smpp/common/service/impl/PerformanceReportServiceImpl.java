@@ -107,7 +107,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
-				JasperPrint print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
+				List<DeliveryDTO> print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
 				target = IConstants.SUCCESS_KEY;
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
@@ -136,7 +136,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
-				JasperPrint print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
+				List<DeliveryDTO>  print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
 				System.out.println("<-- Preparing Outputstream --> ");
 				String reportName = "performance_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0))
 						+ ".xlsx";
@@ -187,7 +187,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
-				JasperPrint print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
+				List<DeliveryDTO>  print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
 				System.out.println("<-- Preparing Outputstream --> ");
 				String reportName = "performance_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0))
 						+ ".pdf";
@@ -234,7 +234,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
-				JasperPrint print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
+				List<DeliveryDTO>  print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
 				System.out.println("<-- Preparing Outputstream --> ");
 				String reportName = "performance_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0))
 						+ ".doc";
@@ -368,7 +368,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 		return list;
 	}
 
-	private JasperPrint getJasperPrint(List<DeliveryDTO> reportList, boolean paging, String groupBy) throws Exception {
+	private List<DeliveryDTO> getJasperPrint(List<DeliveryDTO> reportList, boolean paging, String groupBy){
 		System.out.println("Creating Design");
 		Map<String, SmscEntry> smscEntries = list();
 
@@ -378,7 +378,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 		JasperDesign design = null;
 		System.out.println("<-- Preparing Charts --> ");
 		if (groupBy.equalsIgnoreCase("Smsc")) {
-			design = JRXmlLoader.load(template_file_smsc);
+			//design = JRXmlLoader.load(template_file_smsc);
 			Map<String, Map<String, DeliveryDTO>> smsc_key_map = new TreeMap<String, Map<String, DeliveryDTO>>();
 			Map<String, Integer> total_status_map = new TreeMap<String, Integer>(); // track all status counts for pi
 																					// chart
@@ -454,7 +454,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 				final_list.addAll(personStream.collect(Collectors.toList()));
 			}
 		} else if (groupBy.equalsIgnoreCase("Operator")) {
-			design = JRXmlLoader.load(template_file_opr);
+			//design = JRXmlLoader.load(template_file_opr);
 			Map<String, Map<String, DeliveryDTO>> opr_key_map = new TreeMap<String, Map<String, DeliveryDTO>>();
 			Map<String, Integer> total_status_map = new TreeMap<String, Integer>(); // track all status counts for pi
 																					// chart
@@ -530,7 +530,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 				final_list.addAll(personStream.collect(Collectors.toList()));
 			}
 		} else if (groupBy.equalsIgnoreCase("Category")) {
-			design = JRXmlLoader.load(template_file_cat);
+			//design = JRXmlLoader.load(template_file_cat);
 			Map<String, Map<String, DeliveryDTO>> cat_key_map = new TreeMap<String, Map<String, DeliveryDTO>>();
 			Map<String, Integer> total_status_map = new TreeMap<String, Integer>(); // track all status counts for pi
 																					// chart
@@ -610,7 +610,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 			System.out.println("Invalid GroupBy : " + groupBy);
 		}
 		System.out.println("<--- Compiling -->");
-		JasperReport report = JasperCompileManager.compileReport(design);
+		//JasperReport report = JasperCompileManager.compileReport(design);
 		// -------------------------------------------------------------
 		JRBeanCollectionDataSource piechartDataSource = new JRBeanCollectionDataSource(pi_chart_list);
 		JRBeanCollectionDataSource barchart1DataSource = new JRBeanCollectionDataSource(bar_chart_list);
@@ -622,8 +622,8 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 		ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);
 		parameters.put("REPORT_RESOURCE_BUNDLE", bundle);
 		System.out.println("<-- filling report data --> ");
-		JasperPrint print = JasperFillManager.fillReport(report, parameters, beanColDataSource);
-		return print;
+		//JasperPrint print = JasperFillManager.fillReport(report, parameters, beanColDataSource);
+		return final_list;
 	}
 
 	public Map<String, SmscEntry> list() {

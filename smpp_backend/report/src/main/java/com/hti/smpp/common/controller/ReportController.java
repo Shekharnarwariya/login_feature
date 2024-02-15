@@ -335,7 +335,7 @@ public class ReportController {
 
 	@Operation(summary = "Get Lookup Report View")
 	@PostMapping("/lookup-report-view")
-	public ResponseEntity<?> getLookupReportView(@Valid@RequestParam String username,
+	public ResponseEntity<?> getLookupReportView(@Valid@RequestHeader String username,
 			@RequestBody LookUpReportRequest customReportForm, @RequestParam String lang) {
 		return lookupReportService.LookupReportview(username, customReportForm, lang);
 	
