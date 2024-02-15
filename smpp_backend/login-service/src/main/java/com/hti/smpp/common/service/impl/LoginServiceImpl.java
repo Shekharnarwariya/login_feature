@@ -103,7 +103,7 @@ public class LoginServiceImpl implements LoginService {
 
 	@Autowired
 	private JwtUtils jwtUtils;
-	
+
 	@Autowired
 	private SalesRepository salesRepository;
 
@@ -539,7 +539,7 @@ public class LoginServiceImpl implements LoginService {
 		}
 	}
 
-	// ------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------
 
 	private UserEntry getUser(String username) {
 
@@ -548,11 +548,13 @@ public class LoginServiceImpl implements LoginService {
 		if (user.isPresent()) {
 			userEntry = user.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("Unauthorised User!");
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 
 		} else {
-			throw new NotFoundException("User Entry Not Found With Username: " + username);
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 		return userEntry;
 	}
@@ -563,36 +565,35 @@ public class LoginServiceImpl implements LoginService {
 		if (webEntry != null) {
 			return webEntry;
 		} else {
-			throw new NotFoundException("Web Master Entry Not Found!");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND_WEBMASTER_ERROR));
 		}
 	}
 
 	private ProfessionEntry getProfessionEntry(int userId) {
 		ProfessionEntry proEntry = this.professionEntryRepository.findByUserId(userId)
-				.orElseThrow(() -> new NotFoundException("No Profession Entry Found For UserId: " + userId));
+				.orElseThrow(() -> new NotFoundException(
+						messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
 		return proEntry;
-	}
-
-	private int validateUser(LoginRequest loginRequest) {
-		String systemId = loginRequest.getUsername();
-		String password = encoder.encode(loginRequest.getPassword());
-
-		UserEntry userEntry = getUser(loginRequest.getUsername());
-		if (userEntry.getPassword().equals(password)) {
-			return userEntry.getId();
-		} else {
-			logger.info(systemId + " Invalid Password: " + password);
-			return 0;
-		}
 	}
 
 	@Override
 	public ResponseEntity<?> validateUserIpAccess(LoginRequest loginRequest, String language) {
-		int userId = validateUser(loginRequest);
+
+		// user validation
+		int userId = 0;
+		String systemId = loginRequest.getUsername();
+		String password = encoder.encode(loginRequest.getPassword());
+		UserEntry userEntry = getUser(loginRequest.getUsername());
+		if (userEntry.getPassword().equals(password)) {
+			userId = userEntry.getId();
+		} else {
+			logger.error(messageResourceBundle.getLogMessage("auth.failed.password"), systemId);
+			userId = 0;
+		}
+
 		boolean webAccess = true;
 		String ipaddress = getClientIp();
 		if (userId > 0) {
-			UserEntry userEntry = getUser(loginRequest.getUsername());
 			WebMasterEntry webEntry = getWebMasterEntry(userId);
 			if (webEntry != null) {
 				if (webEntry.isWebAccess()) {
@@ -603,7 +604,8 @@ public class LoginServiceImpl implements LoginService {
 								.before(new java.util.Date());
 					} catch (ParseException ex) {
 						logger.error(userEntry.getSystemId(), ex.fillInStackTrace());
-						throw new InternalServerException("Unable to parse user entry expiry date!");
+						throw new InternalServerException(
+								messageResourceBundle.getExMessage(ConstantMessages.DATE_PARSE_ERROR));
 					}
 					boolean isPasswordExpired = false;
 					if (userEntry.isForcePasswordChange()) {
@@ -612,73 +614,93 @@ public class LoginServiceImpl implements LoginService {
 									.parse(userEntry.getPasswordExpiresOn()).before(new java.util.Date());
 						} catch (ParseException ex) {
 							logger.error(userEntry.getSystemId(), ex.fillInStackTrace());
-							throw new InternalServerException("Unable to parse user entry password expires on!");
+							throw new InternalServerException(
+									messageResourceBundle.getExMessage(ConstantMessages.PASSWORD_EXPIRES_PARSE_ERROR));
 						}
 					}
 					if (isExpired) {
-						logger.info("<- User Account Expired -> " + userEntry.getSystemId());
+						logger.error(messageResourceBundle.getLogMessage("user.account.expired"),
+								userEntry.getSystemId());
 						this.accessLog.save(new AccessLogEntry(userEntry.getSystemId(),
 								new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), ipaddress, 0, "failed",
 								"Account Expired"));
 
-						throw new InternalServerException("User " + userEntry.getSystemId() + " Account Expired!");
+						throw new InternalServerException(messageResourceBundle.getExMessage(
+								ConstantMessages.ACCOUNT_EXPIRED, new Object[] { userEntry.getSystemId() }));
 					} else if (isPasswordExpired) {
-						logger.info("<- User Password Expired -> " + userEntry.getSystemId());
+						logger.error(messageResourceBundle.getLogMessage("user.password.expired"),
+								userEntry.getSystemId());
 						this.accessLog.save(new AccessLogEntry(userEntry.getSystemId(),
 								new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), ipaddress, 0, "failed",
 								"Password Expired"));
-						throw new InternalServerException("User " + userEntry.getSystemId() + " Password Expired!");
+						throw new InternalServerException(messageResourceBundle.getExMessage(
+								ConstantMessages.PASSWORD_EXPIRED, new Object[] { userEntry.getSystemId() }));
 					} else {
 						String fileName = Constants.USER_FLAG_DIR + userEntry.getSystemId() + ".txt";
 						String flagValue = MultiUtility.readFlag(fileName);
 						if (flagValue != null) {
 							if (flagValue.contains("404")) {
 								webAccess = false;
-								logger.info(userEntry.getSystemId() + " Blocked By Flag <404> ");
+								logger.error(messageResourceBundle.getLogMessage("user.account.blocked"),
+										userEntry.getSystemId());
 								this.accessLog.save(new AccessLogEntry(userEntry.getSystemId(),
 										new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), ipaddress, 0,
 										"failed", "Account Blocked"));
-								throw new InternalServerException(userEntry.getSystemId() + " Account Blocked!");
+								throw new InternalServerException(messageResourceBundle.getExMessage(
+										ConstantMessages.ACCOUNT_BLOCKED, new Object[] { userEntry.getSystemId() }));
 							} else {
 								// userEntry.setFlagValue("100");
-								logger.info(userEntry.getSystemId() + " Flag ====> " + flagValue);
+								logger.info(messageResourceBundle.getLogMessage("user.flag.value"),
+										userEntry.getSystemId(), flagValue);
 
 							}
 						} else {
-							logger.info("<-- " + userEntry.getSystemId() + " Flag Read Error --> ");
+							logger.info(messageResourceBundle.getLogMessage("user.flag.read.error"),
+									userEntry.getSystemId());
 							webAccess = false;
 							this.accessLog.save(new AccessLogEntry(userEntry.getSystemId(),
 									new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), ipaddress, 0,
 									"failed", "Flag Read Error"));
-							throw new InternalServerException("Error While Reading Flag!");
+							throw new InternalServerException(
+									messageResourceBundle.getExMessage(ConstantMessages.FLAG_READ_ERROR));
 						}
 						if (webAccess) {
 							// ip validation starts
-							logger.info(userEntry.getSystemId() + "<-- Checking For AccessIP -->");
+							logger.info(messageResourceBundle.getLogMessage("user.check.ipaddress"),
+									userEntry.getSystemId());
 							if (Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
 
 								if (ipaddress != null && !ipaddress.isEmpty()) {
 									boolean matched = false;
 									if (ipaddress.equalsIgnoreCase("0:0:0:0:0:0:0:1")
 											|| ipaddress.equalsIgnoreCase("127.0.0.1")) {
-										logger.info(userEntry.getSystemId() + " Local AccessIp Matched: " + ipaddress);
+										logger.info(messageResourceBundle.getLogMessage("user.local.ip.match"),
+												userEntry.getSystemId(), ipaddress);
 										matched = true;
 									} else {
-										logger.info(userEntry.getSystemId() + " Matching[" + ipaddress
-												+ "] From Super Access IP list");
+
+										logger.info(
+												messageResourceBundle
+														.getLogMessage("user.matching.super.access.ip.info"),
+												userEntry.getSystemId(), ipaddress);
+
 										String[] IPs = IConstants.AccessIP.split(",");
 										for (String allowedip : IPs) {
 											if (allowedip.indexOf("/") > 0) {
 												if (isInRange(allowedip, ipaddress)) {
-													logger.info(userEntry.getSystemId() + " Range[" + allowedip
-															+ "] Matched: " + ipaddress);
+													logger.info(
+															messageResourceBundle
+																	.getLogMessage("user.range.matched.info"),
+															userEntry.getSystemId(), allowedip, ipaddress);
 													matched = true;
 													break;
 												}
 											} else {
 												if (ipaddress.equalsIgnoreCase(allowedip)) {
-													logger.info(userEntry.getSystemId() + " Configured[" + allowedip
-															+ "] Ip Matched: " + ipaddress);
+													logger.info(
+															messageResourceBundle
+																	.getLogMessage("user.configured.ip.matched.info"),
+															userEntry.getSystemId(), allowedip, ipaddress);
 													matched = true;
 													break;
 												}
@@ -686,21 +708,28 @@ public class LoginServiceImpl implements LoginService {
 
 										}
 										if (!matched) {
-											logger.info(userEntry.getSystemId() + " Matching[" + ipaddress
-													+ "] From Global Access IP list");
+
+											logger.info(
+													messageResourceBundle
+															.getLogMessage("user.matching.global.access.ip.info"),
+													userEntry.getSystemId(), ipaddress);
 											IPs = IConstants.GLOBAl_ACCESS_IP.split(",");
 											for (String allowedip : IPs) {
 												if (allowedip.indexOf("/") > 0) {
 													if (isInRange(allowedip, ipaddress)) {
-														logger.info(userEntry.getSystemId() + " Range[" + allowedip
-																+ "] Matched: " + ipaddress);
+														logger.info(
+																messageResourceBundle
+																		.getLogMessage("user.range.matched.info"),
+																userEntry.getSystemId(), allowedip, ipaddress);
 														matched = true;
 														break;
 													}
 												} else {
 													if (ipaddress.equalsIgnoreCase(allowedip)) {
-														logger.info(userEntry.getSystemId() + " Configured[" + allowedip
-																+ "] Ip Matched: " + ipaddress);
+														logger.info(
+																messageResourceBundle.getLogMessage(
+																		"user.configured.ip.matched.info"),
+																userEntry.getSystemId(), allowedip, ipaddress);
 														matched = true;
 														break;
 													}
@@ -709,15 +738,23 @@ public class LoginServiceImpl implements LoginService {
 										}
 									}
 									if (!matched) {
-										logger.info(userEntry.getSystemId() + " Access IP Not Matched: " + ipaddress);
+										logger.info(
+												messageResourceBundle.getLogMessage("user.access.ip.not.matched.info"),
+												userEntry.getSystemId(), ipaddress);
 										if (userEntry.getAccessCountry() != null
 												&& userEntry.getAccessCountry().length() > 0) {
-											logger.info(userEntry.getSystemId() + " Matching[" + ipaddress
-													+ "] From Allowed Country list");
+
+											logger.info(
+													messageResourceBundle
+															.getLogMessage("user.matching.allowed.country.info"),
+													userEntry.getSystemId(), ipaddress);
 											String country = getCountryname(ipaddress);
 											if (country != null && !country.isEmpty()) {
-												logger.info(userEntry.getSystemId() + " Country [" + ipaddress
-														+ "] found in database: " + country);
+
+												logger.info(
+														messageResourceBundle.getLogMessage("user.country.found.info"),
+														userEntry.getSystemId(), ipaddress, country);
+
 												for (String allowedCountry : userEntry.getAccessCountry().split(",")) {
 													if (allowedCountry.equalsIgnoreCase(country)) {
 														matched = true;
@@ -725,58 +762,76 @@ public class LoginServiceImpl implements LoginService {
 													}
 												}
 											} else {
-												logger.info(userEntry.getSystemId() + " Country [" + ipaddress
-														+ "] not found in database.");
+												logger.info(
+														messageResourceBundle
+																.getLogMessage("user.country.not.found.info"),
+														userEntry.getSystemId(), ipaddress);
 											}
 											if (!matched) {
 												webAccess = false;
-												logger.info(userEntry.getSystemId() + " Access IP Not Allowed: "
-														+ ipaddress);
-												throw new InternalServerException(userEntry.getSystemId()
-														+ " Access IP Not Allowed: " + ipaddress);
+												logger.info(
+														messageResourceBundle
+																.getLogMessage("user.access.ip.not.allowed.info"),
+														userEntry.getSystemId(), ipaddress);
+												throw new InternalServerException(messageResourceBundle.getExMessage(
+														ConstantMessages.USER_ACCESS_IPNOTALLOWED,
+														new Object[] { userEntry.getSystemId(), ipaddress }));
 											} else {
-												logger.info(userEntry.getSystemId() + " Valid Access Country: "
-														+ ipaddress);
+												logger.info(
+														messageResourceBundle
+																.getLogMessage("user.valid.access.country.info"),
+														userEntry.getSystemId(), ipaddress);
 											}
 
 										} else {
 											webAccess = false;
-											logger.info(userEntry.getSystemId() + " Access Countries Not Configured.");
-											throw new InternalServerException(
-													userEntry.getSystemId() + " Access Countries Not Configured.");
+											logger.info(
+													messageResourceBundle
+															.getLogMessage("user.access.countries.not.configured.info"),
+													userEntry.getSystemId());
+											throw new InternalServerException(messageResourceBundle.getExMessage(
+													ConstantMessages.ACCESS_COUNTRY_NOTCONFIGURED,
+													new Object[] { userEntry.getSystemId()}));
 										}
 									} else {
-										logger.info(userEntry.getSystemId() + " Valid Access IP: " + ipaddress);
+										logger.info(messageResourceBundle.getLogMessage("user.valid.access.ip.info"),
+												userEntry.getSystemId(), ipaddress);
 									}
 
 								} else {
-									throw new NotFoundException("Unable to found Ip address!");
+									throw new NotFoundException(
+											messageResourceBundle.getExMessage(ConstantMessages.IPADDRESS_NOTFOUND));
 								}
 
 							} else {
 								if (userEntry.getAccessIp() != null && userEntry.getAccessIp().length() > 0) {
 									boolean matched = false;
-
 									if (ipaddress != null && !ipaddress.isEmpty()) {
 										if (ipaddress.equalsIgnoreCase("0:0:0:0:0:0:0:1")
 												|| ipaddress.equalsIgnoreCase("127.0.0.1")) {
-											logger.info(
-													userEntry.getSystemId() + " Local AccessIp Matched: " + ipaddress);
+											
+											logger.info(messageResourceBundle.getLogMessage("user.local.ip.match"),
+													userEntry.getSystemId(), ipaddress);
 											matched = true;
 										} else {
 											String[] allowed_list = userEntry.getAccessIp().split(",");
 											for (String allowedip : allowed_list) {
 												if (allowedip.indexOf("/") > 0) {
 													if (isInRange(allowedip, ipaddress)) {
-														logger.info(userEntry.getSystemId() + " Range[" + allowedip
-																+ "] Matched: " + ipaddress);
+														logger.info(
+																messageResourceBundle
+																		.getLogMessage("user.range.matched.info"),
+																userEntry.getSystemId(), allowedip, ipaddress);
 														matched = true;
 														break;
 													}
 												} else {
 													if (ipaddress.equalsIgnoreCase(allowedip)) {
-														logger.info(userEntry.getSystemId() + " Configured[" + allowedip
-																+ "] Ip Matched: " + ipaddress);
+														
+														logger.info(
+																messageResourceBundle
+																		.getLogMessage("user.configured.ip.matched.info"),
+																userEntry.getSystemId(), allowedip, ipaddress);
 														matched = true;
 														break;
 													}
@@ -784,21 +839,30 @@ public class LoginServiceImpl implements LoginService {
 											}
 
 											if (!matched) {
-												logger.info(userEntry.getSystemId() + " Matching[" + ipaddress
-														+ "] From Global Access IP list");
+												
+												logger.info(
+														messageResourceBundle
+																.getLogMessage("user.matching.global.access.ip.info"),
+														userEntry.getSystemId(), ipaddress);
 												allowed_list = IConstants.GLOBAl_ACCESS_IP.split(",");
 												for (String allowedip : allowed_list) {
 													if (allowedip.indexOf("/") > 0) {
 														if (isInRange(allowedip, ipaddress)) {
-															logger.info(userEntry.getSystemId() + " Range[" + allowedip
-																	+ "] Matched: " + ipaddress);
+															
+															logger.info(
+																	messageResourceBundle
+																			.getLogMessage("user.range.matched.info"),
+																	userEntry.getSystemId(), allowedip, ipaddress);
 															matched = true;
 															break;
 														}
 													} else {
 														if (ipaddress.equalsIgnoreCase(allowedip)) {
-															logger.info(userEntry.getSystemId() + " Configured["
-																	+ allowedip + "] Ip Matched: " + ipaddress);
+														
+															logger.info(
+																	messageResourceBundle.getLogMessage(
+																			"user.configured.ip.matched.info"),
+																	userEntry.getSystemId(), allowedip, ipaddress);
 															matched = true;
 															break;
 														}
@@ -807,16 +871,23 @@ public class LoginServiceImpl implements LoginService {
 											}
 										}
 										if (!matched) {
+											
 											logger.info(
-													userEntry.getSystemId() + " Access IP Not Matched: " + ipaddress);
+													messageResourceBundle.getLogMessage("user.access.ip.not.matched.info"),
+													userEntry.getSystemId(), ipaddress);
 											if (userEntry.getAccessCountry() != null
 													&& userEntry.getAccessCountry().length() > 0) {
-												logger.info(userEntry.getSystemId() + " Matching[" + ipaddress
-														+ "] From Allowed Country list");
+												
+												logger.info(
+														messageResourceBundle
+																.getLogMessage("user.matching.allowed.country.info"),
+														userEntry.getSystemId(), ipaddress);
 												String country = getCountryname(ipaddress);
 												if (country != null && !country.isEmpty()) {
-													logger.info(userEntry.getSystemId() + " Country [" + ipaddress
-															+ "] found in database: " + country);
+													
+													logger.info(
+															messageResourceBundle.getLogMessage("user.country.found.info"),
+															userEntry.getSystemId(), ipaddress, country);
 													for (String allowedCountry : userEntry.getAccessCountry()
 															.split(",")) {
 														if (allowedCountry.equalsIgnoreCase(country)) {
@@ -825,52 +896,70 @@ public class LoginServiceImpl implements LoginService {
 														}
 													}
 												} else {
-													logger.info(userEntry.getSystemId() + " Country [" + ipaddress
-															+ "] not found in database.");
+													logger.info(
+															messageResourceBundle
+																	.getLogMessage("user.country.not.found.info"),
+															userEntry.getSystemId(), ipaddress);
 												}
 												if (!matched) {
 													webAccess = false;
-													logger.info(userEntry.getSystemId() + " Access IP Not Allowed: "
-															+ ipaddress);
+													
+													logger.info(
+															messageResourceBundle
+																	.getLogMessage("user.access.ip.not.allowed.info"),
+															userEntry.getSystemId(), ipaddress);
 
-													throw new InternalServerException(userEntry.getSystemId()
-															+ " Access IP Not Allowed: " + ipaddress);
+													throw new InternalServerException(messageResourceBundle.getExMessage(
+															ConstantMessages.USER_ACCESS_IPNOTALLOWED,
+															new Object[] { userEntry.getSystemId(), ipaddress }));
 												} else {
-													logger.info(userEntry.getSystemId() + " Valid Access Country: "
-															+ ipaddress);
+												
+													logger.info(
+															messageResourceBundle
+																	.getLogMessage("user.valid.access.country.info"),
+															userEntry.getSystemId(), ipaddress);
 												}
 											} else {
 												webAccess = false;
 												logger.info(
-														userEntry.getSystemId() + " Access Countries Not Configured.");
-												throw new InternalServerException(
-														userEntry.getSystemId() + " Access Countries Not Configured.");
+														messageResourceBundle
+																.getLogMessage("user.access.countries.not.configured.info"),
+														userEntry.getSystemId());
+												throw new InternalServerException(messageResourceBundle.getExMessage(
+														ConstantMessages.ACCESS_COUNTRY_NOTCONFIGURED,
+														new Object[] { userEntry.getSystemId()}));
 											}
 										} else {
-											logger.info(userEntry.getSystemId() + " Valid Access IP: " + ipaddress);
+											logger.info(messageResourceBundle.getLogMessage("user.valid.access.ip.info"),
+													userEntry.getSystemId(), ipaddress);
 										}
 
 									} else {
-										throw new NotFoundException("Unable to found Ip Address!");
+										throw new NotFoundException(
+												messageResourceBundle.getExMessage(ConstantMessages.IPADDRESS_NOTFOUND));
 									}
 
 								} else {
-									logger.info(userEntry.getSystemId() + " Access IP Address Not Configured.");
+									logger.info(messageResourceBundle.getLogMessage("user.access.ip.not.configured.info"), userEntry.getSystemId());
 									if (userEntry.getAccessCountry() != null
 											&& userEntry.getAccessCountry().length() > 0) {
 										boolean matched = false;
 										if (ipaddress.equalsIgnoreCase("0:0:0:0:0:0:0:1")
 												|| ipaddress.equalsIgnoreCase("127.0.0.1")) {
-											logger.info(
-													userEntry.getSystemId() + " Local AccessIp Matched: " + ipaddress);
+											logger.info(messageResourceBundle.getLogMessage("user.local.ip.match"),
+													userEntry.getSystemId(), ipaddress);
 											matched = true;
 										} else {
-											logger.info(userEntry.getSystemId() + " Matching[" + ipaddress
-													+ "] From Allowed Country list");
+											
+											logger.info(
+													messageResourceBundle
+															.getLogMessage("user.matching.allowed.country.info"),
+													userEntry.getSystemId(), ipaddress);
 											String country = getCountryname(ipaddress);
 											if (country != null && !country.isEmpty()) {
-												logger.info(userEntry.getSystemId() + " Country [" + ipaddress
-														+ "] found in database: " + country);
+												logger.info(
+														messageResourceBundle.getLogMessage("user.country.found.info"),
+														userEntry.getSystemId(), ipaddress, country);
 												for (String allowedCountry : userEntry.getAccessCountry().split(",")) {
 													if (allowedCountry.equalsIgnoreCase(country)) {
 														matched = true;
@@ -878,279 +967,323 @@ public class LoginServiceImpl implements LoginService {
 													}
 												}
 											} else {
-												logger.info(userEntry.getSystemId() + " Country [" + ipaddress
-														+ "] not found in database.");
+												logger.info(
+														messageResourceBundle
+																.getLogMessage("user.country.not.found.info"),
+														userEntry.getSystemId(), ipaddress);
 											}
 										}
 
 										if (!matched) {
 											webAccess = false;
+											
 											logger.info(
-													userEntry.getSystemId() + " Access IP Not Allowed: " + ipaddress);
-											throw new InternalServerException(
-													userEntry.getSystemId() + " Access IP Not Allowed: " + ipaddress);
+													messageResourceBundle
+															.getLogMessage("user.access.ip.not.allowed.info"),
+													userEntry.getSystemId(), ipaddress);
+											throw new InternalServerException(messageResourceBundle.getExMessage(
+													ConstantMessages.USER_ACCESS_IPNOTALLOWED,
+													new Object[] { userEntry.getSystemId(), ipaddress }));
 
 										} else {
 											logger.info(
-													userEntry.getSystemId() + " Valid Access Country: " + ipaddress);
+													messageResourceBundle
+															.getLogMessage("user.valid.access.country.info"),
+													userEntry.getSystemId(), ipaddress);
 										}
 
 									} else {
-										logger.info(userEntry.getSystemId() + " Access Countries Not Configured.");
-										throw new InternalServerException(
-												userEntry.getSystemId() + " Access Countries Not Configured.");
+										logger.info(
+												messageResourceBundle
+														.getLogMessage("user.access.countries.not.configured.info"),
+												userEntry.getSystemId());
+										throw new InternalServerException(messageResourceBundle.getExMessage(
+												ConstantMessages.ACCESS_COUNTRY_NOTCONFIGURED,
+												new Object[] {userEntry.getSystemId()}));
 									}
 								}
 
 							}
 
+							// -------------------------Send Otp and email alert--------------------------------
+							if (webAccess) {
+								if (webEntry.isOtpLogin()) {
+
+									boolean otplogin = true;
+									if (webEntry.isMultiUserAccess()) {
+										logger.info(messageResourceBundle.getLogMessage("user.multi.user.access.enabled.info"), userEntry.getSystemId());
+										List<MultiUserEntry> list = this.multiUserRepo
+												.findByUserIdEquals(userEntry.getId());
+										if (list.isEmpty()) {
+											logger.info(messageResourceBundle.getLogMessage("user.no.multi.access.name.found.info"), userEntry.getSystemId());
+
+										} else {
+											// forward to ask access name page.
+											otplogin = false;
+//											target = "multiaccess";
+											// TODO ask Vinod Sir about this line
+//											request.getSession().setAttribute("loginEntry", loginDTO);
+										}
+
+									}
+									if (otplogin) {
+										if (webEntry.getOtpNumber() != null && webEntry.getOtpNumber().length() > 0) {
+											String valid_otp_numbers = "";
+											for (String number : webEntry.getOtpNumber().split(",")) {
+												logger.info(messageResourceBundle.getLogMessage("user.otp.number.info"), userEntry.getSystemId(), number);
+
+												try {
+													Long.parseLong(number);
+													valid_otp_numbers += number + ",";
+												} catch (NumberFormatException ne) {
+													logger.error(messageResourceBundle.getLogMessage("user.invalid.otp.number.error"), userEntry.getSystemId(), number);
+												}
+												if (valid_otp_numbers.length() > 0) {
+													int otp = 0;
+													valid_otp_numbers = valid_otp_numbers.substring(0,
+															valid_otp_numbers.length() - 1);
+													logger.info(messageResourceBundle.getLogMessage("user.valid.otp.numbers.info"), userEntry.getSystemId(), valid_otp_numbers);
+													// check otp exist & send to user in case of absent or expired
+													Optional<OTPEntry> optionalOtp = this.otpEntryRepository
+															.findBySystemId(userEntry.getSystemId());
+													OTPEntry otpEntry = null;
+													if (optionalOtp.isPresent()) {
+														otpEntry = optionalOtp.get();
+													} else {
+														logger.info(messageResourceBundle.getLogMessage("user.no.otp.entry.found.info"));
+													}
+													boolean generate_otp = true;
+													if (otpEntry != null) {
+														if (otpEntry.getExpiresOn() != null) {
+															try {
+																if (new Date().after(
+																		new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+																				.parse(otpEntry.getExpiresOn()))) {
+																	
+																	logger.info(messageResourceBundle.getLogMessage("user.otp.expired.on.info"), userEntry.getSystemId(), otpEntry.getExpiresOn());
+																} else {
+																	generate_otp = false;
+																	otp = otpEntry.getOneTimePass();
+																}
+															} catch (ParseException e) {
+																logger.error(e.getLocalizedMessage());
+																throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.OTPEXPIRYDATE_PARSE_ERROR));
+															}
+														}
+
+													}
+													if (generate_otp) {
+														otp = new Random().nextInt(999999 - 100000) + 100000;
+														Calendar calendar = Calendar.getInstance();
+														int duration = 5;
+														if (IConstants.LOGIN_OTP_VALIDITY > 0) {
+															duration = IConstants.LOGIN_OTP_VALIDITY;
+														}
+														calendar.add(Calendar.MINUTE, duration);
+														String validity = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+																.format(calendar.getTime());
+														if (otpEntry != null) {
+															otpEntry.setExpiresOn(validity);
+															otpEntry.setOneTimePass(otp);
+															// updateOTPEntry in database
+															this.otpEntryRepository.save(otpEntry);
+														} else {
+															// save otp entry
+															this.otpEntryRepository.save(new OTPEntry(
+																	userEntry.getSystemId(), otp, validity));
+														}
+														// --------------------- send to user ---------------
+														UserEntry internalUser = this.userEntryRepository
+																.findByRole("internal");
+														if (internalUser != null) {
+															String content = null;
+															try {
+																content = MultiUtility
+																		.readContent(IConstants.FORMAT_DIR + "otp.txt");
+															} catch (Exception ex) {
+																logger.error(messageResourceBundle.getLogMessage("user.otp.format.error"), ex.getMessage());
+															}
+															if (content == null) {
+																content = "Hello [system_id], [otp_pass] is your One-Time Password (OTP) on [url] valid for next [duration] minutes";
+															}
+															content = content.replace("[system_id]",
+																	userEntry.getSystemId());
+															content = content.replace("[otp_pass]",
+																	String.valueOf(otp));
+															content = content.replace("[url]", IConstants.WebUrl);
+															content = content.replace("[duration]",
+																	String.valueOf(duration));
+															ArrayList<String> list = new ArrayList<String>(
+																	Arrays.asList(valid_otp_numbers.split(",")));
+															BulkSmsDTO smsDTO = new BulkSmsDTO();
+															smsDTO.setSystemId(internalUser.getSystemId());
+															smsDTO.setPassword(internalUser.getPassword());
+															smsDTO.setMessage(content);
+															smsDTO.setDestinationList(list);
+															if (webEntry.getOtpSender() != null
+																	&& webEntry.getOtpSender().length() > 1) {
+																smsDTO.setSenderId(webEntry.getOtpSender());
+															} else {
+																smsDTO.setSenderId(IConstants.OTP_SENDER_ID);
+															}
+															/*
+															 * To Be Implemented By Vinod Sir To Send Bulk SMS String
+															 * Response = new SendSmsService().sendAlert(smsDTO);
+															 * 
+															 * logger.info( "<OTP SMS: " + Response + ">" +
+															 * userEntry.getSystemId() + "<" + valid_otp_numbers + ">");
+															 */
+															if (webEntry.getOtpEmail() != null
+																	&& webEntry.getOtpEmail().length() > 0) {
+																String from = IConstants.SUPPORT_EMAIL[0];
+																ProfessionEntry proEntry = getProfessionEntry(
+																		userEntry.getId());
+																if (proEntry.getDomainEmail() != null
+																		&& proEntry.getDomainEmail().length() > 0
+																		&& proEntry.getDomainEmail().contains("@")
+																		&& proEntry.getDomainEmail().contains(".")) {
+																	from = proEntry.getDomainEmail();
+																	logger.info(messageResourceBundle.getLogMessage("user.domain.email.found.info"), userEntry.getSystemId(), from);
+																} else {
+																	String master = userEntry.getMasterId();
+																	ProfessionEntry professionEntry = getProfessionEntry(
+																			master);
+																	if (professionEntry != null
+																			&& professionEntry.getDomainEmail() != null
+																			&& professionEntry.getDomainEmail()
+																					.length() > 0
+																			&& professionEntry.getDomainEmail()
+																					.contains("@")
+																			&& professionEntry.getDomainEmail()
+																					.contains(".")) {
+																		from = professionEntry.getDomainEmail();
+																		logger.info(messageResourceBundle.getLogMessage("user.master.domain.email.found.info"), userEntry.getSystemId(), from);
+																	} else {
+																		logger.info(messageResourceBundle.getLogMessage("user.domain.email.not.found.info"), userEntry.getSystemId());
+																	}
+																	logger.info(messageResourceBundle.getLogMessage("user.sending.otp.email.info"), userEntry.getSystemId(), from, webEntry.getOtpEmail());
+																}
+																emailSender.sendEmail(webEntry.getOtpEmail(),
+																		Constant.OTP_SUBJECT,
+																		Constant.GENERAL_TEMPLATE_PATH,
+																		emailSender.createSourceMap(content));
+															}
+
+														}
+													} else {
+														logger.info(messageResourceBundle.getLogMessage("user.otp.already.generated.info"));
+													}
+
+												} else {
+													this.accessLog.save(new AccessLogEntry(userEntry.getSystemId(),
+															new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+																	.format(new Date()),
+															ipaddress, 0, "failed", "missing OTP numbers"));
+													throw new InternalServerException("Missing OTP numbers!");
+												}
+											}
+										} else {
+											logger.error(messageResourceBundle.getLogMessage("user.otp.number.not.configured.error"), userEntry.getSystemId());
+											this.accessLog.save(new AccessLogEntry(userEntry.getSystemId(),
+													new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
+													ipaddress, 0, "failed", "missing OTP numbers"));
+											throw new InternalServerException(
+													userEntry.getSystemId() + " OTP Number Not Configured.");
+										}
+									}else {
+										// otp login is false and user has multi access
+										ResponseEntity<?> userLogin = login(loginRequest);
+										JwtResponse jwtResp = (JwtResponse) userLogin.getBody();
+										LoginResponse loginResponse = new LoginResponse();
+										loginResponse.setJwtResponse(jwtResp);
+										loginResponse.setOtpLogin(false);
+										loginResponse.setStatus("User Has Multi User Access!");
+										return ResponseEntity.ok(loginResponse);
+									}
+									
+									//otp sent successfully
+									ResponseEntity<?> userLogin = login(loginRequest);
+									JwtResponse jwtResp = (JwtResponse) userLogin.getBody();
+									LoginResponse loginResponse = new LoginResponse();
+									loginResponse.setJwtResponse(jwtResp);
+									loginResponse.setOtpLogin(true);
+									loginResponse.setStatus("Otp sent successfully!");
+									return ResponseEntity.ok(loginResponse);
+
+								} else if (webEntry.isEmailOnLogin()) {
+									// if not otp login send email to user of login alert
+									// send email for login
+									String to = IConstants.TO_EMAIl;
+									String from = IConstants.SUPPORT_EMAIL[0];
+									ProfessionEntry proEntry = getProfessionEntry(userEntry.getId());
+									if (proEntry.getDomainEmail() != null && proEntry.getDomainEmail().length() > 0
+											&& proEntry.getDomainEmail().contains("@")
+											&& proEntry.getDomainEmail().contains(".")) {
+										from = proEntry.getDomainEmail();
+										logger.info(messageResourceBundle.getLogMessage("user.domain.email.found.info"), userEntry.getSystemId(), from);
+									} else {
+										ProfessionEntry professionEntry = getProfessionEntry(userEntry.getMasterId());
+										if (professionEntry != null && professionEntry.getDomainEmail() != null
+												&& professionEntry.getDomainEmail().length() > 0
+												&& professionEntry.getDomainEmail().contains("@")
+												&& professionEntry.getDomainEmail().contains(".")) {
+											from = professionEntry.getDomainEmail();
+											logger.info(messageResourceBundle.getLogMessage("user.master.domain.email.found.info"), userEntry.getSystemId(), from);
+										} else {
+											logger.info(messageResourceBundle.getLogMessage("user.domain.email.not.found.info"), userEntry.getSystemId());
+										}
+									}
+									if (webEntry.getEmail() != null && webEntry.getEmail().contains("@")
+											&& webEntry.getEmail().contains(".")) {
+										to = webEntry.getEmail();
+									}
+
+									emailSender.sendEmail(to, Constant.LOGIN_SUBJECT, Constant.LOGIN_TEMPLATE_PATH,
+											emailSender.createCustomSourceMap(userEntry.getSystemId(),
+													IConstants.GATEWAY_NAME, ipaddress, new Date().toString(),
+													IConstants.DEFAULT_GMT));
+
+									ResponseEntity<?> userLogin = login(loginRequest);
+									JwtResponse jwtResp = (JwtResponse) userLogin.getBody();
+									LoginResponse loginResponse = new LoginResponse();
+									loginResponse.setJwtResponse(jwtResp);
+									loginResponse.setOtpLogin(false);
+									loginResponse.setStatus("Login Alert Email Sent Successfully!");
+									return ResponseEntity.ok(loginResponse);
+
+								} else {
+									ResponseEntity<?> userLogin = login(loginRequest);
+									JwtResponse jwtResp = (JwtResponse) userLogin.getBody();
+									LoginResponse loginResponse = new LoginResponse();
+									loginResponse.setJwtResponse(jwtResp);
+									loginResponse.setOtpLogin(false);
+									loginResponse.setStatus("Jwt Token Generated Successfully!");
+									return ResponseEntity.ok(loginResponse);
+								}
+
+							} else {
+								throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.WEBACCESS_DENIED_USER, new Object[] {loginRequest.getUsername(),loginRequest.getPassword()}));
+							}
+
+						} else {
+							logger.info(messageResourceBundle.getLogMessage("user.web.access.denied.info"), loginRequest.getUsername(), loginRequest.getPassword());
+							throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.WEBACCESS_DENIED_USER, new Object[] {loginRequest.getUsername(),loginRequest.getPassword()}));
 						}
 					}
 				} else {
-					logger.info("Web Access Denied User -> " + userEntry.getSystemId() + " Password -> "
-							+ userEntry.getPassword());
+					logger.info(messageResourceBundle.getLogMessage("user.web.access.denied.info"), loginRequest.getUsername(), loginRequest.getPassword());
 					this.accessLog.save(new AccessLogEntry(userEntry.getSystemId(),
 							new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), ipaddress, 0, "failed",
 							"WebAccess Denied"));
-					throw new InternalServerException("Web Access Denied User -> " + loginRequest.getUsername()
-							+ " Password -> " + loginRequest.getPassword());
+					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.WEBACCESS_DENIED_USER, new Object[] {loginRequest.getUsername(),loginRequest.getPassword()}));
 				}
 			} else {
-				throw new NotFoundException("WebMaster Entry not found!");
-			}
-
-			if (webAccess) {
-				System.out.println(webEntry.isOtpLogin());
-				if (webEntry.isOtpLogin()) {
-
-					boolean otplogin = true;
-					if (webEntry.isMultiUserAccess()) {
-						logger.info(userEntry.getSystemId() + " Multi User Access Enabled.");
-						List<MultiUserEntry> list = this.multiUserRepo.findByUserIdEquals(userEntry.getId());
-						if (list.isEmpty()) {
-							logger.info(userEntry.getSystemId() + " No Multi Access Name Found");
-						} else {
-							// forward to ask access name page.
-							otplogin = false;
-//							target = "multiaccess";
-							// TODO ask Vinod Sir about this line
-//							request.getSession().setAttribute("loginEntry", loginDTO);
-						}
-
-					}
-					if (otplogin) {
-						if (webEntry.getOtpNumber() != null && webEntry.getOtpNumber().length() > 0) {
-//							target = "otplogin";
-							String valid_otp_numbers = "";
-							for (String number : webEntry.getOtpNumber().split(",")) {
-								logger.info(userEntry.getSystemId() + " OTP Number: " + number);
-								try {
-									Long.parseLong(number);
-									valid_otp_numbers += number + ",";
-								} catch (NumberFormatException ne) {
-									logger.error(userEntry.getSystemId() + " Invalid OTP Number Configured: " + number);
-								}
-								if (valid_otp_numbers.length() > 0) {
-									int otp = 0;
-									valid_otp_numbers = valid_otp_numbers.substring(0, valid_otp_numbers.length() - 1);
-									logger.info(userEntry.getSystemId() + " Valid OTP Numbers: " + valid_otp_numbers);
-									// check otp exist & send to user in case of absent or expired
-									Optional<OTPEntry> optionalOtp = this.otpEntryRepository.findBySystemId(userEntry.getSystemId());
-									OTPEntry otpEntry = null;
-									if(optionalOtp.isPresent()) {
-										otpEntry = optionalOtp.get();
-									}else {
-										logger.info("no otp entry found for the user!");
-									}
-									boolean generate_otp = true;
-									if (otpEntry != null) {
-										if (otpEntry.getExpiresOn() != null) {
-											try {
-												if (new Date().after(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-														.parse(otpEntry.getExpiresOn()))) {
-													logger.info(userEntry.getSystemId() + " OTP ExpiredOn: "
-															+ otpEntry.getExpiresOn());
-												} else {
-													generate_otp = false;
-													otp = otpEntry.getOneTimePass();
-												}
-											} catch (ParseException e) {
-												logger.error(e.getLocalizedMessage());
-												throw new InternalServerException("Unable to parse otp expiry date!");
-											}
-										}
-
-									}
-									if (generate_otp) {
-										otp = new Random().nextInt(999999 - 100000) + 100000;
-										Calendar calendar = Calendar.getInstance();
-										int duration = 5;
-										if (IConstants.LOGIN_OTP_VALIDITY > 0) {
-											duration = IConstants.LOGIN_OTP_VALIDITY;
-										}
-										calendar.add(Calendar.MINUTE, duration);
-										String validity = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-												.format(calendar.getTime());
-										if (otpEntry != null) {
-											otpEntry.setExpiresOn(validity);
-											otpEntry.setOneTimePass(otp);
-											// updateOTPEntry in database
-											this.otpEntryRepository.save(otpEntry);
-										} else {
-											// save otp entry
-											this.otpEntryRepository
-													.save(new OTPEntry(userEntry.getSystemId(), otp, validity));
-										}
-										// --------------------- send to user ---------------
-										UserEntry internalUser = this.userEntryRepository.findByRole("internal");
-										if (internalUser != null) {
-											String content = null;
-											try {
-												content = MultiUtility.readContent(IConstants.FORMAT_DIR + "otp.txt");
-											} catch (Exception ex) {
-												logger.error("OTP_FORMAT (unable to read otp.txt file): ", ex.getLocalizedMessage());
-											}
-											if (content == null) {
-												content = "Hello [system_id], [otp_pass] is your One-Time Password (OTP) on [url] valid for next [duration] minutes";
-											}
-											content = content.replace("[system_id]", userEntry.getSystemId());
-											content = content.replace("[otp_pass]", String.valueOf(otp));
-											content = content.replace("[url]", IConstants.WebUrl);
-											content = content.replace("[duration]", String.valueOf(duration));
-											ArrayList<String> list = new ArrayList<String>(
-													Arrays.asList(valid_otp_numbers.split(",")));
-											BulkSmsDTO smsDTO = new BulkSmsDTO();
-											smsDTO.setSystemId(internalUser.getSystemId());
-											smsDTO.setPassword(internalUser.getPassword());
-											smsDTO.setMessage(content);
-											smsDTO.setDestinationList(list);
-											if (webEntry.getOtpSender() != null
-													&& webEntry.getOtpSender().length() > 1) {
-												smsDTO.setSenderId(webEntry.getOtpSender());
-											} else {
-												smsDTO.setSenderId(IConstants.OTP_SENDER_ID);
-											}
-											/*
-											 * To Be Implemented By Vinod Sir To Send Bulk SMS String Response = new
-											 * SendSmsService().sendAlert(smsDTO);
-											 * 
-											 * logger.info( "<OTP SMS: " + Response + ">" + userEntry.getSystemId() +
-											 * "<" + valid_otp_numbers + ">");
-											 */
-											System.out.println(content);
-											if (webEntry.getOtpEmail() != null && webEntry.getOtpEmail().length() > 0) {
-												String from = IConstants.SUPPORT_EMAIL[0];
-												ProfessionEntry proEntry = getProfessionEntry(userEntry.getId());
-												if (proEntry.getDomainEmail() != null
-														&& proEntry.getDomainEmail().length() > 0
-														&& proEntry.getDomainEmail().contains("@")
-														&& proEntry.getDomainEmail().contains(".")) {
-													from = proEntry.getDomainEmail();
-													logger.info(
-															userEntry.getSystemId() + " Domain-Email Found: " + from);
-												} else {
-													String master = userEntry.getMasterId();
-													ProfessionEntry professionEntry = getProfessionEntry(master);
-													if (professionEntry != null
-															&& professionEntry.getDomainEmail() != null
-															&& professionEntry.getDomainEmail().length() > 0
-															&& professionEntry.getDomainEmail().contains("@")
-															&& professionEntry.getDomainEmail().contains(".")) {
-														from = professionEntry.getDomainEmail();
-														logger.info(userEntry.getSystemId()
-																+ " Master Domain-Email Found: " + from);
-													} else {
-														logger.info(
-																userEntry.getSystemId() + " Domain-Email Not Found");
-													}
-													logger.info(userEntry.getSystemId() + " Sending OTP Email From["
-															+ from + "] on: " + webEntry.getOtpEmail());
-													
-
-												}
-												emailSender.sendEmail(webEntry.getOtpEmail(), Constant.OTP_SUBJECT, Constant.GENERAL_TEMPLATE_PATH,
-														emailSender.createSourceMap(content));
-											}
-											
-											
-										}
-									}else {
-										logger.info("Otp already generated!");
-									}
-
-								} else {
-									this.accessLog.save(new AccessLogEntry(userEntry.getSystemId(),
-											new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), ipaddress,
-											0, "failed", "missing OTP numbers"));
-									throw new InternalServerException("Missing OTP numbers!");
-								}
-							}
-						} else {
-							logger.error(userEntry.getSystemId() + " OTP Number Not Configured.");
-							this.accessLog.save(new AccessLogEntry(userEntry.getSystemId(),
-									new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), ipaddress, 0,
-									"failed", "missing OTP numbers"));
-							throw new InternalServerException(userEntry.getSystemId() + " OTP Number Not Configured.");
-						}
-					}
-					ResponseEntity<?> userLogin = login(loginRequest);
-					JwtResponse jwtResp = (JwtResponse) userLogin.getBody();
-					LoginResponse loginResponse = new LoginResponse();
-					loginResponse.setJwtResponse(jwtResp);
-					loginResponse.setOtpLogin(true);
-					loginResponse.setStatus("Otp sent successfully!");
-					return ResponseEntity.ok(loginResponse);
-
-				} else {
-					// if not otp login send email to user of login alert
-					if (webEntry.isEmailOnLogin()) {
-						// send email for login
-						String to = IConstants.TO_EMAIl;
-						String from = IConstants.SUPPORT_EMAIL[0];
-						ProfessionEntry proEntry = getProfessionEntry(userEntry.getId());
-						if (proEntry.getDomainEmail() != null && proEntry.getDomainEmail().length() > 0
-								&& proEntry.getDomainEmail().contains("@") && proEntry.getDomainEmail().contains(".")) {
-							from = proEntry.getDomainEmail();
-							logger.info(userEntry.getSystemId() + " Domain-Email Found: " + from);
-						} else {
-							ProfessionEntry professionEntry = getProfessionEntry(userEntry.getMasterId());
-							if (professionEntry != null && professionEntry.getDomainEmail() != null
-									&& professionEntry.getDomainEmail().length() > 0
-									&& professionEntry.getDomainEmail().contains("@")
-									&& professionEntry.getDomainEmail().contains(".")) {
-								from = professionEntry.getDomainEmail();
-								logger.info(userEntry.getSystemId() + " Master Domain-Email Found: " + from);
-							} else {
-								logger.info(userEntry.getSystemId() + " Domain-Email Not Found");
-							}
-						}
-						if (webEntry.getEmail() != null && webEntry.getEmail().contains("@")
-								&& webEntry.getEmail().contains(".")) {
-							to = webEntry.getEmail();
-						}
-						
-						emailSender.sendEmail(webEntry.getEmail(), Constant.LOGIN_SUBJECT, Constant.LOGIN_TEMPLATE_PATH,
-								emailSender.createCustomSourceMap(userEntry.getSystemId(),IConstants.GATEWAY_NAME,ipaddress,new Date().toString(),IConstants.DEFAULT_GMT));
-					}
-					ResponseEntity<?> userLogin = login(loginRequest);
-					JwtResponse jwtResp = (JwtResponse) userLogin.getBody();
-					LoginResponse loginResponse = new LoginResponse();
-					loginResponse.setJwtResponse(jwtResp);
-					loginResponse.setOtpLogin(false);
-					loginResponse.setStatus("Login Alert Email Sent Successfully!");
-					return ResponseEntity.ok(loginResponse);
-
-				}
-				
-
-			} else {
-				throw new InternalServerException("Web Access Denied User -> " + loginRequest.getUsername()
-						+ " Password -> " + loginRequest.getPassword());
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND_WEBMASTER_ERROR));
 			}
 
 		} else {
-			logger.error("Invalid Creadentials! Unable to validate User.");
-			throw new UnauthorizedException("Invalid Creadentials! Unable to validate User.");
+			logger.error(messageResourceBundle.getLogMessage("user.invalid.credentials.error"));
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.INVALID_CREDENTIALS));
 		}
 
 	}
@@ -1236,30 +1369,19 @@ public class LoginServiceImpl implements LoginService {
 		}
 		return entry;
 	}
+//-------------------------------------------------------------------------------------------------------------------
 
 	public int validateEntry(String username, String password) {
 		SalesEntry entry = this.salesRepository.findByUsername(username);
 		if (entry == null) {
-			logger.info("Invalid Sales Username: " + username);
 			return 0;
 		} else {
 			if (entry.getPassword().equals(password)) {
 				return entry.getId();
 			} else {
-				logger.info(username + " Invalid password: " + password);
 				return 0;
 			}
 		}
-	}
-
-	public int validateExecutive(String systemId, String password) {
-		int seller_id = 0;
-		try {
-			seller_id = validateEntry(systemId, password);
-		} catch (Exception e) {
-			logger.error(systemId, e);
-		}
-		return seller_id;
 	}
 
 	private Map<Integer, String> listNamesUnderManager(String mgrId) {
@@ -1320,7 +1442,7 @@ public class LoginServiceImpl implements LoginService {
 	@Override
 	public ResponseEntity<?> sellerValidation(String systemId, String password) {
 		String target = IConstants.FAILURE_KEY;
-		int seller_id = validateExecutive(systemId, password);
+		int seller_id = validateEntry(systemId, password);
 		if (seller_id > 0) {
 			Date expired = null;
 			UserSessionObject userSessionObject = getExecutiveSessionObject(seller_id);
@@ -1340,8 +1462,8 @@ public class LoginServiceImpl implements LoginService {
 			} catch (ParseException ex) {
 			}
 			if (isExpired) {
-				logger.info("<- Executive Account Expired -> " + systemId);
-				throw new InternalServerException("User " + systemId + " Account Expired!");
+				logger.error(messageResourceBundle.getLogMessage("user.account.expired"), systemId);
+				throw new InternalServerException("Executive " + systemId + " Account Expired!");
 			} else {
 				userSessionObject.setFlagValue("100");
 				userSessionObject.getWebMasterEntry().setDisplayCost(true);
@@ -1349,7 +1471,7 @@ public class LoginServiceImpl implements LoginService {
 			}
 
 		} else {
-			throw new UnauthorizedException("Unauthorised Executive!");
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {systemId}));
 		}
 		return ResponseEntity.ok(target);
 	}

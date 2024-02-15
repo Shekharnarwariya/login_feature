@@ -9,7 +9,18 @@ public class ConstantMessages {
     public static final String NOT_FOUND = "not.found";
     public static final String ROLE_NOT_FOUND_ERROR = "role.not.found.error";
     public static final String PROFESSION_ENTRY_ERROR = "profession.entry.error";
-
+    public static final String DATE_PARSE_ERROR = "login.parse.date.error";
+    public static final String PASSWORD_EXPIRES_PARSE_ERROR = "login.parse.expireson.error";
+    public static final String ACCOUNT_EXPIRED = "user.account.expired";
+    public static final String PASSWORD_EXPIRED = "user.password.expired";
+    public static final String ACCOUNT_BLOCKED = "user.account.blocked";
+    public static final String FLAG_READ_ERROR = "user.read.flag.error";
+    public static final String USER_ACCESS_IPNOTALLOWED = "user.access.ip.not.allowed";
+    public static final String ACCESS_COUNTRY_NOTCONFIGURED = "user.access.countries.not.configured";
+    public static final String IPADDRESS_NOTFOUND = "user.ip.address.notfound";
+    public static final String OTPEXPIRYDATE_PARSE_ERROR = "user.otp.expirydate.parse.error";
+    public static final String WEBACCESS_DENIED_USER = "user.web.access.denied";
+    public static final String INVALID_CREDENTIALS = "user.invalid.credentials";
     
     public static final String INVALID_OLD_PASSWORD = "invalid.old.password";
     public static final String UNAUTHORIZED_OPERATION = "unauthorized.operation";
