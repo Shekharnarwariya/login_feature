@@ -202,7 +202,7 @@ public class ScheduleProcess {
 
 						}
 						scheduleEntryRepository.deleteById(schedule_id);
-						File schedulefile = new File(IConstants.WEBSMPP_EXT_DIR + "schedule//" + file);
+						File schedulefile = new File(IConstants.HOME_DIR + "schedule//" + file);
 						if (schedulefile.exists()) {
 							logger.info(file + " Schedule Deleted: " + schedulefile.delete());
 						}
@@ -219,7 +219,7 @@ public class ScheduleProcess {
 	}
 
 	public static void checkScheduleFolder() {
-		File f = new File(IConstants.WEBSMPP_EXT_DIR + "schedule//");
+		File f = new File(IConstants.HOME_DIR + "schedule//");
 		if (f.exists()) {
 			if (f.isDirectory()) {
 				System.out.println("Schedule Directory Exist: " + f.getAbsolutePath());
@@ -235,7 +235,7 @@ public class ScheduleProcess {
 		ObjectInputStream fobj = null;
 		BulkSmsDTO bulk = null;
 		try {
-			fobj = new ObjectInputStream(new FileInputStream(IConstants.WEBSMPP_EXT_DIR + "schedule//" + filename));
+			fobj = new ObjectInputStream(new FileInputStream(IConstants.HOME_DIR + "schedule//" + filename));
 			bulk = (BulkSmsDTO) fobj.readObject();
 			System.out.println("this is bukl dto" + bulk);
 		} catch (Exception e) {

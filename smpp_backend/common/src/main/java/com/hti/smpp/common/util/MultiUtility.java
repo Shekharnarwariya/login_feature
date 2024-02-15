@@ -157,7 +157,8 @@ public class MultiUtility {
 
 	public static void writeExcludeNumbers(String systemId, String content) throws Exception {
 		PrintStream printStream = null;
-		File dir = new File(IConstants.BIN_DIR + "numbers//exclude//");
+		File dir = new File(IConstants.HOME_DIR + "numbers//exclude//");
+		System.out.println(dir);
 		if (!dir.exists()) {
 			if (dir.mkdir()) {
 				logger.info(systemId + " Exclude Numbers Dir Created");
@@ -165,7 +166,7 @@ public class MultiUtility {
 				logger.error(systemId + " Exclude Numbers Dir Creation Failed");
 			}
 		}
-		File numberfile = new File(IConstants.BIN_DIR + "numbers//exclude//" + systemId + ".txt");
+		File numberfile = new File(IConstants.HOME_DIR + "numbers//exclude//" + systemId + ".txt");
 		if (!numberfile.exists()) {
 			try {
 				if (numberfile.createNewFile()) {
@@ -205,9 +206,10 @@ public class MultiUtility {
 	}
 
 	public static boolean removeExcludeNumbers(String systemId) throws Exception {
-		File dir = new File(IConstants.BIN_DIR + "numbers//exclude//");
+		File dir = new File(IConstants.HOME_DIR + "numbers//exclude//");
+		System.out.println(dir);
 		if (dir.exists()) {
-			File numberfile = new File(IConstants.BIN_DIR + "numbers//exclude//" + systemId + ".txt");
+			File numberfile = new File(IConstants.HOME_DIR + "numbers//exclude//" + systemId + ".txt");
 			if (numberfile.exists()) {
 				return numberfile.delete();
 			} else {

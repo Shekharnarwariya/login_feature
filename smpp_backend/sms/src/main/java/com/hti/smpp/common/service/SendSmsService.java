@@ -26,7 +26,7 @@ public class SendSmsService {
 		ObjectInputStream fobj = null;
 		BulkSmsDTO bulk = null;
 		try {
-			fobj = new ObjectInputStream(new FileInputStream(IConstants.WEBSMPP_EXT_DIR + "schedule//" + filename));
+			fobj = new ObjectInputStream(new FileInputStream(IConstants.HOME_DIR + "schedule//" + filename));
 			bulk = (BulkSmsDTO) fobj.readObject();
 		} catch (Exception e) {
 			logger.error(filename, e.fillInStackTrace());
@@ -50,12 +50,12 @@ public class SendSmsService {
 		System.out.println("Org: " + bulkDTO.getOrigMessage());
 		try {
 			filename = bulkDTO.getSystemId() + "_" + new SimpleDateFormat("ddMMyyyyHHmmssSSS").format(new Date());
-			f = new File(IConstants.WEBSMPP_EXT_DIR + "schedule//" + filename);
+			f = new File(IConstants.HOME_DIR + "schedule//" + filename);
 			if (!f.exists()) {
 				fin = new FileOutputStream(f);
 				fobj = new ObjectOutputStream(fin);
 				fobj.writeObject(bulkDTO);
-				logger.info(bulkDTO.getSystemId() + ":" + f.getName() + " Schedule Created");
+				logger.info(bulkDTO.getSystemId() + ":" + f.getAbsolutePath() + " Schedule Created");
 			} else {
 				filename = null;
 				logger.error(bulkDTO.getSystemId() + ":" + f.getName() + " Schedule Exist");
