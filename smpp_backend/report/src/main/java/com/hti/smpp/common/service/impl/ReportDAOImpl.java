@@ -7,11 +7,13 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.report.dto.ProfitReportEntry;
 import com.hti.smpp.common.report.dto.ReportCriteria;
 import com.hti.smpp.common.service.ReportDAO;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -24,13 +26,17 @@ public class ReportDAOImpl implements ReportDAO {
 	private Logger logger = LoggerFactory.getLogger(ReportDAOImpl.class);
 
 	private SessionFactory sessionFactory;
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 
 	// Constructor or setter method to inject the SessionFactory
 	public ReportDAOImpl(SessionFactory sessionFactory) {
 		this.sessionFactory = sessionFactory;
 	}
 	public List<ProfitReportEntry> listProfitReport(ReportCriteria rc) {
-	    logger.info("Listing Profit Result Entries: " + rc);
+		logger.info(messageResourceBundle.getMessage("listing.profit.result.entries.message"), rc);
+
 	    Session session = null;
 
 	    try {
@@ -59,7 +65,8 @@ public class ReportDAOImpl implements ReportDAO {
 	        // Execute the query
 	        List<ProfitReportEntry> list = session.createQuery(query).getResultList();
 
-	        logger.info("ProfitReport Entries: " + list.size());
+	        logger.info(messageResourceBundle.getMessage("profit.report.entries.message"), list.size());
+
 
 	        // You might need to handle the connection accordingly based on your
 	        // application's requirements.

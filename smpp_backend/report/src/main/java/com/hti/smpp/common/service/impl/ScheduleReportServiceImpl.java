@@ -31,8 +31,10 @@ import com.hti.smpp.common.service.UserDAService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 import jakarta.servlet.http.HttpServlet;
 
@@ -43,6 +45,9 @@ public class ScheduleReportServiceImpl implements ScheduleReportService {
 
 	@Autowired
 	private UserEntryRepository userRepository;
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
+	
 	@Autowired
 	private UserDAService userService;
 	private Logger logger = LoggerFactory.getLogger(ScheduleReportServiceImpl.class);
@@ -64,9 +69,9 @@ public class ScheduleReportServiceImpl implements ScheduleReportService {
 		String target = IConstants.SUCCESS_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
@@ -77,13 +82,14 @@ public class ScheduleReportServiceImpl implements ScheduleReportService {
 				return ResponseEntity.ok(reportList); // Add this return statement
 			} else {
 				target = IConstants.FAILURE_KEY;
-				throw new NotFoundException("Schedule report not found with username: " + username);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SCHEDULE_REPORT_NOT_FOUND_MESSAGE,new Object[] {username}));
+
 			}
 		} catch (Exception ex) {
 			logger.error(user.getSystemId(), ex.fillInStackTrace());
 			target = IConstants.FAILURE_KEY;
-			throw new InternalServerException(
-					"Error: Getting error in profit report for view with username: " + username);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_PROFIT_REPORT_MESSAGE,new Object[] {username}));
+
 		}
 	}
 
@@ -143,9 +149,11 @@ public class ScheduleReportServiceImpl implements ScheduleReportService {
 				entryExt.setSenderId(rs.getString("sender_id"));
 				scheduleList.add(entryExt);
 			}
-			logger.info("Schedule History report: " + scheduleList.size());
+			logger.info(messageResourceBundle.getMessage("schedule.history.report.message"), scheduleList.size());
+
 		} catch (SQLException sqle) {
-			logger.error("Error in SQL query", sqle);
+			logger.error(messageResourceBundle.getMessage("sql.query.error.message"), sqle);
+
 		}
 
 		return scheduleList;

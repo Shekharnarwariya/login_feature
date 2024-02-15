@@ -60,9 +60,11 @@ import com.hti.smpp.common.user.repository.BalanceEntryRepository;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 import com.logica.smpp.Data;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -101,6 +103,8 @@ public class ReportServiceImpl implements ReportService {
 
 	@Autowired
 	private DataSource dataSource;
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 
 	private final String template_file = IConstants.FORMAT_DIR + "report//BlockedReport.jrxml";
 
@@ -114,9 +118,9 @@ public class ReportServiceImpl implements ReportService {
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			UserEntry user = userOptional
-					.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+					.orElseThrow(() ->  new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 			locale = Customlocale.getLocaleByLanguage(lang);
 			Map<String, List<DeliveryDTO>> reportList = dataBase.getBalanceReportList(customReportForm, username, lang);
@@ -125,7 +129,8 @@ public class ReportServiceImpl implements ReportService {
 				target = IConstants.SUCCESS_KEY;
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
-				throw new NoDataFoundException("No data found for the balance report for user: " + username);
+				throw new NoDataFoundException(messageResourceBundle.getExMessage(ConstantMessages.NO_BALANCE_REPORT_DATA_FOUND_MESSAGE , new Object[] {username}));
+
 			}
 		} catch (NotFoundException e) {
 			throw new NoDataFoundException(e.getMessage());
@@ -133,7 +138,8 @@ public class ReportServiceImpl implements ReportService {
 			throw new UnauthorizedException(e.getMessage());
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new InternalServerException("Error occurred while processing the balance report: " + e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_PROCESSING_BALANCE_REPORT_MESSAGE, new Object[] {e.getMessage()}));
+
 		}
 	}
 
@@ -163,16 +169,20 @@ public class ReportServiceImpl implements ReportService {
 						return new ResponseEntity<>(content, HttpStatus.OK);
 					} else {
 
-						throw new InternalServerException("Error: Empty XLS content");
+						throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.EMPTY_XLS_CONTENT_ERROR_MESSAGE));
+
 					}
 				} catch (IOException ioe) {
-					throw new InternalServerException("Error closing XLS OutputStream" + ioe.getMessage());
+					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_CLOSING_XLS_OUTPUTSTREAM_MESSAGE , new Object[] {ioe.getMessage()}));
+
 				}
 			} else {
-				throw new InternalServerException("Error: getting error in generating report.");
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GENERATING_REPORT_MESSAGE));
+
 			}
 		} catch (Exception e) {
-			throw new InternalServerException("Unexpected error occurred");
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_MESSAGE , new Object[] {username}));
+
 		}
 	}
 
@@ -201,11 +211,13 @@ public class ReportServiceImpl implements ReportService {
 					if (content.length > 0) {
 						return new ResponseEntity<>(content, HttpStatus.OK);
 					} else {
-						throw new InternalServerException("Error: Empty PDF content");
+						throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.EMPTY_PDF_CONTENT_ERROR_MESSAGE));
+
 					}
 				}
 			} else {
-				throw new InternalServerException("Error generating report PDF file in balance");
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GENERATING_BALANCE_REPORT_PDF_MESSAGE));
+
 			}
 		} catch (Exception e) {
 			throw new InternalServerException("Error: " + e.getMessage());
@@ -242,11 +254,13 @@ public class ReportServiceImpl implements ReportService {
 					if (content.length > 0) {
 						return new ResponseEntity<>(content, HttpStatus.OK);
 					} else {
-						throw new InternalServerException("Error: Empty DOC content");
+						throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.EMPTY_DOC_CONTENT_ERROR_MESSAGE));
+
 					}
 				}
 			} else {
-				throw new InternalServerException("Error generating report DOC file in balance");
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GENERATING_BALANCE_REPORT_DOC_MESSAGE));
+
 			}
 		} catch (Exception e) {
 			throw new InternalServerException("Error: " + e.getMessage());
@@ -274,11 +288,12 @@ public class ReportServiceImpl implements ReportService {
 				target = IConstants.SUCCESS_KEY;
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
-				throw new InternalServerException("No data found for the report");
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NO_DATA_FOUND));
 			}
 		} catch (Exception e) {
 			logger.error("{} Unexpected error generating report", username, e);
-			throw new InternalServerException("Unexpected error generating report" + e);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.UNEXPECTED_ERROR_GENERATING_REPORT_MESSAGE));
+
 		}
 	}
 
@@ -310,11 +325,12 @@ public class ReportServiceImpl implements ReportService {
 					throw new InternalServerException(ioe.getMessage());
 				}
 			} else {
-				throw new InternalServerException("No data found for the report");
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NO_DATA_FOUND));
 			}
 		} catch (Exception e) {
 			logger.error("{} Unexpected error generating PDF report", username, e);
-			throw new InternalServerException("Unexpected error generating PDF report" + e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.UNEXPECTED_ERROR_GENERATING_PDF_REPORT_MESSAGE));
+
 		}
 
 		return null;
@@ -365,11 +381,14 @@ public class ReportServiceImpl implements ReportService {
 				target = IConstants.SUCCESS_KEY;
 			} else {
 				logger.info("{} <-- No Records Found -->", username);
-				throw new InternalServerException("{} <-- No Records Found -->" + username);
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NO_RECORDS_FOUND_MESSAGE ,new Object[] {username}));
+
 			}
 		} catch (Exception e) {
 			logger.error("{} Unexpected error generating XLS report", username, e);
-			throw new InternalServerException("Unexpected error generating XLS report" + e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.UNEXPECTED_ERROR_GENERATING_XLS_REPORT_MESSAGE));
+
+
 		}
 
 		return null;
@@ -408,11 +427,12 @@ public class ReportServiceImpl implements ReportService {
 				logger.info(username + " <-- doc Report Finished --> ");
 				target = IConstants.SUCCESS_KEY;
 			} else {
-				throw new InternalServerException("data not found username{}" + username);
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NO_RECORDS_FOUND_MESSAGE,new Object[] {username}));
 			}
 		} catch (Exception e) {
 			logger.error(username, e.fillInStackTrace());
-			throw new InternalServerException("Error:getting error in generate doc{}" + e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GENERATING_DOC_REPORT_MESSAGE));
+
 		}
 
 		return null;
@@ -422,7 +442,7 @@ public class ReportServiceImpl implements ReportService {
 			throws JRException {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isEmpty()) {
-			throw new NotFoundException("user not found username{}" + username);
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		JasperPrint print = null;
 		JasperReport report = null;

@@ -50,9 +50,11 @@ import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.BadRequestException;
@@ -93,6 +95,9 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 
 	@Autowired
 	private UserEntryRepository userRepository;
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 
 	@Autowired
 	private WebMasterEntryRepository webMasterEntryRepository;
@@ -127,27 +132,36 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 				HttpHeaders headers = new HttpHeaders();
 				headers.setContentType(MediaType.APPLICATION_PDF);
 				headers.setContentDispositionFormData("attachment", "LatencyReport.pdf");
-				//return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+				//return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK) ;
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
-				throw new NotFoundException("SMS Latency report not found with username: " + username);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_LATENCY_REPORT_NOT_FOUND_MESSAGE,new Object[] {username}));
+
 			}
 		} catch (NotFoundException e) {
         // Log NotFoundException
-        logger.error("SMS Latency report not found for username: {}", username, e);
-        throw new NotFoundException(e.getMessage());
+			logger.error(messageResourceBundle.getMessage("sms.latency.report.notFound"), username, e);
+
+        throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RESOURCE_NOT_FOUND_EXCEPTION));
+
         } catch (IllegalArgumentException e) {
         // Log IllegalArgumentException
-        logger.error("Invalid argument: {}", e.getMessage(), e);
-        throw new BadRequestException("Invalid argument: " + e.getMessage());
+        	logger.error(messageResourceBundle.getMessage("invalid.argument"), e.getMessage(), e);
+
+        throw new BadRequestException(messageResourceBundle.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE , new Object[] {e.getMessage()}));
+
         } catch (JRException e) {
         // Log JRException
-        logger.error("JasperReports Exception occurred: {}", e.getMessage(), e);
-        throw new InternalServerException("Error generating Jasper report: " + e.getMessage());
+        	logger.error(messageResourceBundle.getMessage("jasperreports.exception.message"), e.getMessage(), e);
+
+        throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GENERATING_JASPER_REPORT_MESSAGE, new Object[] {e.getMessage()}));
+
         } catch (Exception e) {
         // Log other exceptions
-        logger.error("Unexpected error occurred: {}", e.getMessage(), e);
-        throw new InternalServerException("Error: No Latency report data found for username " + username + " within the specified date range.");
+        	logger.error(messageResourceBundle.getMessage("unexpected.error"), e.getMessage(), e);
+
+        throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NO_LATENCY_REPORT_DATA_FOUND_MESSAGE , new Object[] {username}));
+
         }
 	}
 
@@ -158,17 +172,19 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		}
 		Optional<UserEntry> usersOptional = userRepository.findBySystemId(username);
 		if (!usersOptional.isPresent()) {
-			throw new NotFoundException("user not fout with system id" + username);
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		UserEntry user = usersOptional.get();
 		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
 		if (webMasterEntry == null) {
-			throw new NotFoundException("web MasterEntry  not fount username {}" + user.getId());
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE ,new Object[] { user.getId()}));
+
 		}
 		if (customReportForm.getClientId() == null) {
 			return null;
 		}
-		logger.info(user.getSystemId() + " Report Based On Criteria");
+		logger.info(messageResourceBundle.getMessage("report.criteria.message"));
+
 		List<String> users = null;
 		String query = null;
 		String senderId = customReportForm.getSenderId();
@@ -204,6 +220,7 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 				users = new ArrayList<String>(
 						listUsernamesUnderManager(user.getSystemId()).values());
 			}
+			
 			logger.info(user + " Under Users: " + users.size());
 		} else {
 			users = new ArrayList<String>();
@@ -212,7 +229,8 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		if (users != null && !users.isEmpty()) {
 			while (!users.isEmpty()) {
 				String report_user = (String) users.remove(0);
-				logger.info(user.getSystemId() + " Checking Report For " + report_user);
+				logger.info(messageResourceBundle.getMessage("checking.report.for.message"),user.getSystemId(), report_user);
+
 				query = "select count(msg_id) as count,source_no,oprcountry,status,TIME_TO_SEC(TIMEDIFF(deliver_time,submitted_time)) as latency from mis_"
 						+ report_user + " where status not like 'ATES' and ";
 				if (to_gmt != null) {
@@ -288,10 +306,14 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 					}
 				}
 				query += " group by source_no,oprcountry,status,latency";
-				logger.info(user.getSystemId() + " ReportSQL:" + query);
+				logger.info(messageResourceBundle.getMessage("report.sql.message"),user.getSystemId(), query);
+
+			
 				////throw sql exception
 				list = getLatencyReport(report_user, query);
-				logger.info(user.getSystemId() + " list:" + list.size());
+				logger.info(messageResourceBundle.getMessage("list.size.message"),user.getSystemId(), list.size());
+
+				
 				if (list != null && !list.isEmpty()) {
 					System.out.println(report_user + " Report List Size --> " + list.size());
 					final_list.addAll(sortList(list));
@@ -299,8 +321,8 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 				}
 			}
 		}
-		logger.info(
-				user.getSystemId() + " End Based On Criteria. Final Report Size: " + final_list.size());
+		logger.info(messageResourceBundle.getMessage("end.criteria.final.size.message"), final_list.size());
+
 		return final_list;
 	}
 
@@ -367,16 +389,20 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 						report.setSubmitted(report.getSubmitted() + count);
 						mapping.put(senderId + "#" + oprCountry, report);
 					} catch (Exception sqle) {
-						logger.error("", sqle.fillInStackTrace());
+						logger.error(messageResourceBundle.getMessage("error.empty.message"), sqle.fillInStackTrace());
+
+
 					}
 				}
 		//	logger.info(username + " Report List Final Count:--> " + report.size());
 			}
 		} catch (SQLException ex) {
 			if (ex.getMessage().contains("Table") && ex.getMessage().contains("doesn't exist")) {
-				logger.info("<-- " + report_user + " Mis & Content Table Doesn't Exist -->");
+				logger.info("<-- " + report_user + " " + messageResourceBundle.getMessage("missing.tables.message"));
+
 			} else {
-				logger.error(" ", ex.fillInStackTrace());
+				logger.error(messageResourceBundle.getMessage("empty.error.message"));
+
 			}
 		} finally {
 			try {
@@ -402,17 +428,19 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		}
 		Optional<UserEntry> usersOptional = userRepository.findBySystemId(username);
 		if (!usersOptional.isPresent()) {
-			throw new NotFoundException("user not fout with system id" + username);
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		UserEntry user = usersOptional.get();
 		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
 		if (webMasterEntry == null) {
-			throw new NotFoundException("web MasterEntry  not fount username {}" + user.getId());
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE ,new Object[] {user.getId()}));
+
 		}
 		if (customReportForm.getClientId() == null) {
 			return null;
 		}
-		logger.info(user.getSystemId() + " Report Based On Criteria");
+		logger.info(messageResourceBundle.getMessage("report.criteria.message"),user.getSystemId());
+
 		List<String> users = null;
 		String query = null;
 		String senderId = customReportForm.getSenderId();
@@ -428,11 +456,15 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		}
 		// String role = userSessionObject.getRole();
 		users = new ArrayList<String>(userService.listUsers().values());
-		logger.info(user + " Report Users: " + users.size());
+		logger.info( messageResourceBundle.getMessage("report.users.size.message"),user, users.size());
+
+		
 		if (users != null && !users.isEmpty()) {
 			while (!users.isEmpty()) {
 				String report_user = "testUser1";//(String) users.remove(0);
-				logger.info(user.getSystemId() + " Checking Report For " + report_user);
+			
+				logger.info(messageResourceBundle.getMessage("checking.report.for.message"), user.getSystemId(), report_user);
+
 				query = "select count(msg_id) as count,route_to_smsc,source_no,oprcountry,status,TIME_TO_SEC(TIMEDIFF(deliver_time,submitted_time)) as latency from mis_"
 						+ report_user + " where status not like 'ATES' and ";
 				if (to_gmt != null) {
@@ -509,10 +541,13 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 					}
 				}
 				query += " group by route_to_smsc,source_no,oprcountry,status,latency";
-				logger.info(user.getSystemId() + " ReportSQL:" + query);
+			
+				logger.info(messageResourceBundle.getMessage("report.sql.message"),user.getSystemId(), query);
+
 				
 				list = getLatencyReport(username, query, true);
-				logger.info(user.getSystemId() + " list:" + list.size());
+				logger.info(messageResourceBundle.getMessage("user.list.size"), user.getSystemId(), list.size());
+
 				if (list != null && !list.isEmpty()) {
 					System.out.println(report_user + " Report List Size --> " + list.size());
 					final_list.addAll(sortList(list));
@@ -520,8 +555,9 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 				}
 			}
 		}
-		logger.info(
-			user.getSystemId() + " End Based On Criteria. Final Report Size: " + final_list.size());
+		
+		logger.info(messageResourceBundle.getMessage("end.criteria.report.size.message"), user.getSystemId(), final_list.size());
+
 		return final_list;
 	}
 
@@ -590,16 +626,19 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 						report.setSubmitted(report.getSubmitted() + count);
 						mapping.put(smscname + "#" + senderId + "#" + oprCountry, report);
 					} catch (Exception sqle) {
-						logger.error("", sqle.fillInStackTrace());
+						logger.error(messageResourceBundle.getMessage("empty.error.message"), sqle.getMessage());
+
 					}
 				}
 				// logger.info(username + " Report List Final Count:--> " + customReport.size());
 			}
 		} catch (SQLException ex) {
 			if (ex.getMessage().contains("Table") && ex.getMessage().contains("doesn't exist")) {
-				logger.info("<-- " + username + " Mis & Content Table Doesn't Exist -->");
+				logger.info(messageResourceBundle.getMessage("missing.tables.message"), username);
+
 			} else {
-				logger.error(" ", ex.fillInStackTrace());
+				logger.error(messageResourceBundle.getMessage("empty.error.message"), ex.getMessage());
+
 			}
 		} finally {
 			try {
@@ -626,9 +665,9 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			UserEntry user = userOptional
-					.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+					.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 			locale = Customlocale.getLocaleByLanguage(lang);
 			List<DeliveryDTO> reportList = null;
@@ -659,11 +698,13 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 
 				return new ResponseEntity<>(byteArrayOutputStream.toByteArray(), headers, HttpStatus.OK);
 			} else {
-				throw new NotFoundException("sms Latency report not found with username {}" + username);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_LATENCY_REPORT_NOT_FOUND_MESSAGE ,new Object[] {username}));
+
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new InternalServerException("Error: getting error in Latency report with username {}" + username);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_LATENCY_REPORT_MESSAGE ,new Object[] {username}));
+
 		}
 	}
 
@@ -673,9 +714,9 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			UserEntry user = userOptional
-					.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+					.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 			locale = Customlocale.getLocaleByLanguage(lang);
 			List<DeliveryDTO> reportList = null;
@@ -704,12 +745,14 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 
 				return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
 			} else {
-				throw new NotFoundException("SMS Latency report not found with username: " + username);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_LATENCY_REPORT_NOT_FOUND_MESSAGE,new Object[] {username}));
+
 			}
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
-			throw new InternalServerException("Error: getting error in Latency report with username: " + username);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_LATENCY_REPORT_MESSAGE,new Object[] {username}));
+
 		}
 	}
 
@@ -721,9 +764,9 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			UserEntry user = userOptional
-					.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+					.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 			locale = Customlocale.getLocaleByLanguage(lang);
 			List<DeliveryDTO> reportList = null;
@@ -759,18 +802,23 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
-			throw new InternalServerException("Error: getting error in Latency report with username {}" + username);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_LATENCY_REPORT_MESSAGE ,new Object[] {username}));
+
 		}
 
 	}
 
 	private JasperPrint getJasperPrint(List<DeliveryDTO> reportList, boolean paging, String template_file)
 			throws JRException {
-		System.out.println("<-- Creating Design ---> ");
+		
+		logger.info(messageResourceBundle.getMessage("creating.design.message"));
+
 		JasperDesign design = JRXmlLoader.load(template_file);
-		System.out.println("<-- Compiling Source Format file ---> ");
+		logger.info(messageResourceBundle.getMessage("compiling.source.format.message"));
+
 		JasperReport report = JasperCompileManager.compileReport(design);
-		System.out.println("<-- Preparing Chart Data ---> ");
+		logger.info(messageResourceBundle.getMessage("preparing.chart.data.message"));
+
 		List<DeliveryDTO> chart_list = new ArrayList<DeliveryDTO>();
 		Map<String, Integer> chart_map = new HashMap<>();
 		chart_map.put("0-5", 0);

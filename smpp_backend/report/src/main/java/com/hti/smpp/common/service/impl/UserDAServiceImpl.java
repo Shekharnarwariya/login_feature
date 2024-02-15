@@ -294,7 +294,6 @@ public class UserDAServiceImpl implements UserDAService {
 				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 		return sortedMap;
 	}
-
 	@Override
 	public Map<Integer, String> listUsersUnderSeller(int seller) {
 		logger.debug("listUsersUnderSeller(" + seller + ")");

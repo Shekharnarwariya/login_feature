@@ -49,9 +49,11 @@ import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -101,6 +103,8 @@ public class CampaignReportImpl implements CampaignReportService {
 	private UserDAService userService;
 	@Autowired
 	private SalesRepository salesRepository;
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
@@ -111,10 +115,12 @@ public class CampaignReportImpl implements CampaignReportService {
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			UserEntry user = userOptional
-					.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+					.orElseThrow(() ->new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+
 
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+
 			}
 
 			// Validate request parameters if necessary
@@ -127,17 +133,18 @@ public class CampaignReportImpl implements CampaignReportService {
 			
 			
 			if (print != null && !print.isEmpty()) {
-				logger.info(user.getSystemId() + " ReportSize[View]:" + print.size());
+				logger.info(messageResourceBundle.getMessage("report.size.view.message"), user.getSystemId(), print.size());
 				// JasperPrint print = dataBase.getJasperPrint(reportList, false, username);
-				logger.info(user.getSystemId() + " <-- Report Finished --> ");
+				logger.info(messageResourceBundle.getMessage("report.finished.message"), user.getSystemId());
+
 				
 
 				// Return ResponseEntity with the list in the response body
 				return new ResponseEntity<>(print, HttpStatus.OK);
 			} else {
-				throw new InternalServerException("No data found for the Campaign  report");
-			}
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_EXCEPTION,new Object[] {username}));
 
+			}
 		//	return new ResponseEntity<>(print, HttpStatus.OK);
 		} catch (DataNotFoundException | UnauthorizedException | ParameterMismatchException e) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -148,7 +155,6 @@ public class CampaignReportImpl implements CampaignReportService {
 							+ " within the specified date range.");
 		}
 	}
-
 	private List<DeliveryDTO> getReportList(CampaignReportRequest customReportForm, String username, boolean paging,
 			String lang) {
 		locale = Customlocale.getLocaleByLanguage(lang);
@@ -157,7 +163,7 @@ public class CampaignReportImpl implements CampaignReportService {
 		}
 		Optional<UserEntry> usersOptional = userRepository.findBySystemId(username);
 		if (!usersOptional.isPresent()) {
-			throw new NotFoundException("user not fout with system id" + username);
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		UserEntry user = usersOptional.get();
 
@@ -195,12 +201,14 @@ public class CampaignReportImpl implements CampaignReportService {
 				// SalesDAService salesService = new SalesDAServiceImpl();
 				users = new ArrayList<String>(listUsernamesUnderManager(user.getSystemId()).values());
 			}
-			logger.info(user + " Under Users: " + users.size());
+			logger.info(messageResourceBundle.getMessage("under.users.message"), user, users.size());
+
 		} else {
 			users = new ArrayList<String>();
 			users.add(customReportForm.getClientId());
 		}
-		logger.info(user.getSystemId() + " <-- preparing Report Data --> ");
+		logger.info(messageResourceBundle.getMessage("preparing.report.data.message"), user.getSystemId());
+
 		List<BulkMapEntry> list = list(users.toArray(new String[users.size()]), Long.parseLong(start_date_str),
 				Long.parseLong(end_date_str));
 		if (customReportForm.getGroupBy().equalsIgnoreCase("name")) {
@@ -232,7 +240,8 @@ public class CampaignReportImpl implements CampaignReportService {
 						report_map = getCampaignReport(entry.getKey(), campaign_entry.getValue());
 					} catch (SQLException e) {
 						e.printStackTrace();
-						logger.info("An error occurred while fetching the campaign report.", e);
+						logger.info(messageResourceBundle.getMessage("fetching.campaign.report.error"), e);
+
 						System.err.println(
 								"Sorry, there was an issue retrieving the campaign report. Please try again later.");
 
@@ -285,11 +294,13 @@ public class CampaignReportImpl implements CampaignReportService {
 				while (!users.isEmpty()) {
 					String report_user = (String) users.remove(0);
 					try {
-						logger.info(user.getSystemId() + " Checking Report For " + report_user);
+						logger.info(messageResourceBundle.getMessage("checking.report.message"), user.getSystemId(), report_user);
+
 						String sql = "select msg_id,DATE(submitted_time) as date,source_no,status from mis_"
 								+ report_user + " where msg_id between " + start_date_str + " and " + end_date_str;
 						List<DeliveryDTO> part_list = getCampaignReport(sql);
-						logger.info(report_user + " Start Processing Entries: " + part_list.size());
+						logger.info(messageResourceBundle.getMessage("processing.entries.message"), report_user, part_list.size());
+
 						Map<String, Map<String, Map<String, DeliveryDTO>>> date_wise_map = new HashMap<String, Map<String, Map<String, DeliveryDTO>>>();
 						// int total_submitted = 0;
 						for (DeliveryDTO dlrEntry : part_list) {
@@ -347,7 +358,8 @@ public class CampaignReportImpl implements CampaignReportService {
 							campaign_wise_map.put(dlrDTO.getCampaign(), source_wise_map);
 							date_wise_map.put(dlrDTO.getDate(), campaign_wise_map);
 						}
-						logger.info(report_user + " <- End Processing Entries -> ");
+						logger.info(messageResourceBundle.getMessage("end.processing.entries.message"), report_user);
+
 						if (!date_wise_map.isEmpty()) {
 							for (Map.Entry<String, Map<String, Map<String, DeliveryDTO>>> date_wise_entry : date_wise_map
 									.entrySet()) {
@@ -373,7 +385,8 @@ public class CampaignReportImpl implements CampaignReportService {
 		chart_list.add(new DeliveryDTO("OTHERS", final_others));
 		List<DeliveryDTO> print = null;
 		if (!final_list.isEmpty()) {
-			logger.info(user.getSystemId() + " Prepared List: " + final_list.size());
+			logger.info(messageResourceBundle.getMessage("prepared.list.message"), user.getSystemId(), final_list.size());
+
 			final_list = sortList(final_list);
 //			JasperDesign design = null;
 //			try {
@@ -420,7 +433,8 @@ public class CampaignReportImpl implements CampaignReportService {
 	}
 
 	public List<BulkMapEntry> list(String[] systemId, long from, long to) {
-		logger.info("Checking for systemId: " + systemId + " From: " + from + " To: " + to);
+		logger.info(messageResourceBundle.getMessage("checking.systemId.message"), systemId, from, to);
+
 
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<BulkMapEntry> criteriaQuery = criteriaBuilder.createQuery(BulkMapEntry.class);
@@ -441,7 +455,8 @@ public class CampaignReportImpl implements CampaignReportService {
 
 		List<BulkMapEntry> list = entityManager.createQuery(criteriaQuery).getResultList();
 
-		logger.info("Campaign entries: " + list.size());
+		logger.info(messageResourceBundle.getMessage("campaign.entries.message"), list.size());
+
 		return list;
 	}
 
@@ -511,7 +526,8 @@ public class CampaignReportImpl implements CampaignReportService {
 				report_list.put(rs.getString("time"), source_map);
 				// System.out.println(report_list);
 			}
-			logger.info(" Campaign[" + username + "] Report: " + report_list.size());
+			logger.info(messageResourceBundle.getMessage("campaign.report.message"), username, report_list.size());
+
 		} catch (SQLException sqle) {
 			logger.error(" ", sqle.fillInStackTrace());
 		} finally {

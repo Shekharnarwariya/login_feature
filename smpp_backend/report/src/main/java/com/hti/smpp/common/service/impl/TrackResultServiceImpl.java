@@ -16,6 +16,8 @@ import java.util.StringTokenizer;
 
 import javax.sql.DataSource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,19 +28,22 @@ import com.hti.smpp.common.response.TrackResultResponse;
 import com.hti.smpp.common.service.TrackResultService;
 import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 @Service
 public class TrackResultServiceImpl implements TrackResultService {
 
 	@Autowired
 	private DataSource dataSource;
-
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
+	private Logger logger = LoggerFactory.getLogger(TrackResultServiceImpl.class);
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
 	}
 	Locale locale =null;
 	
-
 	@Override
 	public TrackResultResponse TrackResultReport(String username, CustomReportForm customReportForm,String lang) {
 		TrackResultResponse trackResultResponse = new TrackResultResponse();
@@ -224,8 +229,10 @@ public class TrackResultServiceImpl implements TrackResultService {
 			if (smscinSQL.length() > 0) {
 				String smscin_stmt = "select * from smsc_in where " + smscinSQL + " order by time";
 				String smscin_log_stmt = "select * from host_zlog.smsc_in_log where " + smscinSQL + " order by time";
-				System.out.println("Smsc_in: " + smscin_stmt);
-				System.out.println("smscin_log: " + smscin_log_stmt);
+				logger.info(messageResourceBundle.getMessage("smsc.in.message"), smscin_stmt);
+
+				logger.info(messageResourceBundle.getMessage("smscin.log.message"), smscin_log_stmt);
+
 				Map inmap = getSmscInRecord(smscin_stmt);
 				Map inLogmap = getSmscInRecord(smscin_log_stmt);
 				Iterator itr = inmap.keySet().iterator();
@@ -262,7 +269,8 @@ public class TrackResultServiceImpl implements TrackResultService {
 					userPrefix.put(smscin.getUsername(), prefixSet);
 					// ---------------End Getting User's Disctinct Prefix Routing ---------
 				}
-				System.out.println("SmscIn Record Size: " + smscinlist.size());
+				logger.info(messageResourceBundle.getMessage("smscin.record.size.message"), smscinlist.size());
+
 			}
 			// -------------- Finished For Smsc_in Records ---------------------
 			// -------------- For Mis Records ---------------------
@@ -274,7 +282,8 @@ public class TrackResultServiceImpl implements TrackResultService {
 					while (itr.hasNext()) {
 						String username1 = (String) itr.next();
 						mis_stmt += "select * from mis_" + username1 + " where " + misSQL + " order by submitted_time";
-						System.out.println("mis: " + mis_stmt);
+						logger.info(messageResourceBundle.getMessage("mis.message"), mis_stmt);
+
 						List temp_list = getMisRecord(mis_stmt);
 						if (temp_list != null && !temp_list.isEmpty()) {
 							mislist.addAll(temp_list);
@@ -311,7 +320,8 @@ public class TrackResultServiceImpl implements TrackResultService {
 					}
 					i++;
 				}
-				System.out.println("RoutingSQL: " + routingSQL);
+				logger.info(messageResourceBundle.getMessage("routing.sql.message"), routingSQL);
+
 				if (routingSQL.length() > 0) {
 					// RoutingList = dbService.getRoutingRecord(routingSQL);
 				}

@@ -29,10 +29,14 @@ import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
+
 import com.hti.smpp.common.util.Converters;
 import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
+import jakarta.persistence.EntityManager;
 import jakarta.ws.rs.BadRequestException;
 
 @Service
@@ -46,6 +50,12 @@ public class AbortBatchReportServiceImpl implements AbortBatchReportService {
 	@Autowired
 	private DataSource dataSource;
 
+	@Autowired
+	private EntityManager entityManager;
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
+
 	Locale locale = null;
 	private static final Logger logger = LoggerFactory.getLogger(ReportServiceImpl.class);
 
@@ -58,10 +68,11 @@ public class AbortBatchReportServiceImpl implements AbortBatchReportService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
+			
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
 
 		String target = IConstants.SUCCESS_KEY;
@@ -76,29 +87,38 @@ public class AbortBatchReportServiceImpl implements AbortBatchReportService {
 				return reportList;
 			} else {
 				target = IConstants.FAILURE_KEY;
-				throw new NotFoundException("Abort batch report not found : " + username);
+				throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
+
+				
 			}
 		} catch (NotFoundException e) {
-			// Log NotFoundException
-			logger.error("SMS Latency report not found for username: {}", username, e);
-			throw new NotFoundException(e.getMessage());
-		} catch (IllegalArgumentException e) {
-			// Log IllegalArgumentException
-			logger.error("Invalid argument: {}", e.getMessage(), e);
-			throw new BadRequestException("Invalid argument: " + e.getMessage());
-		} catch (Exception e) {
-			// Log other exceptions
-			logger.error("Unexpected error occurred: {}", e.getMessage(), e);
-			throw new InternalServerException("Error: No AbortBatch report data found for username " + username
-					+ " within the specified date range.");
-		}
+	        // Log NotFoundException
+			
+			logger.error(messageResourceBundle.getLogMessage("auth.failed.userNotFound"), username, e);
+
+	        throw new NotFoundException(e.getMessage());
+	        } catch (IllegalArgumentException e) {
+	        // Log IllegalArgumentException
+	        logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
+
+	        
+	        throw new BadRequestException(messageResourceBundle.getMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] {e.getMessage()}));
+	        } catch (Exception e) {
+	        // Log other exceptions
+	        logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
+
+	        throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.INTERNAL_SERVER_EXCEPTION_MESSAGE,new Object[] {username}));
+
+	        }
+
 	}
 
 	private List<BulkEntry> getReportList(AbortBatchReportRequest customReportForm, int id) throws SQLException {
 		UserDAService userDAService = new UserDAServiceImpl();
 		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(id);
 		if (webMasterEntry == null) {
-			throw new NotFoundException("web MasterEntry AbortBatchReportRequest not fount username {}" + id);
+			 throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND_EXCEPTION_MESSAGE,new Object[] {id}));
+
 		}
 
 		String to_gmt = null;
@@ -151,7 +171,7 @@ public class AbortBatchReportServiceImpl implements AbortBatchReportService {
 	}
 
 	public List<BulkEntry> getAbortReport(String sql) throws SQLException {
-		logger.info("<--- checking For Batch Aborted Report --> ");
+		logger.info(messageResourceBundle.getLogMessage("batch.aborted.report.check"));
 		List<BulkEntry> list = new ArrayList<BulkEntry>();
 		Connection con = null;
 		PreparedStatement pStmt = null;
@@ -169,7 +189,8 @@ public class AbortBatchReportServiceImpl implements AbortBatchReportService {
 						rs.getLong("firstNum"), content, rs.getString("campaign_name"), rs.getLong("pending"));
 				list.add(entry);
 			}
-			logger.info("Batch Aborted report: " + list.size());
+			logger.info(messageResourceBundle.getLogMessage("batch.aborted.report.size"), list.size());
+
 		} catch (SQLException sqle) {
 			logger.error(" ", sqle.fillInStackTrace());
 		} finally {

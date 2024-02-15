@@ -76,9 +76,11 @@ import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 import jakarta.servlet.http.HttpServletResponse;
 import net.sf.jasperreports.engine.JRExporter;
@@ -107,6 +109,9 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 
 	@Autowired
 	private WebMasterEntryRepository webMasterEntryRepository;
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 
 	@Autowired
 	private UserDAService userService;
@@ -128,13 +133,14 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 		List<DeliveryDTO> target = new ArrayList<>();
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
 		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
 		if (webMasterEntry == null) {
-			throw new NotFoundException("web MasterEntry not found for username: " + user.getId());
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE,new Object[] {user.getId()}));
+
 		}
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
@@ -150,7 +156,8 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 				}
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
-				throw new NotFoundException("SmscDlr  report not found with username: " + username);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_DLR_REPORT_NOT_FOUND_MESSAGE, new Object[] {username}));
+
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -166,13 +173,13 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 		List<DeliveryDTO> target = null;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
 		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
 		if (webMasterEntry == null) {
-			throw new NotFoundException("web MasterEntry not found for username: " + user.getId());
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE,new Object[] {user.getId()}));
 		}
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
@@ -206,7 +213,8 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 			}
 			if (reportList != null && !reportList.isEmpty()) {
 				int total_rec = reportList.size();
-				logger.info(username + " ReportSize[xls]:" + total_rec);
+				logger.info(messageResourceBundle.getMessage("xls.report.size.message"), username, total_rec);
+
 				// ---------- Sorting list ----------------------------
 				reportList = sortListByCountry(reportList);
 				Workbook workbook = null;
@@ -216,7 +224,8 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 					workbook = getWorkBook(reportList, username, webMasterEntry);
 				}
 				if (total_rec > 100000) {
-					logger.info(username + "<-- Creating Zip Folder --> ");
+					logger.info(messageResourceBundle.getMessage("creating.zip.folder.message"), username);
+
 					response.setContentType("application/zip");
 					response.setHeader("Content-Disposition", "attachment; filename=" + "delivery_"
 							+ new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".zip");
@@ -225,11 +234,13 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 					String reportName = "delivery.xlsx";
 					ZipEntry entry = new ZipEntry(reportName); // create a zip entry and add it to ZipOutputStream
 					zos.putNextEntry(entry);
-					logger.info(username + "<-- Starting Zip Download --> ");
+					logger.info(messageResourceBundle.getMessage("starting.zip.download.message"), username);
+
 					workbook.write(zos);
 					zos.close();
 				} else {
-					logger.info(username + " <---- Creating XLS -----> ");
+					logger.info(messageResourceBundle.getMessage("creating.xls.message"), username);
+
 					String filename = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0))
 							+ ".xlsx";
 					// response.setContentType("text/html; charset=utf-8");
@@ -238,7 +249,8 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 					// filename);
 					ByteArrayOutputStream bos = new ByteArrayOutputStream();
 					workbook.write(bos);
-					logger.info(username + " <---- Reading XLS -----> ");
+					logger.info(messageResourceBundle.getMessage("reading.xls.message"), username);
+
 					InputStream is = null;
 					OutputStream out = null;
 					try {
@@ -246,13 +258,15 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 						// byte[] buffer = new byte[8789];
 						int curByte = -1;
 						out = response.getOutputStream();
-						logger.info(username + " <---- Starting xls Download -----> ");
+						logger.info(messageResourceBundle.getMessage("starting.xls.download.message"), username);
+
 						while ((curByte = is.read()) != -1) {
 							out.write(curByte);
 						}
 						out.flush();
 					} catch (Exception ex) {
-						logger.error(username + " DLR XLSReport Error ", ex.fillInStackTrace());
+						logger.error(messageResourceBundle.getMessage("dlr.xlsreport.error.message"), username);
+
 						// ex.printStackTrace();
 					} finally {
 						try {
@@ -268,13 +282,15 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 				}
 				workbook.close();
 				reportList.clear();
-				logger.info(username + "<--XLS Report Finished --> ");
+				logger.info(messageResourceBundle.getMessage("xls.report.finished.message"), username);
+
 				target = reportList;
 			} else {
-				throw new NotFoundException("SmscDlr  report not found with username: " + username);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_DLR_REPORT_NOT_FOUND_MESSAGE, new Object[] {username}));
 			}
 		} catch (Exception e) {
-			logger.error(username, e.fillInStackTrace());
+			logger.error(messageResourceBundle.getMessage("error.message"), username);
+
 			throw new InternalServerException("Error: " + e.getMessage());
 
 		}
@@ -287,16 +303,16 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 		List<DeliveryDTO> target = null;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
 
 		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
 
 		if (webMasterEntry == null) {
-			throw new NotFoundException("Web MasterEntry not found for username: " + user.getId());
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE,new Object[] {user.getId()}));
 		}
 
 		try {
@@ -330,7 +346,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 			                .contentLength(byteArrayOutputStream.size())
 			                .body(byteArrayOutputStream.toByteArray());
 			} else {
-				throw new NotFoundException("SmscDlr  report not found with username: " + username);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_DLR_REPORT_NOT_FOUND_MESSAGE, new Object[] {username}));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

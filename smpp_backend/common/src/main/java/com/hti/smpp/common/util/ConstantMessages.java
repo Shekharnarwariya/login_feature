@@ -188,7 +188,89 @@ public class ConstantMessages {
     public static final String ADDBOOK_GROUP_SAVED = "addbook.group.save.success";
     public static final String ADDBOOK_GROUP_UPDATED = "addbook.group.update.success";
     public static final String ADDBOOK_GROUP_DELETED = "addbook.group.delete.success";
+    //Report Messages 
+    public static final String NOT_FOUND_EXCEPTION_MESSAGE = "notFoundException.message";
+    public static final String INTERNAL_SERVER_EXCEPTION_MESSAGE = "internalServerException.message";
+    public static final String BAD_REQUEST_EXCEPTION_MESSAGE = "badRequestException.message";
+    public static final String INTERNAL_SERVER_EXCEPTION = "campaign.report.data.not.found";
+    public static final String UNAUTHORIZED_EXCEPTION_MESSAGE = "user.unauthorized.operation";
+    public static final String INTERNAL_SERVER_MESSAGE = "dlr.content.report.data.not.found";
+    public static final String INTERNAL_SERVER_LATENCY_EXCEPTION = "latency.report.error";
+    public static final String NO_DATA_FOUND = "report.data.not.found";
+    public static final String XLS_GENERATING_ERROR = "xls.report.error";
+    public static final String PDF_GENERATION_ERROR = "pdf.report.error";
+    public static final String REPORT_DOCUMENT_GENERATING_ERROR = "document.report.error";
+    public static final String WEBMASTER_NOT_FOUND = "web.master.entry.not.found";
+    public static final String CONTENT_WISE_PROCESS_DATA_ERROR = "content.wise.unprocessed.error";
+    public static final String CUSTOMIZED_REPORT_NOT_FOUND_MESSAGE = "customized.report.data.not.found";
+    public static final String CUSTOMIZED_REPORT_PROCESSING_ERROR_MESSAGE = "customized.report.processing.error";
+    public static final String FAILED_GENERATE_JASPER_PRINT_MESSAGE = "jasperprint.generation.failed";
     
+    //DLR Summary Report
+    public static final String NO_DATA_FOUND_DLR_SUMMARY_REPORT = "dlr.summary.report.data.not.found";
+    public static final String ERROR_PROCESSING_DLR_SUMMARY_REPORT_MESSAGE = "dlr.summary.report.processing.error";
+    public static final String GETTING_ERROR_DLR_SUMMARY_REPORT_MESSAGE = "dlr.summary.reportgetting.error";
+    
+    //SMS latency message
+    
+    public static final String SMS_LATENCY_REPORT_NOT_FOUND_MESSAGE = "sms.latency.report.not.found";
+    public static final String RESOURCE_NOT_FOUND_EXCEPTION = "not.found.exception.message";
+    public static final String ERROR_GENERATING_JASPER_REPORT_MESSAGE = "error.generating.jasper.report";
+    public static final String NO_LATENCY_REPORT_DATA_FOUND_MESSAGE = "no.latency.report.data.found";
+    public static final String WEBMASTER_ENTRY_NOT_FOUND_MESSAGE = "web.master.entry.notfound";
+    public static final String ERROR_GETTING_LATENCY_REPORT_MESSAGE = "error.getting.latency.report";
+    
+    //lookup report
+    
+    public static final String ERROR_GENERATING_PDF_LOOKUP_REPORT_MESSAGE = "error.generating.pdf.lookup.report";
+    public static final String ERROR_MESSAGE = "error.message";
+    public static final String PROCESS_ERROR_MESSAGE = "process.error.message";
+    
+    //performance Report
+    public static final String PERFORMANCE_REPORT_NOT_FOUND_MESSAGE = "performance.report.not.found";
+    public static final String ERROR_GETTING_PERFORMANCE_REPORT_MESSAGE = "error.getting.performance.report";
+    public static final String SCHEDULE_REPORT_NOT_FOUND_MESSAGE = "schedule.report.not.found";
+    public static final String ERROR_GETTING_PROFIT_REPORT_MESSAGE = "error.getting.profit.report";
+    public static final String PROFIT_REPORT_NOT_FOUND_MESSAGE = "profit.report.not.found";
+    public static final String PROFIT_REPORT_XLS_NOT_FOUND_MESSAGE = "profit.report.xls.not.found";
+    public static final String ERROR_GETTING_PROFIT_REPORT_XLS_MESSAGE = "error.getting.profit.report.xls";
+    public static final String PROFIT_REPORT_PDF_NOT_FOUND_MESSAGE = "profit.report.pdf.not.found";
+    public static final String ERROR_GETTING_PROFIT_REPORT_PDF_MESSAGE = "error.getting.profit.report.pdf";
+    public static final String PROFIT_REPORT_DOC_NOT_FOUND_MESSAGE = "profit.report.doc.not.found";
+
+    //balance report
+    public static final String NO_BALANCE_REPORT_DATA_FOUND_MESSAGE = "no.balance.report.data.found";
+    public static final String ERROR_PROCESSING_BALANCE_REPORT_MESSAGE = "error.processing.balance.report";
+    public static final String EMPTY_XLS_CONTENT_ERROR_MESSAGE = "empty.xls.content.error";
+    public static final String ERROR_CLOSING_XLS_OUTPUTSTREAM_MESSAGE = "error.closing.xls.outputstream";
+    public static final String ERROR_GENERATING_REPORT_MESSAGE = "error.generating.report";
+    public static final String EMPTY_PDF_CONTENT_ERROR_MESSAGE = "empty.pdf.content.error";
+    public static final String ERROR_GENERATING_BALANCE_REPORT_PDF_MESSAGE = "error.generating.balance.report.pdf";
+
+    public static final String EMPTY_DOC_CONTENT_ERROR_MESSAGE = "empty.doc.content.error";
+    public static final String ERROR_GENERATING_BALANCE_REPORT_DOC_MESSAGE = "error.generating.balance.report.doc";
+    public static final String UNEXPECTED_ERROR_GENERATING_REPORT_MESSAGE = "unexpected.error.generating.report";
+    public static final String UNEXPECTED_ERROR_GENERATING_PDF_REPORT_MESSAGE = "unexpected.error.generating.pdf.report";
+
+    public static final String NO_RECORDS_FOUND_MESSAGE = "no.records.found";
+    public static final String UNEXPECTED_ERROR_GENERATING_XLS_REPORT_MESSAGE = "unexpected.error.generating.xls.report";
+    public static final String ERROR_GENERATING_DOC_REPORT_MESSAGE = "error.generating.doc.report";
+
+    public static final String SMS_DLR_REPORT_NOT_FOUND_MESSAGE = "sms.dlr.report.not.found";
+    public static final String NO_USER_DELIVERY_NOT_REPORT_DATA_FOUND_MESSAGE = "no.user.delivery.not.report.data.found";
+    public static final String NO_DELIVERY_REPORT_DATA_FOUND_MESSAGE = "no.delivery.report.data.found";
+    public static final String USER_DELIVERY_REPORT_NOT_FOUND_MESSAGE = "user.delivery.report.not.found";
+    public static final String ERROR_GETTING_DELIVERY_REPORT_MESSAGE = "error.getting.delivery.report";
+    public static final String NO_USERS_FOUND_UNDER_MESSAGE = "no.users.found.under";
+    public static final String USER_SUBMISSION_REPORT_NOT_FOUND_MESSAGE = "user.submission.report.not.found";
+    public static final String ERROR_GETTING_SUBMISSION_REPORT_MESSAGE = "error.getting.submission.report";
+    public static final String USER_SUMMARY_REPORT_NOT_FOUND_MESSAGE = "user.summary.report.not.found";
+    public static final String ERROR_GETTING_DLR_CONTENT_REPORT_MESSAGE = "error.getting.dlr.content.report";
+
+    //HLR SMSC
+    public static final String ERROR_SAVING_HLR_SMSC_ENTRY_MESSAGE = "error.saving.hlr.smsc.entry";
+    public static final String ERROR_CONVERTING_HLR_SMSC_ENTRY_REQUEST_MESSAGE = "error.converting.hlr.smsc.entry.request";
+  
     //hlr-smsc exception message
     public static final String HLR_SMSC_SAVE_ERROR = "hlr.smsc.save.error";
     public static final String HLR_SMSC_CONVERT_ERROR = "hlr.smsc.convert.error";

@@ -49,7 +49,10 @@ import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.GlobalVars;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 @Service
 public class Dashboard implements DashboardService {
@@ -68,6 +71,9 @@ public class Dashboard implements DashboardService {
 
 	@Autowired
 	private DataSource dataSource;
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
@@ -80,10 +86,10 @@ public class Dashboard implements DashboardService {
 		System.out.println(username);
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
 		String resp = "";
 		if (request.getMethod() != null) {
@@ -91,7 +97,8 @@ public class Dashboard implements DashboardService {
 				if (request.getDays() != null) {
 					int days = Integer.parseInt(request.getDays());
 					String systemid = request.getUsername();
-					logger.info(user.getSystemId() + " " + " Username => " + systemid + " Days => " + days);
+					logger.info(messageResourceBundle.getMessage("user.days.message"), user.getSystemId(), days);
+
 					try {
 						if (systemid != null) {
 							System.out.println("1st called: " + systemid + " " + days);
@@ -120,13 +127,14 @@ public class Dashboard implements DashboardService {
 							seller_id = Integer.parseInt(seller);
 						}
 					} catch (Exception ex) {
-						logger.error(user.getSystemId() + " Invalid seller Id: " + seller);
+						logger.error(messageResourceBundle.getMessage("invalid.seller.id.message"), user.getSystemId(), seller);
+
 					}
 					Map<Integer, String> map = null;
 					if (seller_id > 0) {
 						map = userService.listUsersUnderSeller(seller_id);
-						logger.info(
-								user.getSystemId() + " User Found Under Seller[" + seller_id + "]: " + map.values());
+						logger.info(messageResourceBundle.getMessage("user.found.under.seller.message"), user.getSystemId(), seller_id, map.values());
+
 					} else {
 						map = listUsernamesUnderManager(user.getSystemId());
 					}
@@ -142,14 +150,14 @@ public class Dashboard implements DashboardService {
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
 		// IDatabaseService dbService = HtiSmsDB.getInstance();
-		logger.info(user.getSystemId() + " " + user.getSystemId() + " <-- Getting  Dashboard Report for last " + days
-				+ " days --> ");
+		logger.info(messageResourceBundle.getMessage("dashboard.report.last.days.message"), days, user.getSystemId());
+
 		boolean proceed = true;
 		Calendar calender = Calendar.getInstance();
 		String sql = "";
@@ -184,12 +192,15 @@ public class Dashboard implements DashboardService {
 								seller_id = Integer.parseInt(seller);
 							}
 						} catch (Exception ex) {
-							logger.error(user.getSystemId() + " Invalid seller Id: " + seller);
+							logger.error(messageResourceBundle.getMessage("invalid.seller.id.message"), user.getSystemId(), seller);
+
 						}
 						if (seller_id > 0) {
 							map = userService.listUsersUnderSeller(seller_id);
-							logger.info(user.getSystemId() + " User Found Under Seller[" + seller_id + "]: "
-									+ map.values());
+							
+							logger.info(messageResourceBundle.getMessage("user.found.under.seller.message"), user.getSystemId(), seller_id, map.values());
+							
+							
 						} else {
 							map = listUsernamesUnderManager(user.getSystemId());
 						}
@@ -245,12 +256,13 @@ public class Dashboard implements DashboardService {
 								seller_id = Integer.parseInt(seller);
 							}
 						} catch (Exception ex) {
-							logger.error(user.getSystemId() + " Invalid seller Id: " + seller);
+							logger.error(messageResourceBundle.getMessage("invalid.seller.id.message"), user.getSystemId(), seller);
+
 						}
 						if (seller_id > 0) {
 							map = userService.listUsersUnderSeller(seller_id);
-							logger.info(user.getSystemId() + " User Found Under Seller[" + seller_id + "]: "
-									+ map.values());
+							logger.info(messageResourceBundle.getMessage("user.found.under.seller.message"), user.getSystemId(), seller_id, map.values());
+
 						} else {
 							map = listUsernamesUnderManager(user.getSystemId());
 						}
@@ -474,7 +486,8 @@ public class Dashboard implements DashboardService {
 		json.put("cols", colsArr);
 		json.put("rows", rowsArr);
 		responseObj.put(json);
-		logger.info(user.getSystemId() + " " + "Country Counter: " + json.toString());
+		logger.info(messageResourceBundle.getMessage("country.counter.message"), user.getSystemId(), json.toString());
+
 		// ----------- 3rd Chart -----------------------
 		sender_map = sortByDscValue(sender_map, 10);
 		json = new JSONObject();
@@ -518,7 +531,8 @@ public class Dashboard implements DashboardService {
 		json.put("cols", colsArr);
 		json.put("rows", rowsArr);
 		responseObj.put(json);
-		logger.info(user.getSystemId() + " " + "Sender Count: " + json.toString());
+		logger.info(messageResourceBundle.getMessage("sender.count.message"), user.getSystemId(), json.toString());
+
 		// ------------------ 4th chart --------------
 		JSONArray arr = new JSONArray();
 		JSONObject smscCount = new JSONObject();
@@ -540,8 +554,8 @@ public class Dashboard implements DashboardService {
 				if (user_delivered_map.containsKey(username1)) {
 					user_delivered = (Integer) user_delivered_map.get(username1);
 				}
-				logger.info(user.getSystemId() + " " + username1 + " -> " + user_received + " : " + user_processed
-						+ " : " + user_delivered);
+				logger.info(messageResourceBundle.getMessage("user.processing.info.message"), user.getSystemId(), username1, user_received, user_processed, user_delivered);
+
 				json = new JSONObject();
 				json.put("user", username1);
 				json.put("counter", user_received);
@@ -549,13 +563,15 @@ public class Dashboard implements DashboardService {
 				json.put("deliverd", (Integer) user_delivered);
 				arr.put(json);
 			}
-			logger.info(user.getSystemId() + " " + "UserWise Counter: " + arr.toString());
+			logger.info(messageResourceBundle.getMessage("userwise.counter.message"), user.getSystemId(), arr.toString());
+
 		}
 		if (user.getRole().equalsIgnoreCase("superadmin") || user.getRole().equalsIgnoreCase("system")
 				|| (user.getRole().equalsIgnoreCase("admin") && smscEntryRepository.findByMasterId(username) != null)) {
 			// ----------- 5th Chart -----------------------
 			smsc_count = sortByDscValue(smsc_count, 15);
-			logger.info(user.getSystemId() + " " + "SmscCounter ==> " + smsc_count);
+			logger.info(messageResourceBundle.getMessage("smsc.counter.message"), user.getSystemId(), smsc_count);
+
 			// Set dlr_set = smsc_count.keySet();
 			colsArr = new JSONArray();
 			cols = new JSONObject();
@@ -588,10 +604,12 @@ public class Dashboard implements DashboardService {
 			}
 			smscCount.put("cols", colsArr);
 			smscCount.put("rows", rowsArr);
-			logger.info(user.getSystemId() + " " + "Smsc Count: " + smscCount.toString());
+			
+			logger.info(messageResourceBundle.getMessage("smsc.counter.message"), user.getSystemId(), smscCount.toString());
+
 			// ----------- 6th Chart -----------------------
 			// smsc_deliver = sortByDscValue(smsc_deliver, 10);
-			logger.info(user.getSystemId() + " " + "SmscDeliver==> " + smsc_deliver);
+			logger.info(messageResourceBundle.getMessage("smsc.deliver.message"), user.getSystemId(), smsc_deliver);
 			colsArr = new JSONArray();
 			cols = new JSONObject();
 			// rowsArr = new JSONArray();
@@ -614,7 +632,8 @@ public class Dashboard implements DashboardService {
 					int submit = (Integer) smsc_count.get(key);
 					percent = (int) (((double) deliv / (double) submit) * 100);
 				} else {
-					logger.info(user.getSystemId() + " " + "No Delivery Found: " + key);
+					logger.info(messageResourceBundle.getMessage("no.delivery.found.message"), user.getSystemId(), key);
+
 				}
 				JSONObject rows = new JSONObject();
 				JSONArray rowValArr = new JSONArray();
@@ -630,11 +649,14 @@ public class Dashboard implements DashboardService {
 			smscDeliver.put("cols", colsArr);
 			smscDeliver.put("rows", rowsArr);
 			logger.info(user.getSystemId() + " " + "Smsc Deliver: " + smscDeliver.toString());
+			logger.info(messageResourceBundle.getMessage("smsc.deliver.message"), user.getSystemId(), smscDeliver.toString());
+
 		}
 		if (user.getRole().equalsIgnoreCase("superadmin") || user.getRole().equalsIgnoreCase("system")) {
 			// ----------- 7th Chart -----------------------
 			smsc_spam = sortByDscValue(smsc_spam, 10);
-			logger.info(user.getSystemId() + " " + "SmscSpam ==> " + smsc_spam);
+			logger.info(messageResourceBundle.getMessage("smsc.spam.message"), user.getSystemId(), smsc_spam);
+
 			// Set dlr_set = smsc_count.keySet();
 			colsArr = new JSONArray();
 			cols = new JSONObject();
@@ -667,10 +689,12 @@ public class Dashboard implements DashboardService {
 			}
 			smscSpam.put("cols", colsArr);
 			smscSpam.put("rows", rowsArr);
-			logger.info(user.getSystemId() + " " + "Smsc Spam Count: " + smscSpam.toString());
+			logger.info(messageResourceBundle.getMessage("smsc.spam.count.message"), user.getSystemId(), smscSpam.toString());
+
 			// ----------- 8th Chart -----------------------
 			user_spam = sortByDscValue(user_spam, 10);
-			logger.info(user.getSystemId() + " " + "UserSpam ==> " + user_spam);
+			logger.info(messageResourceBundle.getMessage("user.spam.message"), user.getSystemId(), user_spam);
+
 			// Set dlr_set = smsc_count.keySet();
 			colsArr = new JSONArray();
 			cols = new JSONObject();
@@ -703,14 +727,16 @@ public class Dashboard implements DashboardService {
 			}
 			userSpam.put("cols", colsArr);
 			userSpam.put("rows", rowsArr);
-			logger.info(user.getSystemId() + " " + "User Spam Count: " + userSpam.toString());
+			logger.info(messageResourceBundle.getMessage("user.spam.count.message"), user.getSystemId(), userSpam.toString());
+
 		}
 		responseObj.put(arr);
 		responseObj.put(smscCount);
 		responseObj.put(smscDeliver);
 		responseObj.put(smscSpam);
 		responseObj.put(userSpam);
-		logger.info(user.getSystemId() + " " + "<-- Finished Dashboard -->");
+		logger.info(messageResourceBundle.getMessage("finished.dashboard.message"), user.getSystemId());
+
 		return ResponseEntity.ok(responseObj.toString());
 	}
 	
@@ -719,13 +745,14 @@ public class Dashboard implements DashboardService {
 		System.out.println("line 718 for request , username methode ");
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
 
-		logger.info(user.getSystemId() + " " + user.getRole() + " <-- Getting Recent Dashboard Report --> ");
+		logger.info(messageResourceBundle.getMessage("getting.recent.dashboard.report.message"), user.getSystemId(), user.getRole());
+
 		boolean proceed = true;
 		String sql = "";
 		sql = "select count(msg_id) as count,username,oprCountry,sender,status,smsc from report";
@@ -786,14 +813,16 @@ public class Dashboard implements DashboardService {
 		}
 		sql += " group by username,oprCountry,sender,status,smsc";
 		// ************* Creating Response Object ******************************
-		logger.info(user.getSystemId() + " " + "Dashboard SQL: " + sql);
+		logger.info(messageResourceBundle.getMessage("dashboard.sql.message"), user.getSystemId(), sql);
+
 		List<DeliveryDTO> list = null;
 		if (proceed) {
 			list = getDashboardReport(sql);
 		} else {
 			list = new ArrayList<DeliveryDTO>();
 		}
-		logger.info(user.getSystemId() + " " + "Dashboard Report List Size:--> " + list.size());
+		logger.info(messageResourceBundle.getMessage("dashboard.report.list.size.message"), user.getSystemId(), list.size());
+
 		// Iterator itr = list.iterator();
 		int received = 0, processed = 0, delivered = 0;
 		Map<String, Integer> country_map = new HashMap<String, Integer>();
@@ -972,7 +1001,8 @@ public class Dashboard implements DashboardService {
 		json.put("cols", colsArr);
 		json.put("rows", rowsArr);
 		responseObj.put(json);
-		logger.info(user.getSystemId() + " " + "Country Counter: " + json.toString());
+		logger.info(messageResourceBundle.getMessage("country.counter.message"), user.getSystemId(), json.toString());
+
 		// ----------- 3rd Chart -----------------------
 		sender_map = sortByDscValue(sender_map, 10);
 		json = new JSONObject();
@@ -1016,7 +1046,8 @@ public class Dashboard implements DashboardService {
 		json.put("cols", colsArr);
 		json.put("rows", rowsArr);
 		responseObj.put(json);
-		logger.info(user.getSystemId() + " " + "Sender Count: " + json.toString());
+		logger.info(messageResourceBundle.getMessage("sender.count.message"), user.getSystemId(), json.toString());
+
 		// ------------------ 4th chart --------------
 		JSONArray arr = new JSONArray();
 		JSONObject smscCount = new JSONObject();
@@ -1038,8 +1069,8 @@ public class Dashboard implements DashboardService {
 				if (user_delivered_map.containsKey(username1)) {
 					user_delivered = (Integer) user_delivered_map.get(username1);
 				}
-				logger.info(user.getSystemId() + " " + username1 + " -> " + user_received + " : " + user_processed
-						+ " : " + user_delivered);
+				logger.info(messageResourceBundle.getMessage("user.processing.info.message"), user.getSystemId(), username1, user_received, user_processed, user_delivered);
+
 				json = new JSONObject();
 				json.put("user", username1);
 				json.put("counter", user_received);
@@ -1047,14 +1078,16 @@ public class Dashboard implements DashboardService {
 				json.put("deliverd", (Integer) user_delivered);
 				arr.put(json);
 			}
-			logger.info(user.getSystemId() + " " + "UserWise Counter: " + arr.toString());
+			logger.info(messageResourceBundle.getMessage("userwise.counter.message"), user.getSystemId(), arr.toString());
+
 		}
 		if (user.getRole().equalsIgnoreCase("superadmin") || user.getRole().equalsIgnoreCase("system")
 				|| (user.getRole().equalsIgnoreCase("admin") && smscEntryRepository.findByMasterId(username) != null)) {
 
 			// ----------- 5th Chart -----------------------
 			smsc_count = sortByDscValue(smsc_count, 15);
-			logger.info(user.getSystemId() + " " + "SmscCounter ==> " + smsc_count);
+			logger.info(messageResourceBundle.getMessage("smsc.counter.message"), user.getSystemId(), smsc_count);
+
 			// Set dlr_set = smsc_count.keySet();
 			colsArr = new JSONArray();
 			cols = new JSONObject();
@@ -1087,10 +1120,12 @@ public class Dashboard implements DashboardService {
 			}
 			smscCount.put("cols", colsArr);
 			smscCount.put("rows", rowsArr);
-			logger.info(user.getSystemId() + " " + "Smsc Count: " + smscCount.toString());
+			
+			logger.info(messageResourceBundle.getMessage("smsc.counter.message"), user.getSystemId(), smscCount.toString());
 			// ----------- 6th Chart -----------------------
 			// smsc_deliver = sortByDscValue(smsc_deliver, 10);
-			logger.info(user.getSystemId() + " " + "SmscDeliver==> " + smsc_deliver);
+			logger.info(messageResourceBundle.getMessage("smsc.deliver.message"), user.getSystemId(), smsc_deliver);
+
 			colsArr = new JSONArray();
 			cols = new JSONObject();
 			// rowsArr = new JSONArray();
@@ -1128,12 +1163,14 @@ public class Dashboard implements DashboardService {
 			}
 			smscDeliver.put("cols", colsArr);
 			smscDeliver.put("rows", rowsArr);
-			logger.info(user.getSystemId() + " " + "Smsc Deliver: " + smscDeliver.toString());
+			logger.info(messageResourceBundle.getMessage("smsc.deliver.message"), user.getSystemId(), smscDeliver.toString());
+
 		}
 		if (user.getRole().equalsIgnoreCase("superadmin") || user.getRole().equalsIgnoreCase("system")) {
 			// ----------- 7th Chart -----------------------
 			smsc_spam = sortByDscValue(smsc_spam, 10);
-			logger.info(user.getSystemId() + " " + "SmscSpam ==> " + smsc_spam);
+			logger.info(messageResourceBundle.getMessage("smsc.spam.message"), user.getSystemId(), smsc_spam);
+
 			// Set dlr_set = smsc_count.keySet();
 			colsArr = new JSONArray();
 			cols = new JSONObject();
@@ -1166,10 +1203,12 @@ public class Dashboard implements DashboardService {
 			}
 			smscSpam.put("cols", colsArr);
 			smscSpam.put("rows", rowsArr);
-			logger.info(user.getSystemId() + " " + "Smsc Spam Count: " + smscSpam.toString());
+			logger.info(messageResourceBundle.getMessage("smsc.spam.count.message"), user.getSystemId(), smscSpam.toString());
+
 			// ----------- 8th Chart -----------------------
 			user_spam = sortByDscValue(user_spam, 10);
-			logger.info(user.getSystemId() + " " + "UserSpam ==> " + user_spam);
+			logger.info(messageResourceBundle.getMessage("user.spam.message"), user.getSystemId(), user_spam);
+
 			// Set dlr_set = smsc_count.keySet();
 			colsArr = new JSONArray();
 			cols = new JSONObject();
@@ -1202,14 +1241,16 @@ public class Dashboard implements DashboardService {
 			}
 			userSpam.put("cols", colsArr);
 			userSpam.put("rows", rowsArr);
-			logger.info(user.getSystemId() + " " + "User Spam Count: " + userSpam.toString());
+			logger.info(messageResourceBundle.getMessage("user.spam.count.message"), user.getSystemId(), userSpam.toString());
+
 		}
 		responseObj.put(arr);
 		responseObj.put(smscCount);
 		responseObj.put(smscDeliver);
 		responseObj.put(smscSpam);
 		responseObj.put(userSpam);
-		logger.info(user.getSystemId() + " " + "<-- Finished Dashboard -->");
+		logger.info(messageResourceBundle.getMessage("finished.dashboard.message"), user.getSystemId());
+
 		return ResponseEntity.ok(responseObj.toString());
 
 	}
@@ -1220,13 +1261,13 @@ public class Dashboard implements DashboardService {
 		System.out.println(" Dashboard methode -- line 1216");
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
-		logger.info(user.getSystemId() + " " + user.getSystemId() + " <-- Getting  Dashboard Report for last " + days
-				+ " days --> ");
+		logger.info(messageResourceBundle.getMessage("dashboard.report.message"), user.getSystemId(), days);
+
 		boolean proceed = true;
 		Calendar calender = Calendar.getInstance();
 		String sql = "";
@@ -1261,12 +1302,13 @@ public class Dashboard implements DashboardService {
 								seller_id = Integer.parseInt(seller);
 							}
 						} catch (Exception ex) {
-							logger.error(user.getSystemId() + " Invalid seller Id: " + seller);
+							logger.error(messageResourceBundle.getMessage("invalid.seller.id.message"), user.getSystemId(), seller);
+
 						}
 						if (seller_id > 0) {
 							map = userService.listUsersUnderSeller(seller_id);
-							logger.info(user.getSystemId() + " User Found Under Seller[" + seller_id + "]: "
-									+ map.values());
+							logger.info(messageResourceBundle.getMessage("user.found.under.seller.message"), seller_id, map.values());
+
 						} else {
 							map = listUsernamesUnderManager(user.getSystemId());
 						}
@@ -1322,12 +1364,13 @@ public class Dashboard implements DashboardService {
 								seller_id = Integer.parseInt(seller);
 							}
 						} catch (Exception ex) {
-							logger.error(user.getSystemId() + " Invalid seller Id: " + seller);
+							logger.error(messageResourceBundle.getMessage("invalid.seller.id.message"), user.getSystemId(), seller);
+
 						}
 						if (seller_id > 0) {
 							map = userService.listUsersUnderSeller(seller_id);
-							logger.info(user.getSystemId() + " User Found Under Seller[" + seller_id + "]: "
-									+ map.values());
+							logger.info(messageResourceBundle.getMessage("user.found.under.seller.message"), seller_id, map.values());
+
 						} else {
 							map = listUsernamesUnderManager(user.getSystemId());
 						}
@@ -1364,14 +1407,16 @@ public class Dashboard implements DashboardService {
 			sql += " group by username,oprCountry,sender,status,smsc";
 		}
 		// ************* Creating Response Object ******************************
-		logger.info(user.getSystemId() + " " + "Dashboard SQL: " + sql);
+		logger.info(messageResourceBundle.getMessage("dashboard.sql.message"), user.getSystemId(), sql);
+
 		List<DeliveryDTO> list = null;
 		if (proceed) {
 			list = getDashboardReport(sql);
 		} else {
 			list = new ArrayList<DeliveryDTO>();
 		}
-		logger.info(user.getSystemId() + " " + "Dashboard Report List Size:--> " + list.size());
+		logger.info(messageResourceBundle.getMessage("dashboard.report.list.size.message"), user.getSystemId(), list.size());
+
 		// Iterator itr = list.iterator();
 		int received = 0, processed = 0, delivered = 0;
 		Map<String, Integer> country_map = new HashMap<String, Integer>();
@@ -1551,7 +1596,8 @@ public class Dashboard implements DashboardService {
 		json.put("cols", colsArr);
 		json.put("rows", rowsArr);
 		responseObj.put(json);
-		logger.info(user.getSystemId() + " " + "Country Counter: " + json.toString());
+		logger.info(messageResourceBundle.getMessage("country.counter.message"), user.getSystemId(), json.toString());
+
 		// ----------- 3rd Chart -----------------------
 		sender_map = sortByDscValue(sender_map, 10);
 		json = new JSONObject();
@@ -1595,7 +1641,8 @@ public class Dashboard implements DashboardService {
 		json.put("cols", colsArr);
 		json.put("rows", rowsArr);
 		responseObj.put(json);
-		logger.info(user.getSystemId() + " " + "Sender Count: " + json.toString());
+		logger.info(messageResourceBundle.getMessage("sender.count.message"), user.getSystemId(), json.toString());
+
 		// ------------------ 4th chart --------------
 		JSONArray arr = new JSONArray();
 		JSONObject smscCount = new JSONObject();
@@ -1617,8 +1664,8 @@ public class Dashboard implements DashboardService {
 				if (user_delivered_map.containsKey(username1)) {
 					user_delivered = (Integer) user_delivered_map.get(username1);
 				}
-				logger.info(user.getSystemId() + " " + username1 + " -> " + user_received + " : " + user_processed
-						+ " : " + user_delivered);
+				logger.info(messageResourceBundle.getMessage("user.delivery.status.message"), user.getSystemId(), username1, user_received, user_processed, user_delivered);
+
 				json = new JSONObject();
 				json.put("user", username1);
 				json.put("counter", user_received);
@@ -1626,14 +1673,16 @@ public class Dashboard implements DashboardService {
 				json.put("deliverd", (Integer) user_delivered);
 				arr.put(json);
 			}
-			logger.info(user.getSystemId() + " " + "UserWise Counter: " + arr.toString());
+			logger.info(messageResourceBundle.getMessage("userwise.counter.message"), user.getSystemId(), arr.toString());
+
 		}
 		if (user.getRole().equalsIgnoreCase("superadmin") || user.getRole().equalsIgnoreCase("system")
 				|| (user.getRole().equalsIgnoreCase("admin")
 						&& (smscEntryRepository.findByMasterId(systemid) != null))) {
 			// ----------- 5th Chart -----------------------
 			smsc_count = sortByDscValue(smsc_count, 15);
-			logger.info(user.getSystemId() + " " + "SmscCounter ==> " + smsc_count);
+			logger.info(messageResourceBundle.getMessage("smsc.counter.message"), user.getSystemId(), smsc_count);
+
 			// Set dlr_set = smsc_count.keySet();
 			colsArr = new JSONArray();
 			cols = new JSONObject();
@@ -1666,10 +1715,12 @@ public class Dashboard implements DashboardService {
 			}
 			smscCount.put("cols", colsArr);
 			smscCount.put("rows", rowsArr);
-			logger.info(user.getSystemId() + " " + "Smsc Count: " + smscCount.toString());
+			logger.info(messageResourceBundle.getMessage("smsc.counter.message"), user.getSystemId(), smscCount.toString());
+
 			// ----------- 6th Chart -----------------------
 			// smsc_deliver = sortByDscValue(smsc_deliver, 10);
-			logger.info(user.getSystemId() + " " + "SmscDeliver==> " + smsc_deliver);
+			logger.info(messageResourceBundle.getMessage("smsc.deliver.message"), user.getSystemId(), smsc_deliver);
+
 			colsArr = new JSONArray();
 			cols = new JSONObject();
 			// rowsArr = new JSONArray();
@@ -1692,7 +1743,8 @@ public class Dashboard implements DashboardService {
 					int submit = (Integer) smsc_count.get(key);
 					percent = (int) (((double) deliv / (double) submit) * 100);
 				} else {
-					logger.info(user.getSystemId() + " " + "No Delivery Found: " + key);
+					logger.info(messageResourceBundle.getMessage("no.delivery.found.message"), user.getSystemId(), key);
+
 				}
 				JSONObject rows = new JSONObject();
 				JSONArray rowValArr = new JSONArray();
@@ -1707,12 +1759,14 @@ public class Dashboard implements DashboardService {
 			}
 			smscDeliver.put("cols", colsArr);
 			smscDeliver.put("rows", rowsArr);
-			logger.info(user.getSystemId() + " " + "Smsc Deliver: " + smscDeliver.toString());
+			logger.info(messageResourceBundle.getMessage("smsc.deliver.message"), user.getSystemId(), smscDeliver.toString());
+
 		}
 		if (user.getRole().equalsIgnoreCase("superadmin") || user.getRole().equalsIgnoreCase("system")) {
 			// ----------- 7th Chart -----------------------
 			smsc_spam = sortByDscValue(smsc_spam, 10);
-			logger.info(user.getSystemId() + " " + "SmscSpam ==> " + smsc_spam);
+			logger.info(messageResourceBundle.getMessage("smsc.spam.message"), user.getSystemId(), smsc_spam);
+
 			// Set dlr_set = smsc_count.keySet();
 			colsArr = new JSONArray();
 			cols = new JSONObject();
@@ -1745,10 +1799,12 @@ public class Dashboard implements DashboardService {
 			}
 			smscSpam.put("cols", colsArr);
 			smscSpam.put("rows", rowsArr);
-			logger.info(user.getSystemId() + " " + "Smsc Spam Count: " + smscSpam.toString());
+			logger.info(messageResourceBundle.getMessage("smsc.spam.count.message"), user.getSystemId(), smscSpam.toString());
+
 			// ----------- 8th Chart -----------------------
 			user_spam = sortByDscValue(user_spam, 10);
-			logger.info(user.getSystemId() + " " + "UserSpam ==> " + user_spam);
+			logger.info(messageResourceBundle.getMessage("user.spam.message"), user.getSystemId(), user_spam);
+
 			// Set dlr_set = smsc_count.keySet();
 			colsArr = new JSONArray();
 			cols = new JSONObject();
@@ -1781,14 +1837,16 @@ public class Dashboard implements DashboardService {
 			}
 			userSpam.put("cols", colsArr);
 			userSpam.put("rows", rowsArr);
-			logger.info(user.getSystemId() + " " + "User Spam Count: " + userSpam.toString());
+			logger.info(messageResourceBundle.getMessage("user.spam.count.message"), user.getSystemId(), userSpam.toString());
+
 		}
 		responseObj.put(arr);
 		responseObj.put(smscCount);
 		responseObj.put(smscDeliver);
 		responseObj.put(smscSpam);
 		responseObj.put(userSpam);
-		logger.info(user.getSystemId() + " " + "<-- Finished Dashboard -->");
+		logger.info(messageResourceBundle.getMessage("finished.dashboard.message"), user.getSystemId());
+
 		return ResponseEntity.ok(responseObj.toString());
 
 	}
@@ -1825,11 +1883,13 @@ public class Dashboard implements DashboardService {
 					reportDTO.setRoute(rs.getString("smsc"));
 					report.add(reportDTO);
 				} catch (Exception sqle) {
-					logger.error(" ", sqle.fillInStackTrace());
+					logger.error(messageResourceBundle.getMessage("database.error.message"), sqle.getMessage(), sqle);
+
 				}
 			}
 		} catch (SQLException sqle) {
-			logger.error(" ", sqle.fillInStackTrace());
+			logger.error(messageResourceBundle.getMessage("unexpected.error "), sqle.getMessage(), sqle);
+
 		} finally {
 			try {
 				if (pStmt != null) {

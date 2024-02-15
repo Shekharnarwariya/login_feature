@@ -56,9 +56,11 @@ import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 import jakarta.servlet.http.HttpServletResponse;
 import net.sf.jasperreports.engine.JRException;
@@ -100,6 +102,8 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 
 	@Autowired
 	private WebMasterEntryRepository webMasterEntryRepository;
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
@@ -115,20 +119,23 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
 		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
 		if (webMasterEntry == null) {
-			throw new NotFoundException("WebMasterEntry not found for username: " + user.getId());
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE, new Object[] {user.getId()}));
+
 		}
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
-			System.out.println("run 120 in summary report view");
+			logger.info(messageResourceBundle.getMessage("run.summary.report.view.message"));
+
 			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry, lang);
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(user.getSystemId() + " ReportSize[View]:" + reportList.size());
+				logger.info(messageResourceBundle.getMessage("report.size.view.message"), user.getSystemId(), reportList.size());
+
 //				JasperPrint print = getJasperPrint(reportList, username, false, lang);
 //				logger.info(user.getSystemId() + " <-- Report Finished --> ");
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
@@ -152,25 +159,27 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			UserEntry user = userOptional
-					.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+					.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 
 			WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
 			if (webMasterEntry == null) {
-				throw new NotFoundException("WebMasterEntry not found for username: " + user.getId());
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE, new Object[] {user.getId()}));
 			}
 
 			Locale locale = Customlocale.getLocaleByLanguage(lang);
 			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry, lang);
 
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(user.getSystemId() + " ReportSize[XLS]:" + reportList.size());
+				logger.info(messageResourceBundle.getMessage("xls.report.size.message"), user.getSystemId(), reportList.size());
+
 
 				JasperPrint print = getJasperPrint(reportList, username, false, lang);
-				logger.info(user.getSystemId() + " <-- Report Finished --> ");
+				logger.info(messageResourceBundle.getMessage("report.finished.message"), user.getSystemId());
+
 				byte[] xlsReport = generateXLSReport(print);
 
 				HttpHeaders headers = new HttpHeaders();
@@ -180,7 +189,8 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 				// Return the file in the ResponseEntity
 				return new ResponseEntity<>(xlsReport, headers, HttpStatus.OK);
 			} else {
-				throw new NotFoundException("User summary report not found with username: " + username);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_SUMMARY_REPORT_NOT_FOUND_MESSAGE,new Object[] {username}));
+
 			}
 
 		} catch (UnauthorizedException e) {
@@ -208,25 +218,25 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			UserEntry user = userOptional
-					.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+					.orElseThrow(() ->  new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_SUMMARY_REPORT_NOT_FOUND_MESSAGE,new Object[] {username})));
 
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 
 			WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
 			if (webMasterEntry == null) {
-				throw new NotFoundException("WebMasterEntry not found for username: " + user.getId());
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE, new Object[] {user.getId()}));
 			}
 
 			locale = Customlocale.getLocaleByLanguage(lang);
 			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry, lang);
 
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(user.getSystemId() + " ReportSize[PDF]:" + reportList.size());
+				logger.info(messageResourceBundle.getMessage("xls.report.size.message"), user.getSystemId(), reportList.size());
 
 				JasperPrint print = getJasperPrint(reportList, username, false, lang);
-				logger.info(user.getSystemId() + " <-- Report Finished --> ");
+				logger.info(messageResourceBundle.getMessage("report.finished.message"), user.getSystemId());
 				byte[] pdfReport = generatePDFReport(print);
 
 				HttpHeaders headers = new HttpHeaders();
@@ -236,11 +246,12 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 				// Return the file in the ResponseEntity
 				return new ResponseEntity<>(pdfReport, headers, HttpStatus.OK);
 			} else {
-				throw new NotFoundException("User summary report not found with username: " + username);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_SUMMARY_REPORT_NOT_FOUND_MESSAGE,new Object[] {username}));
 			}
 	} catch (Exception ex) {
 		target = IConstants.FAILURE_KEY;
-		throw new InternalServerException("Error getting error in dlr Content  report: " + ex.getMessage());
+		throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_DLR_CONTENT_REPORT_MESSAGE));
+
 	}
 }
 
@@ -259,25 +270,26 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			UserEntry user = userOptional
-					.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+					.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 
 			WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
 			if (webMasterEntry == null) {
-				throw new NotFoundException("WebMasterEntry not found for username: " + user.getId());
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 
 			Locale locale = Customlocale.getLocaleByLanguage(lang);
 			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry, lang);
 
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(user.getSystemId() + " ReportSize[DOC]: " + reportList.size());
+				logger.info(messageResourceBundle.getMessage("report.size.doc.message"), user.getSystemId(), reportList.size());
+
 
 				JasperPrint print = getJasperPrint(reportList, username, false, lang);
-				logger.info(user.getSystemId() + " <-- Report Finished --> ");
+				logger.info(messageResourceBundle.getMessage("report.finished.message"), user.getSystemId());
 
 				byte[] docReport = generateDocReport(print);
 
@@ -289,7 +301,7 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 				// Return the file in the ResponseEntity
 				return new ResponseEntity<>(docReport, headers, HttpStatus.OK);
 			} else {
-				throw new NotFoundException("User summary report not found with username: " + username);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_SUMMARY_REPORT_NOT_FOUND_MESSAGE,new Object[] {username}));
 			}
 
 		} catch (UnauthorizedException e) {
@@ -314,11 +326,14 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 	private JasperPrint getJasperPrint(List reportList, String username, boolean paging, String lang) throws Exception {
 
 		locale = Customlocale.getLocaleByLanguage(lang);
-		System.out.println("<-- Creating Design ---> ");
+		logger.info(messageResourceBundle.getMessage("creating.design.message"));
+
 		JasperDesign design = JRXmlLoader.load(template_file);
-		System.out.println("<-- Compiling Source Format file ---> ");
+		logger.info(messageResourceBundle.getMessage("compiling.source.format.message"));
+
 		JasperReport report = JasperCompileManager.compileReport(design);
-		System.out.println("<-- Preparing Chart Data ---> ");
+		logger.info(messageResourceBundle.getMessage("preparing.chart.data.message"));
+
 		// ------------- Preparing databeancollection for chart ------------------
 		Iterator itr = reportList.iterator();
 		Map temp_chart = new HashMap();
@@ -404,9 +419,9 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 		System.out.println("call get summary report list 390 ");
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+				.orElseThrow(() ->new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
 		String to_gmt = null;
 		String from_gmt = null;
@@ -446,7 +461,8 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 					if (users != null && !users.isEmpty()) {
 						sql += " and username in('" + String.join("','", users) + "')";
 					} else {
-						logger.info(user.getSystemId() + "[" + user.getRole() + "] No User Found");
+						logger.info(messageResourceBundle.getMessage("no.user.found.message"), user.getSystemId(), user.getRole());
+
 						return null;
 					}
 				} else {
@@ -454,7 +470,8 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 				}
 			}
 		} else {
-			logger.info(user.getSystemId() + " Batch Report Requested Based On Criteria ");
+			logger.info(messageResourceBundle.getMessage("batch.report.requested.message"), user.getSystemId());
+
 			// boolean and = false;
 			sql += " where campaign_type like '" + customReportForm.getCampaignType() + "'";
 			if (user.getRole().equalsIgnoreCase("user")) {
@@ -480,7 +497,7 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 						if (users != null && !users.isEmpty()) {
 							sql += " and username in('" + String.join("','", users) + "')";
 						} else {
-							logger.info(user.getSystemId() + "[" + user.getRole() + "] No User Found");
+							logger.info(messageResourceBundle.getMessage("no.user.found.message"), user.getSystemId(), user.getRole());
 							return null;
 						}
 					}
@@ -632,7 +649,8 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 
 			return salesList;
 		} catch (Exception e) {
-			throw new InternalServerException("Error: getting error in delivery report with username {}");
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_DELIVERY_REPORT_MESSAGE, new Object[] {systemId}));
+
 		}
 	}
 

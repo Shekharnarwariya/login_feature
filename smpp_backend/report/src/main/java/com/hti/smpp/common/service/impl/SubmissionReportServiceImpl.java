@@ -47,9 +47,11 @@ import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -63,6 +65,9 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 
 	@Autowired
 	private UserDAService userService;
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 
 	Locale locale = null;
 	@Autowired
@@ -88,17 +93,18 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
 
 		boolean mis = true;
 		boolean mis_log = false;
 		String mis_sql = "";
 
-		logger.info(username + " Submission Report Requested.");
+		logger.info(messageResourceBundle.getMessage("submission.report.requested.message"), username);
+
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
 
@@ -112,13 +118,14 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 			String sender = customReportDTO.getSenderId();
 			String status = customReportDTO.getMessageStatus();
 			String reportType = customReportDTO.getReportType();
-			logger.info(username + " Report Type: " + reportType + " User: " + username + " Smsc: " + smsc
-					+ " country: " + country + " sender: " + sender + " status: " + status);
+			logger.info(messageResourceBundle.getMessage("report.info.message"), username, reportType, username, smsc, country, sender, status);
+
 			if (status != null && !status.equals("%") && !status.equalsIgnoreCase("T")) {
 				mis = false;
 			}
 			if (mis) {
-				System.out.println(username + " Checking For mis Records");
+				logger.info(messageResourceBundle.getMessage("checking.mis.records.message"), username);
+
 				mis_sql = "";
 				String mis_select = "select count(msg_id) as count,date(submitted_time) as timing";
 				String mis_conditionStr = " where ";
@@ -132,12 +139,15 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 						if (daysDifference(customReportDTO.getSyear() + "-" + customReportDTO.getSmonth() + "-"
 								+ customReportDTO.getSday()) > 2) {
 							mis_log = true;
-							logger.info("Days differnce under mis log criteria. mis_table_log will be checked.");
+							logger.info(messageResourceBundle.getMessage("mis.log.criteria.message"));
+
 						} else {
-							logger.info("Days differnce is not under mis log criteria");
+							logger.info(messageResourceBundle.getMessage("not.mis.log.criteria.message"));
+
 						}
 					} catch (Exception pex) {
-						logger.info(pex + " while Checking days difference.");
+						logger.info(messageResourceBundle.getMessage("days.difference.check.message"), pex);
+
 						mis_log = true;
 					}
 				} else if (reportType.equalsIgnoreCase("Monthly")) {
@@ -155,12 +165,12 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 						if (daysDifference(customReportDTO.getSyear() + "-" + customReportDTO.getSmonth() + "-"
 								+ customReportDTO.getSday()) > 2) {
 							mis_log = true;
-							logger.info("Days differnce under mis log criteria. mis_table_log will be checked.");
+							logger.info(messageResourceBundle.getMessage("mis.log.criteria.message"));
 						} else {
-							logger.info("Days differnce is not under mis log criteria");
+							logger.info(messageResourceBundle.getMessage("not.mis.log.criteria.message"));
 						}
 					} catch (Exception pex) {
-						logger.info(pex + " while Checking days difference.");
+						logger.info(messageResourceBundle.getMessage("days.difference.check.message"), pex);
 						mis_log = true;
 					}
 				}
@@ -193,7 +203,8 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 				}
 				if (user.getRole().equalsIgnoreCase("superadmin") || user.getRole().equalsIgnoreCase("system")) {
 					if (username.equals("%")) {
-						System.out.println(username + " Checking mis Records For All Users");
+						logger.info(messageResourceBundle.getMessage("checking.mis.records.all.users.message"), username);
+
 						// Check Users From mis_table
 						String check_user_sql = "select distinct(username) from mis_table " + mis_conditionStr;
 						List<String> recent_users = getSubmissionUsers(check_user_sql);
@@ -213,7 +224,8 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 							}
 						}
 					} else {
-						System.out.println(username + " Checking mis Records For: " + username);
+						logger.info(messageResourceBundle.getMessage("checking.mis.records.for.user.message"),username ,username);
+
 						// Query from User's relative mis
 						mis_sql = mis_select + " from mis_" + username + mis_conditionStr + mis_condition_opt
 								+ mis_groupbyStr + mis_orderbyStr;
@@ -222,7 +234,7 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 				} else if (user.getRole().equalsIgnoreCase("admin") || user.getRole().equalsIgnoreCase("manager")
 						|| user.getRole().equalsIgnoreCase("seller")) {
 					if (username.equals("%")) {
-						System.out.println(username + " Checking mis Records For All Users");
+						logger.info(messageResourceBundle.getMessage("checking.mis.records.all.users.message"), username);
 						// Get Users List From Usermaster Under this admin
 						List<String> users = null;
 						if (user.getRole().equalsIgnoreCase("admin")) {
@@ -250,19 +262,20 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 								mis_sql_list.put(underuserinfo, mis_sql);
 							}
 						} else {
-							logger.error("No Users Found Under " + user.getSystemId() + " [" + user.getRole() + "]");
-							throw new EntryNotFoundException(
-									"No Users Found Under " + user.getSystemId() + " [" + user.getRole() + "]");
+							logger.error(messageResourceBundle.getMessage("no.users.found.error"), user.getSystemId(), user.getRole());
+
+							throw new EntryNotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NO_USERS_FOUND_UNDER_MESSAGE, new Object[] {user.getSystemId(),user.getRole()})) ;
+
 						}
 					} else {
-						System.out.println(user.getSystemId() + " Checking mis Records For: " + username);
+						logger.info(messageResourceBundle.getMessage("checking.mis.records.for.user.message"),user.getSystemId() ,username);
 						// Query from User's relative mis
 						mis_sql = mis_select + " from mis_" + username + mis_conditionStr + mis_condition_opt
 								+ mis_groupbyStr + mis_orderbyStr;
 						mis_sql_list.put(username, mis_sql);
 					}
 				} else {
-					System.out.println(user.getSystemId() + " Checking mis Records For: " + username);
+					logger.info(messageResourceBundle.getMessage("checking.mis.records.for.user.message"),user.getSystemId() ,username);
 					// Query from User's relative mis
 					mis_sql = mis_select + " from mis_" + user.getSystemId() + mis_conditionStr + mis_condition_opt
 							+ mis_groupbyStr + mis_orderbyStr;
@@ -270,7 +283,8 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 					logger.info(user.getSystemId() + ": " + mis_sql);
 				}
 			} else {
-				logger.info("No Checking From Mis_table");
+				logger.info(messageResourceBundle.getMessage("no.checking.from.mis.table.message"));
+
 			}
 			// ************** Preparing SQL For Unprocessed *******************************
 			String selectStr = "select count(msg_id) as count,date(time) as timing";
@@ -316,7 +330,8 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 					if (users != null) {
 						conditionStr += "username in('" + String.join("','", users) + "') and ";
 					} else {
-						logger.error("No Users Found Under " + user.getSystemId() + " [" + user.getRole() + "]");
+						logger.error(messageResourceBundle.getMessage("no.users.found.message"), user.getSystemId(), user.getRole());
+
 						throw new EntryNotFoundException(
 								"No Users Found Under " + user.getSystemId() + " [" + user.getRole() + "]");
 					}
@@ -404,7 +419,8 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 			long grandTotal = 0;
 			while (itr.hasNext()) {
 				String date = itr.next();
-				System.out.println("SubmitReport Processing For: " + date);
+				logger.info(messageResourceBundle.getMessage("submit.report.processing.message"), date);
+
 				List<CustomReportDTO> list = reportmap.get(date);
 				Iterator<CustomReportDTO> listItr = list.iterator();
 				long count = 0;
@@ -662,7 +678,8 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 			logger.info(username + " reportList: " + reportList.size());
 			if (reportList.isEmpty()) {
 				target = IConstants.FAILURE_KEY;
-				throw new NotFoundException("user Submission report not found with username {}" + username);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_SUBMISSION_REPORT_NOT_FOUND_MESSAGE, new Object[] {username}));
+
 				// message = new ActionMessage("error.record.unavailable");
 			} else {
 				System.out.println("Report Size: " + reportList.size());
@@ -674,7 +691,8 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 			// logger.error(user.getSystemId(), ex.fillInStackTrace());
 			ex.printStackTrace();
 			target = IConstants.FAILURE_KEY;
-			throw new InternalServerException("Error: getting error in submission report with username {}" + username);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_SUBMISSION_REPORT_MESSAGE, new Object[] {username}));
+
 		}
 
 	}
@@ -693,7 +711,8 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 			pStmt.setFetchSize(Integer.MIN_VALUE);
 			while (!sql_list.isEmpty()) {
 				String sql = (String) sql_list.remove(0);
-			 logger.info("SQL getSubmissionReport => " + sql);
+				logger.info(messageResourceBundle.getMessage("sql.get.submission.report.message"), sql);
+
 
 				rs = pStmt.executeQuery(sql);
 				while (rs.next()) {
@@ -927,7 +946,8 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 	private long daysDifference(String inputtxt) throws IOException, ParseException {
 		Date inputDate = new SimpleDateFormat("yyyy-MM-dd").parse(inputtxt);
 		long days = ChronoUnit.DAYS.between(inputDate.toInstant(), new Date().toInstant());
-		logger.info(inputtxt + " Difference From Today: " + days);
+		logger.info(messageResourceBundle.getMessage("difference.from.today.message"), inputtxt, days);
+
 		return days;
 	}
 }

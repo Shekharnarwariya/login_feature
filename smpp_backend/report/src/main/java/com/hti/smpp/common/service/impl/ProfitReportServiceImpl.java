@@ -49,9 +49,11 @@ import com.hti.smpp.common.service.UserDAService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.servlet.http.HttpServletResponse;
@@ -87,6 +89,8 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 
 	@Autowired
 	private DataSource dataSource;
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
@@ -105,11 +109,11 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
-		System.out.println(user);
+		//System.out.println(user);
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
 			List<ProfitReportEntry> print = getProfitReportList(customReportForm, false, user, lang);
@@ -123,18 +127,21 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 //				// Return the file in the ResponseEntity
 //				return new ResponseEntity<>(pdfReport, headers, HttpStatus.OK);
 			if (print != null && !print.isEmpty()) {
-				logger.info(user.getSystemId() + " ReportSize[View]:" + print.size());
+				logger.info(messageResourceBundle.getMessage("report.size.view.message"), user.getSystemId(), print.size());
+
 				// JasperPrint print = dataBase.getJasperPrint(reportList, false, username);
-				logger.info(user.getSystemId() + " <-- Report Finished --> ");
+				logger.info(messageResourceBundle.getMessage("report.finished.message"), user.getSystemId());
+
 			return new ResponseEntity<>(print, HttpStatus.OK);
 			
 			} else {
-				throw new NotFoundException("Profit report not found with username: " + username);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PROFIT_REPORT_NOT_FOUND_MESSAGE , new Object[] {username}));
+
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
-			throw new InternalServerException(
-					"Error: Getting error in profit report for view with username: " + username);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_PROFIT_REPORT_MESSAGE , new Object[] {username}));
+
 		}
 	}
 
@@ -147,11 +154,14 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 			locale = Customlocale.getLocaleByLanguage(lang);
 			JasperPrint print = null;// getProfitReportList(customReportForm, false, lang, username);
 			if (print != null) {
-				System.out.println("<-- Preparing Outputstream --> ");
+				logger.info(messageResourceBundle.getMessage("preparing.outputstream.message"),username);
+
 				String reportName = "Profit_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".xlsx";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				System.out.println("<-- Creating XLS --> ");
+				
+				logger.info(messageResourceBundle.getMessage("creating.xls.message"),username);
+
 				// OutputStream out = response.getOutputStream();
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
 				JRExporter exporter = new JRXlsxExporter();
@@ -164,19 +174,21 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 					try {
 						out.close();
 					} catch (Exception ioe) {
-						System.out.println("XLS OutPutSream Closing Error");
+						logger.error(messageResourceBundle.getMessage("xls.outputstream.error.message"),username);
+
 					}
 				}
-				System.out.println("<-- Finished --> ");
+				logger.error(messageResourceBundle.getMessage("finish.message"));
 				target = IConstants.SUCCESS_KEY;
 				return ResponseEntity.ok().body(out.toByteArray());
 			} else {
-				throw new NotFoundException("Profit report xls not found with username: " + username);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PROFIT_REPORT_XLS_NOT_FOUND_MESSAGE, new Object[] {username}));
+
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new InternalServerException(
-					"Error: Getting error in profit report in xls with username: " + username);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_PROFIT_REPORT_XLS_MESSAGE , new Object[] {username}));
+
 		}
 //		return target;
 	}
@@ -191,11 +203,12 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 
 			JasperPrint print = null;// getProfitReportList(customReportForm, false, lang, username);
 			if (print != null) {
-				System.out.println("<-- Preparing Outputstream --> ");
+				logger.info(messageResourceBundle.getMessage("preparing.outputstream.message"),username);
 				String reportName = "profit_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".pdf";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				System.out.println("<-- Creating PDF --> ");
+				logger.info(messageResourceBundle.getMessage("creating.pdf.message"));
+
 				OutputStream out = response.getOutputStream();
 				JRExporter exporter = new JRPdfExporter();
 				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
@@ -205,19 +218,21 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 					try {
 						out.close();
 					} catch (Exception e) {
-						System.out.println("PDF OutPutSream Closing Error");
+						logger.error(messageResourceBundle.getMessage("pdf.outputstream.closing.error.message"),username);
+
 					}
 				}
-				System.out.println("<-- Finished --> ");
+				logger.error(messageResourceBundle.getMessage("finish.message"));
 				target = IConstants.SUCCESS_KEY;
 				// return new ResponseEntity<>(response, out, HttpStatus.OK);
 			} else {
-				throw new NotFoundException("Profit report pdf not found with username: " + username);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PROFIT_REPORT_PDF_NOT_FOUND_MESSAGE, new Object[] {username}));
+
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new InternalServerException(
-					"Error: Getting error in profit report in pdf with username: " + username);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_PROFIT_REPORT_PDF_MESSAGE, new Object[] {username}));
+
 
 		}
 		return null;
@@ -232,11 +247,12 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 			locale = Customlocale.getLocaleByLanguage(lang);
 			JasperPrint print = null;// getProfitReportList(customReportForm, false, lang, username);
 			if (print != null) {
-				System.out.println("<-- Preparing Outputstream --> ");
+				logger.info(messageResourceBundle.getMessage("preparing.outputstream.message"),username);
 				String reportName = "profit_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".doc";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				System.out.println("<-- Creating DOC --> ");
+				logger.info(messageResourceBundle.getMessage("creating.doc.message"));
+
 				OutputStream out = response.getOutputStream();
 				JRExporter exporter = new JRDocxExporter();
 				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
@@ -246,18 +262,19 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 					try {
 						out.close();
 					} catch (Exception ioe) {
-						System.out.println("DOC OutPutSream Closing Error");
+						logger.error(messageResourceBundle.getMessage("doc.outputstream.closing.error.message"),username);
+
 					}
 				}
-				System.out.println("<-- Finished --> ");
+				logger.error(messageResourceBundle.getMessage("finish.message"));
 				target = IConstants.SUCCESS_KEY;
 			} else {
-				throw new NotFoundException("Profit report doc not found with username: " + username);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PROFIT_REPORT_DOC_NOT_FOUND_MESSAGE , new Object[] {username}));
+
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new InternalServerException(
-					"Error: Getting error in profit report in pdf with username: " + username);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_PROFIT_REPORT_PDF_MESSAGE, new Object[] {username}));
 
 		}
 
@@ -291,7 +308,9 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 
 		List<ProfitReportEntry> list = listProfitReport(rc);
 		if (list.isEmpty()) {
-			logger.info(user.getSystemId() + " <-- No Report Data Found --> ");
+			logger.info(messageResourceBundle.getMessage("no.report.data.found.message"), user.getSystemId());
+
+
 			return null;
 		}
 				
@@ -443,7 +462,8 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 				username = rs.getString("system_id");
 			}
 		} catch (SQLException sqle) {
-			logger.error(userId + "", sqle);
+			logger.error(messageResourceBundle.getMessage("sql.error.message"), userId, sqle);
+
 		} finally {
 			try {
 				if (rs != null) {

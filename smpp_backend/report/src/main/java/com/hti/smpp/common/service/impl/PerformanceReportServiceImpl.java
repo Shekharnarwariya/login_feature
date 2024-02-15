@@ -45,9 +45,11 @@ import com.hti.smpp.common.smsc.repository.SmscEntryRepository;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 import jakarta.servlet.http.HttpServletResponse;
 import net.sf.jasperreports.engine.JRExporter;
@@ -86,6 +88,9 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 
 	@Autowired
 	private SmscEntryRepository smscEntryRepository;
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
@@ -97,25 +102,30 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
 
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
+				logger.info(messageResourceBundle.getMessage("report.size"), reportList.size());
+
+				JasperPrint print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
 				System.out.println("Report Size: " + reportList.size());
 				List<DeliveryDTO> print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
 				target = IConstants.SUCCESS_KEY;
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
-				throw new NotFoundException("performance report not found with username {}" + username);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PERFORMANCE_REPORT_NOT_FOUND_MESSAGE, new Object[] {username}));
+
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new InternalServerException("Error: getting error in performance report with username {}" + username);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_PERFORMANCE_REPORT_MESSAGE,new Object[] {username}));
+
 		}
 
 	}
@@ -126,15 +136,19 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
 
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
+				logger.info(messageResourceBundle.getMessage("report.size.message"), reportList.size());
+
+				JasperPrint print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
+				logger.info(messageResourceBundle.getMessage("preparing.outputstream.message"),user.getSystemId());
 				System.out.println("Report Size: " + reportList.size());
 				List<DeliveryDTO>  print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
 				System.out.println("<-- Preparing Outputstream --> ");
@@ -142,7 +156,8 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 						+ ".xlsx";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				System.out.println("<-- Creating XLS --> ");
+				logger.info(messageResourceBundle.getMessage("creating.xls.message"),user.getSystemId());
+
 				OutputStream out = response.getOutputStream();
 				JRExporter exporter = new JRXlsxExporter();
 				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
@@ -154,19 +169,23 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 					try {
 						out.close();
 					} catch (Exception e) {
-						System.out.println("XLS OutPutSream Closing Error");
+						logger.error(messageResourceBundle.getMessage("xls.outputstream.error"));
+
 					}
 				}
-				System.out.println("<-- Finished --> ");
+				logger.info(messageResourceBundle.getMessage("finish.message"));
+
 				target = IConstants.SUCCESS_KEY;
 			} else {
-				throw new NotFoundException(" performance report not found with username {}" + username);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PERFORMANCE_REPORT_NOT_FOUND_MESSAGE, new Object[] {username}));
+
 
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 
-			throw new InternalServerException("Error: getting error in performance report with username {}" + username);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_PERFORMANCE_REPORT_MESSAGE, new Object[] {username}));
+
 		}
 		return null;
 	}
@@ -177,15 +196,19 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
 
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
+				logger.info(messageResourceBundle.getMessage("report.size.message"), reportList.size());
+
+				JasperPrint print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
+				logger.info(messageResourceBundle.getMessage("preparing.outputstream.message"),user.getSystemId());
 				System.out.println("Report Size: " + reportList.size());
 				List<DeliveryDTO>  print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
 				System.out.println("<-- Preparing Outputstream --> ");
@@ -193,7 +216,8 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 						+ ".pdf";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				System.out.println("<-- Creating PDF --> ");
+				logger.info(messageResourceBundle.getMessage("creating.pdf.message"));
+
 				OutputStream out = response.getOutputStream();
 				JRExporter exporter = new JRPdfExporter();
 				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
@@ -203,17 +227,21 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 					try {
 						out.close();
 					} catch (Exception e) {
-						System.out.println("PDF OutPutSream Closing Error");
+						logger.error(messageResourceBundle.getMessage("pdf.outputstream.error"));
+
 					}
 				}
-				System.out.println("<-- Finished --> ");
+				logger.info(messageResourceBundle.getMessage("finish.message"));
+
 				target = IConstants.SUCCESS_KEY;
 			} else {
-				throw new NotFoundException(" performance report not found with username {}" + username);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PERFORMANCE_REPORT_NOT_FOUND_MESSAGE , new Object[] {username}));
+
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new InternalServerException("Error: getting error in performance report with username {}" + username);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_PERFORMANCE_REPORT_MESSAGE, new Object[] {username}));
+
 		}
 		return null;
 	}
@@ -224,23 +252,31 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
 
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
+
+				logger.info(messageResourceBundle.getMessage("report.size.message"), reportList.size());
+
+				JasperPrint print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
+				logger.info(messageResourceBundle.getMessage("preparing.outputstream.message"),user.getSystemId());
+
 				System.out.println("Report Size: " + reportList.size());
 				List<DeliveryDTO>  print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
 				System.out.println("<-- Preparing Outputstream --> ");
+
 				String reportName = "performance_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0))
 						+ ".doc";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				System.out.println("<-- Creating DOC --> ");
+				logger.info(messageResourceBundle.getMessage("creating.doc.message"));
+
 				OutputStream out = response.getOutputStream();
 				JRExporter exporter = new JRDocxExporter();
 				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
@@ -250,17 +286,21 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 					try {
 						out.close();
 					} catch (Exception ioe) {
-						System.out.println("DOC OutPutSream Closing Error");
+						logger.error(messageResourceBundle.getMessage("doc.outputstream.error"));
+
 					}
 				}
-				System.out.println("<-- Finished --> ");
+				logger.info(messageResourceBundle.getMessage("finish.message"));
+
 				target = IConstants.SUCCESS_KEY;
 			} else {
-				throw new NotFoundException(" performance report not found with username {}" + username);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PERFORMANCE_REPORT_NOT_FOUND_MESSAGE , new Object[] {username}));
+
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new InternalServerException("Error: getting error in performance report with username {}" + username);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_PERFORMANCE_REPORT_MESSAGE, new Object[] {username}));
+
 		}
 		return null;
 	}
@@ -308,7 +348,8 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 				sql += "and oprCountry in (" + oprCountry + ")";
 			}
 		}
-		System.out.println("SQL: " + sql);
+		logger.info(messageResourceBundle.getMessage("sql.message"), sql);
+
 		list = getSmscStatusReport(sql);
 		return list;
 	}
@@ -368,15 +409,22 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 		return list;
 	}
 
+
+	private JasperPrint getJasperPrint(List<DeliveryDTO> reportList, boolean paging, String groupBy) throws Exception {
+		logger.info(messageResourceBundle.getMessage("creating.design.message"));
+
+
 	private List<DeliveryDTO> getJasperPrint(List<DeliveryDTO> reportList, boolean paging, String groupBy){
 		System.out.println("Creating Design");
+
 		Map<String, SmscEntry> smscEntries = list();
 
 		List<DeliveryDTO> pi_chart_list = new ArrayList<DeliveryDTO>();
 		List<DeliveryDTO> bar_chart_list = new ArrayList<DeliveryDTO>();
 		List<DeliveryDTO> final_list = new ArrayList<DeliveryDTO>();
 		JasperDesign design = null;
-		System.out.println("<-- Preparing Charts --> ");
+		logger.info(messageResourceBundle.getMessage("creating.design.message"));
+
 		if (groupBy.equalsIgnoreCase("Smsc")) {
 			//design = JRXmlLoader.load(template_file_smsc);
 			Map<String, Map<String, DeliveryDTO>> smsc_key_map = new TreeMap<String, Map<String, DeliveryDTO>>();
@@ -607,10 +655,16 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 				final_list.addAll(personStream.collect(Collectors.toList()));
 			}
 		} else {
-			System.out.println("Invalid GroupBy : " + groupBy);
+			logger.info(messageResourceBundle.getMessage("invalid.groupby.message"), groupBy);
+
 		}
+
+		
+		JasperReport report = JasperCompileManager.compileReport(design);
+
 		System.out.println("<--- Compiling -->");
 		//JasperReport report = JasperCompileManager.compileReport(design);
+
 		// -------------------------------------------------------------
 		JRBeanCollectionDataSource piechartDataSource = new JRBeanCollectionDataSource(pi_chart_list);
 		JRBeanCollectionDataSource barchart1DataSource = new JRBeanCollectionDataSource(bar_chart_list);
@@ -621,9 +675,16 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 		parameters.put("barchart1DataSource", barchart1DataSource);
 		ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);
 		parameters.put("REPORT_RESOURCE_BUNDLE", bundle);
+
+		logger.info(messageResourceBundle.getMessage("processing.report.data.message"));
+
+		JasperPrint print = JasperFillManager.fillReport(report, parameters, beanColDataSource);
+		return print;
+
 		System.out.println("<-- filling report data --> ");
 		//JasperPrint print = JasperFillManager.fillReport(report, parameters, beanColDataSource);
 		return final_list;
+
 	}
 
 	public Map<String, SmscEntry> list() {
