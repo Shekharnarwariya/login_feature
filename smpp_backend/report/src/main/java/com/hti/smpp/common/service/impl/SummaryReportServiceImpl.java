@@ -130,11 +130,11 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 		}
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
-			logger.info(messageResourceBundle.getMessage("run.summary.report.view.message"));
+			logger.info(messageResourceBundle.getLogMessage("run.summary.report.view.message"));
 
 			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry, lang);
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("report.size.view.message"), user.getSystemId(), reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(), reportList.size());
 
 //				JasperPrint print = getJasperPrint(reportList, username, false, lang);
 //				logger.info(user.getSystemId() + " <-- Report Finished --> ");
@@ -174,11 +174,11 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry, lang);
 
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("xls.report.size.message"), user.getSystemId(), reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("xls.report.size.message"), user.getSystemId(), reportList.size());
 
 
 				JasperPrint print = getJasperPrint(reportList, username, false, lang);
-				logger.info(messageResourceBundle.getMessage("report.finished.message"), user.getSystemId());
+				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
 
 				byte[] xlsReport = generateXLSReport(print);
 
@@ -233,10 +233,10 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry, lang);
 
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("xls.report.size.message"), user.getSystemId(), reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("xls.report.size.message"), user.getSystemId(), reportList.size());
 
 				JasperPrint print = getJasperPrint(reportList, username, false, lang);
-				logger.info(messageResourceBundle.getMessage("report.finished.message"), user.getSystemId());
+				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
 				byte[] pdfReport = generatePDFReport(print);
 
 				HttpHeaders headers = new HttpHeaders();
@@ -285,11 +285,11 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry, lang);
 
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("report.size.doc.message"), user.getSystemId(), reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.size.doc.message"), user.getSystemId(), reportList.size());
 
 
 				JasperPrint print = getJasperPrint(reportList, username, false, lang);
-				logger.info(messageResourceBundle.getMessage("report.finished.message"), user.getSystemId());
+				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
 
 				byte[] docReport = generateDocReport(print);
 
@@ -326,13 +326,13 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 	private JasperPrint getJasperPrint(List reportList, String username, boolean paging, String lang) throws Exception {
 
 		locale = Customlocale.getLocaleByLanguage(lang);
-		logger.info(messageResourceBundle.getMessage("creating.design.message"));
+		logger.info(messageResourceBundle.getLogMessage("creating.design.message"));
 
 		JasperDesign design = JRXmlLoader.load(template_file);
-		logger.info(messageResourceBundle.getMessage("compiling.source.format.message"));
+		logger.info(messageResourceBundle.getLogMessage("compiling.source.format.message"));
 
 		JasperReport report = JasperCompileManager.compileReport(design);
-		logger.info(messageResourceBundle.getMessage("preparing.chart.data.message"));
+		logger.info(messageResourceBundle.getLogMessage("preparing.chart.data.message"));
 
 		// ------------- Preparing databeancollection for chart ------------------
 		Iterator itr = reportList.iterator();
@@ -461,7 +461,7 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 					if (users != null && !users.isEmpty()) {
 						sql += " and username in('" + String.join("','", users) + "')";
 					} else {
-						logger.info(messageResourceBundle.getMessage("no.user.found.message"), user.getSystemId(), user.getRole());
+						logger.info(messageResourceBundle.getLogMessage("no.user.found.message"), user.getSystemId(), user.getRole());
 
 						return null;
 					}
@@ -470,7 +470,7 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 				}
 			}
 		} else {
-			logger.info(messageResourceBundle.getMessage("batch.report.requested.message"), user.getSystemId());
+			logger.info(messageResourceBundle.getLogMessage("batch.report.requested.message"), user.getSystemId());
 
 			// boolean and = false;
 			sql += " where campaign_type like '" + customReportForm.getCampaignType() + "'";
@@ -497,7 +497,7 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 						if (users != null && !users.isEmpty()) {
 							sql += " and username in('" + String.join("','", users) + "')";
 						} else {
-							logger.info(messageResourceBundle.getMessage("no.user.found.message"), user.getSystemId(), user.getRole());
+							logger.info(messageResourceBundle.getLogMessage("no.user.found.message"), user.getSystemId(), user.getRole());
 							return null;
 						}
 					}

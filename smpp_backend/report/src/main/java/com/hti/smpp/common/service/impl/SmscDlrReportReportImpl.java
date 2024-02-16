@@ -214,7 +214,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 			}
 			if (reportList != null && !reportList.isEmpty()) {
 				int total_rec = reportList.size();
-				logger.info(messageResourceBundle.getMessage("xls.report.size.message"), username, total_rec);
+				logger.info(messageResourceBundle.getLogMessage("xls.report.size.message"), username, total_rec);
 
 				// ---------- Sorting list ----------------------------
 				reportList = sortListByCountry(reportList);
@@ -225,7 +225,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 					workbook = getWorkBook(reportList, username, webMasterEntry);
 				}
 				if (total_rec > 100000) {
-					logger.info(messageResourceBundle.getMessage("creating.zip.folder.message"), username);
+					logger.info(messageResourceBundle.getLogMessage("creating.zip.folder.message"), username);
 
 					response.setContentType("application/zip");
 					response.setHeader("Content-Disposition", "attachment; filename=" + "delivery_"
@@ -235,12 +235,12 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 					String reportName = "delivery.xlsx";
 					ZipEntry entry = new ZipEntry(reportName); // create a zip entry and add it to ZipOutputStream
 					zos.putNextEntry(entry);
-					logger.info(messageResourceBundle.getMessage("starting.zip.download.message"), username);
+					logger.info(messageResourceBundle.getLogMessage("starting.zip.download.message"), username);
 
 					workbook.write(zos);
 					zos.close();
 				} else {
-					logger.info(messageResourceBundle.getMessage("creating.xls.message"), username);
+					logger.info(messageResourceBundle.getLogMessage("creating.xls.message"), username);
 
 					String filename = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0))
 							+ ".xlsx";
@@ -250,7 +250,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 					// filename);
 					ByteArrayOutputStream bos = new ByteArrayOutputStream();
 					workbook.write(bos);
-					logger.info(messageResourceBundle.getMessage("reading.xls.message"), username);
+					logger.info(messageResourceBundle.getLogMessage("reading.xls.message"), username);
 
 					InputStream is = null;
 					OutputStream out = null;
@@ -259,14 +259,14 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 						// byte[] buffer = new byte[8789];
 						int curByte = -1;
 						out = response.getOutputStream();
-						logger.info(messageResourceBundle.getMessage("starting.xls.download.message"), username);
+						logger.info(messageResourceBundle.getLogMessage("starting.xls.download.message"), username);
 
 						while ((curByte = is.read()) != -1) {
 							out.write(curByte);
 						}
 						out.flush();
 					} catch (Exception ex) {
-						logger.error(messageResourceBundle.getMessage("dlr.xlsreport.error.message"), username);
+						logger.error(messageResourceBundle.getLogMessage("dlr.xlsreport.error.message"), username);
 
 						// ex.printStackTrace();
 					} finally {
@@ -283,14 +283,14 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 				}
 				workbook.close();
 				reportList.clear();
-				logger.info(messageResourceBundle.getMessage("xls.report.finished.message"), username);
+				logger.info(messageResourceBundle.getLogMessage("xls.report.finished.message"), username);
 
 				target = reportList;
 			} else {
 				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_DLR_REPORT_NOT_FOUND_MESSAGE, new Object[] {username}));
 			}
 		} catch (Exception e) {
-			logger.error(messageResourceBundle.getMessage("error.message"), username);
+			logger.error(messageResourceBundle.getLogMessage("error.message"), username);
 
 			throw new InternalServerException("Error: " + e.getMessage());
 

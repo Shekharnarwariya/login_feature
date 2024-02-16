@@ -229,9 +229,9 @@ public class TrackResultServiceImpl implements TrackResultService {
 			if (smscinSQL.length() > 0) {
 				String smscin_stmt = "select * from smsc_in where " + smscinSQL + " order by time";
 				String smscin_log_stmt = "select * from host_zlog.smsc_in_log where " + smscinSQL + " order by time";
-				logger.info(messageResourceBundle.getMessage("smsc.in.message"), smscin_stmt);
+				logger.info(messageResourceBundle.getLogMessage("smsc.in.message"), smscin_stmt);
 
-				logger.info(messageResourceBundle.getMessage("smscin.log.message"), smscin_log_stmt);
+				logger.info(messageResourceBundle.getLogMessage("smscin.log.message"), smscin_log_stmt);
 
 				Map inmap = getSmscInRecord(smscin_stmt);
 				Map inLogmap = getSmscInRecord(smscin_log_stmt);
@@ -269,7 +269,7 @@ public class TrackResultServiceImpl implements TrackResultService {
 					userPrefix.put(smscin.getUsername(), prefixSet);
 					// ---------------End Getting User's Disctinct Prefix Routing ---------
 				}
-				logger.info(messageResourceBundle.getMessage("smscin.record.size.message"), smscinlist.size());
+				logger.info(messageResourceBundle.getLogMessage("smscin.record.size.message"), smscinlist.size());
 
 			}
 			// -------------- Finished For Smsc_in Records ---------------------
@@ -282,7 +282,7 @@ public class TrackResultServiceImpl implements TrackResultService {
 					while (itr.hasNext()) {
 						String username1 = (String) itr.next();
 						mis_stmt += "select * from mis_" + username1 + " where " + misSQL + " order by submitted_time";
-						logger.info(messageResourceBundle.getMessage("mis.message"), mis_stmt);
+						logger.info(messageResourceBundle.getLogMessage("mis.message"), mis_stmt);
 
 						List temp_list = getMisRecord(mis_stmt);
 						if (temp_list != null && !temp_list.isEmpty()) {
@@ -320,7 +320,7 @@ public class TrackResultServiceImpl implements TrackResultService {
 					}
 					i++;
 				}
-				logger.info(messageResourceBundle.getMessage("routing.sql.message"), routingSQL);
+				logger.info(messageResourceBundle.getLogMessage("routing.sql.message"), routingSQL);
 
 				if (routingSQL.length() > 0) {
 					// RoutingList = dbService.getRoutingRecord(routingSQL);
