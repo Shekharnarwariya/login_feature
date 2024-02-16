@@ -35,7 +35,7 @@ public class ReportDAOImpl implements ReportDAO {
 		this.sessionFactory = sessionFactory;
 	}
 	public List<ProfitReportEntry> listProfitReport(ReportCriteria rc) {
-		logger.info(messageResourceBundle.getMessage("listing.profit.result.entries.message"), rc);
+		logger.info(messageResourceBundle.getLogMessage("listing.profit.result.entries.message"), rc);
 
 	    Session session = null;
 
@@ -65,7 +65,7 @@ public class ReportDAOImpl implements ReportDAO {
 	        // Execute the query
 	        List<ProfitReportEntry> list = session.createQuery(query).getResultList();
 
-	        logger.info(messageResourceBundle.getMessage("profit.report.entries.message"), list.size());
+	        logger.info(messageResourceBundle.getLogMessage("profit.report.entries.message"), list.size());
 
 
 	        // You might need to handle the connection accordingly based on your

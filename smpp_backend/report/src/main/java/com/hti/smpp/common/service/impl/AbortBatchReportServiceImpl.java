@@ -87,7 +87,7 @@ public class AbortBatchReportServiceImpl implements AbortBatchReportService {
 				return reportList;
 			} else {
 				target = IConstants.FAILURE_KEY;
-				throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND));
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 
 				
 			}
@@ -102,12 +102,12 @@ public class AbortBatchReportServiceImpl implements AbortBatchReportService {
 	        logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
 
 	        
-	        throw new BadRequestException(messageResourceBundle.getMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] {e.getMessage()}));
+	        throw new BadRequestException(messageResourceBundle.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] {e.getMessage()}));
 	        } catch (Exception e) {
 	        // Log other exceptions
 	        logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
 
-	        throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.INTERNAL_SERVER_EXCEPTION_MESSAGE,new Object[] {username}));
+	        throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_EXCEPTION_MESSAGE,new Object[] {username}));
 
 	        }
 
@@ -117,7 +117,7 @@ public class AbortBatchReportServiceImpl implements AbortBatchReportService {
 		UserDAService userDAService = new UserDAServiceImpl();
 		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(id);
 		if (webMasterEntry == null) {
-			 throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NOT_FOUND_EXCEPTION_MESSAGE,new Object[] {id}));
+			 throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND_EXCEPTION_MESSAGE,new Object[] {id}));
 
 		}
 

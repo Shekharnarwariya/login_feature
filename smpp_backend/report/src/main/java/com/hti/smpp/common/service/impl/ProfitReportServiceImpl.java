@@ -127,10 +127,10 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 //				// Return the file in the ResponseEntity
 //				return new ResponseEntity<>(pdfReport, headers, HttpStatus.OK);
 			if (print != null && !print.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("report.size.view.message"), user.getSystemId(), print.size());
+				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(), print.size());
 
 				// JasperPrint print = dataBase.getJasperPrint(reportList, false, username);
-				logger.info(messageResourceBundle.getMessage("report.finished.message"), user.getSystemId());
+				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
 
 			return new ResponseEntity<>(print, HttpStatus.OK);
 			
@@ -154,13 +154,13 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 			locale = Customlocale.getLocaleByLanguage(lang);
 			JasperPrint print = null;// getProfitReportList(customReportForm, false, lang, username);
 			if (print != null) {
-				logger.info(messageResourceBundle.getMessage("preparing.outputstream.message"),username);
+				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"),username);
 
 				String reportName = "Profit_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".xlsx";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
 				
-				logger.info(messageResourceBundle.getMessage("creating.xls.message"),username);
+				logger.info(messageResourceBundle.getLogMessage("creating.xls.message"),username);
 
 				// OutputStream out = response.getOutputStream();
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -174,11 +174,11 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 					try {
 						out.close();
 					} catch (Exception ioe) {
-						logger.error(messageResourceBundle.getMessage("xls.outputstream.error.message"),username);
+						logger.error(messageResourceBundle.getLogMessage("xls.outputstream.error.message"),username);
 
 					}
 				}
-				logger.error(messageResourceBundle.getMessage("finish.message"));
+				logger.error(messageResourceBundle.getLogMessage("finish.message"));
 				target = IConstants.SUCCESS_KEY;
 				return ResponseEntity.ok().body(out.toByteArray());
 			} else {
@@ -203,11 +203,11 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 
 			JasperPrint print = null;// getProfitReportList(customReportForm, false, lang, username);
 			if (print != null) {
-				logger.info(messageResourceBundle.getMessage("preparing.outputstream.message"),username);
+				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"),username);
 				String reportName = "profit_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".pdf";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				logger.info(messageResourceBundle.getMessage("creating.pdf.message"));
+				logger.info(messageResourceBundle.getLogMessage("creating.pdf.message"));
 
 				OutputStream out = response.getOutputStream();
 				JRExporter exporter = new JRPdfExporter();
@@ -218,11 +218,11 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 					try {
 						out.close();
 					} catch (Exception e) {
-						logger.error(messageResourceBundle.getMessage("pdf.outputstream.closing.error.message"),username);
+						logger.error(messageResourceBundle.getLogMessage("pdf.outputstream.closing.error.message"),username);
 
 					}
 				}
-				logger.error(messageResourceBundle.getMessage("finish.message"));
+				logger.error(messageResourceBundle.getLogMessage("finish.message"));
 				target = IConstants.SUCCESS_KEY;
 				// return new ResponseEntity<>(response, out, HttpStatus.OK);
 			} else {
@@ -247,11 +247,11 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 			locale = Customlocale.getLocaleByLanguage(lang);
 			JasperPrint print = null;// getProfitReportList(customReportForm, false, lang, username);
 			if (print != null) {
-				logger.info(messageResourceBundle.getMessage("preparing.outputstream.message"),username);
+				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"),username);
 				String reportName = "profit_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".doc";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				logger.info(messageResourceBundle.getMessage("creating.doc.message"));
+				logger.info(messageResourceBundle.getLogMessage("creating.doc.message"));
 
 				OutputStream out = response.getOutputStream();
 				JRExporter exporter = new JRDocxExporter();
@@ -262,11 +262,11 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 					try {
 						out.close();
 					} catch (Exception ioe) {
-						logger.error(messageResourceBundle.getMessage("doc.outputstream.closing.error.message"),username);
+						logger.error(messageResourceBundle.getLogMessage("doc.outputstream.closing.error.message"),username);
 
 					}
 				}
-				logger.error(messageResourceBundle.getMessage("finish.message"));
+				logger.error(messageResourceBundle.getLogMessage("finish.message"));
 				target = IConstants.SUCCESS_KEY;
 			} else {
 				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.PROFIT_REPORT_DOC_NOT_FOUND_MESSAGE , new Object[] {username}));
@@ -308,7 +308,7 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 
 		List<ProfitReportEntry> list = listProfitReport(rc);
 		if (list.isEmpty()) {
-			logger.info(messageResourceBundle.getMessage("no.report.data.found.message"), user.getSystemId());
+			logger.info(messageResourceBundle.getLogMessage("no.report.data.found.message"), user.getSystemId());
 
 
 			return null;
@@ -462,7 +462,7 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 				username = rs.getString("system_id");
 			}
 		} catch (SQLException sqle) {
-			logger.error(messageResourceBundle.getMessage("sql.error.message"), userId, sqle);
+			logger.error(messageResourceBundle.getLogMessage("sql.error.message"), userId, sqle);
 
 		} finally {
 			try {

@@ -136,7 +136,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 			List<DeliveryDTO> reportList = getDlrReportList(customReportForm, username, lang);
 
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("report.view.size.message"), user, reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.view.size.message"), user, reportList.size());
 
 				JasperPrint print = getdlrSummaryJasperPrint(reportList, false, username);
 
@@ -148,7 +148,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 				headers.setContentType(MediaType.APPLICATION_PDF);
 				headers.setContentDispositionFormData("attachment", "DlrSummaryReport.pdf");
 
-				logger.info(messageResourceBundle.getMessage("report.finished.message"), username);
+				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), username);
 
 					
 				// Return PDF file in the response body
@@ -163,7 +163,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 
 		} catch (Exception e) {
 			// Handle other general exceptions
-			logger.error(messageResourceBundle.getMessage("unexpected.error.message"), e.getMessage(), e);
+			logger.error(messageResourceBundle.getLogMessage("unexpected.error.message"), e.getMessage(), e);
 
 			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.GETTING_ERROR_DLR_SUMMARY_REPORT_MESSAGE , new Object[] {username}));
 
@@ -190,10 +190,10 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 
 			List<DeliveryDTO> reportList = getDlrReportList(customReportForm, username, lang);
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("report.size.doc.message"), username, reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.size.doc.message"), username, reportList.size());
 
 				JasperPrint print = getdlrSummaryJasperPrint(reportList, false, username);
-				logger.info(messageResourceBundle.getMessage("preparing.outputstream.message"), username);
+				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), username);
 
 
 				// Generate a unique filename based on the current timestamp
@@ -203,7 +203,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 				response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
 
-				logger.info(messageResourceBundle.getMessage("creating.docx.message"), username);
+				logger.info(messageResourceBundle.getLogMessage("creating.docx.message"), username);
 
 
 				// Create the DOCX file and write it to the response output stream
@@ -247,7 +247,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(username + " ReportSize[pdf]:" + reportList.size());
 				JasperPrint print = getdlrSummaryJasperPrint(reportList, false, username);
-				logger.info(messageResourceBundle.getMessage("preparing.outputstream.message"), username);
+				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), username);
 
 				// Generate a unique filename based on the current timestamp
 				String reportName = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".xls";
@@ -256,7 +256,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 				response.setContentType("application/vnd.ms-excel");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
 
-				logger.info(messageResourceBundle.getMessage("creating.xls.message"), username);
+				logger.info(messageResourceBundle.getLogMessage("creating.xls.message"), username);
 
 
 				// Create the XLS file and write it to the response output stream
@@ -271,12 +271,12 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 					try {
 						out.close();
 					} catch (IOException ioe) {
-						logger.info(messageResourceBundle.getMessage("xls.outputstream.error.message"), username);
+						logger.info(messageResourceBundle.getLogMessage("xls.outputstream.error.message"), username);
 
 					}
 				}
 
-				logger.info(messageResourceBundle.getMessage("xls.report.finished.message"), username);
+				logger.info(messageResourceBundle.getLogMessage("xls.report.finished.message"), username);
 
 				return ResponseEntity.ok().build();
 			} else {
@@ -315,10 +315,10 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 
 			List<DeliveryDTO> reportList = getDlrReportList(customReportForm, username, lang);
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("xls.report.size.message"), username, reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("xls.report.size.message"), username, reportList.size());
 
 				JasperPrint print = getdlrSummaryJasperPrint(reportList, false, username);
-				logger.info(messageResourceBundle.getMessage("preparing.outputstream.message"), username);
+				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), username);
 
 				// Generate a unique filename based on the current timestamp
 				String reportName = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".xls";
@@ -327,7 +327,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 				response.setContentType("application/vnd.ms-excel");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
 
-				logger.info(messageResourceBundle.getMessage("creating.xls.message"), username);
+				logger.info(messageResourceBundle.getLogMessage("creating.xls.message"), username);
 
 
 				// Create the XLS file and write it to the response output stream
@@ -342,12 +342,12 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 					try {
 						out.close();
 					} catch (IOException ioe) {
-						logger.info(messageResourceBundle.getMessage("xls.outputstream.error.message"), username);
+						logger.info(messageResourceBundle.getLogMessage("xls.outputstream.error.message"), username);
 
 					}
 				}
 
-				logger.info(messageResourceBundle.getMessage("xls.report.finished.message"), username);
+				logger.info(messageResourceBundle.getLogMessage("xls.report.finished.message"), username);
 
 				return ResponseEntity.ok().build();
 			} else {
@@ -385,7 +385,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 
 		}
 
-		logger.info(messageResourceBundle.getMessage("creating.report.list.message"), username);
+		logger.info(messageResourceBundle.getLogMessage("creating.report.list.message"), username);
 
 		List list = null;
 		List final_list = new ArrayList();
@@ -408,9 +408,9 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 			to_gmt = webMasterEntry.getGmt().replace("GMT", "");
 			from_gmt = IConstants.DEFAULT_GMT.replace("GMT", "");
 		}
-		logger.info(messageResourceBundle.getMessage("custom.report.dto.message"), username, customReportDTO);
+		logger.info(messageResourceBundle.getLogMessage("custom.report.dto.message"), username, customReportDTO);
 
-		logger.info(messageResourceBundle.getMessage("report.criteria.message"), username);
+		logger.info(messageResourceBundle.getLogMessage("report.criteria.message"), username);
 
 		List<String> users = null;
 		if (customReportDTO.getClientId().equalsIgnoreCase("All")) {
@@ -432,7 +432,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 				// SalesDAService salesService = new SalesDAServiceImpl();
 				users = new ArrayList<String>(listUsernamesUnderManager(username).values());
 			}
-			logger.info(messageResourceBundle.getMessage("under.users.message"), username, users.size());
+			logger.info(messageResourceBundle.getLogMessage("under.users.message"), username, users.size());
 
 		} else {
 			users = new ArrayList<String>();
@@ -440,7 +440,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 		}
 		if (users != null && !users.isEmpty()) {
 			for (String report_user : users) {
-				logger.info(messageResourceBundle.getMessage("checking.report.message"), username, report_user);
+				logger.info(messageResourceBundle.getLogMessage("checking.report.message"), username, report_user);
 				query = "select count(msg_id) as count,date(submitted_time) as datet,HOUR(submitted_time) as hours,status from mis_"
 						+ report_user + " where ";
 				if (senderId != null && senderId.trim().length() > 0) {
@@ -522,7 +522,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 				}
 				query += " group by datet,hours,status order by datet,hours,status";
 				
-				logger.info(messageResourceBundle.getMessage("report.sql.message"), username, query);
+				logger.info(messageResourceBundle.getLogMessage("report.sql.message"), username, query);
 
 				list = (List) getDlrSummaryReport(report_user, query);
 				logger.info(username + " list:" + list.size());
@@ -627,7 +627,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 			// cross_unprocessed_query);
 			// end check for unprocessed/Blocked/M/F entries
 		}
-		logger.info(messageResourceBundle.getMessage("end.criteria.report.size.message"), username, final_list.size());
+		logger.info(messageResourceBundle.getLogMessage("end.criteria.report.size.message"), username, final_list.size());
 
 		return final_list;
 	}
@@ -677,13 +677,13 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 						report.setTime(hours);
 						customReport.add(report);
 					} catch (Exception sqle) {
-						logger.error(messageResourceBundle.getMessage("empty.error.message"), sqle.fillInStackTrace());
+						logger.error(messageResourceBundle.getLogMessage("empty.error.message"), sqle.fillInStackTrace());
 
 					}
 				}
 			}
 		} catch (SQLException ex) {
-			logger.error(messageResourceBundle.getMessage("empty.error.message"), ex.fillInStackTrace());
+			logger.error(messageResourceBundle.getLogMessage("empty.error.message"), ex.fillInStackTrace());
 		} finally {
 			try {
 				if (pStmt != null) {
@@ -698,7 +698,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 			} catch (SQLException sqle) {
 			}
 		}
-		logger.info(messageResourceBundle.getMessage("report.list.count.message"), customReport.size());
+		logger.info(messageResourceBundle.getLogMessage("report.list.count.message"), customReport.size());
 
 		return customReport;
 	}
@@ -726,18 +726,18 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 						report.setTime(hours);
 						customReport.add(report);
 					} catch (Exception sqle) {
-						logger.error(messageResourceBundle.getMessage("empty.error.message"), sqle.fillInStackTrace());
+						logger.error(messageResourceBundle.getLogMessage("empty.error.message"), sqle.fillInStackTrace());
 					}
 				}
 			}
 		} catch (SQLException ex) {
 			if (ex.getMessage().contains("Table") && ex.getMessage().contains("doesn't exist")) {
-				logger.error(messageResourceBundle.getMessage("missing.tables.message"), username);
+				logger.error(messageResourceBundle.getLogMessage("missing.tables.message"), username);
 
 				// createMisTable(username);
 				// createContentTable(username);
 			} else {
-				logger.error(messageResourceBundle.getMessage("empty.error.message"), ex.fillInStackTrace());
+				logger.error(messageResourceBundle.getLogMessage("empty.error.message"), ex.fillInStackTrace());
 			}
 		} finally {
 			try {
@@ -764,7 +764,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 		design = JRXmlLoader.load(template_file);
 		report = JasperCompileManager.compileReport(design);
 		reportList = sortListByTime(reportList);
-		logger.info(messageResourceBundle.getMessage("preparing.charts.message"), username);
+		logger.info(messageResourceBundle.getLogMessage("preparing.charts.message"), username);
 
 		// ------------- Preparing databeancollection for chart ------------------
 		Iterator itr = reportList.iterator();
@@ -813,12 +813,12 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 		}
 		JRBeanCollectionDataSource piechartDataSource = new JRBeanCollectionDataSource(chart_list);
 		parameters.put("piechartDataSource", piechartDataSource);
-		logger.info(messageResourceBundle.getMessage("preparing.report.message"), username);
+		logger.info(messageResourceBundle.getLogMessage("preparing.report.message"), username);
 
 		JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(
 				sortListByTime(new ArrayList<DeliveryDTO>(prepared_list.values())));
 		if (reportList.size() > 20000) {
-			logger.info(messageResourceBundle.getMessage("creating.virtualizer.message"), username);
+			logger.info(messageResourceBundle.getLogMessage("creating.virtualizer.message"), username);
 
 			JRSwapFileVirtualizer virtualizer = new JRSwapFileVirtualizer(1000,
 					new JRSwapFile(IConstants.WEBAPP_DIR + "temp//", 2048, 1024));
@@ -827,10 +827,10 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 		parameters.put(JRParameter.IS_IGNORE_PAGINATION, paging);
 		ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);
 		parameters.put("REPORT_RESOURCE_BUNDLE", bundle);
-		logger.info(messageResourceBundle.getMessage("filling.report.data.message"), username);
+		logger.info(messageResourceBundle.getLogMessage("filling.report.data.message"), username);
 
 		print = JasperFillManager.fillReport(report, parameters, beanColDataSource);
-		logger.info(messageResourceBundle.getMessage("filling.completed.message"), username);
+		logger.info(messageResourceBundle.getLogMessage("filling.completed.message"), username);
 
 		return print;
 	}

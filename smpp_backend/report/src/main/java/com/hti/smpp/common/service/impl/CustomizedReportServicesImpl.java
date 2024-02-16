@@ -142,15 +142,17 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			}
 			System.out.println(isSummary);
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("report.size.view.message"), user.getSystemId(), reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(), reportList.size());
 				JasperPrint print = isSummary ? dataBase.getSummaryJasperPrint(reportList, false, username, lang)
 						: dataBase.getCustomizedJasperPrint(reportList, false, username, lang);
-				logger.info(messageResourceBundle.getMessage("report.finished.message"), user.getSystemId());
+				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
 
-				logger.info(user.getSystemId() + " ReportSize[View]:" + reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(), reportList.size());
+
 //				List<DeliveryDTO> print = isSummary ? getSummaryJasperPrint(reportList, false, username, lang)
 //						: getCustomizedJasperPrint(reportList, false, username, lang);
-				logger.info(user.getSystemId() + " <-- Report Finished --> ");
+				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
+
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 
 			} else {
@@ -176,7 +178,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 		locale = Customlocale.getLocaleByLanguage(lang);
 		List<DeliveryDTO> print = null;
 		List<DeliveryDTO> report = null;
@@ -344,10 +346,10 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+				.orElseThrow(() ->new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
 		// boolean isContent;
 		Map parameters = new HashMap();
@@ -1863,7 +1865,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					workbook = dataBase.getCustomizedWorkBook(reportList, username);
 				}
 				if (total_rec > 100000) {
-					logger.info(messageResourceBundle.getMessage("creating.zip.folder.message"), user.getSystemId());
+					logger.info(messageResourceBundle.getLogMessage("creating.zip.folder.message"), user.getSystemId());
 
 					response.setContentType("application/zip");
 					response.setHeader("Content-Disposition", "attachment; filename=" + "delivery_"
@@ -1873,12 +1875,12 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					String reportName = "delivery.xlsx";
 					ZipEntry entry = new ZipEntry(reportName); // create a zip entry and add it to ZipOutputStream
 					zos.putNextEntry(entry);
-					logger.info(messageResourceBundle.getMessage("starting.zip.download.message"), user.getSystemId());
+					logger.info(messageResourceBundle.getLogMessage("starting.zip.download.message"), user.getSystemId());
 
 					workbook.write(zos);
 					zos.close();
 				} else {
-					logger.info(messageResourceBundle.getMessage("creating.xls.message"), user.getSystemId());
+					logger.info(messageResourceBundle.getLogMessage("creating.xls.message"), user.getSystemId());
 
 					String filename = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())
 							+ ".xlsx";
@@ -1888,7 +1890,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					// filename);
 					ByteArrayOutputStream bos = new ByteArrayOutputStream();
 					workbook.write(bos);
-					logger.info(messageResourceBundle.getMessage("reading.xls.message"), user.getSystemId());
+					logger.info(messageResourceBundle.getLogMessage("reading.xls.message"), user.getSystemId());
 
 					ByteArrayInputStream is = null;
 					ServletOutputStream out = null;
@@ -1897,14 +1899,14 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 						// byte[] buffer = new byte[8789];
 						int curByte = -1;
 						out = response.getOutputStream();
-						logger.info(messageResourceBundle.getMessage("starting.xls.download.message"), user.getSystemId());
+						logger.info(messageResourceBundle.getLogMessage("starting.xls.download.message"), user.getSystemId());
 
 						while ((curByte = is.read()) != -1) {
 							out.write(curByte);
 						}
 						out.flush();
 					} catch (Exception ex) {
-						logger.error(messageResourceBundle.getMessage("dlr.xlsreport.error.message"), user.getSystemId(), ex);
+						logger.error(messageResourceBundle.getLogMessage("dlr.xlsreport.error.message"), user.getSystemId(), ex);
 
 						// ex.printStackTrace();
 					} finally {
@@ -1921,13 +1923,13 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				}
 				workbook.close();
 				reportList.clear();
-				logger.info(messageResourceBundle.getMessage("xls.report.finished.message"), user.getSystemId());
+				logger.info(messageResourceBundle.getLogMessage("xls.report.finished.message"), user.getSystemId());
 
 			} else {
-				logger.info(messageResourceBundle.getMessage("no.records.found.message"), user.getSystemId());
+				logger.info(messageResourceBundle.getLogMessage("no.records.found.message"), user.getSystemId());
 			}
 		} catch (Exception e) {
-			logger.error(messageResourceBundle.getMessage("error.message"), user.getSystemId(), e.getMessage());
+			logger.error(messageResourceBundle.getLogMessage("error.message"), user.getSystemId(), e.getMessage());
 
 		}
 		return target;
@@ -1948,7 +1950,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			locale = Customlocale.getLocaleByLanguage(lang);
 			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username, lang);
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("report.size.pdf.message"), username, reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.size.pdf.message"), username, reportList.size());
 
 				JasperPrint print = null;
 				if (customReportForm.getReportType().equalsIgnoreCase("Summary")) {
@@ -1965,7 +1967,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 
 				if (print != null) {
 
-					logger.info(messageResourceBundle.getMessage("preparing.outputstream.message"), username);
+					logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), username);
 
 					String reportName = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())
 							+ ".pdf";
@@ -1987,7 +1989,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 
 			}
 		} catch (Exception e) {
-			logger.error(messageResourceBundle.getMessage("error.message"), user.getSystemId(), e.getMessage());
+			logger.error(messageResourceBundle.getLogMessage("error.message"), user.getSystemId(), e.getMessage());
 			// Handle exceptions and return an appropriate response
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating the PDF report");
 		}
@@ -2010,7 +2012,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			locale = Customlocale.getLocaleByLanguage(lang);
 			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username, lang);
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("report.size.doc.message"), user.getSystemId(), reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.size.doc.message"), user.getSystemId(), reportList.size());
 
 				JasperPrint print = null;
 				if (customReportForm.getReportType().equalsIgnoreCase("Summary")) {
@@ -2025,12 +2027,12 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					print = dataBase.getCustomizedJasperPrint(reportList, false, username, lang);
 				}
 
-				logger.info(messageResourceBundle.getMessage("preparing.outputstream.message"), user.getSystemId());
+				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), user.getSystemId());
 
 				String reportName = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".doc";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				logger.info(messageResourceBundle.getMessage("creating.doc.message"), user.getSystemId());
+				logger.info(messageResourceBundle.getLogMessage("creating.doc.message"), user.getSystemId());
 
 
 
@@ -2055,7 +2057,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			}
 
 		} catch (Exception e) {
-			logger.error(messageResourceBundle.getMessage("error.message"), user.getSystemId(), e.getMessage());
+			logger.error(messageResourceBundle.getLogMessage("error.message"), user.getSystemId(), e.getMessage());
 			// Handle exceptions and return an appropriate response
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating the doc report");
 		}

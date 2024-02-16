@@ -149,10 +149,10 @@ public class ScheduleReportServiceImpl implements ScheduleReportService {
 				entryExt.setSenderId(rs.getString("sender_id"));
 				scheduleList.add(entryExt);
 			}
-			logger.info(messageResourceBundle.getMessage("schedule.history.report.message"), scheduleList.size());
+			logger.info(messageResourceBundle.getLogMessage("schedule.history.report.message"), scheduleList.size());
 
 		} catch (SQLException sqle) {
-			logger.error(messageResourceBundle.getMessage("sql.query.error.message"), sqle);
+			logger.error(messageResourceBundle.getLogMessage("sql.query.error.message"), sqle);
 
 		}
 

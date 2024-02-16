@@ -124,7 +124,7 @@ public class LookupReportServiceImpl implements LookupReportService {
 
 			List<LookupReport> reportList = getLookupReport(customReportForm, user.getRole(), username);
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("report.size"), reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
 
 				JasperPrint print = null;
 				print = getJasperPrint(reportList, false);
@@ -175,7 +175,7 @@ public class LookupReportServiceImpl implements LookupReportService {
 					String reportName = "lookup.xlsx";
 					ZipEntry entry = new ZipEntry(reportName); // create a zip entry and add it to ZipOutputStream
 					zos.putNextEntry(entry);
-					logger.info(messageResourceBundle.getMessage("zip.download.start"));
+					logger.info(messageResourceBundle.getLogMessage("zip.download.start"));
 
 					workbook.write(zos);
 					zos.close();
@@ -191,14 +191,14 @@ public class LookupReportServiceImpl implements LookupReportService {
 						is = new ByteArrayInputStream(bos.toByteArray());
 						int curByte = -1;
 						out = response.getOutputStream();
-						logger.info(messageResourceBundle.getMessage("download.start"));
+						logger.info(messageResourceBundle.getLogMessage("download.start"));
 
 						while ((curByte = is.read()) != -1) {
 							out.write(curByte);
 						}
 						out.flush();
 					} catch (Exception ex) {
-						logger.error(messageResourceBundle.getMessage("xls.download.error"), ex.toString());
+						logger.error(messageResourceBundle.getLogMessage("xls.download.error"), ex.toString());
 
 						// ex.printStackTrace();
 					} finally {
@@ -210,12 +210,12 @@ public class LookupReportServiceImpl implements LookupReportService {
 								out.close();
 							}
 						} catch (Exception ex) {
-							logger.error(messageResourceBundle.getMessage("stream.release.error"), ex.toString());
+							logger.error(messageResourceBundle.getLogMessage("stream.release.error"), ex.toString());
 
 						}
 					}
 				}
-				logger.info(messageResourceBundle.getMessage("finish.message"));
+				logger.info(messageResourceBundle.getLogMessage("finish.message"));
 
 				target = IConstants.SUCCESS_KEY;
 			} else {
@@ -245,15 +245,15 @@ public class LookupReportServiceImpl implements LookupReportService {
 
 			List<LookupReport> reportList = getLookupReport(customReportForm, user.getRole(), username);
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("report.size"), reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
 
 				JasperPrint print = getJasperPrint(reportList, false);
-				logger.info(messageResourceBundle.getMessage("prepare.outputstream"));
+				logger.info(messageResourceBundle.getLogMessage("prepare.outputstream"));
 
 				String reportName = "lookup_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".pdf";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				logger.info(messageResourceBundle.getMessage("create.pdf"));
+				logger.info(messageResourceBundle.getLogMessage("create.pdf"));
 
 				OutputStream out = response.getOutputStream();
 				JRExporter exporter = new JRPdfExporter();
@@ -264,11 +264,11 @@ public class LookupReportServiceImpl implements LookupReportService {
 					try {
 						out.close();
 					} catch (Exception e) {
-						logger.error(messageResourceBundle.getMessage("pdf.outputstream.error"));
+						logger.error(messageResourceBundle.getLogMessage("pdf.outputstream.error"));
 
 					}
 				}
-				logger.info(messageResourceBundle.getMessage("finish.message"));
+				logger.info(messageResourceBundle.getLogMessage("finish.message"));
 				target = IConstants.SUCCESS_KEY;
 			} else {
 				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GENERATING_PDF_LOOKUP_REPORT_MESSAGE));
@@ -297,17 +297,17 @@ public class LookupReportServiceImpl implements LookupReportService {
 			locale = Customlocale.getLocaleByLanguage(lang);
 			List<LookupReport> reportList = getLookupReport(customReportForm, user.getRole(), username);
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("report.size"), reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
 
 				JasperPrint print = getJasperPrint(reportList, false);
 				
-				logger.info(messageResourceBundle.getMessage("preparing.outputstream.message"),user.getSystemId());
+				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"),user.getSystemId());
 
 				String reportName = "lookup_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".doc";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
 				
-				logger.info(messageResourceBundle.getMessage("creating.doc.message"),user.getSystemId());
+				logger.info(messageResourceBundle.getLogMessage("creating.doc.message"),user.getSystemId());
 
 				OutputStream out = response.getOutputStream();
 				JRExporter exporter = new JRDocxExporter();
@@ -318,11 +318,11 @@ public class LookupReportServiceImpl implements LookupReportService {
 					try {
 						out.close();
 					} catch (Exception e) {
-						logger.error(messageResourceBundle.getMessage("doc.outputstream.error"));
+						logger.error(messageResourceBundle.getLogMessage("doc.outputstream.error"));
 
 					}
 				}
-				logger.info(messageResourceBundle.getMessage("finish.message"));
+				logger.info(messageResourceBundle.getLogMessage("finish.message"));
 
 				target = IConstants.SUCCESS_KEY;
 			} else {
@@ -388,13 +388,13 @@ public class LookupReportServiceImpl implements LookupReportService {
 			}
 			System.out.println("SQL: " + sql);
 			int count = new LookupServiceInvoker().reCheckStatus(sql);
-			logger.info(messageResourceBundle.getMessage("recheck.lookup.size"), count);
+			logger.info(messageResourceBundle.getLogMessage("recheck.lookup.size"), count);
 
 			if (count > 0) {
-				logger.info(messageResourceBundle.getMessage("message.recheckSuccess"));
+				logger.info(messageResourceBundle.getLogMessage("message.recheckSuccess"));
 				target = "recheck";
 			} else {
-				logger.info(messageResourceBundle.getMessage("error.record.unavailable"));
+				logger.info(messageResourceBundle.getLogMessage("error.record.unavailable"));
 			}
 		} catch (Exception ex) {
 			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.PROCESS_ERROR_MESSAGE));
@@ -406,7 +406,7 @@ public class LookupReportServiceImpl implements LookupReportService {
 	}
 
 	private org.apache.poi.ss.usermodel.Workbook getWorkBook(List reportList) {
-		logger.info(messageResourceBundle.getMessage("creating.workbook.message"));
+		logger.info(messageResourceBundle.getLogMessage("creating.workbook.message"));
 		SXSSFWorkbook workbook = new SXSSFWorkbook();
 		int records_per_sheet = 100000;
 		int sheet_number = 0;
@@ -463,7 +463,7 @@ public class LookupReportServiceImpl implements LookupReportService {
 			int row_number = 0;
 			sheet = workbook.createSheet("Sheet(" + sheet_number + ")");
 			sheet.setDefaultColumnWidth(14);
-			logger.info(messageResourceBundle.getMessage("creating.sheet.message"), sheet_number);
+			logger.info(messageResourceBundle.getLogMessage("creating.sheet.message"), sheet_number);
 
 			while (!reportList.isEmpty()) {
 				row = sheet.createRow(row_number);
@@ -542,14 +542,14 @@ public class LookupReportServiceImpl implements LookupReportService {
 					cell.setCellStyle(rowStyle);
 				}
 				if (++row_number > records_per_sheet) {
-					logger.info(messageResourceBundle.getMessage("sheet.created.message"), sheet_number);
+					logger.info(messageResourceBundle.getLogMessage("sheet.created.message"), sheet_number);
 
 					break;
 				}
 			}
 			sheet_number++;
 		}
-		logger.info(messageResourceBundle.getMessage("workbook.created.message"));
+		logger.info(messageResourceBundle.getLogMessage("workbook.created.message"));
 
 		return workbook;
 	}

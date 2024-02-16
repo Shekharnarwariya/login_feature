@@ -107,7 +107,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("report.size"), reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
 
 				// JasperPrint print = getJasperPrint(reportList, false,
 				// customReportForm.getGroupBy());
@@ -146,11 +146,11 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 			locale = Customlocale.getLocaleByLanguage(lang);
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("report.size.message"), reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.size.message"), reportList.size());
 
 				// JasperPrint print = getJasperPrint(reportList, false,
 				// customReportForm.getGroupBy());
-				logger.info(messageResourceBundle.getMessage("preparing.outputstream.message"), user.getSystemId());
+				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), user.getSystemId());
 				System.out.println("Report Size: " + reportList.size());
 				List<DeliveryDTO> print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
 				System.out.println("<-- Preparing Outputstream --> ");
@@ -158,7 +158,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 						+ ".xlsx";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				logger.info(messageResourceBundle.getMessage("creating.xls.message"), user.getSystemId());
+				logger.info(messageResourceBundle.getLogMessage("creating.xls.message"), user.getSystemId());
 
 				OutputStream out = response.getOutputStream();
 				JRExporter exporter = new JRXlsxExporter();
@@ -171,11 +171,11 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 					try {
 						out.close();
 					} catch (Exception e) {
-						logger.error(messageResourceBundle.getMessage("xls.outputstream.error"));
+						logger.error(messageResourceBundle.getLogMessage("xls.outputstream.error"));
 
 					}
 				}
-				logger.info(messageResourceBundle.getMessage("finish.message"));
+				logger.info(messageResourceBundle.getLogMessage("finish.message"));
 
 				target = IConstants.SUCCESS_KEY;
 			} else {
@@ -209,11 +209,11 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 			locale = Customlocale.getLocaleByLanguage(lang);
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("report.size.message"), reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.size.message"), reportList.size());
 
 				// JasperPrint print = getJasperPrint(reportList, false,
 				// customReportForm.getGroupBy());
-				logger.info(messageResourceBundle.getMessage("preparing.outputstream.message"), user.getSystemId());
+				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), user.getSystemId());
 				System.out.println("Report Size: " + reportList.size());
 				List<DeliveryDTO> print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
 				System.out.println("<-- Preparing Outputstream --> ");
@@ -221,7 +221,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 						+ ".pdf";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				logger.info(messageResourceBundle.getMessage("creating.pdf.message"));
+				logger.info(messageResourceBundle.getLogMessage("creating.pdf.message"));
 
 				OutputStream out = response.getOutputStream();
 				JRExporter exporter = new JRPdfExporter();
@@ -232,11 +232,11 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 					try {
 						out.close();
 					} catch (Exception e) {
-						logger.error(messageResourceBundle.getMessage("pdf.outputstream.error"));
+						logger.error(messageResourceBundle.getLogMessage("pdf.outputstream.error"));
 
 					}
 				}
-				logger.info(messageResourceBundle.getMessage("finish.message"));
+				logger.info(messageResourceBundle.getLogMessage("finish.message"));
 
 				target = IConstants.SUCCESS_KEY;
 			} else {
@@ -270,10 +270,10 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
 
-				logger.info(messageResourceBundle.getMessage("report.size.message"), reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.size.message"), reportList.size());
 
 //				JasperPrint print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
-				logger.info(messageResourceBundle.getMessage("preparing.outputstream.message"), user.getSystemId());
+				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), user.getSystemId());
 
 				System.out.println("Report Size: " + reportList.size());
 				List<DeliveryDTO> print = getJasperPrint(reportList, false, customReportForm.getGroupBy());
@@ -283,7 +283,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 						+ ".doc";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				logger.info(messageResourceBundle.getMessage("creating.doc.message"));
+				logger.info(messageResourceBundle.getLogMessage("creating.doc.message"));
 
 				OutputStream out = response.getOutputStream();
 				JRExporter exporter = new JRDocxExporter();
@@ -294,11 +294,11 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 					try {
 						out.close();
 					} catch (Exception ioe) {
-						logger.error(messageResourceBundle.getMessage("doc.outputstream.error"));
+						logger.error(messageResourceBundle.getLogMessage("doc.outputstream.error"));
 
 					}
 				}
-				logger.info(messageResourceBundle.getMessage("finish.message"));
+				logger.info(messageResourceBundle.getLogMessage("finish.message"));
 
 				target = IConstants.SUCCESS_KEY;
 			} else {
@@ -358,7 +358,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 				sql += "and oprCountry in (" + oprCountry + ")";
 			}
 		}
-		logger.info(messageResourceBundle.getMessage("sql.message"), sql);
+		logger.info(messageResourceBundle.getLogMessage("sql.message"), sql);
 
 		list = getSmscStatusReport(sql);
 		return list;
@@ -428,7 +428,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 		List<DeliveryDTO> bar_chart_list = new ArrayList<DeliveryDTO>();
 		List<DeliveryDTO> final_list = new ArrayList<DeliveryDTO>();
 		JasperDesign design = null;
-		logger.info(messageResourceBundle.getMessage("creating.design.message"));
+		logger.info(messageResourceBundle.getLogMessage("creating.design.message"));
 
 		if (groupBy.equalsIgnoreCase("Smsc")) {
 			// design = JRXmlLoader.load(template_file_smsc);
@@ -660,7 +660,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 				final_list.addAll(personStream.collect(Collectors.toList()));
 			}
 		} else {
-			logger.info(messageResourceBundle.getMessage("invalid.groupby.message"), groupBy);
+			logger.info(messageResourceBundle.getLogMessage("invalid.groupby.message"), groupBy);
 
 		}
 
@@ -680,7 +680,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 		ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);
 		parameters.put("REPORT_RESOURCE_BUNDLE", bundle);
 
-		logger.info(messageResourceBundle.getMessage("processing.report.data.message"));
+		logger.info(messageResourceBundle.getLogMessage("processing.report.data.message"));
 
 		// JasperPrint print = JasperFillManager.fillReport(report, parameters,
 		// beanColDataSource);

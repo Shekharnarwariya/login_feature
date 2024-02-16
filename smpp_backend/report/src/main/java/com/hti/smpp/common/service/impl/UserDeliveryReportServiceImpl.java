@@ -102,10 +102,10 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("report.size.view.message"), user.getSystemId(), reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(), reportList.size());
 
 				JasperPrint print = getJasperPrint(reportList, false);
-				logger.info(messageResourceBundle.getMessage("report.finished.message"), user.getSystemId());
+				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
 
 				target = IConstants.SUCCESS_KEY;
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
@@ -135,7 +135,7 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
 			if (!reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("report.size"), reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
 
 				JasperPrint print = getJasperPrint(reportList, false);
 
@@ -158,7 +158,7 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 						out.flush(); // Flush before closing
 						out.close();
 					} catch (IOException ioe) {
-						logger.error(messageResourceBundle.getMessage("xls.outputstream.error.message"));
+						logger.error(messageResourceBundle.getLogMessage("xls.outputstream.error.message"));
 
 					}
 				}
@@ -187,7 +187,7 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 
 				List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
 				if (!reportList.isEmpty()) {
-					logger.info(messageResourceBundle.getMessage("report.size"), reportList.size());
+					logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
 
 					JasperPrint print = getJasperPrint(reportList, false);
 
@@ -196,7 +196,7 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 					response.setHeader("Content-Disposition", "attachment; filename=UserDlr_" +
 							new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".pdf");
 
-					logger.info(messageResourceBundle.getMessage("creating.pdf.message"));
+					logger.info(messageResourceBundle.getLogMessage("creating.pdf.message"));
 
 					OutputStream out = response.getOutputStream();
 					JRExporter exporter = new JRPdfExporter();
@@ -210,7 +210,7 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 							out.flush(); // Flush before closing 
 							out.close();
 						} catch (IOException ioe) {
-							logger.error(messageResourceBundle.getMessage("pdf.outputstream.closing.error.message"));
+							logger.error(messageResourceBundle.getLogMessage("pdf.outputstream.closing.error.message"));
 
 						}
 					}
@@ -238,7 +238,7 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
 			if (!reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("report.size"), reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
 				JasperPrint print = getJasperPrint(reportList, false);
 
 				// Update content type for DOCX file
@@ -246,7 +246,7 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 				response.setHeader("Content-Disposition", "attachment; filename=UserDlr_" +
 						new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".docx");
 
-				logger.info(messageResourceBundle.getMessage("creating.doc.message"),username);
+				logger.info(messageResourceBundle.getLogMessage("creating.doc.message"),username);
 				OutputStream out = response.getOutputStream();
 				JRExporter exporter = new JRDocxExporter();
 				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
@@ -259,7 +259,7 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 						out.flush(); // Flush before closing
 						out.close();
 					} catch (IOException ioe) {
-						logger.error(messageResourceBundle.getMessage("docx.outputstream.closing.error.message"));
+						logger.error(messageResourceBundle.getLogMessage("docx.outputstream.closing.error.message"));
 
 					}
 				}
@@ -278,14 +278,14 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 
 
 	private JasperPrint getJasperPrint(List<DeliveryDTO> reportList, boolean paging) throws JRException {
-		logger.info(messageResourceBundle.getMessage("creating.design.message"));
+		logger.info(messageResourceBundle.getLogMessage("creating.design.message"));
 
 		JasperDesign design = JRXmlLoader.load(template_file);
-		logger.info(messageResourceBundle.getMessage("compiling.message"));
+		logger.info(messageResourceBundle.getLogMessage("compiling.message"));
 
 		JasperReport report = JasperCompileManager.compileReport(design);
 		// ------------- Preparing databeancollection for chart ------------------
-		logger.info(messageResourceBundle.getMessage("preparing.chart.message"));
+		logger.info(messageResourceBundle.getLogMessage("preparing.chart.message"));
 
 
 		Map<String, DeliveryDTO> key_map = new HashMap<String, DeliveryDTO>();
@@ -323,7 +323,7 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 		List<DeliveryDTO> final_list = new ArrayList<DeliveryDTO>(key_map.values());
 		final_list = sortListByCountry(final_list);
 		// -------------------------------------------------------------
-		logger.info(messageResourceBundle.getMessage("preparing.report.message"));
+		logger.info(messageResourceBundle.getLogMessage("preparing.report.message"));
 
 		JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(final_list);
 		Map parameters = new HashMap();
