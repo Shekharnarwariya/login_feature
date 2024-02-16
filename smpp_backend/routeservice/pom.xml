@@ -85,6 +85,13 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>smpp</groupId>
+			<artifactId>smpp</artifactId>
+			<scope>system</scope>
+			<version>1.0</version>
+			<systemPath>${basedir}/lib/smpp.jar</systemPath>
+		</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>

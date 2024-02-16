@@ -115,6 +115,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 
 	@Autowired
 	private UserDAService userService;
+	
 	private Logger logger = LoggerFactory.getLogger(UserDeliveryReportServiceImpl.class);
 	boolean isSummary;
 	@Autowired
