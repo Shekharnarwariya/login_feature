@@ -71,6 +71,7 @@ import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MessageResourceBundle;
 import com.hti.smpp.common.util.dto.SevenBitChar;
+
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
 import net.sf.jasperreports.engine.JRException;
@@ -147,8 +148,8 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				logger.info(messageResourceBundle.getMessage("report.finished.message"), user.getSystemId());
 
 				logger.info(user.getSystemId() + " ReportSize[View]:" + reportList.size());
-				List<DeliveryDTO> print = isSummary ? getSummaryJasperPrint(reportList, false, username, lang)
-						: getCustomizedJasperPrint(reportList, false, username, lang);
+//				List<DeliveryDTO> print = isSummary ? getSummaryJasperPrint(reportList, false, username, lang)
+//						: getCustomizedJasperPrint(reportList, false, username, lang);
 				logger.info(user.getSystemId() + " <-- Report Finished --> ");
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 

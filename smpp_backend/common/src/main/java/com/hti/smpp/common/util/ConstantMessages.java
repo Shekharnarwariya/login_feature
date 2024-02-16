@@ -266,10 +266,6 @@ public class ConstantMessages {
     public static final String ERROR_GETTING_SUBMISSION_REPORT_MESSAGE = "error.getting.submission.report";
     public static final String USER_SUMMARY_REPORT_NOT_FOUND_MESSAGE = "user.summary.report.not.found";
     public static final String ERROR_GETTING_DLR_CONTENT_REPORT_MESSAGE = "error.getting.dlr.content.report";
-
-    //HLR SMSC
-    public static final String ERROR_SAVING_HLR_SMSC_ENTRY_MESSAGE = "error.saving.hlr.smsc.entry";
-    public static final String ERROR_CONVERTING_HLR_SMSC_ENTRY_REQUEST_MESSAGE = "error.converting.hlr.smsc.entry.request";
   
     //hlr-smsc exception message
     public static final String HLR_SMSC_SAVE_ERROR = "hlr.smsc.save.error";
