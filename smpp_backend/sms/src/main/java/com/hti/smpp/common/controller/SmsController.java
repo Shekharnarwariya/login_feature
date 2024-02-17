@@ -359,4 +359,26 @@ public class SmsController {
 			@RequestParam String title, @RequestParam List<String> link_urls) {
 		return mediaUploadService.UploadMedia(title, link_urls, items);
 	}
+
+	@Operation(summary = "get exclude numbers", description = "This endpoint allows users to get exclude numbers")
+	@GetMapping(value = "/exclud/number")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "get exclude numbers Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
+	public ResponseEntity<?> getExcludeNumbers(@RequestHeader(name = "username", required = true) String username) {
+		return smsService.getExcludeNumbers(username);
+
+	}
+
+	@Operation(summary = "get sender id", description = "This endpoint allows users to get sender id")
+	@GetMapping(value = "/sender/id")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "get sender id Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
+	public ResponseEntity<?> getSenderId(@RequestHeader(name = "username", required = true) String username) {
+		return smsService.getSenderId(username);
+
+	}
 }
