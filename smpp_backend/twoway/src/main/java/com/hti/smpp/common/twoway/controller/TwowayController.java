@@ -35,13 +35,11 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/twoway")
 @Tag(name = "TwowayController", description = "API's for Twoway")
-/**
- * The `TwowayController` class serves as a controller in the Two-Way Application.
- */
 public class TwowayController {
     
     @Autowired 
     private KeywordService keywordService;
+    
    /**
     * The `TwowayController` class is a part of the Two-Way Application and handles 
     * @param form
@@ -59,6 +57,7 @@ public class TwowayController {
     public ResponseEntity<String> addKeyword(@Valid @RequestBody KeywordEntryForm form, @Parameter(description = "Username in header") @RequestHeader(value="username", required = true) String username){
     	return this.keywordService.addKeyword(form, username);
     }
+    
    /**
     * The `TwowayController` class, a part of the Two-Way Application, handles HTTP
     * requests related to listing keyword entries. 
@@ -72,16 +71,17 @@ public class TwowayController {
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
     })
-    /**
-     * The `TwowayController` class, a part of the Two-Way Application, handles HTTP
-     * requests related to keyword entries.
-     * @param username
-     * @return
-     */
+    @GetMapping("/list-keyword")
     public ResponseEntity<List<KeywordEntry>> listKeyword(@RequestHeader(value="username", required = true) String username){
     	return this.keywordService.listKeyword(username);
     }
     
+    /**
+     * Updates an existing keyword entry.
+     * @param form
+     * @param username
+     * @return
+     */
     @Operation(summary = "Update Keyword Entry", description = "Update an existing keyword entry")
     @ApiResponses(value = {
 			@ApiResponse(responseCode = "201", description = "KeywordEntry Updated Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
@@ -89,17 +89,17 @@ public class TwowayController {
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 	})
-    /**
-     * Updates an existing keyword entry.
-     * @param form
-     * @param username
-     * @return
-     */
     @PutMapping("/update-keyword")
     public ResponseEntity<String> updateKeyword(@Valid @RequestBody KeywordEntryForm form, @RequestHeader(value="username", required = true) String username){
     	return this.keywordService.updateKeyword(form, username);
     }
     
+    /**
+     * Deletes a keyword entry by ID.
+     * @param id
+     * @param username
+     * @return
+     */
     @Operation(summary = "Delete Keyword Entry", description = "Delete an existing keyword entry")
     @ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "KeywordEntry Deleted Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
@@ -107,35 +107,18 @@ public class TwowayController {
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 	})
-    /**
-     * Deletes a keyword entry by ID.
-     * @param id
-     * @param username
-     * @return
-     */
     @DeleteMapping("/delete-keyword/{id}")
     public ResponseEntity<String> deleteKeyword(@PathVariable(value = "id", required = true) int id, @RequestHeader(value="username", required = true) String username){
     	return this.keywordService.deleteKeyword(id, username);
     	
     }
     
-    @Operation(summary = "Setup Keyword", description = "Returns the list as a response of UserEntry")
-    @ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Setup Keyword Successful."),
-			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "401", description = "Unauthorized.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
-	})
     /**
-     * Initializes keyword setup
+     * Retrieves details of a specific keyword entry by ID.
+     * @param id
      * @param username
      * @return
      */
-    @GetMapping("/setupkeyword")
-    public ResponseEntity<?> setupKeyword(@RequestHeader(value="username", required = true) String username){
-    	return this.keywordService.setupKeyword(username);
-    }
-    
     @Operation(summary = "View Keyword", description = "Returns the KeywordEntry as a response by id")
     @ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "View KeywordEntry by id.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = KeywordEntry.class))),
@@ -143,17 +126,18 @@ public class TwowayController {
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 	})
-    /**
-     * Retrieves details of a specific keyword entry by ID.
-     * @param id
-     * @param username
-     * @return
-     */
     @GetMapping("/viewkeyword/{id}")
     public ResponseEntity<KeywordEntry> viewKeyword(@PathVariable(value = "id", required = true) int id, @RequestHeader(value="username", required = true) String username){
     	return this.keywordService.viewKeyword(id, username);
     }
     
+    /**
+     *  Generates and returns an Excel file based on the provided report form and locale.
+     * @param form
+     * @param locale
+     * @param username
+     * @return
+     */
     @Operation(summary = "Generate Xls", description = "Creates the twoway report in .xlsx")
     @ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Twoway Report Creation Successful in .xlsx."),
@@ -162,18 +146,18 @@ public class TwowayController {
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
     })
-    /**
-     *  Generates and returns an Excel file based on the provided report form and locale.
-     * @param form
-     * @param locale
-     * @param username
-     * @return
-     */
     @PostMapping(value = "/generate/xls/{locale}")
     public ResponseEntity<StreamingResponseBody> generateXls(@Valid @RequestBody TwowayReportForm form, @PathVariable(value = "locale", required=true) String locale, @RequestHeader(value="username", required = true) String username){
     	return this.keywordService.generateXls(form, locale, username);
     }
     
+    /**
+     * Generates and returns a PDF file based on the provided report form and locale.
+     * @param form
+     * @param locale
+     * @param username
+     * @return
+     */
     @Operation(summary = "Generate Pdf", description = "Creates the twoway report in .pdf")
     @ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Twoway Report Creation Successful in .pdf."),
@@ -182,15 +166,8 @@ public class TwowayController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
     })
-    /**
-     * Generates and returns a PDF file based on the provided report form and locale.
-     * @param form
-     * @param locale
-     * @param username
-     * @return
-     */
     @PostMapping("/generate/pdf/{locale}")
-    public ResponseEntity<StreamingResponseBody> generatePdf(@Valid @RequestBody TwowayReportForm form, @PathVariable(value = "locale", required=true) String locale, @RequestHeader(value="username", required = true) String username){
+    public ResponseEntity<StreamingResponseBody> generatePdf(@Valid @RequestBody TwowayReportForm form, @PathVariable(value = "locale", required = false) String locale, @RequestHeader(value="username", required = true) String username){
     	return this.keywordService.generatePdf(form, locale, username);
     }
     
@@ -214,6 +191,13 @@ public class TwowayController {
     	return this.keywordService.generateDoc(form, locale, username);
     }
     
+    /**
+     * Generates and returns a view for a report based on the provided form and locale.
+     * @param form
+     * @param locale
+     * @param username
+     * @return
+     */
     @Operation(summary = "View Report", description = "Returns the response of View")
     @ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Twoway ViewReport."),
@@ -222,18 +206,37 @@ public class TwowayController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
     })
-    /**
-     * Generates and returns a view for a report based on the provided form and locale.
-     * @param form
-     * @param locale
-     * @param username
-     * @return
-     */
     @PostMapping("/view/{locale}")
     public ResponseEntity<?> viewReport(@Valid @RequestBody TwowayReportForm form, @PathVariable(value = "locale", required=true) String locale, @RequestHeader(value="username", required = true) String username){
     	return this.keywordService.view(form, locale, username);
     }
     
+    //----------------------------------------------------------------------------------------------------------------------------
+    /**
+     * Initializes keyword setup
+     * @param username
+     * @return
+     */
+    /*
+    @Operation(summary = "Setup Keyword", description = "Returns the list as a response of UserEntry")
+    @ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Setup Keyword Successful."),
+			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "401", description = "Unauthorized.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+	})
+    @GetMapping("/setupkeyword")
+    public ResponseEntity<?> setupKeyword(@RequestHeader(value="username", required = true) String username){
+    	return this.keywordService.setupKeyword(username);
+    }
+    */
+    
+    /**
+     * Initializes setup for the Two-Way Report.
+     * @param username
+     * @return
+     */
+    /*
     @Operation(summary = "Setup TwowayReport", description = "Returns the list as a response of UserEntry")
     @ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Setup Twoway Report Successful."),
@@ -241,14 +244,11 @@ public class TwowayController {
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
     })
-    /**
-     * Initializes setup for the Two-Way Report.
-     * @param username
-     * @return
-     */
+    
     @GetMapping("/setup-twowayreport")
     public ResponseEntity<?> setupTwowayReport(@RequestHeader(value="username", required = true) String username){
     	return this.keywordService.setupTwowayReport(username);
     }
+    */
 
 }

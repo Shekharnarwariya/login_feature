@@ -13,7 +13,7 @@ import lombok.Data;
 public class ReportEntry implements Cloneable {
 	@Id
 	@Column(name = "deliver_id")
-	private Integer deliverId;
+	private int deliverId;
 	@Column(name = "user_id")
 	private int userId;
 	@Column(name = "keyword_id")
