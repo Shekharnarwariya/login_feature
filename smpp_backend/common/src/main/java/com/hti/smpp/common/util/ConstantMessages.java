@@ -282,4 +282,29 @@ public class ConstantMessages {
     public static final String HLR_SMSC_UPDATED_SUCCESS = "hlr.smsc.update.success";
     public static final String HLR_SMSC_SAVED_SUCCESS = "hlr.smsc.add.success";
     
+    
+    // route
+    public static final String USERWISE_ROUTING_EMPTY = "userwise.routing.empty";
+    public static final String RECORD_UNAVAILABLE_EXCEPTION = "record.unavailable.exception";
+    public static final String DELETION_ERROR_EXCEPTION = "deletion.error.exception";
+    public static final String INTERNAL_SERVER_ERROR_EXCEPTION_SAVE = "internal.server.error.exception.save";
+    public static final String RECORD_NOT_FOUND_EMPTY_LIST = "record.not.found.empty.list";
+    public static final String RECORD_UNAVAILABLE = "record.unavailable";
+    public static final String RECORD_UNAVAILABLE_ID_UNAVAILABLE = "record.unavailable.id.unavailable";
+    public static final String FAILED_TO_ADD_OPTIONAL_ROUTE_ENTRIES = "record.unavailable.id.unavailablefailed.to.add.optional.route.entries";
+    public static final String SALES_ENTRY_NOT_FOUND_EXCEPTION = "sales.entry.notfound";
+    public static final String DISTINCT_COUNTRIES_NOT_FOUND_EXCEPTION = "distinct.countries.notfound";
+    public static final String ROUTING_LIST_NOT_FOUND_EXCEPTION = "routing.list.notfound";
+    public static final String NO_DATA_IN_LIST_EXCEPTION = "no.data.in.list.exception";
+    public static final String LOG_LIST_NOT_FOUND = "log.list.not.found";
+    public static final String ROUTE_ENTRY_EXT_LIST_NOT_FOUND = "route.entry.ext.list.not.found";
+    public static final String FAILED_TO_ADD_HLR_ROUTE_ENTRIES = "failed.to.add.hlr.route.entries";
+    public static final String NO_DATA_FOUND_IN_ROUTE_ENTRY_EXT_LIST = "no.data.found.in.route.entry.ext.list";
+    public static final String ID_NOT_FOUND_OR_NULL = "id.not.found.or.null";
+    public static final String ERROR_ADDING_ROUTE_ENTRIES = "error.adding.route.entries";
+
+
+    
+    
 }
+
