@@ -2,6 +2,7 @@ package com.hti.smpp.common.twoway.service.impl;
 
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -107,7 +108,7 @@ public class KeywordServiceImpl implements KeywordService {
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -133,6 +134,7 @@ public class KeywordServiceImpl implements KeywordService {
 				BeanUtils.copyProperties(entryForm, entry);
 				try {
 					entry.setCreatedBy(systemId);
+					entry.setCreatedOn(LocalDate.now() + "");
 					this.keywordRepo.save(entry);
 					target = IConstants.SUCCESS_KEY;
 					logger.info("message: operation success");
@@ -174,9 +176,7 @@ public class KeywordServiceImpl implements KeywordService {
 			throw new NotFoundException("No KeywordEntry Found.");
 		}
 		for (KeywordEntry entry : list) {
-			if (GlobalVars.UserEntries.containsKey(entry.getUserId())) {
-				entry.setSystemId(GlobalVars.UserEntries.get(entry.getUserId()).getSystemId());
-			}
+			entry.setSystemId(entry.getCreatedBy());
 		}
 		return list;
 	}
@@ -194,9 +194,7 @@ public class KeywordServiceImpl implements KeywordService {
 			throw new NotFoundException("No KeywordEntry Found.");
 		}
 		for (KeywordEntry entry : list) {
-			if (GlobalVars.UserEntries.containsKey(entry.getUserId())) {
-				entry.setSystemId(GlobalVars.UserEntries.get(entry.getUserId()).getSystemId());
-			}
+			entry.setSystemId(entry.getCreatedBy());
 		}
 		return list;
 	}
@@ -209,7 +207,7 @@ public class KeywordServiceImpl implements KeywordService {
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystemAndAdmin")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -246,9 +244,8 @@ public class KeywordServiceImpl implements KeywordService {
 			} else if (webMenu.isTwoWay()) {
 				Integer[] users = null;
 				if (Access.isAuthorized(user.getRole(),"isAuthorizedAdmin")) {
-					Predicate<Integer, UserEntry> p = new PredicateBuilderImpl().getEntryObject().get("masterId")
-							.equal(systemId);
-					Set<Integer> set = new HashSet<Integer>(GlobalVars.UserEntries.keySet());
+					Set<Integer> userKey = this.userRepository.getAllIds();
+					Set<Integer> set = new HashSet<Integer>(userKey);
 					set.add(userOptional.get().getId());
 					users = set.toArray(new Integer[0]);
 				} else {
@@ -295,7 +292,7 @@ public class KeywordServiceImpl implements KeywordService {
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -319,9 +316,13 @@ public class KeywordServiceImpl implements KeywordService {
 			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndAdmin") || webMenu.isTwoWay()) {
 				KeywordEntry entry = new KeywordEntry();
 				BeanUtils.copyProperties(entryForm, entry);
-				KeywordEntry updateEntry = this.keywordRepo.findById(entry.getId())
-						.orElseThrow(() -> new NotFoundException("KeywordEntry not found."));
-				this.keywordRepo.save(updateEntry);
+				
+				if(this.keywordRepo.existsById(entry.getId())) {
+					this.keywordRepo.save(entry);
+				}else {
+					throw new NotFoundException("KeywordEntry not found.");
+				}
+				
 				target = IConstants.SUCCESS_KEY;
 				MultiUtility.changeFlag(Constants.KEYWORD_FLAG_FILE, "707");
 			} else {
@@ -352,7 +353,7 @@ public class KeywordServiceImpl implements KeywordService {
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -400,7 +401,7 @@ public class KeywordServiceImpl implements KeywordService {
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystemAndAdmin")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -466,9 +467,10 @@ public class KeywordServiceImpl implements KeywordService {
 		} else {
 			throw new NotFoundException("KeywordEntry not found.");
 		}
-		if (GlobalVars.UserEntries.containsKey(entry.getUserId())) {
-			entry.setSystemId(GlobalVars.UserEntries.get(entry.getUserId()).getSystemId());
-		}
+//		if (GlobalVars.UserEntries.containsKey(entry.getUserId())) {
+//			entry.setSystemId(GlobalVars.UserEntries.get(entry.getUserId()).getSystemId());
+//		}
+		
 		return entry;
 	}
 /**
@@ -480,7 +482,7 @@ public class KeywordServiceImpl implements KeywordService {
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
@@ -872,26 +874,82 @@ public class KeywordServiceImpl implements KeywordService {
 			throw new NotFoundException("User not found with the provided username.");
 		}
 		String target = IConstants.SUCCESS_KEY;
-		JasperPrint print = null;
+		String sql = "select A.user_id,A.source,A.short_code,A.received_text,A.receivedOn,A.reply,A.reply_msg,A.msg_id,A.remarks,B.system_id,C.prefix,C.suffix"
+				+ " from 2way_report A,usermaster B,2way_keyword C where A.user_id=B.id and A.keyword_id = C.id";
+		if (reportForm.getUserId() != null && reportForm.getUserId().length > 0) {
+			sql += " and A.user_id in("
+					+ Arrays.stream(reportForm.getUserId()).mapToObj(String::valueOf).collect(Collectors.joining(","))
+					+ ")";
+		}
+		if (reportForm.getType() != null && reportForm.getType().length > 0) {
+			sql += " and C.type in('" + String.join("','", reportForm.getType()) + "')";
+		}
+		if (reportForm.getKeyword() != null && reportForm.getKeyword().length() > 0) {
+			sql += " and C.prefix in ('" + String.join("','", reportForm.getKeyword().split(",")) + "')";
+		}
+		if (reportForm.getShortCode() != null && reportForm.getShortCode().length() > 0) {
+			sql += " and A.short_code in ('" + String.join("','", reportForm.getShortCode().split(",")) + "')";
+		}
+		if (reportForm.getStartTime() != null && reportForm.getEndTime() != null) {
+			sql += " and A.receivedOn between '" + reportForm.getStartTime() + "' and '" + reportForm.getEndTime()
+					+ "'";
+		}
+		List<ReportEntry> list = new ArrayList<ReportEntry>();
+
 		try {
-			this.locale = locale != null ? new Locale(locale) : Locale.getDefault();
-			print = getReportList(reportForm, false);
+            this.jdbcTemplate.query(sql, (rs) -> {
+                try {
+                    ReportEntry entry = new ReportEntry(
+                            rs.getString("A.source"),
+                            rs.getString("A.short_code"),
+                            rs.getString("A.received_text"),
+                            rs.getString("A.receivedOn"),
+                            rs.getBoolean("A.reply"),
+                            rs.getString("A.reply_msg"),
+                            rs.getString("A.msg_id"),
+                            rs.getString("A.remarks"));
 
-		} catch (JRException e) {
-			logger.error(e.toString());
-			throw new JasperReportException(e.getLocalizedMessage());
-		} catch (Exception e) {
-			logger.error(e.toString());
-			throw new InternalServerException(e.getLocalizedMessage());
-		}
+                    String prefix = rs.getString("C.prefix");
+                    String suffix = rs.getString("C.suffix");
 
-		if (print != null) {
-			return new ResponseEntity<>(print, HttpStatus.OK);
-		} else {
-			target = IConstants.FAILURE_KEY;
-			logger.error("error: record unavailable");
-			throw new NotFoundException("Record Unavailbale.");
-		}
+                    if (suffix != null) {
+                        entry.setKeyword(prefix + " " + suffix);
+                    } else {
+                        entry.setKeyword(prefix);
+                    }
+
+                    entry.setSystemId(rs.getString("B.system_id"));
+
+                    list.add(entry);
+                } catch (SQLException e) {
+                    logger.error("SQL ERROR: "+e.toString());
+                    throw new InternalServerException("SQL ERROR: "+e.getLocalizedMessage());
+                } catch (Exception e) {
+                    logger.error("ERROR: "+e.toString());
+                    throw new InternalServerException("ERROR: "+e.getLocalizedMessage());
+                }
+            });
+        } catch (DataAccessException e) {
+            logger.error("DataAccess ERROR: "+e.toString());
+            throw new InternalServerException("ERROR: "+e.getLocalizedMessage());
+        } catch (Exception e) {
+            logger.error("ERROR: "+e.toString());
+            throw new InternalServerException("ERROR: "+e.getLocalizedMessage());
+        }
+		
+		List<ReportEntry> final_list = list;
+//		try {
+//			this.locale = locale != null ? new Locale(locale) : Locale.getDefault();
+
+//		} catch (JRException e) {
+//			logger.error(e.toString());
+//			throw new JasperReportException(e.getLocalizedMessage());
+//		} catch (Exception e) {
+//			logger.error(e.toString());
+//			throw new InternalServerException(e.getLocalizedMessage());
+//		}
+
+		return new ResponseEntity<>(final_list, HttpStatus.OK);
 
 	}
 /**

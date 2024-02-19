@@ -1,6 +1,7 @@
 package com.hti.smpp.common.user.repository;
 
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -21,4 +22,7 @@ public interface UserEntryRepository extends JpaRepository<UserEntry, Integer> {
 	public boolean existsBySystemId(String username);
 	
 	public UserEntry findByRole(String role);
+	
+	@Query("SELECT u.id FROM UserEntry u")
+    Set<Integer> getAllIds();
 }
