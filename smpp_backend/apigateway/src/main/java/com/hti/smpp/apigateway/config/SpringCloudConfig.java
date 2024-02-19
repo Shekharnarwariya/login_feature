@@ -107,6 +107,13 @@ public class SpringCloudConfig {
 								.filters(f -> f.rewritePath("./network/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
 								.uri("lb://network-service:8093"))
+				
+				// Route for REPORT_SERVICE
+				.route("report-service",
+						r -> r.path("/reports/**")
+								.filters(f -> f.rewritePath("./reports/(?<segment>.*)", "/${segment}")
+										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
+								.uri("lb://report-service:8094"))
 
 				.build(); // Build the routes
 	}

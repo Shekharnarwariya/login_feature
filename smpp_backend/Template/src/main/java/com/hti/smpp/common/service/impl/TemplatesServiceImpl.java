@@ -70,8 +70,8 @@ public class TemplatesServiceImpl implements TemplatesService {
 			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
-		logger.info(messageResourceBundle.getLogMessage("add.template.req"), user.getId(), request.getTitle(), request.getMessage());
-
+		logger.info(messageResourceBundle.getLogMessage("add.template.req"), user.getId(), request.getTitle(),
+				request.getMessage());
 
 		TemplatesDTO template = new TemplatesDTO();
 		template.setMessage(Converter.UTF16(request.getMessage()));
@@ -99,9 +99,11 @@ public class TemplatesServiceImpl implements TemplatesService {
 		}
 
 		if (mapToResponse(savedTemplate) != null) {
-			logger.info(messageResourceBundle.getLogMessage("add.template.success"), userOptional.get().getId(), request.getTitle(), request.getMessage());
+			logger.info(messageResourceBundle.getLogMessage("add.template.success"), userOptional.get().getId(),
+					request.getTitle(), request.getMessage());
 
-			return new ResponseEntity<>(messageResourceBundle.getMessage("template.created.success"), HttpStatus.CREATED);
+			return new ResponseEntity<>(messageResourceBundle.getMessage("template.created.success"),
+					HttpStatus.CREATED);
 		} else {
 			logger.error(messageResourceBundle.getLogMessage("processing.error"));
 
@@ -157,6 +159,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 	@Transactional
 	@Override
 	public ResponseEntity<?> getAllTemplates(String username, LocalDate fromDate, LocalDate toDate, String search) {
+		System.out.println("username" + username + "from date" + fromDate + "toDate" + toDate + "search" + search);
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -173,14 +176,20 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 		logger.info(messageResourceBundle.getLogMessage("get.all.templates.req"), system_id);
 
-
 		List<TemplatesDTO> templates = null;
 		try {
 			if (fromDate != null && toDate != null) {
+				System.out.println(
+						"username" + username + "from date" + fromDate + "toDate" + toDate + "search" + search);
 				templates = templatesRepository.findByMasterIdAndCreatedOnBetween(system_id, fromDate, toDate);
+				if (templates.isEmpty()) {
+					throw new NotFoundException("No Template Found For the Specific Date..");
+				}
 			} else {
 				templates = templatesRepository.findByMasterId(system_id);
 			}
+		} catch (NotFoundException e) {
+			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
 			logger.error(messageResourceBundle.getLogMessage("error.processing.templates"), e.toString());
 
@@ -214,8 +223,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 			return ResponseEntity.ok(collect);
 		} else {
 			logger.error(messageResourceBundle.getLogMessage("error.processing.get.all.templates"));
-
-			return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+			throw new NotFoundException("No Template found .....");
 		}
 
 	}
@@ -235,8 +243,8 @@ public class TemplatesServiceImpl implements TemplatesService {
 		}
 
 		String system_id = user.getSystemId();
-		logger.info(messageResourceBundle.getLogMessage("update.template.req"), system_id, request.getTitle(), request.getMessage());
-
+		logger.info(messageResourceBundle.getLogMessage("update.template.req"), system_id, request.getTitle(),
+				request.getMessage());
 
 		TemplatesDTO template = templatesRepository.findByIdAndMasterId(id, system_id)
 				.orElseThrow(() -> new NotFoundException("Template with id: " + id + ": "
@@ -264,7 +272,8 @@ public class TemplatesServiceImpl implements TemplatesService {
 
 		}
 		if (mapToResponse(updatedTemplate) != null) {
-			logger.info(messageResourceBundle.getLogMessage("update.template.success"), userOptional.get().getId(), request.getTitle(), request.getMessage());
+			logger.info(messageResourceBundle.getLogMessage("update.template.success"), userOptional.get().getId(),
+					request.getTitle(), request.getMessage());
 
 			return new ResponseEntity<>(mapToResponse(updatedTemplate), HttpStatus.CREATED);
 		} else {
@@ -313,14 +322,14 @@ public class TemplatesServiceImpl implements TemplatesService {
 		}
 	}
 
+	private String formatDate(Date date) {
+		if (date == null) {
+			return null;
+		}
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+		return dateFormat.format(date);
+	}
 
-    private String formatDate(Date date) {
-        if (date == null) {
-            return null;
-        }
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
-        return dateFormat.format(date);
-    }
 	// Method for mapping TemplatesDTO to TemplatesResponse
 	private TemplatesResponse mapToResponse(TemplatesDTO template) {
 		TemplatesResponse response = new TemplatesResponse();
@@ -328,8 +337,8 @@ public class TemplatesServiceImpl implements TemplatesService {
 		response.setMessage(template.getMessage());
 		response.setMasterId(template.getMasterId());
 		response.setTitle(template.getTitle());
-		  response.setCreatedOn(formatDate(template.getCreatedOn()));
-		    response.setUpdatedOn(formatDate(template.getUpdatedOn()));
+		response.setCreatedOn(formatDate(template.getCreatedOn()));
+		response.setUpdatedOn(formatDate(template.getUpdatedOn()));
 		return response;
 	}
 

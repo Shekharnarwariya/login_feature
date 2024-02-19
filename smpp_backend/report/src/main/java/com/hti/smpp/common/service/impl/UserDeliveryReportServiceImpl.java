@@ -93,34 +93,42 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-			UserEntry user = userOptional
-					.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+			UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(), reportList.size());
 
-				JasperPrint print = getJasperPrint(reportList, false);
+				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(),
+						reportList.size());
+
+				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(),
+						reportList.size());
+
+				List<DeliveryDTO> print = getJasperPrint(reportList, false);
 				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
 
 				target = IConstants.SUCCESS_KEY;
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 				// Return the file in the ResponseEntity
-				//return new ResponseEntity<>(pdfReport, headers, HttpStatus.OK);
-				
+				// return new ResponseEntity<>(pdfReport, headers, HttpStatus.OK);
+
 			} else {
-				throw new Exception(messageResourceBundle.getExMessage(ConstantMessages.NO_USER_DELIVERY_NOT_REPORT_DATA_FOUND_MESSAGE));
+				throw new Exception(messageResourceBundle
+						.getExMessage(ConstantMessages.NO_USER_DELIVERY_NOT_REPORT_DATA_FOUND_MESSAGE));
 
 			}
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NO_DELIVERY_REPORT_DATA_FOUND_MESSAGE, new Object[] {username}));
-
+			e.printStackTrace();
+			throw new InternalServerException(messageResourceBundle
+					.getExMessage(ConstantMessages.NO_DELIVERY_REPORT_DATA_FOUND_MESSAGE, new Object[] { username }));
 
 		}
 	}
@@ -137,7 +145,7 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 			if (!reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
 
-				JasperPrint print = getJasperPrint(reportList, false);
+				List<DeliveryDTO> print = getJasperPrint(reportList, false);
 
 				// Update content type for Excel file
 				response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -165,68 +173,66 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 
 				target = IConstants.SUCCESS_KEY;
 			} else {
-				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_DELIVERY_REPORT_NOT_FOUND_MESSAGE,new Object[] {username}));
+				throw new NotFoundException(messageResourceBundle.getExMessage(
+						ConstantMessages.USER_DELIVERY_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
 
 			}
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_DELIVERY_REPORT_MESSAGE,new Object[] {username}));
+			throw new InternalServerException(messageResourceBundle
+					.getExMessage(ConstantMessages.ERROR_GETTING_DELIVERY_REPORT_MESSAGE, new Object[] { username }));
 
 		}
 		return ResponseEntity.ok(target);
 	}
 
 	@Override
-		public ResponseEntity<?> UserDeliveryReportPdf(String username, UserDeliveryForm customReportForm,
-				HttpServletResponse response, String lang) {
-			String target = IConstants.FAILURE_KEY;
+	public ResponseEntity<?> UserDeliveryReportPdf(String username, UserDeliveryForm customReportForm,
+	        HttpServletResponse response, String lang) {
+	    String target = IConstants.FAILURE_KEY;
 
-			try {
-				locale = Customlocale.getLocaleByLanguage(lang);
+	    try {
+	        Locale locale = Customlocale.getLocaleByLanguage(lang);
+	        List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
+	        if (!reportList.isEmpty()) {
+	            logger.info(messageResourceBundle.getMessage("report.size"), reportList.size());
 
-				List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
-				if (!reportList.isEmpty()) {
-					logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
+	            List<DeliveryDTO>  print = getJasperPrint(reportList, false);
 
-					JasperPrint print = getJasperPrint(reportList, false);
+	            // Update content type for PDF file
+	            response.setContentType("application/pdf");
+	            response.setHeader("Content-Disposition", "attachment; filename=UserDlr_"
+	                    + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".pdf");
 
-					// Update content type for PDF file
-					response.setContentType("application/pdf");
-					response.setHeader("Content-Disposition", "attachment; filename=UserDlr_" +
-							new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".pdf");
+	            logger.info(messageResourceBundle.getMessage("creating.pdf.message"));
 
-					logger.info(messageResourceBundle.getLogMessage("creating.pdf.message"));
+	            OutputStream out = response.getOutputStream();
+	            JRExporter exporter = new JRPdfExporter();
+	            exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
+	            exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
+	            exporter.exportReport();
 
-					OutputStream out = response.getOutputStream();
-					JRExporter exporter = new JRPdfExporter();
-					exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-					exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-					exporter.exportReport();
+	            // Close the output stream
+	            out.flush(); // Flush before closing
+	            out.close();
 
-					// Close the output stream
-					if (out != null) {
-						try {
-							out.flush(); // Flush before closing 
-							out.close();
-						} catch (IOException ioe) {
-							logger.error(messageResourceBundle.getLogMessage("pdf.outputstream.closing.error.message"));
-
-						}
-					}
-
-					target = IConstants.SUCCESS_KEY;
-				} else {
-					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_DELIVERY_REPORT_NOT_FOUND_MESSAGE,new Object[] {username}));
-				}
-			} catch (NotFoundException e) {
-				throw new NotFoundException(e.getMessage());
-			} catch (Exception e) {
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_DELIVERY_REPORT_MESSAGE,new Object[] {username}));
-			}
-			return ResponseEntity.ok(target);
-		}
-
+	            target = IConstants.SUCCESS_KEY;
+	        } else {
+	            throw new NotFoundException(messageResourceBundle.getExMessage(
+	                    ConstantMessages.USER_DELIVERY_REPORT_NOT_FOUND_MESSAGE, new Object[]{username}));
+	        }
+	    } catch (NotFoundException e) {
+	        throw new NotFoundException(e.getMessage());
+	    } catch (IOException e) {
+	        logger.error(messageResourceBundle.getMessage("pdf.outputstream.closing.error.message"), e);
+	        // Handle IOException for OutputStream operations
+	    } catch (Exception e) {
+	        throw new InternalServerException(messageResourceBundle
+	                .getExMessage(ConstantMessages.ERROR_GETTING_DELIVERY_REPORT_MESSAGE, new Object[]{username}));
+	    }
+	    return ResponseEntity.ok(target);
+	}
 
 	@Override
 	public ResponseEntity<?> UserDeliveryReportDoc(String username, UserDeliveryForm customReportForm,
@@ -239,14 +245,16 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
 			if (!reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
-				JasperPrint print = getJasperPrint(reportList, false);
+				List<DeliveryDTO>  print = getJasperPrint(reportList, false);
 
 				// Update content type for DOCX file
 				response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-				response.setHeader("Content-Disposition", "attachment; filename=UserDlr_" +
-						new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".docx");
+				response.setHeader("Content-Disposition", "attachment; filename=UserDlr_"
+						+ new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".docx");
 
-				logger.info(messageResourceBundle.getLogMessage("creating.doc.message"),username);
+				logger.info(messageResourceBundle.getMessage("creating.doc.message"), username);
+				logger.info(messageResourceBundle.getLogMessage("creating.doc.message"), username);
+
 				OutputStream out = response.getOutputStream();
 				JRExporter exporter = new JRDocxExporter();
 				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
@@ -266,27 +274,27 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 
 				target = IConstants.SUCCESS_KEY;
 			} else {
-				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_DELIVERY_REPORT_NOT_FOUND_MESSAGE,new Object[] {username}));
+				throw new NotFoundException(messageResourceBundle.getExMessage(
+						ConstantMessages.USER_DELIVERY_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
 			}
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_DELIVERY_REPORT_MESSAGE,new Object[] {username}));
+			throw new InternalServerException(messageResourceBundle
+					.getExMessage(ConstantMessages.ERROR_GETTING_DELIVERY_REPORT_MESSAGE, new Object[] { username }));
 		}
 		return ResponseEntity.ok(target);
 	}
 
-
-	private JasperPrint getJasperPrint(List<DeliveryDTO> reportList, boolean paging) throws JRException {
-		logger.info(messageResourceBundle.getLogMessage("creating.design.message"));
-
-		JasperDesign design = JRXmlLoader.load(template_file);
-		logger.info(messageResourceBundle.getLogMessage("compiling.message"));
-
-		JasperReport report = JasperCompileManager.compileReport(design);
-		// ------------- Preparing databeancollection for chart ------------------
-		logger.info(messageResourceBundle.getLogMessage("preparing.chart.message"));
-
+	private List<DeliveryDTO> getJasperPrint(List<DeliveryDTO> reportList, boolean paging) throws JRException {
+//		logger.info(messageResourceBundle.getLogMessage("creating.design.message"));
+//
+//		JasperDesign design = JRXmlLoader.load(template_file);
+//		logger.info(messageResourceBundle.getLogMessage("compiling.message"));
+//
+//		JasperReport report = JasperCompileManager.compileReport(design);
+//		// ------------- Preparing databeancollection for chart ------------------
+//		logger.info(messageResourceBundle.getLogMessage("preparing.chart.message"));
 
 		Map<String, DeliveryDTO> key_map = new HashMap<String, DeliveryDTO>();
 		for (DeliveryDTO chartDTO : reportList) {
@@ -325,13 +333,13 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 		// -------------------------------------------------------------
 		logger.info(messageResourceBundle.getLogMessage("preparing.report.message"));
 
-		JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(final_list);
-		Map parameters = new HashMap();
-		parameters.put(JRParameter.IS_IGNORE_PAGINATION, paging);
-		ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);
-		parameters.put("REPORT_RESOURCE_BUNDLE", bundle);
-		JasperPrint print = JasperFillManager.fillReport(report, parameters, beanColDataSource);
-		return print;
+//		JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(final_list);
+//		Map parameters = new HashMap();
+//		parameters.put(JRParameter.IS_IGNORE_PAGINATION, paging);
+//		ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);
+//		parameters.put("REPORT_RESOURCE_BUNDLE", bundle);
+//		JasperPrint print = JasperFillManager.fillReport(report, parameters, beanColDataSource);
+		return final_list;
 	}
 
 	private List<DeliveryDTO> getReportList(UserDeliveryForm customReportForm, String username, String lang)
@@ -450,7 +458,5 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 		List<DeliveryDTO> sortedlist = personStream.collect(Collectors.toList());
 		return sortedlist;
 	}
-
-	
 
 }

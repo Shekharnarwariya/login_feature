@@ -1,12 +1,9 @@
 package com.hti.smpp.common.controller;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -20,7 +17,6 @@ import com.hti.smpp.common.request.BalanceReportRequest;
 import com.hti.smpp.common.request.BlockedReportRequest;
 import com.hti.smpp.common.request.CampaignReportRequest;
 import com.hti.smpp.common.request.ContentReportRequest;
-import com.hti.smpp.common.request.CustomReportDTO;
 import com.hti.smpp.common.request.CustomReportForm;
 import com.hti.smpp.common.request.CustomizedReportRequest;
 import com.hti.smpp.common.request.DashboardRequest;
@@ -34,11 +30,7 @@ import com.hti.smpp.common.request.SmscDlrReportRequest;
 import com.hti.smpp.common.request.SubmissionReportRequest;
 import com.hti.smpp.common.request.SummaryReportForm;
 import com.hti.smpp.common.request.UserDeliveryForm;
-
-
-import com.hti.smpp.common.response.DeliveryDTO;
 import com.hti.smpp.common.response.TrackResultResponse;
-import com.hti.smpp.common.rmi.dto.LookupReport;
 import com.hti.smpp.common.service.AbortBatchReportService;
 import com.hti.smpp.common.service.CampaignReportService;
 import com.hti.smpp.common.service.ContentReportService;

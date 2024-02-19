@@ -63,13 +63,11 @@ import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
-import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Converter;
 import com.hti.smpp.common.util.Converters;
 import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
-import com.hti.smpp.common.util.MessageResourceBundle;
 import com.hti.smpp.common.util.dto.SevenBitChar;
 
 import jakarta.servlet.ServletOutputStream;
@@ -92,14 +90,12 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	@Autowired
 	private UserDAService userService;
 	@Autowired
-	private MessageResourceBundle messageResourceBundle;
-	@Autowired
 	private WebMasterEntryRepository webMasterEntryRepository;
-	
+
 	@Autowired
-	private BulkDAService bulkService ;
-	
-	private boolean isSummary;
+	private BulkDAService bulkService;
+
+	boolean isSummary;
 	private static final Logger logger = LoggerFactory.getLogger(CustomizedReportServicesImpl.class);
 	String reportUser = null;
 	Locale locale = null;
@@ -127,10 +123,10 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			UserEntry user = userOptional
-					.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+					.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
 
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 
 			locale = Customlocale.getLocaleByLanguage(lang);
@@ -142,33 +138,23 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			}
 			System.out.println(isSummary);
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(), reportList.size());
-				JasperPrint print = isSummary ? dataBase.getSummaryJasperPrint(reportList, false, username, lang)
-						: dataBase.getCustomizedJasperPrint(reportList, false, username, lang);
-				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
-
-				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(), reportList.size());
-
-//				List<DeliveryDTO> print = isSummary ? getSummaryJasperPrint(reportList, false, username, lang)
-//						: getCustomizedJasperPrint(reportList, false, username, lang);
-				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
-
+				logger.info(user.getSystemId() + " ReportSize[View]:" + reportList.size());
+				List<DeliveryDTO> print = isSummary ? getSummaryJasperPrint(reportList, false, username, lang)
+						: getCustomizedJasperPrint(reportList, false, username, lang);
+				logger.info(user.getSystemId() + " <-- Report Finished --> ");
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 
 			} else {
-				throw new Exception(messageResourceBundle.getExMessage(ConstantMessages.CUSTOMIZED_REPORT_NOT_FOUND_MESSAGE));
-
+				throw new Exception("No data found for the CustomizedReport report");
 			}
 		} catch (UnauthorizedException e) {
 			// Handle unauthorized exception
-			//e.printStackTrace();
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.CUSTOMIZED_REPORT_PROCESSING_ERROR_MESSAGE));
-
+			e.printStackTrace();
+			throw new InternalServerException("Error processing in the CustomizedReport report");
 		} catch (Exception e) {
 			// Handle other general exceptions
-			//e.printStackTrace();
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.CUSTOMIZED_REPORT_PROCESSING_ERROR_MESSAGE));
-
+			e.printStackTrace();
+			throw new InternalServerException("Error processing in the CustomizedReport report");
 		}
 	}
 
@@ -178,7 +164,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
 		locale = Customlocale.getLocaleByLanguage(lang);
 		List<DeliveryDTO> print = null;
 		List<DeliveryDTO> report = null;
@@ -200,7 +186,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 //		}
 //
 //		report = JasperCompileManager.compileReport(design);
-	if (groupby.equalsIgnoreCase("country")) {
+		if (groupby.equalsIgnoreCase("country")) {
 			reportList = sortListByCountry(reportList);
 			logger.info(user.getSystemId() + " <-- Preparing Charts --> ");
 			// ------------- Preparing databeancollection for chart ------------------
@@ -323,7 +309,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 //		logger.info(user.getSystemId() + " <-- Filling Report Data --> ");
 //		print = JasperFillManager.fillReport(report, parameters, beanColDataSource);
 //		logger.info(user.getSystemId() + " <-- Filling Finished --> ");
-	return reportList;
+		return reportList;
 	}
 
 	private List<DeliveryDTO> getCustomizedJasperPrint(List<DeliveryDTO> reportList, boolean b, String username,
@@ -346,10 +332,10 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
-				.orElseThrow(() ->new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
 		// boolean isContent;
 		Map parameters = new HashMap();
@@ -477,8 +463,8 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 //		logger.info(user.getSystemId() + " <-- Filling Completed --> ");
 		return report;
 
-	
 	}
+
 	private <K, V extends Comparable<? super V>> Map<K, V> sortMapByDscValue(Map<K, V> map, int limit) {
 		Map<K, V> result = new LinkedHashMap<>();
 		Stream<Map.Entry<K, V>> st = map.entrySet().stream();
@@ -486,7 +472,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				.forEachOrdered(e -> result.put(e.getKey(), e.getValue()));
 		return result;
 	}
-
 
 	public List sortListBySender(List list) {
 		// logger.info(userSessionObject.getSystemId() + " sortListBySender ");
@@ -544,7 +529,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		BeanUtils.copyProperties(customReportForm, customReportDTO);
 		String startDate = customReportForm.getStartDate();
 		String endDate = customReportForm.getEndDate();
-		//IDatabaseService dbService = HtiSmsDB.getInstance();
+		// IDatabaseService dbService = HtiSmsDB.getInstance();
 		reportUser = customReportDTO.getClientId();
 		String campaign = customReportForm.getCampaign();
 		String messageId = customReportDTO.getMessageId(); // null; //customReportDTO.getMessageId();
@@ -567,14 +552,13 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		}
 		to_gmt = null;
 		from_gmt = null;
-		logger.info(user.getSystemId() + ": " + webMasterEntry.getGmt() + " Default: "
-				+ IConstants.DEFAULT_GMT);
+		logger.info(user.getSystemId() + ": " + webMasterEntry.getGmt() + " Default: " + IConstants.DEFAULT_GMT);
 		if (!webMasterEntry.getGmt().equalsIgnoreCase(IConstants.DEFAULT_GMT)) {
 			to_gmt = webMasterEntry.getGmt().replace("GMT", "");
 			from_gmt = IConstants.DEFAULT_GMT.replace("GMT", "");
 		}
-		logger.info(user.getSystemId() + " " + customReportDTO + ",isContent=" + isContent + ",GroupBy="
-				+ groupby + ",Status=" + status);
+		logger.info(user.getSystemId() + " " + customReportDTO + ",isContent=" + isContent + ",GroupBy=" + groupby
+				+ ",Status=" + status);
 		if (criteria_type.equalsIgnoreCase("messageid")) {
 			logger.info(user.getSystemId() + " Report Based On MessageId: " + messageId);
 			if (messageId != null && messageId.trim().length() > 0) {
@@ -593,19 +577,16 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 							+ reportUser + " where msg_id ='" + messageId + "'";
 					logger.info(user.getSystemId() + " ReportSQL:" + query);
 					if (isContent) {
-						Map map =getDlrReport(reportUser, query,
-								webMasterEntry.isHideNum());
+						Map map = getDlrReport(reportUser, query, webMasterEntry.isHideNum());
 						if (!map.isEmpty()) {
-							list =getMessageContent(map, reportUser);
+							list = getMessageContent(map, reportUser);
 						}
 					} else {
-						list = (List) getCustomizedReport(reportUser, query,
-								webMasterEntry.isHideNum());
+						list = (List) getCustomizedReport(reportUser, query, webMasterEntry.isHideNum());
 					}
 				}
 				final_list.addAll(list);
-				logger.info(user.getSystemId() + " End Based On MessageId. Final Report Size: "
-						+ final_list.size());
+				logger.info(user.getSystemId() + " End Based On MessageId. Final Report Size: " + final_list.size());
 			} else {
 				logger.info(user.getSystemId() + " Invalid MessageId");
 				return null;
@@ -615,18 +596,16 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			if (campaign != null && campaign.length() > 1) {
 				List<BulkMapEntry> bulk_list = null;
 				if (campaign.equalsIgnoreCase("all")) {
-					if (user.getRole().equalsIgnoreCase("superadmin")
-							|| user.getRole().equalsIgnoreCase("system")) {
+					if (user.getRole().equalsIgnoreCase("superadmin") || user.getRole().equalsIgnoreCase("system")) {
 						bulk_list = bulkService.list(null, null);
 					} else {
 						String[] user_array;
-						if (user.getRole().equalsIgnoreCase("admin")
-								|| user.getRole().equalsIgnoreCase("seller")
+						if (user.getRole().equalsIgnoreCase("admin") || user.getRole().equalsIgnoreCase("seller")
 								|| user.getRole().equalsIgnoreCase("manager")) {
 							List<String> users = null;
 							if (user.getRole().equalsIgnoreCase("admin")) {
-								users = new ArrayList<String>(userService
-										.listUsersUnderMaster(user.getSystemId()).values());
+								users = new ArrayList<String>(
+										userService.listUsersUnderMaster(user.getSystemId()).values());
 								users.add(user.getSystemId());
 								Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject()
 										.get("secondaryMaster").equal(user.getSystemId());
@@ -635,8 +614,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 									users.add(userEntry.getSystemId());
 								}
 							} else if (user.getRole().equalsIgnoreCase("seller")) {
-								users = new ArrayList<String>(userService
-										.listUsersUnderSeller(user.getId()).values());
+								users = new ArrayList<String>(userService.listUsersUnderSeller(user.getId()).values());
 							} else if (user.getRole().equalsIgnoreCase("manager")) {
 								// SalesDAService salesService = new SalesDAServiceImpl();
 								users = new ArrayList<String>(listUsernamesUnderManager(user.getSystemId()).values());
@@ -670,13 +648,12 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 								|| user.getRole().equalsIgnoreCase("system")) {
 							// superadmin or system user can check for any user's campaign
 						} else {
-							if (user.getRole().equalsIgnoreCase("admin")
-									|| user.getRole().equalsIgnoreCase("seller")
+							if (user.getRole().equalsIgnoreCase("admin") || user.getRole().equalsIgnoreCase("seller")
 									|| user.getRole().equalsIgnoreCase("manager")) {
 								List<String> users = null;
 								if (user.getRole().equalsIgnoreCase("admin")) {
-									users = new ArrayList<String>(userService
-											.listUsersUnderMaster(user.getSystemId()).values());
+									users = new ArrayList<String>(
+											userService.listUsersUnderMaster(user.getSystemId()).values());
 									users.add(user.getSystemId());
 									Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject()
 											.get("secondaryMaster").equal(user.getSystemId());
@@ -685,8 +662,8 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 										users.add(userEntry.getSystemId());
 									}
 								} else if (user.getRole().equalsIgnoreCase("seller")) {
-									users = new ArrayList<String>(userService
-											.listUsersUnderSeller(user.getId()).values());
+									users = new ArrayList<String>(
+											userService.listUsersUnderSeller(user.getId()).values());
 								} else if (user.getRole().equalsIgnoreCase("manager")) {
 									// SalesDAService salesService = new SalesDAServiceImpl();
 									users = new ArrayList<String>(
@@ -730,14 +707,12 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 								+ reportUser + " where msg_id in(" + String.join(",", entry.getValue()) + ")";
 						logger.info(user.getSystemId() + " ReportSQL:" + query);
 						if (isContent) {
-							Map map = getDlrReport(reportUser, query,
-									webMasterEntry.isHideNum());
+							Map map = getDlrReport(reportUser, query, webMasterEntry.isHideNum());
 							if (!map.isEmpty()) {
-								list =getMessageContent(map, reportUser);
+								list = getMessageContent(map, reportUser);
 							}
 						} else {
-							list = (List) getCustomizedReport(reportUser, query,
-									webMasterEntry.isHideNum());
+							list = (List) getCustomizedReport(reportUser, query, webMasterEntry.isHideNum());
 						}
 						final_list.addAll(list);
 					}
@@ -752,22 +727,24 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					if (isContent) {
 						cross_unprocessed_query += ",content,dcs";
 					}
+					cross_unprocessed_query += ",smsc";
 					cross_unprocessed_query += " from table_name where msg_id in(" + String.join(",", unprocessed_set)
 							+ ")";
-					List unproc_list = (List)getUnprocessedReport(
-							cross_unprocessed_query.replaceAll("table_name", "unprocessed"),
-							webMasterEntry.isHideNum(), isContent);
+					System.out.println("unprcced" + cross_unprocessed_query);
+					List unproc_list = getUnprocessedReport(
+							cross_unprocessed_query.replaceAll("table_name", "unprocessed"), webMasterEntry.isHideNum(),
+							isContent);
 					if (unproc_list != null && !unproc_list.isEmpty()) {
 						final_list.addAll(unproc_list);
 					}
+					System.out.println("smsc_in" + unproc_list);
 					unproc_list = (List) getUnprocessedReport(
-							cross_unprocessed_query.replaceAll("table_name", "smsc_in"),
-							webMasterEntry.isHideNum(), isContent);
+							cross_unprocessed_query.replaceAll("table_name", "smsc_in"), webMasterEntry.isHideNum(),
+							isContent);
 					if (unproc_list != null && !unproc_list.isEmpty()) {
 						final_list.addAll(unproc_list);
 					}
-					logger.info(user.getSystemId() + " End Based On Campaign. Final Report Size: "
-							+ final_list.size());
+					logger.info(user.getSystemId() + " End Based On Campaign. Final Report Size: " + final_list.size());
 					// ------------- end report fetching ------------------------------------
 				}
 				logger.info(user.getSystemId() + " End Report Based On Campaign: " + campaign);
@@ -783,8 +760,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				if (role.equalsIgnoreCase("superadmin") || role.equalsIgnoreCase("system")) {
 					users = new ArrayList<String>(userService.listUsers().values());
 				} else if (role.equalsIgnoreCase("admin")) {
-					users = new ArrayList<String>(
-							userService.listUsersUnderMaster(user.getSystemId()).values());
+					users = new ArrayList<String>(userService.listUsersUnderMaster(user.getSystemId()).values());
 					users.add(user.getSystemId());
 					Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject()
 							.get("secondaryMaster").equal(user.getSystemId());
@@ -793,12 +769,10 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 						users.add(userEntry.getSystemId());
 					}
 				} else if (role.equalsIgnoreCase("seller")) {
-					users = new ArrayList<String>(
-							userService.listUsersUnderSeller(user.getId()).values());
+					users = new ArrayList<String>(userService.listUsersUnderSeller(user.getId()).values());
 				} else if (role.equalsIgnoreCase("manager")) {
 					// SalesDAService salesService = new SalesDAServiceImpl();
-					users = new ArrayList<String>(
-							listUsernamesUnderManager(user.getSystemId()).values());
+					users = new ArrayList<String>(listUsernamesUnderManager(user.getSystemId()).values());
 				}
 				logger.info(user.getSystemId() + ": Under Users: " + users.size());
 			} else {
@@ -948,14 +922,12 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 						// query += " order by submitted_time DESC,oprCountry ASC,msg_id DESC";
 						logger.debug(user.getSystemId() + " ReportSQL:" + query);
 						if (isContent) {
-							Map map =getDlrReport(report_user, query,
-									webMasterEntry.isHideNum());
+							Map map = getDlrReport(report_user, query, webMasterEntry.isHideNum());
 							if (!map.isEmpty()) {
 								list = getMessageContent(map, report_user);
 							}
 						} else {
-							list = (List) getCustomizedReport(report_user, query,
-									webMasterEntry.isHideNum());
+							list = (List) getCustomizedReport(report_user, query, webMasterEntry.isHideNum());
 						}
 					}
 					if (list != null && !list.isEmpty()) {
@@ -1042,6 +1014,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 						System.out.println(customReportForm.getContentType() + " Content: " + hexmsg);
 						cross_unprocessed_query += " content like '%" + hexmsg + "%' and ";
 					}
+					System.out.println("cross_unprocessed_query " + cross_unprocessed_query);
 					if (to_gmt != null) {
 						SimpleDateFormat client_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 						client_formatter.setTimeZone(TimeZone.getTimeZone(webMasterEntry.getGmt()));
@@ -1094,11 +1067,11 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 						}
 						List unproc_list = (List) getUnprocessedSummary(
 								cross_unprocessed_query.replaceAll("table_name", "unprocessed"), groupby);
-						System.out.println("unprocessed"+unproc_list);
+						System.out.println("unprocessed" + unproc_list);
 						if (unproc_list != null && !unproc_list.isEmpty()) {
 							final_list.addAll(unproc_list);
 						}
-						unproc_list = (List)getUnprocessedSummary(
+						unproc_list = (List) getUnprocessedSummary(
 								cross_unprocessed_query.replaceAll("table_name", "smsc_in"), groupby);
 						if (unproc_list != null && !unproc_list.isEmpty()) {
 							final_list.addAll(unproc_list);
@@ -1111,8 +1084,8 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 							final_list.addAll(unproc_list);
 						}
 						unproc_list = (List) getUnprocessedReport(
-								cross_unprocessed_query.replaceAll("table_name", "smsc_in"),
-								webMasterEntry.isHideNum(), isContent);
+								cross_unprocessed_query.replaceAll("table_name", "smsc_in"), webMasterEntry.isHideNum(),
+								isContent);
 						if (unproc_list != null && !unproc_list.isEmpty()) {
 							final_list.addAll(unproc_list);
 						}
@@ -1122,14 +1095,13 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				// cross_unprocessed_query);
 				// end check for unprocessed/Blocked/M/F entries
 			}
-			logger.info(user.getSystemId() + " End Based On Criteria. Final Report Size: "
-					+ final_list.size());
+			logger.info(user.getSystemId() + " End Based On Criteria. Final Report Size: " + final_list.size());
 		}
-		
+
 		return final_list;
-	
+
 	}
-	
+
 	public List getUnprocessedSummary(String query, String groupby) {
 		List customReport = new ArrayList();
 		Connection con = null;
@@ -1138,8 +1110,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		DeliveryDTO report = null;
 		System.out.println("UnprocessedSummary:" + query);
 		try {
-			con=getConnection();
-			// con = dbCon.getConnection();
+			con = getConnection();
 			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
 					java.sql.ResultSet.CONCUR_READ_ONLY);
 			pStmt.setFetchSize(Integer.MIN_VALUE);
@@ -1218,7 +1189,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		return customReport;
 	}
 
-	public List getUnprocessedReport(String query, boolean hide_number, boolean isContent) {
+	List getUnprocessedReport(String query, boolean hide_number, boolean isContent) {
 		List customReport = new ArrayList();
 		Connection con = null;
 		PreparedStatement pStmt = null;
@@ -1232,9 +1203,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		String msg_id = null;
 		try {
 			Set<String> flags = getSmscErrorFlagSymbol();
-			con=getConnection();
-
-			// con = dbCon.getConnection();
+			con = getConnection();
 			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
 					java.sql.ResultSet.CONCUR_READ_ONLY);
 			pStmt.setFetchSize(Integer.MIN_VALUE);
@@ -1346,7 +1315,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		ResultSet rs = null;
 		String sql = "select distinct(Flag_symbol) from smsc_error_code";
 		try {
-		con= getConnection();
+			con = getConnection();
 
 			// con = dbCon.getConnection();
 			pStmt = con.prepareStatement(sql);
@@ -1368,13 +1337,13 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					rs.close();
 				}
 				if (con != null) {
-					con.close();				}
+					con.close();
+				}
 			} catch (SQLException sqle) {
 			}
 		}
 		return map;
 	}
-
 
 	public Map<Integer, String> listNamesUnderManager(String mgrId) {
 		Map<Integer, String> map = new HashMap<Integer, String>();
@@ -1484,6 +1453,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		}
 		return customReport;
 	}
+
 	private List getDlrSummaryReport(String report_user, String query, String groupby) {
 		List customReport = new ArrayList();
 		Connection con = null;
@@ -1491,7 +1461,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		ResultSet rs = null;
 		DeliveryDTO report = null;
 		try {
-		con=getConnection();
+			con = getConnection();
 
 			// con = dbCon.getConnection();
 			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
@@ -1564,6 +1534,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		return customReport;
 
 	}
+
 	public List getMessageContent(Map map, String username) {
 		List list = new ArrayList();
 		Connection con = null;
@@ -1575,7 +1546,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			keys = keys.substring(1, keys.length() - 1);
 			sql = "select msg_id,dcs,content from content_" + username + " where msg_id in(" + keys + ")";
 
-			con=getConnection();
+			con = getConnection();
 			pStmt = con.prepareStatement(sql, java.sql.ResultSet.TYPE_FORWARD_ONLY,
 					java.sql.ResultSet.CONCUR_READ_ONLY);
 			pStmt.setFetchSize(Integer.MIN_VALUE);
@@ -1631,7 +1602,8 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		}
 		return list;
 	}
-		public String hexCodePointsToCharMsg(String msg) {
+
+	public String hexCodePointsToCharMsg(String msg) {
 		// logger.info("got request ");
 		// this mthd made decreasing codes, only.
 		//// This mthd will take msg who contain hex values of unicode, then it will
@@ -1674,7 +1646,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		return msg;
 	}
 
-		private Map getDlrReport(String reportUser, String query, boolean hideNum) {
+	private Map getDlrReport(String reportUser, String query, boolean hideNum) {
 		// public Map getDlrReport(String reportUser, String query, boolean hideNum)
 		// throws DBException {
 		Map customReport = new HashMap();
@@ -1691,7 +1663,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		DeliveryDTO report = null;
 		String msg_id = null;
 		try {
-		 con =getConnection();
+			con = getConnection();
 			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
 					java.sql.ResultSet.CONCUR_READ_ONLY);
 			pStmt.setFetchSize(Integer.MIN_VALUE);
@@ -1753,7 +1725,8 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					rs.close();
 				}
 				if (con != null) {
-					con.close();;
+					con.close();
+					;
 				}
 			} catch (SQLException sqle) {
 			}
@@ -1762,65 +1735,65 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 
 	}
 
-		 public List<String> getDistinctMisUser(String userQuery) {
-		        List<String> userSet = new ArrayList<>();
-		        Connection con = null;
-		        Statement pStmt = null;
-		        ResultSet rs = null;
-		        try {
-		            con = getConnection(); // Ensure this method exists and returns a valid connection
-		            pStmt = con.createStatement();
-		            rs = pStmt.executeQuery(userQuery);
-		            while (rs.next()) {
-		                userSet.add(rs.getString("username"));
-		            }
-		        } catch (SQLException sqle) {
-		            sqle.printStackTrace(); // Log or handle the SQLException
-		        } catch (Exception e) {
-		            e.printStackTrace(); // Log or handle other exceptions
-		        } finally {
-		            if (rs != null) {
-		                try {
-		                    rs.close();
-		                } catch (SQLException sqle) {
-		                    sqle.printStackTrace(); // Log or handle the closing exception
-		                }
-		            }
-		            if (pStmt != null) {
-		                try {
-		                    pStmt.close();
-		                } catch (SQLException sqle) {
-		                    sqle.printStackTrace(); // Log or handle the closing exception
-		                }
-		            }
-		            if (con != null) {
-		                try {
-		                    // Assuming con.close connection is your method to close/release the connection
-		                    con.close();
-		                } catch (Exception e) {
-		                    e.printStackTrace(); // Log or handle the closing/release exception
-		                }
-		            }
-		        }
-		        return userSet;
-		    }
+	public List<String> getDistinctMisUser(String userQuery) {
+		List<String> userSet = new ArrayList<>();
+		Connection con = null;
+		Statement pStmt = null;
+		ResultSet rs = null;
+		try {
+			con = getConnection(); // Ensure this method exists and returns a valid connection
+			pStmt = con.createStatement();
+			rs = pStmt.executeQuery(userQuery);
+			while (rs.next()) {
+				userSet.add(rs.getString("username"));
+			}
+		} catch (SQLException sqle) {
+			sqle.printStackTrace(); // Log or handle the SQLException
+		} catch (Exception e) {
+			e.printStackTrace(); // Log or handle other exceptions
+		} finally {
+			if (rs != null) {
+				try {
+					rs.close();
+				} catch (SQLException sqle) {
+					sqle.printStackTrace(); // Log or handle the closing exception
+				}
+			}
+			if (pStmt != null) {
+				try {
+					pStmt.close();
+				} catch (SQLException sqle) {
+					sqle.printStackTrace(); // Log or handle the closing exception
+				}
+			}
+			if (con != null) {
+				try {
+					// Assuming con.close connection is your method to close/release the connection
+					con.close();
+				} catch (Exception e) {
+					e.printStackTrace(); // Log or handle the closing/release exception
+				}
+			}
+		}
+		return userSet;
+	}
+
 	@Override
 	public String CustomizedReportxls(String username, CustomizedReportRequest customReportForm,
 			HttpServletResponse response, String lang) {
 		String target = IConstants.SUCCESS_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
-				.orElseThrow(() ->  new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
 			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username, lang);
 			if (reportList != null && !reportList.isEmpty()) {
 				int total_rec = reportList.size();
-				logger.info(messageResourceBundle.getMessage("xls.report.size.message"), user.getSystemId(), total_rec);
-
+				logger.info(user.getSystemId() + " ReportSize[xls]:" + total_rec);
 				// ---------- Sorting list ----------------------------
 				if (groupby.equalsIgnoreCase("country")) {
 					reportList = dataBase.sortListByCountry(reportList);
@@ -1865,8 +1838,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					workbook = dataBase.getCustomizedWorkBook(reportList, username);
 				}
 				if (total_rec > 100000) {
-					logger.info(messageResourceBundle.getLogMessage("creating.zip.folder.message"), user.getSystemId());
-
+					logger.info(user.getSystemId() + "<-- Creating Zip Folder --> ");
 					response.setContentType("application/zip");
 					response.setHeader("Content-Disposition", "attachment; filename=" + "delivery_"
 							+ new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".zip");
@@ -1875,13 +1847,11 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					String reportName = "delivery.xlsx";
 					ZipEntry entry = new ZipEntry(reportName); // create a zip entry and add it to ZipOutputStream
 					zos.putNextEntry(entry);
-					logger.info(messageResourceBundle.getLogMessage("starting.zip.download.message"), user.getSystemId());
-
+					logger.info(user.getSystemId() + "<-- Starting Zip Download --> ");
 					workbook.write(zos);
 					zos.close();
 				} else {
-					logger.info(messageResourceBundle.getLogMessage("creating.xls.message"), user.getSystemId());
-
+					logger.info(user.getSystemId() + " <---- Creating XLS -----> ");
 					String filename = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())
 							+ ".xlsx";
 					// response.setContentType("text/html; charset=utf-8");
@@ -1890,8 +1860,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					// filename);
 					ByteArrayOutputStream bos = new ByteArrayOutputStream();
 					workbook.write(bos);
-					logger.info(messageResourceBundle.getLogMessage("reading.xls.message"), user.getSystemId());
-
+					logger.info(user.getSystemId() + " <---- Reading XLS -----> ");
 					ByteArrayInputStream is = null;
 					ServletOutputStream out = null;
 					try {
@@ -1899,15 +1868,13 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 						// byte[] buffer = new byte[8789];
 						int curByte = -1;
 						out = response.getOutputStream();
-						logger.info(messageResourceBundle.getLogMessage("starting.xls.download.message"), user.getSystemId());
-
+						logger.info(user.getSystemId() + " <---- Starting xls Download -----> ");
 						while ((curByte = is.read()) != -1) {
 							out.write(curByte);
 						}
 						out.flush();
 					} catch (Exception ex) {
-						logger.error(messageResourceBundle.getLogMessage("dlr.xlsreport.error.message"), user.getSystemId(), ex);
-
+						logger.error(user.getSystemId() + " DLR XLSReport Error ", ex.fillInStackTrace());
 						// ex.printStackTrace();
 					} finally {
 						try {
@@ -1923,14 +1890,12 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				}
 				workbook.close();
 				reportList.clear();
-				logger.info(messageResourceBundle.getLogMessage("xls.report.finished.message"), user.getSystemId());
-
+				logger.info(user.getSystemId() + "<--XLS Report Finished --> ");
 			} else {
-				logger.info(messageResourceBundle.getLogMessage("no.records.found.message"), user.getSystemId());
+				logger.info(user.getSystemId() + "<-- No Records Found --> ");
 			}
 		} catch (Exception e) {
-			logger.error(messageResourceBundle.getLogMessage("error.message"), user.getSystemId(), e.getMessage());
-
+			logger.error(user.getSystemId(), e.fillInStackTrace());
 		}
 		return target;
 	}
@@ -1941,17 +1906,16 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
 		try {
 			locale = Customlocale.getLocaleByLanguage(lang);
 			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username, lang);
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("report.size.pdf.message"), username, reportList.size());
-
+				logger.info(username + " ReportSize[pdf]:" + reportList.size());
 				JasperPrint print = null;
 				if (customReportForm.getReportType().equalsIgnoreCase("Summary")) {
 					isSummary = true;
@@ -1967,8 +1931,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 
 				if (print != null) {
 
-					logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), username);
-
+					logger.info(username + " <-- Preparing Outputstream --> ");
 					String reportName = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())
 							+ ".pdf";
 
@@ -1981,15 +1944,13 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					// Return the file in the ResponseEntity
 					return new ResponseEntity<>(pdfReport, headers, HttpStatus.OK);
 				} else {
-					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.FAILED_GENERATE_JASPER_PRINT_MESSAGE));
-
+					throw new InternalServerException("Failed to generate JasperPrint");
 				}
 			} else {
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NO_DATA_FOUND));
-
+				throw new InternalServerException("No data found for the report");
 			}
 		} catch (Exception e) {
-			logger.error(messageResourceBundle.getLogMessage("error.message"), user.getSystemId(), e.getMessage());
+			logger.error(username, e.fillInStackTrace());
 			// Handle exceptions and return an appropriate response
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating the PDF report");
 		}
@@ -2001,10 +1962,10 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
 
 		String target = IConstants.SUCCESS_KEY;
@@ -2012,8 +1973,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			locale = Customlocale.getLocaleByLanguage(lang);
 			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username, lang);
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("report.size.doc.message"), user.getSystemId(), reportList.size());
-
+				logger.info(user.getSystemId() + " ReportSize[doc]:" + reportList.size());
 				JasperPrint print = null;
 				if (customReportForm.getReportType().equalsIgnoreCase("Summary")) {
 					isSummary = true;
@@ -2027,14 +1987,11 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					print = dataBase.getCustomizedJasperPrint(reportList, false, username, lang);
 				}
 
-				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), user.getSystemId());
-
+				logger.info(user.getSystemId() + " <-- Preparing Outputstream --> ");
 				String reportName = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".doc";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				logger.info(messageResourceBundle.getLogMessage("creating.doc.message"), user.getSystemId());
-
-
+				logger.info(user.getSystemId() + " <-- Creating DOC --> ");
 
 				// String reportName = "delivery_" + new
 				// SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".docx";
@@ -2053,11 +2010,11 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 								"application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 						.body(byteArrayOutputStream.toByteArray());
 			} else {
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.FAILED_GENERATE_JASPER_PRINT_MESSAGE));
+				throw new InternalServerException("Failed to generate JasperPrint");
 			}
 
 		} catch (Exception e) {
-			logger.error(messageResourceBundle.getLogMessage("error.message"), user.getSystemId(), e.getMessage());
+			logger.error(username, e.fillInStackTrace());
 			// Handle exceptions and return an appropriate response
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating the doc report");
 		}

@@ -74,6 +74,13 @@
 			<artifactId>common</artifactId>
 			<version>1.0</version>
 		</dependency>
+		<dependency>
+			<groupId>smpp</groupId>
+			<artifactId>smpp</artifactId>
+			<scope>system</scope>
+			<version>1.0</version>
+			<systemPath>${basedir}/lib/smpp.jar</systemPath>
+		</dependency>
 	</dependencies>
 
 	<build>

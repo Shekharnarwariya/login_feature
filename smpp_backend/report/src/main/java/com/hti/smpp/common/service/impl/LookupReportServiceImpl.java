@@ -98,7 +98,7 @@ public class LookupReportServiceImpl implements LookupReportService {
 	private UserDAService userService;
 	@Autowired
 	private WebMasterEntryRepository webMasterEntryRepository;
-	
+
 	@Autowired
 	private MessageResourceBundle messageResourceBundle;
 
@@ -111,11 +111,12 @@ public class LookupReportServiceImpl implements LookupReportService {
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
+					new Object[] { username }));
 		}
 
 		try {
@@ -126,21 +127,22 @@ public class LookupReportServiceImpl implements LookupReportService {
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
 
-				JasperPrint print = null;
-				print = getJasperPrint(reportList, false);
-
-				target = IConstants.SUCCESS_KEY;
-			     return new ResponseEntity<>(reportList, HttpStatus.OK);
+//				JasperPrint print = null;
+//				print = getJasperPrint(reportList, false);
+//
+//				target = IConstants.SUCCESS_KEY;
+				return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GENERATING_PDF_LOOKUP_REPORT_MESSAGE));
+				throw new InternalServerException(messageResourceBundle
+						.getExMessage(ConstantMessages.ERROR_GENERATING_PDF_LOOKUP_REPORT_MESSAGE));
 
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_MESSAGE,new Object[] {e.getMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_MESSAGE,
+					new Object[] { e.getMessage() }));
 
 		}
-
 
 	}
 
@@ -151,11 +153,12 @@ public class LookupReportServiceImpl implements LookupReportService {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
+					new Object[] { username }));
 		}
 
 		try {
@@ -219,10 +222,12 @@ public class LookupReportServiceImpl implements LookupReportService {
 
 				target = IConstants.SUCCESS_KEY;
 			} else {
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GENERATING_PDF_LOOKUP_REPORT_MESSAGE));
+				throw new InternalServerException(messageResourceBundle
+						.getExMessage(ConstantMessages.ERROR_GENERATING_PDF_LOOKUP_REPORT_MESSAGE));
 			}
 		} catch (Exception e) {
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_MESSAGE,new Object[] {e.getMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_MESSAGE,
+					new Object[] { e.getMessage() }));
 		}
 		return null;
 	}
@@ -233,11 +238,12 @@ public class LookupReportServiceImpl implements LookupReportService {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
+					new Object[] { username }));
 		}
 
 		try {
@@ -271,10 +277,12 @@ public class LookupReportServiceImpl implements LookupReportService {
 				logger.info(messageResourceBundle.getLogMessage("finish.message"));
 				target = IConstants.SUCCESS_KEY;
 			} else {
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GENERATING_PDF_LOOKUP_REPORT_MESSAGE));
+				throw new InternalServerException(messageResourceBundle
+						.getExMessage(ConstantMessages.ERROR_GENERATING_PDF_LOOKUP_REPORT_MESSAGE));
 			}
 		} catch (Exception e) {
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_MESSAGE,new Object[] {e.getMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_MESSAGE,
+					new Object[] { e.getMessage() }));
 		}
 		return null;
 	}
@@ -285,11 +293,12 @@ public class LookupReportServiceImpl implements LookupReportService {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
+					new Object[] { username }));
 		}
 
 		try {
@@ -300,14 +309,14 @@ public class LookupReportServiceImpl implements LookupReportService {
 				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
 
 				JasperPrint print = getJasperPrint(reportList, false);
-				
-				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"),user.getSystemId());
+
+				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), user.getSystemId());
 
 				String reportName = "lookup_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".doc";
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				
-				logger.info(messageResourceBundle.getLogMessage("creating.doc.message"),user.getSystemId());
+
+				logger.info(messageResourceBundle.getLogMessage("creating.doc.message"), user.getSystemId());
 
 				OutputStream out = response.getOutputStream();
 				JRExporter exporter = new JRDocxExporter();
@@ -326,10 +335,12 @@ public class LookupReportServiceImpl implements LookupReportService {
 
 				target = IConstants.SUCCESS_KEY;
 			} else {
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GENERATING_PDF_LOOKUP_REPORT_MESSAGE));
+				throw new InternalServerException(messageResourceBundle
+						.getExMessage(ConstantMessages.ERROR_GENERATING_PDF_LOOKUP_REPORT_MESSAGE));
 			}
 		} catch (Exception e) {
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_MESSAGE,new Object[] {e.getMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_MESSAGE,
+					new Object[] { e.getMessage() }));
 		}
 		return null;
 	}
@@ -342,11 +353,12 @@ public class LookupReportServiceImpl implements LookupReportService {
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
+					new Object[] { username }));
 		}
 		try {
 
@@ -397,8 +409,8 @@ public class LookupReportServiceImpl implements LookupReportService {
 				logger.info(messageResourceBundle.getLogMessage("error.record.unavailable"));
 			}
 		} catch (Exception ex) {
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.PROCESS_ERROR_MESSAGE));
-
+			throw new InternalServerException(
+					messageResourceBundle.getExMessage(ConstantMessages.PROCESS_ERROR_MESSAGE));
 
 		}
 
@@ -586,19 +598,21 @@ public class LookupReportServiceImpl implements LookupReportService {
 	private List<LookupReport> getLookupReport(LookUpReportRequest customReportForm, String role, String username)
 			throws Exception {
 
-		UserDAService userDAService = new UserDAServiceImpl();
+		//UserDAService userDAService = new UserDAServiceImpl();
 		if (customReportForm.getClientId() == null) {
 			return null;
 		}
 		Optional<UserEntry> usersOptional = userRepository.findBySystemId(username);
 		if (!usersOptional.isPresent()) {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		UserEntry user = usersOptional.get();
 		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
 		if (webMasterEntry == null) {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE,new Object[] {user.getId()}));
+			throw new NotFoundException(messageResourceBundle
+					.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE, new Object[] { user.getId() }));
 
 		}
 

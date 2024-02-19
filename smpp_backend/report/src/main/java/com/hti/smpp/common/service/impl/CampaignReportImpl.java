@@ -129,12 +129,12 @@ public class CampaignReportImpl implements CampaignReportService {
 //	         }
 
 			locale = Customlocale.getLocaleByLanguage(lang);
+			
 			List<DeliveryDTO> print = getReportList(customReportForm, username, false, lang);
 			
 			
 			if (print != null && !print.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(), print.size());
-				// JasperPrint print = dataBase.getJasperPrint(reportList, false, username);
 				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
 
 				

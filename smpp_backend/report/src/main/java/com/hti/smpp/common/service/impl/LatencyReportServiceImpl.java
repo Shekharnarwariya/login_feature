@@ -108,61 +108,43 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		return dataSource.getConnection();
 	}
 
-	public ResponseEntity<?> LatencyReportView(String username, LetencyReportRequest customReportForm,
-			String lang) {
-		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
+	public ResponseEntity<?> LatencyReportView(String username, LetencyReportRequest customReportForm, String lang) {
+	    try {
+	    	locale = Customlocale.getLocaleByLanguage(lang);
 			List<DeliveryDTO> reportList = null;
 			if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
 				reportList = getSmscReportList(customReportForm, username, lang);
 			} else {
 				reportList = getReportList(customReportForm, username, lang);
 			}
-			if(reportList != null && !reportList.isEmpty()) {
-				System.out.println("Report Size: " + reportList.size());
-				JasperPrint print = null;
-				if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
-					print = getJasperPrint(reportList, false,
-							IConstants.FORMAT_DIR + "report//SmscLatencyReport.jrxml");
-				} else {
-					print = getJasperPrint(reportList, false, IConstants.FORMAT_DIR + "report//LatencyReport.jrxml");
-				}
-				// Convert JasperPrint to byte array (PDF)
-				byte[] pdfBytes = JasperExportManager.exportReportToPdf(print);
-				HttpHeaders headers = new HttpHeaders();
-				headers.setContentType(MediaType.APPLICATION_PDF);
-				headers.setContentDispositionFormData("attachment", "LatencyReport.pdf");
-				//return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK) ;
-				return new ResponseEntity<>(reportList, HttpStatus.OK);
-			} else {
-				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_LATENCY_REPORT_NOT_FOUND_MESSAGE,new Object[] {username}));
 
-			}
-		} catch (NotFoundException e) {
-        // Log NotFoundException
-			logger.error(messageResourceBundle.getLogMessage("sms.latency.report.notFound"), username, e);
-
-        throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RESOURCE_NOT_FOUND_EXCEPTION));
-
-        } catch (IllegalArgumentException e) {
-        // Log IllegalArgumentException
-        	logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
-
-        throw new BadRequestException(messageResourceBundle.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE , new Object[] {e.getMessage()}));
-
-        } catch (JRException e) {
-        // Log JRException
-        	logger.error(messageResourceBundle.getLogMessage("jasperreports.exception.message"), e.getMessage(), e);
-
-        throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GENERATING_JASPER_REPORT_MESSAGE, new Object[] {e.getMessage()}));
-
-        } catch (Exception e) {
-        // Log other exceptions
-        	logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
-
-        throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NO_LATENCY_REPORT_DATA_FOUND_MESSAGE , new Object[] {username}));
-
-        }
+	        if (reportList != null && !reportList.isEmpty()) {
+	            // System.out.println("Report Size: " + reportList.size());
+	            // List<DeliveryDTO> print;
+	            // if (customReportForm.getSmscNames() != null && customReportForm.getSmscNames().length > 0) {
+	            //     print = getJasperPrint(reportList, false, IConstants.FORMAT_DIR + "report/SmscLatencyReport.jrxml");
+	            // } else {
+	            //     print = getJasperPrint(reportList, false, IConstants.FORMAT_DIR + "report/LatencyReport.jrxml");
+	            // }
+	            // byte[] pdfBytes = JasperExportManager.exportReportToPdf(print);
+	            // HttpHeaders headers = new HttpHeaders();
+	            // headers.setContentType(MediaType.APPLICATION_PDF);
+	            // headers.setContentDispositionFormData("attachment", "LatencyReport.pdf");
+	            // return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+	            return new ResponseEntity<>(reportList, HttpStatus.OK);
+	        } else {
+	            throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_LATENCY_REPORT_NOT_FOUND_MESSAGE, new Object[]{username}));
+	        }
+	    } catch (NotFoundException e) {
+	        logger.error(messageResourceBundle.getLogMessage("sms.latency.report.notFound"), username, e);
+	        throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RESOURCE_NOT_FOUND_EXCEPTION));
+	    } catch (IllegalArgumentException e) {
+	        logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
+	        throw new BadRequestException(messageResourceBundle.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[]{e.getMessage()}));
+	    } catch (Exception e) {
+	        logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
+	        throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NO_LATENCY_REPORT_DATA_FOUND_MESSAGE, new Object[]{username}));
+	    }
 	}
 
 	private List<DeliveryDTO> getReportList(LetencyReportRequest customReportForm, String username, String lang) throws SQLException {
@@ -311,7 +293,7 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 			
 				////throw sql exception
 				list = getLatencyReport(report_user, query);
-				logger.info(messageResourceBundle.getLogMessage("list.size.message"),user.getSystemId(), list.size());
+				logger.info(messageResourceBundle.getLogMessage("report.list.size.message"),user.getSystemId(), list.size());
 
 				
 				if (list != null && !list.isEmpty()) {
@@ -677,7 +659,7 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 				reportList = getReportList(customReportForm, username, lang);
 			}
 			if (reportList != null && !reportList.isEmpty()) {
-				JasperPrint print = null;
+				List<DeliveryDTO> print = null;
 				if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
 					print = getJasperPrint(reportList, false,
 							IConstants.FORMAT_DIR + "report//SmscLatencyReport.jrxml");
@@ -727,7 +709,7 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 			}
 			if (reportList != null && !reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
-				JasperPrint print = null;
+				List<DeliveryDTO> print = null;
 				if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
 					print = getJasperPrint(reportList, false,
 							IConstants.FORMAT_DIR + "report//SmscLatencyReport.jrxml");
@@ -736,14 +718,15 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 				}
 
 // Convert JasperPrint to byte array (PDF)
-				byte[] pdfBytes = JasperExportManager.exportReportToPdf(print);
-
-				HttpHeaders headers = new HttpHeaders();
-				headers.setContentType(MediaType.APPLICATION_PDF);
-				String reportName = "latency_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".pdf";
-				headers.setContentDispositionFormData("attachment", reportName);
-
-				return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+				//byte[] pdfBytes = JasperExportManager.exportReportToPdf(print);
+//
+//				HttpHeaders headers = new HttpHeaders();
+//				headers.setContentType(MediaType.APPLICATION_PDF);
+//				String reportName = "latency_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".pdf";
+//				headers.setContentDispositionFormData("attachment", reportName);
+//
+		//return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+				return new ResponseEntity<>( HttpStatus.OK);
 			} else {
 				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_LATENCY_REPORT_NOT_FOUND_MESSAGE,new Object[] {username}));
 
@@ -772,7 +755,7 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 			List<DeliveryDTO> reportList = null;
 
 			System.out.println("Report Size: " + reportList.size());
-			JasperPrint print = null;
+			List<DeliveryDTO> print = null;
 			if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
 				print = getJasperPrint(reportList, false, IConstants.FORMAT_DIR + "report//SmscLatencyReport.jrxml");
 			} else {
@@ -808,15 +791,15 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 
 	}
 
-	private JasperPrint getJasperPrint(List<DeliveryDTO> reportList, boolean paging, String template_file)
+	private List<DeliveryDTO> getJasperPrint(List<DeliveryDTO> reportList, boolean paging, String template_file)
 			throws JRException {
 		
 		logger.info(messageResourceBundle.getLogMessage("creating.design.message"));
 
-		JasperDesign design = JRXmlLoader.load(template_file);
+	JasperDesign design = JRXmlLoader.load(template_file);
 		logger.info(messageResourceBundle.getLogMessage("compiling.source.format.message"));
 
-		JasperReport report = JasperCompileManager.compileReport(design);
+	JasperReport report = JasperCompileManager.compileReport(design);
 		logger.info(messageResourceBundle.getLogMessage("preparing.chart.data.message"));
 
 		List<DeliveryDTO> chart_list = new ArrayList<DeliveryDTO>();
@@ -850,20 +833,20 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		for (Map.Entry<String, Integer> entry : chart_map.entrySet()) {
 			chart_list.add(new DeliveryDTO(entry.getValue(), entry.getKey()));
 		}
-		JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(reportList);
-		JRBeanCollectionDataSource piechartDataSource = new JRBeanCollectionDataSource(chart_list);
-		Map parameters = new HashMap();
-		parameters.put("piechartDataSource", piechartDataSource);
-		if (reportList.size() > 20000) {
-			JRSwapFileVirtualizer virtualizer = new JRSwapFileVirtualizer(1000,
-					new JRSwapFile(IConstants.WEBAPP_DIR + "temp//", 2048, 1024));
-			parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
-		}
-		parameters.put(JRParameter.IS_IGNORE_PAGINATION, paging);
-		ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);
-		parameters.put("REPORT_RESOURCE_BUNDLE", bundle);
-		JasperPrint print = JasperFillManager.fillReport(report, parameters, beanColDataSource);
-		return print;
+//		JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(reportList);
+//		JRBeanCollectionDataSource piechartDataSource = new JRBeanCollectionDataSource(chart_list);
+//		Map parameters = new HashMap();
+//		parameters.put("piechartDataSource", piechartDataSource);
+//		if (reportList.size() > 20000) {
+//			JRSwapFileVirtualizer virtualizer = new JRSwapFileVirtualizer(1000,
+//					new JRSwapFile(IConstants.WEBAPP_DIR + "temp//", 2048, 1024));
+//			parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
+//		}
+//		parameters.put(JRParameter.IS_IGNORE_PAGINATION, paging);
+//		ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);
+//		parameters.put("REPORT_RESOURCE_BUNDLE", bundle);
+//		JasperPrint print = JasperFillManager.fillReport(report, parameters, beanColDataSource);
+		return chart_list;
 	}
 
 
@@ -898,6 +881,8 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		List<DeliveryDTO> sortedlist = personStream.collect(Collectors.toList());
 		return sortedlist;
 	}
+
+
 
 
 }
