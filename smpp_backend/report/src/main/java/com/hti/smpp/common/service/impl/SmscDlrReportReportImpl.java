@@ -3,7 +3,6 @@ package com.hti.smpp.common.service.impl;
 import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
@@ -35,7 +34,6 @@ import javax.sql.DataSource;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
@@ -54,7 +52,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
 
 import com.hazelcast.internal.util.collection.ArrayUtils;
 import com.hazelcast.query.Predicate;
@@ -65,7 +62,6 @@ import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.network.dto.NetworkEntry;
-import com.hti.smpp.common.request.CustomReportForm;
 import com.hti.smpp.common.request.SmscDlrReportRequest;
 import com.hti.smpp.common.response.DeliveryDTO;
 
@@ -115,7 +111,6 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 
 	@Autowired
 	private UserDAService userService;
-	
 	private Logger logger = LoggerFactory.getLogger(UserDeliveryReportServiceImpl.class);
 	boolean isSummary;
 	@Autowired
@@ -148,12 +143,12 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username, webMasterEntry, lang);
 			if (!reportList.isEmpty()) {
 				System.out.println(user.getSystemId() + " Report Size: " + reportList.size());
-				JasperPrint print = null;
+				//JasperPrint print = null;
 
 				if (isSummary) {
-					print = getSummaryJasperPrint(reportList, false, username);
+					//print = getSummaryJasperPrint(reportList, false, username);
 				} else {
-					print = getJasperPrint(reportList, false, username, webMasterEntry);
+					//print = getJasperPrint(reportList, false, username, webMasterEntry);
 				}
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
@@ -214,7 +209,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 			}
 			if (reportList != null && !reportList.isEmpty()) {
 				int total_rec = reportList.size();
-				logger.info(messageResourceBundle.getLogMessage("xls.report.size.message"), username, total_rec);
+				logger.info(messageResourceBundle.getMessage("xls.report.size.message"), username, total_rec);
 
 				// ---------- Sorting list ----------------------------
 				reportList = sortListByCountry(reportList);
@@ -225,7 +220,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 					workbook = getWorkBook(reportList, username, webMasterEntry);
 				}
 				if (total_rec > 100000) {
-					logger.info(messageResourceBundle.getLogMessage("creating.zip.folder.message"), username);
+					logger.info(messageResourceBundle.getMessage("creating.zip.folder.message"), username);
 
 					response.setContentType("application/zip");
 					response.setHeader("Content-Disposition", "attachment; filename=" + "delivery_"
@@ -235,12 +230,12 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 					String reportName = "delivery.xlsx";
 					ZipEntry entry = new ZipEntry(reportName); // create a zip entry and add it to ZipOutputStream
 					zos.putNextEntry(entry);
-					logger.info(messageResourceBundle.getLogMessage("starting.zip.download.message"), username);
+					logger.info(messageResourceBundle.getMessage("starting.zip.download.message"), username);
 
 					workbook.write(zos);
 					zos.close();
 				} else {
-					logger.info(messageResourceBundle.getLogMessage("creating.xls.message"), username);
+					logger.info(messageResourceBundle.getMessage("creating.xls.message"), username);
 
 					String filename = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0))
 							+ ".xlsx";
@@ -250,7 +245,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 					// filename);
 					ByteArrayOutputStream bos = new ByteArrayOutputStream();
 					workbook.write(bos);
-					logger.info(messageResourceBundle.getLogMessage("reading.xls.message"), username);
+					logger.info(messageResourceBundle.getMessage("reading.xls.message"), username);
 
 					InputStream is = null;
 					OutputStream out = null;
@@ -259,14 +254,14 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 						// byte[] buffer = new byte[8789];
 						int curByte = -1;
 						out = response.getOutputStream();
-						logger.info(messageResourceBundle.getLogMessage("starting.xls.download.message"), username);
+						logger.info(messageResourceBundle.getMessage("starting.xls.download.message"), username);
 
 						while ((curByte = is.read()) != -1) {
 							out.write(curByte);
 						}
 						out.flush();
 					} catch (Exception ex) {
-						logger.error(messageResourceBundle.getLogMessage("dlr.xlsreport.error.message"), username);
+						logger.error(messageResourceBundle.getMessage("dlr.xlsreport.error.message"), username);
 
 						// ex.printStackTrace();
 					} finally {
@@ -283,14 +278,14 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 				}
 				workbook.close();
 				reportList.clear();
-				logger.info(messageResourceBundle.getLogMessage("xls.report.finished.message"), username);
+				logger.info(messageResourceBundle.getMessage("xls.report.finished.message"), username);
 
 				target = reportList;
 			} else {
 				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_DLR_REPORT_NOT_FOUND_MESSAGE, new Object[] {username}));
 			}
 		} catch (Exception e) {
-			logger.error(messageResourceBundle.getLogMessage("error.message"), username);
+			logger.error(messageResourceBundle.getMessage("error.message"), username);
 
 			throw new InternalServerException("Error: " + e.getMessage());
 

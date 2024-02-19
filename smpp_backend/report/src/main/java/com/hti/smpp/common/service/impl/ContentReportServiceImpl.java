@@ -1,10 +1,6 @@
 package com.hti.smpp.common.service.impl;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -51,7 +47,6 @@ import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.request.ContentReportRequest;
 import com.hti.smpp.common.request.CustomReportDTO;
-import com.hti.smpp.common.request.CustomReportForm;
 import com.hti.smpp.common.response.DeliveryDTO;
 import com.hti.smpp.common.service.ContentReportService;
 import com.hti.smpp.common.service.UserDAService;
@@ -83,7 +78,6 @@ import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.design.JasperDesign;
 import net.sf.jasperreports.engine.export.JRPdfExporter;
 import net.sf.jasperreports.engine.export.JRXlsExporter;
-import net.sf.jasperreports.engine.export.ooxml.JRDocxExporter;
 import net.sf.jasperreports.engine.fill.JRSwapFileVirtualizer;
 import net.sf.jasperreports.engine.util.JRSwapFile;
 import net.sf.jasperreports.engine.xml.JRXmlLoader;
@@ -93,9 +87,6 @@ public class ContentReportServiceImpl implements ContentReportService {
 
 	@Autowired
 	private DataBase dataBase;
-	@Autowired
-	private EntityManager entityManager;
-
 	@Autowired
 	private UserEntryRepository userRepository;
 	@Autowired
@@ -116,8 +107,6 @@ public class ContentReportServiceImpl implements ContentReportService {
 
 	@Override
 	public ResponseEntity<?> ContentReportView(String username, ContentReportRequest customReportForm, String lang) {
-		String target = IConstants.FAILURE_KEY;
-
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
 				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
@@ -138,9 +127,6 @@ public class ContentReportServiceImpl implements ContentReportService {
 
 				// JasperPrint print = dataBase.getJasperPrint(reportList, false, username);
 				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
-
-				target = IConstants.SUCCESS_KEY;
-
 				// Return ResponseEntity with the list in the response body
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
@@ -150,7 +136,7 @@ public class ContentReportServiceImpl implements ContentReportService {
 		}
 			catch (NotFoundException e) {
 		        // Log NotFoundException
-				logger.error(messageResourceBundle.getLogMessage("sms.latency.report.notFound"), username, e);
+				logger.error(messageResourceBundle.getLogMessage("dlr.content.report.data.not.found"), username, e);
 
 		        throw new NotFoundException(e.getMessage());
 		        } catch (IllegalArgumentException e) {
@@ -487,8 +473,7 @@ public class ContentReportServiceImpl implements ContentReportService {
 	}
 
 	public List<DeliveryDTO> getContentReportList(ContentReportRequest customReportForm, String username, String lang) {
-
-		UserDAService userDAService = new UserDAServiceImpl();
+		
 		if (customReportForm.getClientId() == null) {
 			return null;
 		}

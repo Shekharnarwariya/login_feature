@@ -74,4 +74,11 @@ public class TemplatesDTO {
 	public void setUpdatedOn(Date updatedOn) {
 		this.updatedOn = updatedOn;
 	}
+
+	@Override
+	public String toString() {
+		return "TemplatesDTO [id=" + id + ", message=" + message + ", masterId=" + masterId + ", title=" + title
+				+ ", createdOn=" + createdOn + ", updatedOn=" + updatedOn + "]";
+	}
+
 }

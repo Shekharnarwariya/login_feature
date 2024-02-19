@@ -26,7 +26,7 @@ public class ReportDAOImpl implements ReportDAO {
 	private Logger logger = LoggerFactory.getLogger(ReportDAOImpl.class);
 
 	private SessionFactory sessionFactory;
-	
+
 	@Autowired
 	private MessageResourceBundle messageResourceBundle;
 
@@ -34,52 +34,51 @@ public class ReportDAOImpl implements ReportDAO {
 	public ReportDAOImpl(SessionFactory sessionFactory) {
 		this.sessionFactory = sessionFactory;
 	}
+
 	public List<ProfitReportEntry> listProfitReport(ReportCriteria rc) {
-		logger.info(messageResourceBundle.getLogMessage("listing.profit.result.entries.message"), rc);
+		logger.info("report Criteria" + rc);
 
-	    Session session = null;
+		Session session = null;
 
-	    try {
-	        session = sessionFactory.openSession();
-	        CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-	        CriteriaQuery<ProfitReportEntry> query = criteriaBuilder.createQuery(ProfitReportEntry.class);
-	        Root<ProfitReportEntry> root = query.from(ProfitReportEntry.class);	       
-	        List<Predicate> predicates = new ArrayList<>();
-	        predicates.add(criteriaBuilder.equal(root.get("wallet"), true));
+		try {
+			session = sessionFactory.openSession();
+			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+			CriteriaQuery<ProfitReportEntry> query = criteriaBuilder.createQuery(ProfitReportEntry.class);
+			Root<ProfitReportEntry> root = query.from(ProfitReportEntry.class);
+			List<Predicate> predicates = new ArrayList<>();
+			predicates.add(criteriaBuilder.equal(root.get("wallet"), true));
 
-	        if (rc.getStartMsgId() > 0 && rc.getEndMsgId() > 0) {
-	            predicates.add(criteriaBuilder.between(root.get("msgId"), rc.getStartMsgId(), rc.getEndMsgId()));
-	        }
+			if (rc.getStartMsgId() > 0 && rc.getEndMsgId() > 0) {
+				predicates.add(criteriaBuilder.between(root.get("msgId"), rc.getStartMsgId(), rc.getEndMsgId()));
+			}
 
-	        if (rc.getResellerId() > 0) {
-	            predicates.add(criteriaBuilder.equal(root.get("resellerId"), rc.getResellerId()));
-	        }
+			if (rc.getResellerId() > 0) {
+				predicates.add(criteriaBuilder.equal(root.get("resellerId"), rc.getResellerId()));
+			}
 
-	        if (rc.getUserId() > 0) {
-	            predicates.add(criteriaBuilder.equal(root.get("userId"), rc.getUserId()));
-	        }
+			if (rc.getUserId() > 0) {
+				predicates.add(criteriaBuilder.equal(root.get("userId"), rc.getUserId()));
+			}
 
-	        // Build the where clause with the collected predicates
-	        query.select(root).where(predicates.toArray(new Predicate[0]));
+			// Build the where clause with the collected predicates
+			query.select(root).where(predicates.toArray(new Predicate[0]));
 
-	        // Execute the query
-	        List<ProfitReportEntry> list = session.createQuery(query).getResultList();
+			// Execute the query
+			List<ProfitReportEntry> list = session.createQuery(query).getResultList();
 
-	        logger.info(messageResourceBundle.getLogMessage("profit.report.entries.message"), list.size());
+			logger.info(messageResourceBundle.getLogMessage("profit.report.entries.message"), list.size());
 
+			// You might need to handle the connection accordingly based on your
+			// application's requirements.
 
-	        // You might need to handle the connection accordingly based on your
-	        // application's requirements.
-
-	        return list;
-	    } finally {
-	        // Close the session in a finally block to ensure it's closed even if an
-	        // exception occurs.
-	        if (session != null) {
-	            session.close();
-	        }
-	    }
+			return list;
+		} finally {
+			// Close the session in a finally block to ensure it's closed even if an
+			// exception occurs.
+			if (session != null) {
+				session.close();
+			}
+		}
 	}
-
 
 }

@@ -15,7 +15,7 @@ public class LookupServiceInvoker {
 
 	public LookupServiceInvoker() throws RemoteException, NotBoundException {
 	// Connect HLR Server on port 1098
-		java.rmi.registry.Registry myRegistry = LocateRegistry.getRegistry("127.0.0.1", 1098);
+		java.rmi.registry.Registry myRegistry = LocateRegistry.getRegistry("5.32.122.147", 1098);
 		// search for service
 	impl = (LookupService) ((java.rmi.registry.Registry) myRegistry).lookup("lookupService");
 	}
