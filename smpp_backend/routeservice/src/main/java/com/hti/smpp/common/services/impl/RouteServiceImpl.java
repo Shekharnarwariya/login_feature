@@ -57,7 +57,6 @@ import com.hti.smpp.common.dto.UserEntryExt;
 import com.hti.smpp.common.exception.DataAccessError;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
-import com.hti.smpp.common.exception.ScheduledTimeException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.exception.WorkBookException;
 import com.hti.smpp.common.network.dto.NetworkEntry;
@@ -99,9 +98,11 @@ import com.hti.smpp.common.user.dto.UserSessionObject;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Constants;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 import com.hti.smpp.common.util.MultiUtility;
 
 import jakarta.persistence.EntityManager;
@@ -165,6 +166,9 @@ public class RouteServiceImpl implements RouteServices {
 
 	@Autowired
 	private HlrRouteEntrySchRepository hlrRouteEntrySchRepository;
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 /**
  * Saves routes based on the provided RouteRequest and username.
  */
@@ -177,10 +181,10 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		String target = IConstants.FAILURE_KEY;
@@ -224,8 +228,9 @@ public class RouteServiceImpl implements RouteServices {
 
 			}
 			if (userWiseRouting.isEmpty()) {
-				logger.error("error: record unavailable");
-				throw new NotFoundException("Userwise Routing is empty!");
+				logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USERWISE_ROUTING_EMPTY));
 			} else {
 				try {
 					// ----- check for auto_copy_routing users ------------
@@ -241,10 +246,11 @@ public class RouteServiceImpl implements RouteServices {
 							pu = new PredicateBuilderImpl().getEntryObject().get("masterId")
 									.equal(reseller.getSystemId());
 							for (int subUserId : GlobalVars.UserEntries.keySet(pu)) {
-								logger.info(reseller.getSystemId() + " Checking Copy Route for SubUser: " + subUserId);
+								logger.info(messageResourceBundle.getLogMessage("copy.route.check"), reseller.getSystemId(), subUserId);
+
 								if (auto_copy_route_users.contains(subUserId)) {
-									logger.info(reseller.getSystemId() + " Auto Copy Route Enabled For SubUser: "
-											+ subUserId);
+									logger.info(messageResourceBundle.getLogMessage("auto.copy.route.enabled"), reseller.getSystemId(), subUserId);
+
 									if (userWiseRouting.containsKey(subUserId)) {
 										userWiseRouting.remove(subUserId);
 									}
@@ -260,7 +266,8 @@ public class RouteServiceImpl implements RouteServices {
 										try {
 											margin = Double.parseDouble(margin_str);
 										} catch (Exception ex) {
-											logger.error(subUserId + "Invalid margin: " + margin_str);
+											logger.error(messageResourceBundle.getLogMessage("invalid.margin"), subUserId, margin_str);
+
 											throw new InternalServerException("Parse Exception: "+ex.getLocalizedMessage());
 										}
 									}
@@ -288,8 +295,8 @@ public class RouteServiceImpl implements RouteServices {
 											childRouteEntry.setCost(child_cost);
 										}
 										if (child_network_routing.containsKey(ext.getBasic().getNetworkId())) {
-											logger.info(reseller.getSystemId() + " SubUser[" + subUserId
-													+ "] Already Has Network: " + ext.getBasic().getNetworkId());
+											logger.info(messageResourceBundle.getLogMessage("subuser.already.has.network"), reseller.getSystemId(), subUserId, ext.getBasic().getNetworkId());
+
 											// put to remove list
 											removeList.add(child_network_routing.get(ext.getBasic().getNetworkId()));
 										}
@@ -307,13 +314,15 @@ public class RouteServiceImpl implements RouteServices {
 							}
 						}
 					}
-					logger.info(systemId + " Add Routing Users: " + userWiseRouting.keySet());
+					logger.info(messageResourceBundle.getLogMessage("add.routing.users"), systemId, userWiseRouting.keySet());
+
 					for (List<RouteEntryExt> user_wise_entries : userWiseRouting.values()) {
 						routingList.addAll(user_wise_entries);
 					}
 					logger.info(systemId + " Add Routing Entries: " + routingList.size());
 					if (!removeList.isEmpty()) {
-						logger.info(systemId + " Remove Routing Entries: " + removeList.size());
+						logger.info(messageResourceBundle.getLogMessage("remove.routing.entries"), systemId, removeList.size());
+
 						deleteRouteEntries(removeList);
 					}
 
@@ -329,8 +338,9 @@ public class RouteServiceImpl implements RouteServices {
 				}
 			}
 		} else {
-			logger.error("error: record unavailable");
-			throw new NotFoundException("Exception: Record Unavailable!");
+			logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RECORD_UNAVAILABLE_EXCEPTION));
+
 		}
 		return target;
 	}
@@ -370,7 +380,7 @@ public class RouteServiceImpl implements RouteServices {
 				routeEntryRepository.delete(entry);
 			} catch (Exception e) {
 				logger.error(e.getLocalizedMessage());
-				throw new InternalServerErrorException("Error in Deletion: "+e.getLocalizedMessage());
+				throw new InternalServerErrorException(messageResourceBundle.getExMessage(ConstantMessages.DELETION_ERROR_EXCEPTION) +e.getLocalizedMessage());
 			}
 
 			HlrRouteEntry hlr = new HlrRouteEntry();
@@ -379,7 +389,7 @@ public class RouteServiceImpl implements RouteServices {
 				hlrRouteEntryRepository.delete(hlr);
 			} catch (Exception e) {
 				logger.error(e.getLocalizedMessage());
-				throw new InternalServerErrorException("Error in Deletion: "+e.getLocalizedMessage());
+				throw new InternalServerErrorException(messageResourceBundle.getExMessage(ConstantMessages.DELETION_ERROR_EXCEPTION) +e.getLocalizedMessage());
 			}
 
 			OptionalRouteEntry opt = new OptionalRouteEntry();
@@ -388,7 +398,7 @@ public class RouteServiceImpl implements RouteServices {
 				optionalRouteEntryRepository.delete(opt);
 			} catch (Exception e) {
 				logger.error(e.getLocalizedMessage());
-				throw new InternalServerErrorException("Error in Deletion: "+e.getLocalizedMessage());
+				throw new InternalServerErrorException(messageResourceBundle.getExMessage(ConstantMessages.DELETION_ERROR_EXCEPTION) +e.getLocalizedMessage());
 			}
 		}
 	}
@@ -450,7 +460,8 @@ public class RouteServiceImpl implements RouteServices {
 
 			} catch (Exception e) {
 				logger.error(e.getLocalizedMessage());
-				throw new InternalServerErrorException("Error in Saving: "+e.getLocalizedMessage());
+				throw new InternalServerErrorException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR_EXCEPTION_SAVE)
++e.getLocalizedMessage());
 			}
 		}
 
@@ -470,7 +481,8 @@ public class RouteServiceImpl implements RouteServices {
 		}
 
 		if (basicEntries.isEmpty()) {
-			logger.info("Routing Entries Not Found For " + userId);
+			logger.info(messageResourceBundle.getLogMessage("routing.entries.not.found"), userId);
+
 			return new HashMap<>();
 		}
 
@@ -573,7 +585,8 @@ public class RouteServiceImpl implements RouteServices {
 				list.put(entry.getBasic().getNetworkId(), entry);
 			}
 		} else {
-			logger.info("listing RouteEntries From Database: " + userId);
+			logger.info(messageResourceBundle.getLogMessage("listing.route.entries"), userId);
+
 			List<RouteEntry> db_list = listRoute(userId);
 			for (RouteEntry basic : db_list) {
 				RouteEntryExt entry = new RouteEntryExt(basic);
@@ -857,7 +870,7 @@ public class RouteServiceImpl implements RouteServices {
 								continue;
 							}
 						} else {
-							logger.error("UserEntry Not Found: " + basic.getUserId());
+							logger.error(messageResourceBundle.getLogMessage("user.entry.not.found"), basic.getUserId());
 							continue;
 						}
 						RouteEntryExt entry = new RouteEntryExt(basic);
@@ -947,7 +960,8 @@ public class RouteServiceImpl implements RouteServices {
 						}
 						result.put(basic.getId(), entry);
 					} else {
-						logger.error(id + " Cached Entry Not Found ");
+						logger.error(messageResourceBundle.getLogMessage("cached.entry.not.found"), id);
+
 					}
 				}
 			} else {
@@ -971,7 +985,8 @@ public class RouteServiceImpl implements RouteServices {
 								continue;
 							}
 						} else {
-							logger.error("UserEntry Not Found: " + basic.getUserId());
+							logger.error(messageResourceBundle.getLogMessage("user.entry.not.found"), basic.getUserId());
+
 							continue;
 						}
 						if (currencies.isEmpty() && accountTypes.isEmpty()) {
@@ -1308,10 +1323,10 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		OptionRouteResponse responce = new OptionRouteResponse();
 		System.out.println("Username: " + username);
@@ -1421,10 +1436,11 @@ public class RouteServiceImpl implements RouteServices {
 					for (UserEntry reseller : resellers) {
 						pu = new PredicateBuilderImpl().getEntryObject().get("masterId").equal(reseller.getSystemId());
 						for (int subUserId : GlobalVars.UserEntries.keySet(pu)) {
-							logger.info(reseller.getSystemId() + " Checking Copy Route for SubUser: " + subUserId);
+							logger.info(messageResourceBundle.getLogMessage("copy.route.check"), reseller.getSystemId(), subUserId);
+
 							if (auto_copy_route_users.contains(subUserId)) {
-								logger.info(
-										reseller.getSystemId() + " Auto Copy Route Enabled For SubUser: " + subUserId);
+								logger.info(messageResourceBundle.getLogMessage("auto.copy.route.enabled"), reseller.getSystemId(), subUserId);
+
 								if (userWiseRouting.containsKey(subUserId)) {
 									userWiseRouting.remove(subUserId);
 								}
@@ -1490,13 +1506,16 @@ public class RouteServiceImpl implements RouteServices {
 					Date scheduledDate = df.parse(scheduledOn[0]);
 					Date currentDate = df.parse(df.format(new Date()));
 					if (scheduledDate.before(currentDate)) {
-						logger.error(masterid + " Optional Routing Scheduled Date is Before Current Date");
+						logger.error(messageResourceBundle.getLogMessage("optional.routing.scheduled.date"), masterid);
+
 					} else {
 						addOptRouteSchEntry(list, optRouteEntry.getScheduledOn());
 						if (scheduledDate.after(currentDate)) {
-							logger.error(masterid + " Optional Routing Not Scheduled For Today");
+							logger.error(messageResourceBundle.getLogMessage("optional.routing.not.scheduled"), masterid);
+
 						} else {
-							logger.info(masterid + " Optional Routing Scheduled For Today");
+							logger.info(messageResourceBundle.getLogMessage("optional.routing.scheduled.today"), masterid);
+
 							Timer t = new Timer();
 							t.schedule(new TimerTask() {
 								public void run() {
@@ -1504,7 +1523,8 @@ public class RouteServiceImpl implements RouteServices {
 									try {
 										updateOptRouteSch(optRouteEntry.getScheduledOn());
 									} catch (DataAccessException e) {
-										logger.error("Data Access Exception: "+e.getLocalizedMessage());
+										logger.error(messageResourceBundle.getLogMessage("data.access.exception"), e.getLocalizedMessage());
+
 										throw new DataAccessError("Data Access Exception: "+e.getLocalizedMessage());
 									} catch (Exception e) {
 										logger.error("Unexpected Error: "+e.getLocalizedMessage());
@@ -1519,7 +1539,8 @@ public class RouteServiceImpl implements RouteServices {
 							}, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(optRouteEntry.getScheduledOn()));
 						}
 						target = "schedule";
-						logger.info("Schedule Succesful.");
+						logger.info(messageResourceBundle.getLogMessage("schedule.successful"));
+
 					}
 				} else {
 					updateOptionalRouteEntries(list);
@@ -1545,12 +1566,14 @@ public class RouteServiceImpl implements RouteServices {
 						target = "view";
 					} else {
 						target = IConstants.SUCCESS_KEY;
-						logger.info("Routing Configured Successful!");
+						logger.info(messageResourceBundle.getLogMessage("routing.configured.successful"));
+
 					}
 				}
 			} else {
-				logger.error("error: record unavailable");
-				throw new NotFoundException("Error: No Record Found");
+				logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RECORD_UNAVAILABLE));
+
 			}
 		} catch (NotFoundException ex) {
 			logger.error(masterid, ex.toString());
@@ -1661,7 +1684,8 @@ public class RouteServiceImpl implements RouteServices {
 			// Log or return success message
 		} catch (Exception e) {
 			logger.error(e.getLocalizedMessage());
-			throw new Exception("Failed to add Optional Route Entries", e);
+			throw new Exception(messageResourceBundle.getExMessage(ConstantMessages.FAILED_TO_ADD_OPTIONAL_ROUTE_ENTRIES) + e);
+
 		}
 	}
 /**
@@ -1682,10 +1706,10 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		String target = IConstants.FAILURE_KEY;
@@ -1699,7 +1723,8 @@ public class RouteServiceImpl implements RouteServices {
 			int[] userId = optRouteEntry.getUserId();
 			if (id != null && id.length > 0) {
 				Map<Integer, OptionalEntryLog> map = listOptLog(id);
-				logger.info("OptionalRoute Undo Records: " + map.size());
+				logger.info(messageResourceBundle.getLogMessage("optional.route.undo.records"), map.size());
+
 				String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 				OptionalRouteEntry routingDTO = null;
 				for (int i = 0; i < id.length; i++) {
@@ -1719,7 +1744,8 @@ public class RouteServiceImpl implements RouteServices {
 					}
 				}
 				if (!list.isEmpty()) {
-					logger.info("Optional Route Update Size: " + list.size());
+					logger.info(messageResourceBundle.getLogMessage("optional.route.update.size"), list.size());
+
 					try {
 						updateOptionalRouteEntries(list);
 					} catch (Exception e) {
@@ -1744,15 +1770,18 @@ public class RouteServiceImpl implements RouteServices {
 						target = "view";
 					} else {
 						target = IConstants.SUCCESS_KEY;
-						logger.info("Routing Configured Successfully!");
+						logger.info(messageResourceBundle.getLogMessage("routing.configured.successfully"));
+
 					}
 				} else {
 					logger.error("error: List is empty");
-					throw new NotFoundException("Record not found! List is empty");
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RECORD_NOT_FOUND_EMPTY_LIST));
+
 				}
 			} else {
-				logger.error("error: record unavailable");
-				throw new NotFoundException("Record Unavailable!");
+				logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RECORD_UNAVAILABLE));
+
 			}
 		} catch (NotFoundException ex) {
 			logger.error("NotFound Exception: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
@@ -1783,10 +1812,10 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		OptionRouteResponse response = new OptionRouteResponse();
@@ -1794,7 +1823,8 @@ public class RouteServiceImpl implements RouteServices {
 
 		String masterid = userEntry.getMasterId();
 
-		logger.info("Optional Route Log Requested By " + masterid);
+		logger.info(messageResourceBundle.getLogMessage("optional.route.log.requested"), masterid);
+
 		// List<RouteEntry> list = new ArrayList<RouteEntry>();
 		int[] id = routingForm.getRouteId();
 		// String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new
@@ -1816,12 +1846,14 @@ public class RouteServiceImpl implements RouteServices {
 					response.setRoutinglist(list);
 					target = "previous";
 				} else {
-					logger.error("error: record unavailable");
-					throw new NotFoundException("Record Not Found!");
+					logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RECORD_UNAVAILABLE));
 				}
 			} else {
-				logger.error("error: record unavailable");
-				throw new NotFoundException("Record Unavailble. Id Unavailable.");
+				logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+				// NotFoundException
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RECORD_UNAVAILABLE_ID_UNAVAILABLE));
+
 			}
 
 		} catch (NotFoundException ex) {
@@ -1846,10 +1878,10 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		String target = IConstants.FAILURE_KEY;
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
@@ -1876,12 +1908,13 @@ public class RouteServiceImpl implements RouteServices {
 					optionRouteResponse.setGroupDetail(listGroupNames());
 					target = "basic";
 				} else {
-					logger.error("error: record unavailable");
-					throw new NotFoundException("Record Not Found! List is empty");
+					logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RECORD_NOT_FOUND_EMPTY_LIST));
+
 				}
 			} else {
-				logger.error("error: record unavailable");
-				throw new NotFoundException("Record not found! Id is null or zero!");
+				logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RECORD_UNAVAILABLE_ID_UNAVAILABLE));
 			}
 		} catch (NotFoundException ex) {
 			logger.error("NotFoundException: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
@@ -1904,10 +1937,10 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		String target = IConstants.FAILURE_KEY;
@@ -2020,7 +2053,8 @@ public class RouteServiceImpl implements RouteServices {
 							}
 							routelist.add(ext);
 						} else {
-							logger.info(systemId + " Already Has Network: " + networkId);
+							logger.info(messageResourceBundle.getLogMessage("already.has.network"), systemId, networkId);
+
 						}
 					} else {
 						RouteEntry entry = new RouteEntry(user, networkId, smscId, groupId, cost, smscType, null, null,
@@ -2083,10 +2117,10 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		UserSessionObject userSessionObject = new UserSessionObject();
 
@@ -2157,7 +2191,8 @@ public class RouteServiceImpl implements RouteServices {
 					includeOpt = routingForm.isOptional();
 				}
 				if (proceed) {
-					logger.info(from + " Checking For Routing Entries");
+					logger.info(messageResourceBundle.getLogMessage("checking.routing.entries"), from);
+
 					Map<Integer, RouteEntryExt> map = listRouteEntries(from, includeHlr, includeOpt, false);
 					logger.info(from + " Routing Entries Found: " + map.size());
 					String country = routingForm.getMcc();
@@ -2201,13 +2236,15 @@ public class RouteServiceImpl implements RouteServices {
 							RouteEntry toRoute = toRouteExt.getBasic();
 							if (!networks.isEmpty()) {
 								if (!networks.contains(toRoute.getNetworkId())) {
-									logger.info("Skipping Copy Routing For: " + toRoute.getNetworkId());
+									logger.info(messageResourceBundle.getLogMessage("skipping.copy.routing"), toRoute.getNetworkId());
+
 									continue;
 								}
 							}
 							if (!replaceExist) {
 								if (exist_networks.contains(toRoute.getNetworkId())) {
-									logger.info("Skipping Copy Routing For Exist: " + toRoute.getNetworkId());
+									logger.info(messageResourceBundle.getLogMessage("skipping.copy.routing.for.exist"), toRoute.getNetworkId());
+
 									continue;
 								} else {
 									to_be_replaced.add(toRoute.getNetworkId());
@@ -2270,7 +2307,8 @@ public class RouteServiceImpl implements RouteServices {
 							}
 							routinglist.add(ext);
 						}
-						logger.info(to_user[i] + " To be Copied Routing Entries: " + routinglist.size());
+						logger.info(messageResourceBundle.getLogMessage("copy.routing.entries"), to_user[i], routinglist.size());
+
 						if (replaceExist) {
 							if (networks.isEmpty()) {
 								deleteRouteEntries(to_user[i]);
@@ -2281,9 +2319,11 @@ public class RouteServiceImpl implements RouteServices {
 							// skip existing networks
 							deleteRouteEntries(to_user[i], to_be_replaced);
 						}
-						logger.info(to_user[i] + " All Routing Entries Deleted");
+						logger.info(messageResourceBundle.getLogMessage("all.routing.entries.deleted"), to_user[i]);
+
 						saveEntries(routinglist);
-						logger.info(to_user[i] + " All Routing Copied");
+						logger.info(messageResourceBundle.getLogMessage("all.routing.copied"), to_user[i]);
+
 						MultiUtility.refreshRouting(to_user[i]);
 					}
 					MultiUtility.changeFlag(Constants.CLIENT_FLAG_FILE, "707");
@@ -2334,10 +2374,10 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		Optional<UserEntry> userEntityOptional = userRepository.findBySystemId(username);
@@ -2345,11 +2385,12 @@ public class RouteServiceImpl implements RouteServices {
 		if (userEntityOptional.isPresent()) {
 			userEntry = userEntityOptional.get();
 		}else {
-			throw new NotFoundException("UserEntry not found");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		String target = IConstants.FAILURE_KEY;
 		String masterid = user.getMasterId();
-		logger.info("Download Routing Requested By " + masterid + " [" + user.getRole() + "]");
+		logger.info(messageResourceBundle.getLogMessage("download.routing.requested"), masterid, user.getRole());
+
 		try {
 			
 			if (!Access.isAuthorized(user.getRole(),"isAuthorizedUser")) {
@@ -2381,7 +2422,8 @@ public class RouteServiceImpl implements RouteServices {
 							Map<Integer, RouteEntryExt> routingmap = listRouteEntries(user1, false, false, true);
 							routinglist.addAll(routingmap.values());
 						}
-						logger.info(masterid + " Download Routinglist Size: " + routinglist.size());
+						logger.info(messageResourceBundle.getLogMessage("download.routinglist.size"), masterid, routinglist.size());
+
 						if (!routinglist.isEmpty()) {
 							Workbook workbook = null;
 							try {
@@ -2403,16 +2445,19 @@ public class RouteServiceImpl implements RouteServices {
 								// byte[] buffer = new byte[8789];
 								int curByte = -1;
 								out = response.getOutputStream();
-								logger.info(masterid + " Starting Routing xlsx Download ");
+								logger.info(messageResourceBundle.getLogMessage("starting.routing.xlsx.download"), masterid);
+
 								while ((curByte = is.read()) != -1) {
 									out.write(curByte);
 								}
 								out.flush();
 							} catch (IOException ex) {
-								logger.error(masterid + " Routing XLSx Download Error: " + ex.toString());
+								logger.error(messageResourceBundle.getLogMessage("routing.xlsx.download.error"), masterid, ex.toString());
+
 								throw new InternalServerException("IO Exception: "+ex.getLocalizedMessage());
 							} catch (Exception ex) {
-								logger.error(masterid + " Routing XLSx Download Error: " + ex.toString());
+								logger.error(messageResourceBundle.getLogMessage("routing.xlsx.download.error"), masterid, ex.toString());
+
 								throw new InternalServerException("Exception: "+ex.getLocalizedMessage());
 							} finally {
 								try {
@@ -2432,7 +2477,8 @@ public class RouteServiceImpl implements RouteServices {
 							}
 							target = IConstants.SUCCESS_KEY;
 						} else {
-							logger.error("error: record unavailable. Routing list empty.");
+							logger.error(messageResourceBundle.getLogMessage("error.record.unavailable.routing.list.empty"));
+
 							throw new NotFoundException("Routing list empty!");
 						}
 					} else {
@@ -2440,7 +2486,7 @@ public class RouteServiceImpl implements RouteServices {
 						throw new UnauthorizedException("Invalid Request!");
 					}
 				} else {
-					logger.error("error: record unavailable");
+					logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
 					throw new NotFoundException("Id not found!");
 				}
 			} else {
@@ -2560,13 +2606,14 @@ public class RouteServiceImpl implements RouteServices {
 					cell.setCellStyle(rowStyle);
 				}
 				if (++row_number > records_per_sheet) {
-					logger.info("Routing Sheet Created: " + sheet_number);
+					logger.info(messageResourceBundle.getLogMessage("routing.sheet.created"), sheet_number);
 					break;
 				}
 			}
 			sheet_number++;
 		}
-		logger.info("Routing Workbook Created");
+		logger.info(messageResourceBundle.getLogMessage("routing.workbook.created"));
+
 		return workbook;
 	}
 /**
@@ -2580,23 +2627,24 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		SalesEntry salesEntry = null;
 		try {
 			salesEntry = salesRepository.findByMasterId(user.getSystemId());
 		} catch (Exception e1) {
 			logger.error("NotFoundException: "+e1.toString());
-			throw new NotFoundException("Unable to found SalesEntry. Exception: "+e1.getLocalizedMessage());
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SALES_ENTRY_NOT_FOUND_EXCEPTION)+e1.getLocalizedMessage());
 		}
 		String target = null;
 		try {
 			// String usernames="";
 			String masterId = user.getSystemId();
-			logger.info("Routing User list Request For " + purpose + " By " + masterId);
+			logger.info(messageResourceBundle.getLogMessage("routing.user.list.request"), purpose, masterId);
+
 			
 			if (Access.isAuthorized(user.getRole(),"isAuthorizedUser")) {
 				logger.info("Authorized User :" + masterId);
@@ -2772,7 +2820,7 @@ public class RouteServiceImpl implements RouteServices {
 			logger.error("Unexpected Exception: "+e.toString());
 			throw new InternalServerException("Unexpected Exception: "+e.getLocalizedMessage());
 		}
-		logger.info("Routing User list Request Target: " + target);
+		logger.info(messageResourceBundle.getLogMessage("routing.user.list.request.target"), target);
 		routeUserResponse.setStatus(target);
 		return routeUserResponse;
 	}
@@ -2855,7 +2903,7 @@ public class RouteServiceImpl implements RouteServices {
 			logger.error("Exception: "+e.toString());
 			throw new InternalServerException("Unexpected Exception: "+e.getLocalizedMessage());
 		}
-		logger.info("UserEntries Found Under Seller(" + seller + "): " + map.size());
+		logger.info(messageResourceBundle.getLogMessage("user.entries.found"), seller, map.size());
 		return map;
 	}
 /**
@@ -2869,13 +2917,13 @@ public class RouteServiceImpl implements RouteServices {
 			resultList = networkEntryRepository.findDistinctCountries();
 		} catch (Exception e) {
 			logger.error("NotFound Exception: "+e.toString());
-			throw new NotFoundException("Unable to find Distinct Countries. Exception: "+e.getLocalizedMessage());
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.DISTINCT_COUNTRIES_NOT_FOUND_EXCEPTION)+e.getLocalizedMessage());
 		}
 
 		for (Object[] result : resultList) {
 			countries.put((String) result[0], (String) result[1]);
 		}
-
+  
 		return countries;
 	}
 /**
@@ -2895,7 +2943,8 @@ public class RouteServiceImpl implements RouteServices {
 					throw new InternalServerException(entry.getSystemId() + " Account Expired: " + entry.getExpiry());
 				}
 			} catch (ParseException e) {
-				logger.error(entry.getSystemId(), "Expiry Parse Error: " + entry.getExpiry());
+				logger.error(messageResourceBundle.getLogMessage("expiry.parse.error"), entry.getSystemId(), entry.getExpiry());
+
 				throw new InternalServerException("Parse Exception: "+e.getLocalizedMessage());
 			} catch (Exception e) {
 				logger.error("Exception: "+e.toString());
@@ -2965,14 +3014,15 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		String target = "basic";
 		String masterid = user.getSystemId();
-		logger.info(masterid + "[" + user.getRole() + "] RouteEntries Search Request Using Advanced Criteria");
+		logger.info(messageResourceBundle.getLogMessage("route.entries.search.request"), masterid, user.getRole());
+
 		try {
 			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 				List<RouteEntryExt> routinglist = getRoutingList(routingForm);
@@ -3057,7 +3107,8 @@ public class RouteServiceImpl implements RouteServices {
 									ext.setAccountType(accountType);
 									routelist.add(ext);
 								} else {
-									logger.info(systemId + " Already Has Network: " + networkId);
+									logger.info(messageResourceBundle.getLogMessage("already.has.network"), systemId, networkId);
+
 								}
 							} else {
 								RouteEntry entry = new RouteEntry(user1, networkId, 0, 0, 0, "W", null, null,
@@ -3109,7 +3160,8 @@ public class RouteServiceImpl implements RouteServices {
 						if (user_under_master.contains(user_id)) {
 							selected_user_list.add(user_id);
 						} else {
-							logger.info(masterid + " Invalid User Routing Request: " + user_id);
+							logger.info(messageResourceBundle.getLogMessage("invalid.user.routing.request"), masterid, user_id);
+
 							selected_user_list.clear();
 							break;
 						}
@@ -3476,15 +3528,16 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		String target = "lookup";
 		String masterid = user.getSystemId();
 		
-		logger.info(masterid + "[" + user.getRole() + "] Lookup RouteEntries Search Request Using Advanced Criteria");
+		logger.info(messageResourceBundle.getLogMessage("lookup.route.entries.search.request"), masterid, user.getRole());
+
 		try {
 			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 				List<RouteEntryExt> routinglist = getRoutingList(routingForm, true, false);
@@ -3492,13 +3545,14 @@ public class RouteServiceImpl implements RouteServices {
 					optionRouteResponse.setRoutinglist(routinglist);
 				} else {
 					target = IConstants.FAILURE_KEY;
-					logger.error("error: record unavailable");
-					throw new NotFoundException("Routing list not found!");
+					logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ROUTING_LIST_NOT_FOUND_EXCEPTION));
 				}
 			} else {
 				logger.info(masterid + "[" + user.getRole() + "] Authorization Failed");
 				target = "invalidRequest";
-				throw new UnauthorizedException("Unauthorized User!");
+				throw new UnauthorizedException(
+						messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 			optionRouteResponse.setStatus(target);
 		} catch (NotFoundException e) {
@@ -3524,15 +3578,15 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		String target = IConstants.FAILURE_KEY;
 		String masterid = user.getSystemId();
 
-		logger.info(masterid + "[" + user.getRole() + "] Lookup RouteEntries Search Request Using Advanced Criteria");
+		logger.info(messageResourceBundle.getLogMessage("lookup.route.entries.search.request"), masterid, user.getRole());
 		try {
 			if (Access.isAuthorized(user.getRole(),"isAuthorizedSuperAdminAndSystem")) {
 				List<RouteEntryExt> routinglist = getRoutingList(routingForm, false, true);
@@ -3555,13 +3609,14 @@ public class RouteServiceImpl implements RouteServices {
 					optionRouteResponse.setSmsclist(smsclist);
 				} else {
 					target = IConstants.FAILURE_KEY;
-					logger.error("error: record unavailable");
-					throw new NotFoundException("NotFound Exception: Routing List Not Found");
+					logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ROUTING_LIST_NOT_FOUND_EXCEPTION));
 				}
 			} else {
 				logger.error(masterid + "[" + user.getRole() + "] Authorization Failed");
 				target = "invalidRequest";
-				throw new UnauthorizedException("Unauthorized User Exception!");
+				throw new UnauthorizedException(
+						messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 			optionRouteResponse.setStatus(target);
 		} catch (NotFoundException e) {
@@ -3586,10 +3641,10 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
 		String target = IConstants.FAILURE_KEY;
@@ -3633,7 +3688,8 @@ public class RouteServiceImpl implements RouteServices {
 					// refreshUsers.add(userid[i]);
 				}
 				if (userWiseRouting.isEmpty()) {
-					logger.error("error: record unavailable. user wise routing is empty!");
+					logger.error(messageResourceBundle.getLogMessage("error.record.unavailable.userwise.routing.empty"));
+
 				} else {
 					// ----- check for auto_copy_routing users ------------
 					// EntryObject e = new PredicateBuilder().getEntryObject();
@@ -3649,10 +3705,11 @@ public class RouteServiceImpl implements RouteServices {
 							p = new PredicateBuilderImpl().getEntryObject().get("masterId")
 									.equal(reseller.getSystemId());
 							for (int subUserId : GlobalVars.UserEntries.keySet(p)) {
-								logger.info(reseller.getSystemId() + " Checking Copy Route for SubUser: " + subUserId);
+								logger.info(messageResourceBundle.getLogMessage("copy.route.check"), reseller.getSystemId(), subUserId);
+
 								if (auto_copy_route_users.contains(subUserId)) {
-									logger.info(reseller.getSystemId() + " Auto Copy Route Enabled For SubUser: "
-											+ subUserId);
+									logger.info(messageResourceBundle.getLogMessage("auto.copy.route.enabled"), reseller.getSystemId(), subUserId);
+
 									if (userWiseRouting.containsKey(subUserId)) {
 										userWiseRouting.remove(subUserId);
 									}
@@ -3709,7 +3766,8 @@ public class RouteServiceImpl implements RouteServices {
 							}
 						}
 					}
-					logger.info(masterid + "[" + user.getRole() + "] Edit Routing Users: " + userWiseRouting.keySet());
+					logger.info(messageResourceBundle.getLogMessage("edit.routing.users"), masterid, user.getRole(), userWiseRouting.keySet());
+
 					for (List<RouteEntry> user_wise_entries : userWiseRouting.values()) {
 						list.addAll(user_wise_entries);
 					}
@@ -3757,13 +3815,16 @@ public class RouteServiceImpl implements RouteServices {
 					Date scheduledDate = df.parse(scheduledOn[0]);
 					Date currentDate = df.parse(df.format(new Date()));
 					if (scheduledDate.before(currentDate)) {
-						logger.error(masterid + " Basic Routing Scheduled Date is Before Current Date");
+						logger.error(messageResourceBundle.getLogMessage("basic.routing.scheduled.date"), masterid);
+
 					} else {
 						addRouteSchEntry(list, routingForm.getScheduledOn());
 						if (scheduledDate.after(currentDate)) {
-							logger.info(masterid + " Basic Routing Not Scheduled For Today");
+							logger.info(messageResourceBundle.getLogMessage("basic.routing.not.scheduled"), masterid);
+
 						} else {
-							logger.info(masterid + " Basic Routing Scheduled For Today");
+							logger.info(messageResourceBundle.getLogMessage("basic.routing.scheduled.today"), masterid);
+
 							Timer t = new Timer();
 							t.schedule(new TimerTask() {
 								public void run() {
@@ -3778,12 +3839,14 @@ public class RouteServiceImpl implements RouteServices {
 										MultiUtility.refreshRouting(user);
 									}
 									MultiUtility.changeFlag(Constants.CLIENT_FLAG_FILE, "707");
-									logger.info(masterid + " Routemaster Scheduled Update Task End");
+									logger.info(messageResourceBundle.getLogMessage("routemaster.scheduled.update.task.end"), masterid);
+
 								}
 							}, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(routingForm.getScheduledOn()));
 						}
 						target = "schedule";
-						logger.info("Schedule configured successfully!");
+						logger.info(messageResourceBundle.getLogMessage("schedule.configured.successfully"));
+
 					}
 				} else {
 					updateRouteEntries(list);
@@ -3825,7 +3888,7 @@ public class RouteServiceImpl implements RouteServices {
 				}
 			} else {
 				logger.info("error: record unavailable");
-				throw new NotFoundException("No data in list Exception!");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NO_DATA_IN_LIST_EXCEPTION));
 			}
 		} catch (InternalServerException ex) {
 			logger.info("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
@@ -3907,7 +3970,11 @@ public class RouteServiceImpl implements RouteServices {
 			System.out.println("Scheduled Basic Route Entries Added: " + batchSize);
 		} catch (Exception e) {
 			// Exception handling
-			throw new RuntimeException("Error adding Route Entries", e);
+			throw new RuntimeException(messageResourceBundle.getMessage(ConstantMessages.ERROR_ADDING_ROUTE_ENTRIES), e);
+
+
+
+
 		}
 	}
 /**
@@ -3920,10 +3987,10 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		Set<Integer> refreshUsers = new HashSet<Integer>();
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
@@ -3956,7 +4023,7 @@ public class RouteServiceImpl implements RouteServices {
 					}
 				}
 				if (userWiseRouting.isEmpty()) {
-					logger.error("error: record unavailable!");
+					logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
 				} else {
 					// ----- check for auto_copy_routing users ------------
 					// EntryObject e = new PredicateBuilder().getEntryObject();
@@ -3972,11 +4039,11 @@ public class RouteServiceImpl implements RouteServices {
 							p = new PredicateBuilderImpl().getEntryObject().get("masterId")
 									.equal(reseller.getSystemId());
 							for (int subUserId : GlobalVars.UserEntries.keySet(p)) {
-								logger.info(
-										reseller.getSystemId() + " Checking Remove Route for SubUser: " + subUserId);
+								logger.info(messageResourceBundle.getLogMessage("remove.route.check"), reseller.getSystemId(), subUserId);
+
 								if (auto_copy_route_users.contains(subUserId)) {
-									logger.info(reseller.getSystemId() + " Auto Remove Route Enabled For SubUser: "
-											+ subUserId);
+									logger.info(messageResourceBundle.getLogMessage("auto.remove.route.enabled"), reseller.getSystemId(), subUserId);
+
 									if (userWiseRouting.containsKey(subUserId)) {
 										userWiseRouting.remove(subUserId);
 									}
@@ -4073,8 +4140,8 @@ public class RouteServiceImpl implements RouteServices {
 					logger.info("Routing Configured!");
 				}
 			} else {
-				logger.error("error: record unavailable");
-				throw new NotFoundException("Record Not Found!");
+				logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RECORD_UNAVAILABLE));
 			}
 		} catch (InternalServerException ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
@@ -4109,10 +4176,10 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
 		String target = IConstants.FAILURE_KEY;
@@ -4166,12 +4233,13 @@ public class RouteServiceImpl implements RouteServices {
 						logger.info("Routing Configured!");
 					}
 				} else {
-					logger.error("error: record unavailable");
-					throw new NotFoundException("Log List Not Found!");
+					logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.LOG_LIST_NOT_FOUND));
+
 				}
 			} else {
-				logger.error("error: record unavailable");
-				throw new NotFoundException("Id is null or not found!");
+				logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RECORD_UNAVAILABLE_ID_UNAVAILABLE));
 			}
 		} catch (NotFoundException ex) {
 			logger.error("NotFound Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
@@ -4202,10 +4270,10 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		String target = IConstants.FAILURE_KEY;
 
@@ -4230,17 +4298,24 @@ public class RouteServiceImpl implements RouteServices {
 						optionRouteResponse.setRoutinglist(list);
 						target = "previous";
 					} else {
-						logger.error("error: record unavailable");
-						throw new NotFoundException("No data found in RouteEntryExt List.");
+						logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+						throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.NO_DATA_FOUND_IN_ROUTE_ENTRY_EXT_LIST));
+
+
+
+
+
 					}
 				} else {
-					logger.error("error: record unavailable");
-					throw new NotFoundException("Id not found or is null!");
+					logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+					throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.ID_NOT_FOUND_OR_NULL));
+
+
 				}
 			} else {
 				logger.info(masterid + "[" + user.getRole() + "] Authorization Failed");
 				target = "invalidRequest";
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} catch (NotFoundException ex) {
 			logger.error("NotFoundException: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
@@ -4269,10 +4344,10 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		String masterid = user.getSystemId();
 		String target = IConstants.FAILURE_KEY;
@@ -4289,17 +4364,16 @@ public class RouteServiceImpl implements RouteServices {
 						optionRouteResponse.setRoutinglist(list);
 						target = "hlr";
 					} else {
-						logger.error("error: record unavailable");
-						throw new NotFoundException("No data found in RouteEntryExt List.");
-					}
+						logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+						throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ROUTE_ENTRY_EXT_LIST_NOT_FOUND));					}
 				} else {
-					logger.error("error: record unavailable");
+					logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
 					throw new NotFoundException("Id not found or is null!");
 				}
 			} else {
 				logger.info(masterid + "[" + user.getRole() + "] Authorization Failed");
 				target = "invalidRequest";
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} catch (NotFoundException ex) {
 			logger.error("NotFoundException: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
@@ -4327,10 +4401,10 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
 		String target = IConstants.FAILURE_KEY;
@@ -4364,17 +4438,17 @@ public class RouteServiceImpl implements RouteServices {
 						optionRouteResponse.setSmsclist(smsclist);
 						target = "optional";
 					} else {
-						logger.error("error: record unavailable");
-						throw new NotFoundException("No data found in RouteEntryExt List.");
+						logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+						throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ROUTE_ENTRY_EXT_LIST_NOT_FOUND));
 					}
 				} else {
-					logger.error("error: record unavailable");
+					logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
 					throw new NotFoundException("Id not found or is null!");
 				}
 			} else {
 				logger.info(masterid + "[" + user.getRole() + "] Authorization Failed");
 				target = "invalidRequest";
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} catch (NotFoundException ex) {
 			logger.error("NotFoundException: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
@@ -4402,10 +4476,10 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		OptionRouteResponse optionRouteResponse = new OptionRouteResponse();
 		String target = IConstants.FAILURE_KEY;
@@ -4456,10 +4530,11 @@ public class RouteServiceImpl implements RouteServices {
 					for (UserEntry reseller : resellers) {
 						pu = new PredicateBuilderImpl().getEntryObject().get("masterId").equal(reseller.getSystemId());
 						for (int subUserId : GlobalVars.UserEntries.keySet(pu)) {
-							logger.info(reseller.getSystemId() + " Checking Copy Route for SubUser: " + subUserId);
+							logger.info(messageResourceBundle.getLogMessage("copy.route.check"), reseller.getSystemId(), subUserId);
+
 							if (auto_copy_route_users.contains(subUserId)) {
-								logger.info(
-										reseller.getSystemId() + " Auto Copy Route Enabled For SubUser: " + subUserId);
+								logger.info(messageResourceBundle.getLogMessage("auto.copy.route.enabled"), reseller.getSystemId(), subUserId);
+
 								if (userWiseRouting.containsKey(subUserId)) {
 									userWiseRouting.remove(subUserId);
 								}
@@ -4506,7 +4581,8 @@ public class RouteServiceImpl implements RouteServices {
 						}
 					}
 				}
-				logger.info(masterid + "[" + user.getRole() + "] Edit Hlr Routing Users: " + userWiseRouting.keySet());
+				logger.info(messageResourceBundle.getLogMessage("edit.hlr.routing.users"), masterid, user.getRole(), userWiseRouting.keySet());
+
 				for (List<HlrRouteEntry> user_wise_entries : userWiseRouting.values()) {
 					list.addAll(user_wise_entries);
 				}
@@ -4518,13 +4594,15 @@ public class RouteServiceImpl implements RouteServices {
 					Date scheduledDate = df.parse(scheduledOn[0]);
 					Date currentDate = df.parse(df.format(new Date()));
 					if (scheduledDate.before(currentDate)) {
-						logger.error(masterid + " Hlr Routing Scheduled Date is Before Current Date");
+						logger.error(messageResourceBundle.getLogMessage("hlr.routing.scheduled.date"), masterid);
 					} else {
 						addHlrRouteSchEntry(list, hlrRouteEntry.getScheduledOn());
 						if (scheduledDate.after(currentDate)) {
-							logger.info(masterid + " Hlr Routing Not Scheduled For Today");
+							logger.info(messageResourceBundle.getLogMessage("hlr.routing.not.scheduled"), masterid);
+
 						} else {
-							logger.info(masterid + " Hlr Routing Scheduled For Today");
+							logger.info(messageResourceBundle.getLogMessage("hlr.routing.scheduled.today"), masterid);
+
 							Timer t = new Timer();
 							t.schedule(new TimerTask() {
 								public void run() {
@@ -4544,7 +4622,8 @@ public class RouteServiceImpl implements RouteServices {
 							}, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(hlrRouteEntry.getScheduledOn()));
 						}
 						target = "schedule";
-						logger.info("Schedule Successful!");
+						logger.info(messageResourceBundle.getLogMessage("schedule.successful"));
+
 					}
 				} else {
 					updateHlrRouteEntries(list);
@@ -4564,8 +4643,9 @@ public class RouteServiceImpl implements RouteServices {
 					}
 				}
 			} else {
-				logger.error("No Records Found to Proceed");
-				throw new NotFoundException("No Records Found to Proceed");
+				logger.error(messageResourceBundle.getLogMessage("no.records.found"));
+
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RECORD_UNAVAILABLE));
 			}
 		} catch (NotFoundException ex) {
 			logger.error("NotFound Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
@@ -4607,7 +4687,12 @@ public class RouteServiceImpl implements RouteServices {
 				hlrRouteEntrySchRepository.save(hlrRouteEntrySch);
 			});
 		} catch (Exception e) {
-			throw new InternalServerErrorException("Failed to add Hlr Route Entries" + e);
+			throw new InternalServerErrorException(messageResourceBundle.getExMessage(ConstantMessages.FAILED_TO_ADD_HLR_ROUTE_ENTRIES) + e);
+
+
+
+
+
 
 		}
 	}
@@ -4638,7 +4723,8 @@ public class RouteServiceImpl implements RouteServices {
 				hlrRouteEntrySchRepository.delete(hlrRouteEntrySch);
 			}
 		} catch (Exception e) {
-			throw new InternalServerErrorException("Failed to update Hlr Route Entries", e);
+			throw new InternalServerErrorException(messageResourceBundle.getExMessage(ConstantMessages.FAILED_TO_ADD_HLR_ROUTE_ENTRIES) + e);
+
 		}
 	}
 /**
@@ -4652,10 +4738,10 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		String target = IConstants.FAILURE_KEY;
 		String masterid = user.getSystemId();
@@ -4680,7 +4766,8 @@ public class RouteServiceImpl implements RouteServices {
 					}
 				}
 				if (!list.isEmpty()) {
-					logger.info("HlrRoute Update Size: " + list.size());
+					logger.info(messageResourceBundle.getLogMessage("hlr.route.update.size"), list.size());
+
 					updateHlrRouteEntries(list);
 					List<RouteEntryExt> routinglist = null;
 					try {
@@ -4697,12 +4784,14 @@ public class RouteServiceImpl implements RouteServices {
 						logger.info("Routing Configured");
 					}
 				} else {
-					logger.error("No Records Found to Proceed");
-					throw new NotFoundException("No Records Found to Proceed. List is empty!");
+					logger.error(messageResourceBundle.getLogMessage("no.records.found"));
+
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RECORD_NOT_FOUND_EMPTY_LIST));
 				}
 			} else {
-				logger.error("No Records Found to Proceed");
-				throw new NotFoundException("No Records Found to Proceed. Id not found or is null!");
+				logger.error(messageResourceBundle.getLogMessage("no.records.found"));
+
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RECORD_UNAVAILABLE_ID_UNAVAILABLE));
 			}
 		} catch (NotFoundException ex) {
 			logger.error("NotFound Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
@@ -4733,15 +4822,16 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		String target = IConstants.FAILURE_KEY;
 		String masterid = user.getSystemId();
 
-		logger.info("Hlr Route Log Requested By " + masterid + " [" + user.getRole() + "]");
+		logger.info(messageResourceBundle.getLogMessage("hlr.route.log.requested"), masterid, user.getRole());
+
 		// List<RouteEntry> list = new ArrayList<RouteEntry>();
 		int[] id = routingForm.getRouteId();
 		// String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new
@@ -4759,11 +4849,13 @@ public class RouteServiceImpl implements RouteServices {
 					optionRouteResponse.setRoutinglist(list);
 					target = "previous";
 				} else {
-					logger.error("No Records Found to Proceed");
+					logger.error(messageResourceBundle.getLogMessage("no.records.found"));
+
 					throw new NotFoundException("No Records Found to Proceed. List is empty.");
 				}
 			} else {
-				logger.error("No Records Found to Proceed");
+				logger.error(messageResourceBundle.getLogMessage("no.records.found"));
+
 				throw new NotFoundException("No Records Found to Proceed. Id not found or is null!");
 			}
 		} catch (NotFoundException ex) {
@@ -4789,14 +4881,15 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		String target = IConstants.FAILURE_KEY;
 		String masterid = user.getSystemId();
-		logger.info("Route Log Requested By " + masterid + " [" + user.getRole() + "]");
+		logger.info(messageResourceBundle.getLogMessage("route.log.requested"), masterid, user.getRole());
+
 		// List<RouteEntry> list = new ArrayList<RouteEntry>();
 		int[] id = routingForm.getRouteId();
 		// String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new
@@ -4822,12 +4915,14 @@ public class RouteServiceImpl implements RouteServices {
 					optionRouteResponse.setSmsclist(smsclist);
 					target = "basic";
 				} else {
-					logger.error("No Records Found to Proceed");
-					throw new NotFoundException("No Records Found to Proceed. List is empty.");
+					logger.error(messageResourceBundle.getLogMessage("no.records.found"));
+
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RECORD_NOT_FOUND_EMPTY_LIST));
 				}
 			} else {
-				logger.error("No Records Found to Proceed");
-				throw new NotFoundException("No Records Found to Proceed. Id not found or is null!");
+				logger.error(messageResourceBundle.getLogMessage("no.records.found"));
+
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RECORD_UNAVAILABLE_ID_UNAVAILABLE));
 			}
 		} catch (NotFoundException ex) {
 			logger.error("NotFound Error: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
@@ -4852,14 +4947,15 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		String target = IConstants.FAILURE_KEY;
 		String masterid = user.getSystemId();
-		logger.info("Route Log Requested By " + masterid + " [" + user.getRole() + "]");
+		logger.info(messageResourceBundle.getLogMessage("route.log.requested"), masterid, user.getRole());
+
 		// List<RouteEntry> list = new ArrayList<RouteEntry>();
 		int[] id = routingForm.getRouteId();
 		// String editOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new
@@ -4887,17 +4983,17 @@ public class RouteServiceImpl implements RouteServices {
 						optionRouteResponse.setSmsclist(smsclist);
 						target = "optional";
 					} else {
-						logger.error("error: record unavailable");
-						throw new NotFoundException("No data found in RouteEntryExt List.");
+						logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+						throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ROUTE_ENTRY_EXT_LIST_NOT_FOUND));
 					}
 				} else {
-					logger.error("error: record unavailable");
-					throw new NotFoundException("Id not found or is null!");
+					logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RECORD_UNAVAILABLE_ID_UNAVAILABLE));
 				}
 			} else {
 				logger.info(masterid + "[" + user.getRole() + "] Authorization Failed");
 				target = "invalidRequest";
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} catch (NotFoundException ex) {
 			logger.error("NotFoundException: " + ex.getMessage() + "[" + ex.getCause() + "]", false);
@@ -4926,10 +5022,10 @@ public class RouteServiceImpl implements RouteServices {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		String target = IConstants.FAILURE_KEY;
 		String masterid = user.getSystemId();
@@ -4945,12 +5041,12 @@ public class RouteServiceImpl implements RouteServices {
 					optionRouteResponse.setRoutinglist(list);
 					target = "hlr";
 				} else {
-					logger.error("error: record unavailable");
-					throw new NotFoundException("No Data Found in RouteEntryExt List!");
+					logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ROUTE_ENTRY_EXT_LIST_NOT_FOUND));
 				}
 			} else {
-				logger.error("error: record unavailable");
-				throw new NotFoundException("Id not found or is null!");
+				logger.error(messageResourceBundle.getLogMessage("error.record.unavailable"));
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.RECORD_UNAVAILABLE_ID_UNAVAILABLE));
 			}
 
 		} catch (NotFoundException ex) {
