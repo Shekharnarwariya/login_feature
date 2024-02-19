@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.hti.smpp.common.messages.dto.BulkSmsDTO;
 import com.hti.smpp.common.request.BulkAutoScheduleRequest;
 import com.hti.smpp.common.request.BulkContactRequest;
 import com.hti.smpp.common.request.BulkMmsRequest;
@@ -15,7 +16,6 @@ import com.hti.smpp.common.request.SendBulkScheduleRequest;
 import com.hti.smpp.common.request.SmsRequest;
 import com.hti.smpp.common.response.BulkResponse;
 import com.hti.smpp.common.response.SmsResponse;
-
 import jakarta.servlet.http.HttpSession;
 
 @Service
@@ -68,5 +68,7 @@ public interface SmsService {
 	public ResponseEntity<?> getExcludeNumbers(String username);
 
 	public ResponseEntity<?> getSenderId(String username);
+
+	public ResponseEntity<?> sendAlert(String username, BulkSmsDTO bulkSmsDTO);
 
 }

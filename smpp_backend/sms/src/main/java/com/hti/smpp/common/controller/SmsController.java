@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.hti.smpp.common.exception.ExceptionResponse;
+import com.hti.smpp.common.messages.dto.BulkSmsDTO;
 import com.hti.smpp.common.request.BulkContactRequest;
 import com.hti.smpp.common.request.BulkUpdateRequest;
 import com.hti.smpp.common.request.MessageRequest;
@@ -379,6 +380,18 @@ public class SmsController {
 			@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
 	public ResponseEntity<?> getSenderId(@RequestHeader(name = "username", required = true) String username) {
 		return smsService.getSenderId(username);
+
+	}
+
+	@Operation(summary = "send alert", description = "This endpoint allows users to send alert")
+	@PostMapping(value = "/send/alert")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "get send alert Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
+	public ResponseEntity<?> sendAlert(@RequestHeader(name = "username", required = true) String username,
+			@RequestBody BulkSmsDTO bulkSmsDTO) {
+		return smsService.sendAlert(username, bulkSmsDTO);
 
 	}
 }

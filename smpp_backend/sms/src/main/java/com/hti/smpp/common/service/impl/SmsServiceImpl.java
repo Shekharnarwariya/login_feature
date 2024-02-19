@@ -8480,4 +8480,92 @@ public class SmsServiceImpl implements SmsService {
 		}
 		return ResponseEntity.ok(senders);
 	}
+
+	@Override
+	public ResponseEntity<?> sendAlert(String username, BulkSmsDTO bulkSmsDTO) {
+		logger.info(bulkSmsDTO.getSystemId() + " sendAlert:-> " + bulkSmsDTO.getSenderId() + " Number:"
+				+ bulkSmsDTO.getDestinationList());
+		String ret = "";
+		String user = bulkSmsDTO.getSystemId();
+		String pwd = bulkSmsDTO.getPassword();
+		String message;
+		String sender;
+		String destination_no;
+		int ston = 5;
+		int snpi = 0;
+		List destination_list = bulkSmsDTO.getDestinationList();
+		UserSession userSession = getUserSession(user, pwd);
+		while (!destination_list.isEmpty()) {
+			destination_no = (String) destination_list.remove(0);
+			SubmitSM msg = new SubmitSM();
+			sender = bulkSmsDTO.getSenderId();
+			message = bulkSmsDTO.getMessage();
+			try {
+				commandid = userSession.getCommandStatus();
+				if (commandid == Data.ESME_ROK) {
+					session = userSession.getSession();
+					msg.setShortMessage(message, "ISO8859_1");
+					msg.setRegisteredDelivery((byte) 1);
+					msg.setDataCoding((byte) 0);
+					msg.setEsmClass((byte) 0);
+					msg.setSourceAddr((byte) ston, (byte) snpi, sender);
+					msg.setDestAddr(Data.GSM_TON_INTERNATIONAL, Data.GSM_NPI_E164, destination_no);
+					SubmitSMResp submitResponse = null;
+					try {
+						submitResponse = session.submit(msg);
+					} catch (Exception e) {
+						logger.error(user + " Exception on Submit[" + destination_no + "] : " + e);
+					}
+					if (submitResponse != null) {
+						// ret += submitResponse.getMessageId() + "\n";
+						if (submitResponse.getCommandStatus() == Data.ESME_ROK) {
+							ret += submitResponse.getMessageId() + "\n";
+							System.out.println(user + " Message submitted. Status=" + submitResponse.getCommandStatus()
+									+ " < " + destination_no);
+						} else {
+							if (submitResponse.getCommandStatus() == 1035) {
+								logger.error(user + " Submit failed < Insufficient balance:" + destination_no + " >");
+								ret += "SubmitError: Insufficient balance\n";
+								userSession.setCommandStatus(submitResponse.getCommandStatus());
+							} else if (submitResponse.getCommandStatus() == Data.ESME_RINVMSGLEN) {
+								logger.error(user + " Submit failed < Invalid Message Length:" + destination_no + " >");
+								ret += "SubmitError: Invalid Message Length\n";
+							} else if (submitResponse.getCommandStatus() == Data.ESME_RINVDSTADR) {
+								logger.error(user + " Submit failed < Invalid Destination:" + destination_no + " >");
+								ret += "SubmitError: Invalid Destination[" + destination_no + "]\n";
+							} else if (submitResponse.getCommandStatus() == Data.ESME_RINVSRCADR) {
+								logger.error(user + " Submit failed < Invalid SourceAddress:" + sender + " >");
+								ret += "SubmitError: Invalid SourceAddress\n";
+							} else if (submitResponse.getCommandStatus() == Data.ESME_RINVEXPIRY) {
+								logger.error(user + " Submit failed < Account Expired:" + destination_no + " >");
+								ret += "SubmitError: Account Expired\n";
+								userSession.setCommandStatus(submitResponse.getCommandStatus());
+							} else {
+								ret += "SubmitError: " + submitResponse.getCommandStatus() + "\n";
+								logger.error(user + " Submit failed < " + submitResponse.getCommandStatus() + ":"
+										+ destination_no + " >");
+							}
+						}
+					} else {
+						ret += "Submit Failed\n";
+						logger.error(user + " Submit failed < No Response: " + destination_no + " >");
+					}
+				} else {
+					if (commandid == 1035) {
+						ret += "Bind Error: Insufficient balance\n";
+					} else if (commandid == Data.ESME_RINVEXPIRY) {
+						ret += "Bind Error: Account Expired\n";
+					} else {
+						ret += "Bind Error: " + commandid + "\n";
+					}
+				}
+			} catch (Exception e) {
+				ret += "Processing Error\n";
+				logger.error(user, e.fillInStackTrace());
+			}
+		} // for loop end here
+		putUserSession(userSession);
+		return ResponseEntity.ok(ret);
+	}
+
 }
