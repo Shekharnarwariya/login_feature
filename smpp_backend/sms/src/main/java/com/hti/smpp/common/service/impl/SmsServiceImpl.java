@@ -5,13 +5,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintStream;
 import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLConnection;
@@ -8422,5 +8420,64 @@ public class SmsServiceImpl implements SmsService {
 		messageIdentiryResponse.setMessageType(messageType);
 		messageIdentiryResponse.setSmscount(smsParts);
 		return ResponseEntity.ok(messageIdentiryResponse);
+	}
+
+	@Override
+	public ResponseEntity<?> getExcludeNumbers(String username) {
+		Optional<User> userOptional = userEntryRepository.getUsers(username);
+		User user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException(
+						messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
+			}
+		} else {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+		}
+		String readExcludeNumbers = null;
+		try {
+			readExcludeNumbers = MultiUtility.readExcludeNumbers(String.valueOf(user.getUserId()));
+		} catch (Exception e) {
+			throw new InternalServerException(
+					messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_EXCLUDE_NUMBER));
+		}
+
+		return ResponseEntity.ok(readExcludeNumbers);
+	}
+
+	@Override
+	public ResponseEntity<?> getSenderId(String username) {
+		Optional<User> userOptional = userEntryRepository.getUsers(username);
+		User user = null;
+		if (userOptional.isPresent()) {
+			user = userOptional.get();
+			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException(
+						messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
+			}
+		} else {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+		}
+		Set<String> senders = null;
+		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getUserId());
+		if (webMasterEntry != null) {
+			if (webMasterEntry.getSenderId() != null && webMasterEntry.getSenderId().length() > 1) {
+				if (webMasterEntry.getSenderRestrictTo().equalsIgnoreCase("ALL")
+						|| webMasterEntry.getSenderRestrictTo().equalsIgnoreCase("WEB")) {
+					senders = new HashSet<String>(Arrays.asList(webMasterEntry.getSenderId().split(",")));
+					logger.info(username + " Configured Senders: " + senders);
+				} else {
+					logger.info(
+							username + " Configured Senders Restricted To: " + webMasterEntry.getSenderRestrictTo());
+				}
+			} else {
+				logger.info(username + " No Senders Configured");
+			}
+		} else {
+			logger.error(username + " Webmaster Entry Not Found");
+			throw new NotFoundException(username + "webmaster entry not found");
+		}
+		return ResponseEntity.ok(senders);
 	}
 }

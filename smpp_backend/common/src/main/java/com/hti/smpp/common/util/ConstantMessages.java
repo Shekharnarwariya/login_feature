@@ -61,6 +61,7 @@ public class ConstantMessages {
     public static final String SCHEDULE_REMOVAL_FAILURE = "schedule.removal.failure.message";
     public static final String DELETE_SCHEDULE_FILE_EXCEPTION = "delete.schedule.file.exception.message";
     public static final String BALANCE_INFO_NOT_FOUND_EXCEPTION = "balance.info.not.found.exception.message";
+    public static final String ERROR_GETTING_EXCLUDE_NUMBER = "error.getting.exclude.number";
     
     //mobiledb exception message
     public static final String INSUFFICIENT_DATA_VALUES = "exception.insufficientData.message";
@@ -219,6 +220,7 @@ public class ConstantMessages {
     public static final String NO_LATENCY_REPORT_DATA_FOUND_MESSAGE = "no.latency.report.data.found";
     public static final String WEBMASTER_ENTRY_NOT_FOUND_MESSAGE = "web.master.entry.notfound";
     public static final String ERROR_GETTING_LATENCY_REPORT_MESSAGE = "error.getting.latency.report";
+  
     
     //lookup report
     

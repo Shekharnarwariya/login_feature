@@ -65,4 +65,8 @@ public interface SmsService {
 
 	public ResponseEntity<?> identifyMessage(String username, String message);
 
+	public ResponseEntity<?> getExcludeNumbers(String username);
+
+	public ResponseEntity<?> getSenderId(String username);
+
 }

@@ -103,7 +103,8 @@ public class MultiUtility {
 		try {
 			calculateFileSize(filename, 5000);
 			printStream = new PrintStream(new FileOutputStream(filename, true), true, "UTF-8");
-			// content = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + " [ " + content + " ]";
+			// content = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + "
+			// [ " + content + " ]";
 			printStream.println(content);
 			done = true;
 		} catch (IOException ioe) {
@@ -123,7 +124,8 @@ public class MultiUtility {
 		try {
 			calculateFileSize(filename, 5000);
 			printStream = new PrintStream(new FileOutputStream(filename, true), true, "UTF-8");
-			// content = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + " [ " + content + " ]";
+			// content = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + "
+			// [ " + content + " ]";
 			printStream.println(content);
 			done = true;
 		} catch (IOException ioe) {
@@ -191,11 +193,11 @@ public class MultiUtility {
 
 	public static String readExcludeNumbers(String systemId) throws Exception {
 		String content = null;
-		File dir = new File(IConstants.BIN_DIR + "numbers//exclude//");
+		File dir = new File(IConstants.HOME_DIR + "numbers//exclude//");
 		if (dir.exists()) {
-			File numberfile = new File(IConstants.BIN_DIR + "numbers//exclude//" + systemId + ".txt");
+			File numberfile = new File(IConstants.HOME_DIR + "numbers//exclude//" + systemId + ".txt");
 			if (numberfile.exists()) {
-				content = readContent(IConstants.BIN_DIR + "numbers//exclude//" + systemId + ".txt");
+				content = readContent(IConstants.HOME_DIR + "numbers//exclude//" + systemId + ".txt");
 			} else {
 				logger.info(systemId + " Exclude Numbers File Not Exist");
 			}
