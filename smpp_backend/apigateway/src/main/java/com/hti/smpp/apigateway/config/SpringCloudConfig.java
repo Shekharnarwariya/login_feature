@@ -83,7 +83,7 @@ public class SpringCloudConfig {
 				// Route for BSFM-SERVICE
 				.route("twoway-service",
 						r -> r.path("/twoway/**")
-								.filters(f -> f.rewritePath("/twoway/(?<segment>.*)", "/${segment}")
+								.filters(f -> f.rewritePath("./twoway/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
 								.uri("lb://twoway-service:8090"))
 

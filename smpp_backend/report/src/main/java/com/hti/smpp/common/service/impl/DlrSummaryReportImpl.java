@@ -121,7 +121,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 	Locale locale = null;
 
 	@Override
-	public ResponseEntity<?> DlrSummaryReportview(String username, DlrSummaryReport customReportForm, String lang) {
+	public ResponseEntity<?> DlrSummaryReportview(String username, DlrSummaryReport customReportForm) {
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
@@ -132,9 +132,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 
-			locale = Customlocale.getLocaleByLanguage(lang);
-
-			List<DeliveryDTO> reportList = getDlrReportList(customReportForm, username, lang);
+			List<DeliveryDTO> reportList = getDlrReportList(customReportForm, username);
 
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.view.size.message"), user, reportList.size());
@@ -175,7 +173,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 
 	@Override
 	public ResponseEntity<?> DlrSummaryReportdoc(String username, DlrSummaryReport customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 
 		String target = IConstants.SUCCESS_KEY;
 
@@ -189,10 +187,8 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 				throw new UnauthorizedException(messageResourceBundle
 						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
-			locale = Customlocale.getLocaleByLanguage(lang);
-			;
 
-			List<DeliveryDTO> reportList = getDlrReportList(customReportForm, username, lang);
+			List<DeliveryDTO> reportList = getDlrReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.size.doc.message"), username,
 						reportList.size());
@@ -243,13 +239,12 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 
 	@Override
 	public ResponseEntity<?> DlrSummaryReportdpdf(String username, DlrSummaryReport customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
 
-			List<DeliveryDTO> reportList = getDlrReportList(customReportForm, username, lang);
+			List<DeliveryDTO> reportList = getDlrReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(username + " ReportSize[pdf]:" + reportList.size());
 				JasperPrint print = getdlrSummaryJasperPrint(reportList, false, username);
@@ -306,7 +301,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 
 	@Override
 	public ResponseEntity<?> DlrSummaryReportdxls(String username, DlrSummaryReport customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
@@ -320,9 +315,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 		String target = IConstants.SUCCESS_KEY;
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
-
-			List<DeliveryDTO> reportList = getDlrReportList(customReportForm, username, lang);
+			List<DeliveryDTO> reportList = getDlrReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("xls.report.size.message"), username,
 						reportList.size());
@@ -380,10 +373,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 		// return ResponseEntity.ok(target);
 	}
 
-	public List<DeliveryDTO> getDlrReportList(DlrSummaryReport customReportForm, String username, String lang)
-			throws Exception {
-
-		locale = Customlocale.getLocaleByLanguage(lang);
+	public List<DeliveryDTO> getDlrReportList(DlrSummaryReport customReportForm, String username) throws Exception {
 		UserDAService userDAService = new UserDAServiceImpl();
 		Optional<UserEntry> usersOptional = userRepository.findBySystemId(username);
 		if (!usersOptional.isPresent()) {

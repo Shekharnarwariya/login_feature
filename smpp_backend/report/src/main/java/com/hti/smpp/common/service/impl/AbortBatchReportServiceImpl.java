@@ -64,7 +64,7 @@ public class AbortBatchReportServiceImpl implements AbortBatchReportService {
 	}
 
 	@Override
-	public List<BulkEntry> abortBatchReport(String username, AbortBatchReportRequest customReportForm, String lang) {
+	public List<BulkEntry> abortBatchReport(String username, AbortBatchReportRequest customReportForm) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
@@ -78,7 +78,7 @@ public class AbortBatchReportServiceImpl implements AbortBatchReportService {
 		String target = IConstants.SUCCESS_KEY;
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
+		
 
 			List<BulkEntry> reportList = getReportList(customReportForm, user.getId());
 

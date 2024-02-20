@@ -91,7 +91,7 @@ public class ContentReportServiceImpl implements ContentReportService {
 	private UserEntryRepository userRepository;
 	@Autowired
 	private WebMasterEntryRepository webMasterEntryRepository;
-	
+
 	@Autowired
 	private MessageResourceBundle messageResourceBundle;
 
@@ -106,76 +106,79 @@ public class ContentReportServiceImpl implements ContentReportService {
 	}
 
 	@Override
-	public ResponseEntity<?> ContentReportView(String username, ContentReportRequest customReportForm, String lang) {
+	public ResponseEntity<?> ContentReportView(String username, ContentReportRequest customReportForm) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
+					new Object[] { username }));
 
 		}
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
 
-			List<DeliveryDTO> reportList = getContentReportList(customReportForm, username, lang);
+			List<DeliveryDTO> reportList = getContentReportList(customReportForm, username);
 			System.out.println(reportList);
 
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("report.view.size.message"), user.getSystemId(), reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.view.size.message"), user.getSystemId(),
+						reportList.size());
 
 				// JasperPrint print = dataBase.getJasperPrint(reportList, false, username);
 				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
 				// Return ResponseEntity with the list in the response body
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_MESSAGE));
+				throw new InternalServerException(
+						messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_MESSAGE));
 
 			}
+		} catch (NotFoundException e) {
+			// Log NotFoundException
+			logger.error(messageResourceBundle.getLogMessage("dlr.content.report.data.not.found"), username, e);
+
+			throw new NotFoundException(e.getMessage());
+		} catch (IllegalArgumentException e) {
+			// Log IllegalArgumentException
+			logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
+
+			throw new BadRequestException(messageResourceBundle
+					.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] { e.getMessage() }));
+
+		} catch (Exception e) {
+			// Log other exceptions
+			logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
+
+			throw new InternalServerException(messageResourceBundle
+					.getExMessage(ConstantMessages.INTERNAL_SERVER_LATENCY_EXCEPTION, new Object[] { username }));
+
 		}
-			catch (NotFoundException e) {
-		        // Log NotFoundException
-				logger.error(messageResourceBundle.getLogMessage("dlr.content.report.data.not.found"), username, e);
-
-		        throw new NotFoundException(e.getMessage());
-		        } catch (IllegalArgumentException e) {
-		        // Log IllegalArgumentException
-		        	logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
-
-		        throw new BadRequestException(messageResourceBundle.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE ,new Object[] {e.getMessage()}));
-
-		        } catch (Exception e) {
-		        // Log other exceptions
-		        	logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
-
-		        throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_LATENCY_EXCEPTION,new Object[]  {username}));
-
-		        }
-		        }
+	}
 
 	@Override
 	public ResponseEntity<?> ContentReportxls(String username, ContentReportRequest customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
+					new Object[] { username }));
 		}
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
 
-			List<DeliveryDTO> reportList = getContentReportList(customReportForm, username, lang);
+			List<DeliveryDTO> reportList = getContentReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("report.size.doc.message"), user.getSystemId(), reportList.size());
-				
+				logger.info(messageResourceBundle.getLogMessage("report.size.doc.message"), user.getSystemId(),
+						reportList.size());
+
 				JasperPrint print = getJasperPrint(reportList, false, username);
 				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), user.getSystemId());
-
 
 				byte[] xlsBytes;
 				try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -205,7 +208,8 @@ public class ContentReportServiceImpl implements ContentReportService {
 // Log the error
 			logger.error(messageResourceBundle.getLogMessage("error.message"), user.getSystemId(), e.getMessage());
 
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.XLS_GENERATING_ERROR , new Object[] {e.getMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.XLS_GENERATING_ERROR,
+					new Object[] { e.getMessage() }));
 
 		}
 
@@ -215,11 +219,12 @@ public class ContentReportServiceImpl implements ContentReportService {
 			throws JRException {
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
+					new Object[] { username }));
 		}
 		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(userOptional.get().getId());
 		JasperPrint print = null;
@@ -295,7 +300,8 @@ public class ContentReportServiceImpl implements ContentReportService {
 					new JRSwapFile(IConstants.WEBAPP_DIR + "temp//", 1024, 512));
 			parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
 		}
-		logger.info(messageResourceBundle.getLogMessage("display.cost.message"), user.getSystemId(), webMasterEntry.isDisplayCost());
+		logger.info(messageResourceBundle.getLogMessage("display.cost.message"), user.getSystemId(),
+				webMasterEntry.isDisplayCost());
 
 		parameters.put("displayCost", webMasterEntry.isDisplayCost());
 		parameters.put(JRParameter.IS_IGNORE_PAGINATION, paging);
@@ -327,27 +333,27 @@ public class ContentReportServiceImpl implements ContentReportService {
 
 	@Override
 	public ResponseEntity<?> ContentReportPdf(String username, ContentReportRequest customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
+					new Object[] { username }));
 		}
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
+	
 
-			List<DeliveryDTO> reportList = getContentReportList(customReportForm, username, lang);
+			List<DeliveryDTO> reportList = getContentReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("report.size.pdf.message"), user.getSystemId(), reportList.size());
-
+				logger.info(messageResourceBundle.getLogMessage("report.size.pdf.message"), user.getSystemId(),
+						reportList.size());
 
 				JasperPrint print = getJasperPrint(reportList, false, username);
 				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), user.getSystemId());
-
 
 				byte[] pdfBytes;
 				try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -375,44 +381,43 @@ public class ContentReportServiceImpl implements ContentReportService {
 			}
 		} catch (UnauthorizedException | NotFoundException e) {
 // Log the specific exception
-			
-			
+
 			logger.error(messageResourceBundle.getLogMessage("error.message"), user.getSystemId(), e.getMessage());
 
 			throw e; // Re-throw the specific exception
 		} catch (Exception e) {
 // Log a general exception
-			
+
 			logger.error(messageResourceBundle.getLogMessage("error.message"), user.getSystemId(), e.getMessage());
 
-			
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.PDF_GENERATION_ERROR, new Object[] {e.getMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.PDF_GENERATION_ERROR,
+					new Object[] { e.getMessage() }));
 
 		}
 	}
 
 	@Override
 	public ResponseEntity<?> ContentReportDoc(String username, ContentReportRequest customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
+					new Object[] { username }));
 		}
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
 
-			List<DeliveryDTO> reportList = getContentReportList(customReportForm, username, lang);
+			List<DeliveryDTO> reportList = getContentReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				int total_rec = reportList.size();
-				logger.info(messageResourceBundle.getLogMessage("xls.report.size.message"), user.getSystemId(), total_rec);
+				logger.info(messageResourceBundle.getLogMessage("xls.report.size.message"), user.getSystemId(),
+						total_rec);
 
-
-				Workbook workbook = dataBase.getContentWorkBook(reportList, username, lang);
+				Workbook workbook = dataBase.getContentWorkBook(reportList, username);
 				HttpHeaders headers = new HttpHeaders();
 
 				if (total_rec > 100000) {
@@ -423,7 +428,8 @@ public class ContentReportServiceImpl implements ContentReportService {
 						String reportName = "delivery.xlsx";
 						ZipEntry entry = new ZipEntry(reportName);
 						zos.putNextEntry(entry);
-						logger.info(messageResourceBundle.getLogMessage("starting.zip.download.message"), user.getSystemId());
+						logger.info(messageResourceBundle.getLogMessage("starting.zip.download.message"),
+								user.getSystemId());
 
 						workbook.write(zos);
 						zos.closeEntry();
@@ -467,25 +473,28 @@ public class ContentReportServiceImpl implements ContentReportService {
 		} catch (Exception e) {
 // Log a general exception
 			logger.error(messageResourceBundle.getLogMessage("error.message"), user.getSystemId(), e.getMessage());
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.REPORT_DOCUMENT_GENERATING_ERROR, new Object[] {e.getMessage()}));
+			throw new InternalServerException(messageResourceBundle
+					.getExMessage(ConstantMessages.REPORT_DOCUMENT_GENERATING_ERROR, new Object[] { e.getMessage() }));
 
 		}
 	}
 
-	public List<DeliveryDTO> getContentReportList(ContentReportRequest customReportForm, String username, String lang) {
-		
+	public List<DeliveryDTO> getContentReportList(ContentReportRequest customReportForm, String username) {
+
 		if (customReportForm.getClientId() == null) {
 			return null;
 		}
 		Optional<UserEntry> usersOptional = userRepository.findBySystemId(username);
 		if (!usersOptional.isPresent()) {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		UserEntry user = usersOptional.get();
 		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
 		if (webMasterEntry == null) {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEBMASTER_NOT_FOUND,new Object[] {user.getId()}));
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEBMASTER_NOT_FOUND,
+					new Object[] { user.getId() }));
 
 		}
 
@@ -509,16 +518,16 @@ public class ContentReportServiceImpl implements ContentReportService {
 		// logger.info("USER_GMT: " + userSessionObject.getDefaultGmt() + " DEFAULT_GMT:
 		// " + IConstants.DEFAULT_GMT);
 		if (!webMasterEntry.getGmt().equalsIgnoreCase(IConstants.DEFAULT_GMT)) {
-			to_gmt = webMasterEntry.getGmt().replace("GMT","");
-			from_gmt = IConstants.DEFAULT_GMT.replace("GMT","");
+			to_gmt = webMasterEntry.getGmt().replace("GMT", "");
+			from_gmt = IConstants.DEFAULT_GMT.replace("GMT", "");
 		}
 		logger.info(messageResourceBundle.getLogMessage("time.gmt.message"), to_gmt, from_gmt);
 
 		// logger.info(userSessionObject.getSystemId() + " Content Report Based On
 		// Criteria");
 		if (to_gmt != null) {
-			query = "SELECT CONVERT_TZ(A.submitted_time,'"+from_gmt+"','"+to_gmt+"') as submitted_time,";
-			unproc_query = "select CONVERT_TZ(A.time,'"+from_gmt+"','"+to_gmt+"') as time,";
+			query = "SELECT CONVERT_TZ(A.submitted_time,'" + from_gmt + "','" + to_gmt + "') as submitted_time,";
+			unproc_query = "select CONVERT_TZ(A.time,'" + from_gmt + "','" + to_gmt + "') as time,";
 		} else {
 			query = "select A.submitted_time as submitted_time,";
 			unproc_query = "select A.time as time,";
@@ -591,10 +600,10 @@ public class ContentReportServiceImpl implements ContentReportService {
 				query += "A.msg_id between " + start_msg_id + " and " + end_msg_id;
 				unproc_query += "A.msg_id BETWEEN " + start_msg_id + " and " + end_msg_id;
 			} catch (Exception e) {
-				query += "A.submitted_time BETWEEN CONVERT_TZ('"+startDate+"','"+to_gmt+"','"+from_gmt
-						+"') and CONVERT_TZ('"+endDate+"','"+to_gmt+"','"+from_gmt+"')";
-				unproc_query += "A.time BETWEEN CONVERT_TZ('"+startDate+"','"+to_gmt+"','"+from_gmt
-						+"') and CONVERT_TZ('"+endDate+"','"+to_gmt+"','"+from_gmt+"')";
+				query += "A.submitted_time BETWEEN CONVERT_TZ('" + startDate + "','" + to_gmt + "','" + from_gmt
+						+ "') and CONVERT_TZ('" + endDate + "','" + to_gmt + "','" + from_gmt + "')";
+				unproc_query += "A.time BETWEEN CONVERT_TZ('" + startDate + "','" + to_gmt + "','" + from_gmt
+						+ "') and CONVERT_TZ('" + endDate + "','" + to_gmt + "','" + from_gmt + "')";
 			}
 		} else {
 			if (startDate.equalsIgnoreCase(endDate)) {
@@ -634,7 +643,8 @@ public class ContentReportServiceImpl implements ContentReportService {
 		List<DeliveryDTO> unproc_list_2 = contentWiseUprocessedReport(
 				unproc_query.replaceAll("table_name", "unprocessed"), report_user, webMasterEntry.isHideNum());
 		list.addAll(unproc_list_2);
-		logger.info(messageResourceBundle.getLogMessage("end.criteria.report.message"), user.getSystemId(), list.size());
+		logger.info(messageResourceBundle.getLogMessage("end.criteria.report.message"), user.getSystemId(),
+				list.size());
 
 		return list;
 	}
@@ -823,7 +833,8 @@ public class ContentReportServiceImpl implements ContentReportService {
 			}
 		} catch (Exception sqle) {
 			logger.error(report_user, sqle);
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.CONTENT_WISE_PROCESS_DATA_ERROR,new Object[] {sqle.getMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(
+					ConstantMessages.CONTENT_WISE_PROCESS_DATA_ERROR, new Object[] { sqle.getMessage() }));
 
 		}
 		return list;
@@ -1072,7 +1083,8 @@ public class ContentReportServiceImpl implements ContentReportService {
 		} catch (Exception sqle) {
 			logger.error(messageResourceBundle.getLogMessage("sql.error.message"), report_user, sqle);
 
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.CONTENT_WISE_PROCESS_DATA_ERROR,new Object[] {sqle.getMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(
+					ConstantMessages.CONTENT_WISE_PROCESS_DATA_ERROR, new Object[] { sqle.getMessage() }));
 		}
 
 		logger.info(messageResourceBundle.getLogMessage("report.list.size.message"), report_user, list.size());

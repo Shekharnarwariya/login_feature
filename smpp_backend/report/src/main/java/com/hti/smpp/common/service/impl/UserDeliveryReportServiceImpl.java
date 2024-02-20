@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -24,9 +23,7 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -44,7 +41,6 @@ import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.ConstantMessages;
-import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
@@ -54,19 +50,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRExporter;
 import net.sf.jasperreports.engine.JRExporterParameter;
-import net.sf.jasperreports.engine.JRParameter;
-import net.sf.jasperreports.engine.JasperCompileManager;
-import net.sf.jasperreports.engine.JasperExportManager;
-import net.sf.jasperreports.engine.JasperFillManager;
-import net.sf.jasperreports.engine.JasperPrint;
-import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
-import net.sf.jasperreports.engine.design.JasperDesign;
 import net.sf.jasperreports.engine.export.JRPdfExporter;
 import net.sf.jasperreports.engine.export.JRXlsExporterParameter;
 import net.sf.jasperreports.engine.export.ooxml.JRDocxExporter;
 import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
-import net.sf.jasperreports.engine.xml.JRXmlLoader;
 
 @Service
 public class UserDeliveryReportServiceImpl implements UserDeliveryReportService {
@@ -87,11 +74,11 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 	}
 
 	@Override
-	public ResponseEntity<?> UserDeliveryReportView(String username, UserDeliveryForm customReportForm, String lang) {
+	public ResponseEntity<?> UserDeliveryReportView(String username, UserDeliveryForm customReportForm) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
+//			locale = Customlocale.getLocaleByLanguage(lang);
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
 					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
@@ -101,7 +88,7 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 
-			List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 
 				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(),
@@ -135,13 +122,13 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 
 	@Override
 	public ResponseEntity<?> UserDeliveryReportxls(String username, UserDeliveryForm customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
+			
 
-			List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
 
@@ -189,12 +176,12 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 
 	@Override
 	public ResponseEntity<?> UserDeliveryReportPdf(String username, UserDeliveryForm customReportForm,
-	        HttpServletResponse response, String lang) {
+	        HttpServletResponse response) {
 	    String target = IConstants.FAILURE_KEY;
 
 	    try {
-	        Locale locale = Customlocale.getLocaleByLanguage(lang);
-	        List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
+	        //Locale locale = Customlocale.getLocaleByLanguage(lang);
+	        List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 	        if (!reportList.isEmpty()) {
 	            logger.info(messageResourceBundle.getMessage("report.size"), reportList.size());
 
@@ -236,13 +223,13 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 
 	@Override
 	public ResponseEntity<?> UserDeliveryReportDoc(String username, UserDeliveryForm customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
+			//locale = Customlocale.getLocaleByLanguage(lang);
 
-			List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
 				List<DeliveryDTO>  print = getJasperPrint(reportList, false);
@@ -287,15 +274,6 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 	}
 
 	private List<DeliveryDTO> getJasperPrint(List<DeliveryDTO> reportList, boolean paging) throws JRException {
-//		logger.info(messageResourceBundle.getLogMessage("creating.design.message"));
-//
-//		JasperDesign design = JRXmlLoader.load(template_file);
-//		logger.info(messageResourceBundle.getLogMessage("compiling.message"));
-//
-//		JasperReport report = JasperCompileManager.compileReport(design);
-//		// ------------- Preparing databeancollection for chart ------------------
-//		logger.info(messageResourceBundle.getLogMessage("preparing.chart.message"));
-
 		Map<String, DeliveryDTO> key_map = new HashMap<String, DeliveryDTO>();
 		for (DeliveryDTO chartDTO : reportList) {
 			// ----------- report Data ----------------
@@ -342,7 +320,7 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 		return final_list;
 	}
 
-	private List<DeliveryDTO> getReportList(UserDeliveryForm customReportForm, String username, String lang)
+	private List<DeliveryDTO> getReportList(UserDeliveryForm customReportForm, String username)
 			throws Exception {
 		List<DeliveryDTO> list = null;
 		// int back_day = 1;

@@ -113,23 +113,25 @@ public class ReportServiceImpl implements ReportService {
 	}
 
 	@Override
-	public ResponseEntity<?> BalanceReportView(String username, BalanceReportRequest customReportForm, String lang) {
+	public ResponseEntity<?> BalanceReportView(String username, BalanceReportRequest customReportForm) {
 		String target = IConstants.FAILURE_KEY;
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-			UserEntry user = userOptional
-					.orElseThrow(() ->  new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+			UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
-			locale = Customlocale.getLocaleByLanguage(lang);
-			Map<String, List<DeliveryDTO>> reportList = dataBase.getBalanceReportList(customReportForm, username, lang);
+
+			Map<String, List<DeliveryDTO>> reportList = dataBase.getBalanceReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
 				target = IConstants.SUCCESS_KEY;
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
-				throw new NoDataFoundException(messageResourceBundle.getExMessage(ConstantMessages.NO_BALANCE_REPORT_DATA_FOUND_MESSAGE , new Object[] {username}));
+				throw new NoDataFoundException(messageResourceBundle.getExMessage(
+						ConstantMessages.NO_BALANCE_REPORT_DATA_FOUND_MESSAGE, new Object[] { username }));
 
 			}
 		} catch (NotFoundException e) {
@@ -138,19 +140,20 @@ public class ReportServiceImpl implements ReportService {
 			throw new UnauthorizedException(e.getMessage());
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_PROCESSING_BALANCE_REPORT_MESSAGE, new Object[] {e.getMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(
+					ConstantMessages.ERROR_PROCESSING_BALANCE_REPORT_MESSAGE, new Object[] { e.getMessage() }));
 
 		}
 	}
 
 	@Override
 	public ResponseEntity<?> BalanceReportxls(String username, BalanceReportRequest customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
-			Map<String, List<DeliveryDTO>> reportList = dataBase.getBalanceReportList(customReportForm, username, lang);
+
+			Map<String, List<DeliveryDTO>> reportList = dataBase.getBalanceReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
 				JasperPrint print = dataBase.getJasperPrint(reportList, false);
 				String reportName = "Consumption_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())
@@ -169,30 +172,35 @@ public class ReportServiceImpl implements ReportService {
 						return new ResponseEntity<>(content, HttpStatus.OK);
 					} else {
 
-						throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.EMPTY_XLS_CONTENT_ERROR_MESSAGE));
+						throw new InternalServerException(
+								messageResourceBundle.getExMessage(ConstantMessages.EMPTY_XLS_CONTENT_ERROR_MESSAGE));
 
 					}
 				} catch (IOException ioe) {
-					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_CLOSING_XLS_OUTPUTSTREAM_MESSAGE , new Object[] {ioe.getMessage()}));
+					throw new InternalServerException(
+							messageResourceBundle.getExMessage(ConstantMessages.ERROR_CLOSING_XLS_OUTPUTSTREAM_MESSAGE,
+									new Object[] { ioe.getMessage() }));
 
 				}
 			} else {
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GENERATING_REPORT_MESSAGE));
+				throw new InternalServerException(
+						messageResourceBundle.getExMessage(ConstantMessages.ERROR_GENERATING_REPORT_MESSAGE));
 
 			}
 		} catch (Exception e) {
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_MESSAGE , new Object[] {username}));
+			throw new InternalServerException(
+					messageResourceBundle.getExMessage(ConstantMessages.ERROR_MESSAGE, new Object[] { username }));
 
 		}
 	}
 
 	@Override
 	public ResponseEntity<?> balanceReportPdf(String username, BalanceReportRequest customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
-			Map<String, List<DeliveryDTO>> reportList = dataBase.getBalanceReportList(customReportForm, username, lang);
+
+			Map<String, List<DeliveryDTO>> reportList = dataBase.getBalanceReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
 				JasperPrint print = dataBase.getJasperPrint(reportList, false);
@@ -211,12 +219,14 @@ public class ReportServiceImpl implements ReportService {
 					if (content.length > 0) {
 						return new ResponseEntity<>(content, HttpStatus.OK);
 					} else {
-						throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.EMPTY_PDF_CONTENT_ERROR_MESSAGE));
+						throw new InternalServerException(
+								messageResourceBundle.getExMessage(ConstantMessages.EMPTY_PDF_CONTENT_ERROR_MESSAGE));
 
 					}
 				}
 			} else {
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GENERATING_BALANCE_REPORT_PDF_MESSAGE));
+				throw new InternalServerException(messageResourceBundle
+						.getExMessage(ConstantMessages.ERROR_GENERATING_BALANCE_REPORT_PDF_MESSAGE));
 
 			}
 		} catch (Exception e) {
@@ -226,13 +236,12 @@ public class ReportServiceImpl implements ReportService {
 
 	@Override
 	public ResponseEntity<?> BalanceReportDoc(String username, BalanceReportRequest customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
 
-			Map<String, List<DeliveryDTO>> reportList = dataBase.getBalanceReportList(customReportForm, username, lang);
+			Map<String, List<DeliveryDTO>> reportList = dataBase.getBalanceReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
 				JasperPrint print = dataBase.getJasperPrint(reportList, false);
@@ -254,12 +263,14 @@ public class ReportServiceImpl implements ReportService {
 					if (content.length > 0) {
 						return new ResponseEntity<>(content, HttpStatus.OK);
 					} else {
-						throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.EMPTY_DOC_CONTENT_ERROR_MESSAGE));
+						throw new InternalServerException(
+								messageResourceBundle.getExMessage(ConstantMessages.EMPTY_DOC_CONTENT_ERROR_MESSAGE));
 
 					}
 				}
 			} else {
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GENERATING_BALANCE_REPORT_DOC_MESSAGE));
+				throw new InternalServerException(messageResourceBundle
+						.getExMessage(ConstantMessages.ERROR_GENERATING_BALANCE_REPORT_DOC_MESSAGE));
 
 			}
 		} catch (Exception e) {
@@ -268,12 +279,12 @@ public class ReportServiceImpl implements ReportService {
 	}
 
 	@Override
-	public ResponseEntity<?> BlockedReportView(String username, BlockedReportRequest customReportForm, String lang) {
+	public ResponseEntity<?> BlockedReportView(String username, BlockedReportRequest customReportForm) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
+
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info("{} ReportSize[View]: {}", username, reportList.size());
 //				JasperPrint print = getJasperPrint(reportList, false, username);
@@ -292,19 +303,20 @@ public class ReportServiceImpl implements ReportService {
 			}
 		} catch (Exception e) {
 			logger.error("{} Unexpected error generating report", username, e);
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.UNEXPECTED_ERROR_GENERATING_REPORT_MESSAGE));
+			throw new InternalServerException(
+					messageResourceBundle.getExMessage(ConstantMessages.UNEXPECTED_ERROR_GENERATING_REPORT_MESSAGE));
 
 		}
 	}
 
 	@Override
 	public ResponseEntity<?> BlockedReportPdf(String username, BlockedReportRequest customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
+
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info("{} ReportSize[pdf]: {}", username, reportList.size());
 				JasperPrint print = getJasperPrint(reportList, false, username);
@@ -329,7 +341,8 @@ public class ReportServiceImpl implements ReportService {
 			}
 		} catch (Exception e) {
 			logger.error("{} Unexpected error generating PDF report", username, e);
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.UNEXPECTED_ERROR_GENERATING_PDF_REPORT_MESSAGE));
+			throw new InternalServerException(messageResourceBundle
+					.getExMessage(ConstantMessages.UNEXPECTED_ERROR_GENERATING_PDF_REPORT_MESSAGE));
 
 		}
 
@@ -338,11 +351,11 @@ public class ReportServiceImpl implements ReportService {
 
 	@Override
 	public ResponseEntity<?> BlockedReportxls(String username, BlockedReportRequest customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
+
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				int totalRec = reportList.size();
 				logger.info("{} ReportSize[xls]: {}", username, totalRec);
@@ -381,13 +394,14 @@ public class ReportServiceImpl implements ReportService {
 				target = IConstants.SUCCESS_KEY;
 			} else {
 				logger.info("{} <-- No Records Found -->", username);
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NO_RECORDS_FOUND_MESSAGE ,new Object[] {username}));
+				throw new InternalServerException(messageResourceBundle
+						.getExMessage(ConstantMessages.NO_RECORDS_FOUND_MESSAGE, new Object[] { username }));
 
 			}
 		} catch (Exception e) {
 			logger.error("{} Unexpected error generating XLS report", username, e);
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.UNEXPECTED_ERROR_GENERATING_XLS_REPORT_MESSAGE));
-
+			throw new InternalServerException(messageResourceBundle
+					.getExMessage(ConstantMessages.UNEXPECTED_ERROR_GENERATING_XLS_REPORT_MESSAGE));
 
 		}
 
@@ -396,13 +410,11 @@ public class ReportServiceImpl implements ReportService {
 
 	@Override
 	public ResponseEntity<?> BlockedReportDoc(String username, BlockedReportRequest customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
-			;
 
-			List<DeliveryDTO> reportList = getReportList(customReportForm, username, lang);
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(username + " ReportSize[doc]:" + reportList.size());
 				JasperPrint print = null;
@@ -427,11 +439,13 @@ public class ReportServiceImpl implements ReportService {
 				logger.info(username + " <-- doc Report Finished --> ");
 				target = IConstants.SUCCESS_KEY;
 			} else {
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NO_RECORDS_FOUND_MESSAGE,new Object[] {username}));
+				throw new InternalServerException(messageResourceBundle
+						.getExMessage(ConstantMessages.NO_RECORDS_FOUND_MESSAGE, new Object[] { username }));
 			}
 		} catch (Exception e) {
 			logger.error(username, e.fillInStackTrace());
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GENERATING_DOC_REPORT_MESSAGE));
+			throw new InternalServerException(
+					messageResourceBundle.getExMessage(ConstantMessages.ERROR_GENERATING_DOC_REPORT_MESSAGE));
 
 		}
 
@@ -442,7 +456,8 @@ public class ReportServiceImpl implements ReportService {
 			throws JRException {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isEmpty()) {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 		JasperPrint print = null;
 		JasperReport report = null;
@@ -497,14 +512,13 @@ public class ReportServiceImpl implements ReportService {
 	}
 
 	// block report
-	public List<DeliveryDTO> getReportList(BlockedReportRequest customReportForm, String username, String lang)
-			throws Exception {
+	public List<DeliveryDTO> getReportList(BlockedReportRequest customReportForm, String username) throws Exception {
 		logger.info(username + " Creating Report list");
 
 		CustomReportDTO customReportDTO = new CustomReportDTO();
 //		Bean Utils.copyProperties(customReportForm, customReportDTO);
 
-		org.springframework.beans.BeanUtils.copyProperties( customReportForm,customReportDTO);
+		org.springframework.beans.BeanUtils.copyProperties(customReportForm, customReportDTO);
 
 		String startDate = customReportForm.getStartDate();
 		System.out.println(startDate);
@@ -521,7 +535,7 @@ public class ReportServiceImpl implements ReportService {
 		String block_query = null;
 		List<String> report_user_list = null;
 		List<DeliveryDTO> finallist = new ArrayList<DeliveryDTO>();
-		
+
 		if (report_user != null) {
 			report_user_list = new ArrayList<String>();
 			report_user_list.add(report_user);
@@ -651,7 +665,7 @@ public class ReportServiceImpl implements ReportService {
 				finallist.addAll(list);
 			} catch (Exception ex) {
 				logger.error(spamUser, ex.fillInStackTrace());
-				
+
 			}
 		}
 		return finallist;

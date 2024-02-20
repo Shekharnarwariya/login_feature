@@ -10,7 +10,7 @@ import com.hti.smpp.common.request.CustomReportForm;
 @Service
 public interface AbortBatchReportService {
 	
-	public List<BulkEntry> abortBatchReport(String username, AbortBatchReportRequest customReportForm,String lang);
+	public List<BulkEntry> abortBatchReport(String username, AbortBatchReportRequest customReportForm);
 
 
 }

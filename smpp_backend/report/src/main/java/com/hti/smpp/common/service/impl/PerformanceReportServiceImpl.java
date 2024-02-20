@@ -92,8 +92,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 	}
 
 	@Override
-	public ResponseEntity<?> PerformanceReportview(String username, PerformanceReportRequest customReportForm,
-			String lang) {
+	public ResponseEntity<?> PerformanceReportview(String username, PerformanceReportRequest customReportForm) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
@@ -103,7 +102,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 					new Object[] { username }));
 		}
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
+
 
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
@@ -132,7 +131,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 
 	@Override
 	public ResponseEntity<?> PerformanceReportxls(String username, PerformanceReportRequest customReportForm,
-			String lang, HttpServletResponse response) {
+		 HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
@@ -143,7 +142,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 		}
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
+
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.size.message"), reportList.size());
@@ -195,7 +194,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 
 	@Override
 	public ResponseEntity<?> PerformanceReportPdf(String username, PerformanceReportRequest customReportForm,
-			String lang, HttpServletResponse response) {
+			 HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
@@ -206,7 +205,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 		}
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
+
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.size.message"), reportList.size());
@@ -255,7 +254,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 
 	@Override
 	public ResponseEntity<?> PerformanceReportDoc(String username, PerformanceReportRequest customReportForm,
-			String lang, HttpServletResponse response) {
+		HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
@@ -266,7 +265,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 		}
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
+
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
 

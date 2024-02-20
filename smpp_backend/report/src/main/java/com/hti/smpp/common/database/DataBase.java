@@ -215,8 +215,7 @@ public class DataBase {
 	}
 
 //////////////////////////////
-	public Map<String, List<DeliveryDTO>> getBalanceReportList(BalanceReportRequest customReportForm, String username,
-			String lang) {
+	public Map<String, List<DeliveryDTO>> getBalanceReportList(BalanceReportRequest customReportForm, String username) {
 		UserDAService userDAService = new UserDAServiceImpl();
 		if (customReportForm.getClientId() == null) {
 			return null;
@@ -1552,7 +1551,7 @@ public class DataBase {
 		return list;
 	}
 
-	public Workbook getContentWorkBook(List<DeliveryDTO> reportList, String username, String lang) {
+	public Workbook getContentWorkBook(List<DeliveryDTO> reportList, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (userOptional.isEmpty()) {
 			throw new NotFoundException("username not found username{}" + username);
@@ -1668,8 +1667,7 @@ public class DataBase {
 		return workbook;
 	}
 
-	public List<DeliveryDTO> getCustomizedReportList(CustomizedReportRequest customReportForm, String username,
-			String lang) throws Exception {
+	public List<DeliveryDTO> getCustomizedReportList(CustomizedReportRequest customReportForm, String username) throws Exception {
 		String target = IConstants.FAILURE_KEY;
 		String groupby = "country";
 		String reportUser = null;
@@ -2942,14 +2940,14 @@ public class DataBase {
 		return report;
 	}
 
-	public JasperPrint getSummaryJasperPrint(List reportList, boolean paging, String username, String lang)
+	public JasperPrint getSummaryJasperPrint(List reportList, boolean paging, String username)
 			throws JRException {
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
 				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
-		locale = Customlocale.getLocaleByLanguage(lang);
+	
 		JasperPrint print = null;
 		JasperReport report = null;
 		JasperDesign design = null;
@@ -3127,20 +3125,18 @@ public class DataBase {
 		return sortedlist;
 	}
 
-	public JasperPrint getCustomizedJasperPrint(List<DeliveryDTO> reportList, boolean paging, String username,
-			String lang) throws Exception {
+	public JasperPrint getCustomizedJasperPrint(List<DeliveryDTO> reportList, boolean paging, String username) throws Exception {
 		final String template_file = IConstants.FORMAT_DIR + "report//dlrReport.jrxml";
 		String template_sender_file = IConstants.FORMAT_DIR + "report//dlrReportSender.jrxml";
 		String template_content_file = IConstants.FORMAT_DIR + "report//dlrContentReport.jrxml";
 		String template_content_sender_file = IConstants.FORMAT_DIR + "report//dlrContentWithSender.jrxml";
 		String summary_template_file = IConstants.FORMAT_DIR + "report//dlrSummaryReport.jrxml";
 		String summary_sender_file = IConstants.FORMAT_DIR + "report//dlrSummarySender.jrxml";
-		locale = Customlocale.getLocaleByLanguage(lang);
+
 		JasperPrint print = null;
 		JasperReport report = null;
 		JasperDesign design = null;
 		String groupby = "country";
-		locale = Customlocale.getLocaleByLanguage(lang);
 		boolean isContent = false;
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);

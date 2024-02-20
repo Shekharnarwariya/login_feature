@@ -111,7 +111,7 @@ public class CampaignReportImpl implements CampaignReportService {
 	}
 
 	@Override
-	public ResponseEntity<?> CampaignReportview(String username, CampaignReportRequest customReportForm, String lang) {
+	public ResponseEntity<?> CampaignReportview(String username, CampaignReportRequest customReportForm) {
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			UserEntry user = userOptional
@@ -123,14 +123,9 @@ public class CampaignReportImpl implements CampaignReportService {
 
 			}
 
-			// Validate request parameters if necessary
-//	         if (!isValidRequest(customReportForm)) {
-//	             throw new ParameterMismatchException("Request parameters do not match the expected format or values.");
-//	         }
-
-			locale = Customlocale.getLocaleByLanguage(lang);
 			
-			List<DeliveryDTO> print = getReportList(customReportForm, username, false, lang);
+			
+			List<DeliveryDTO> print = getReportList(customReportForm, username, false);
 			
 			
 			if (print != null && !print.isEmpty()) {
@@ -155,9 +150,7 @@ public class CampaignReportImpl implements CampaignReportService {
 							+ " within the specified date range.");
 		}
 	}
-	private List<DeliveryDTO> getReportList(CampaignReportRequest customReportForm, String username, boolean paging,
-			String lang) {
-		locale = Customlocale.getLocaleByLanguage(lang);
+	private List<DeliveryDTO> getReportList(CampaignReportRequest customReportForm, String username, boolean paging) {
 		if (customReportForm.getClientId() == null) {
 			return null;
 		}
@@ -598,27 +591,7 @@ public class CampaignReportImpl implements CampaignReportService {
 		return list;
 	}
 
-	@Override
-	public ResponseEntity<?> CampaignReportxls(String username, CampaignReportRequest customReportForm,
-			HttpServletResponse response, String lang) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ResponseEntity<?> CampaignReportPdf(String username, CampaignReportRequest customReportForm,
-			HttpServletResponse response, String lang) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ResponseEntity<?> CampaignReportDoc(String username, CampaignReportRequest customReportForm,
-			HttpServletResponse response, String lang) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
+	
 //	@Override
 //	public ResponseEntity<?> CampaignReportxls(String username, CampaignReportRequest customReportForm,
 //	        HttpServletResponse response, String lang) {

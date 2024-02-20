@@ -9,16 +9,15 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Service
 public interface CustomizedReportService {
-	public ResponseEntity<?> CustomizedReportView(String username, CustomizedReportRequest customReportForm,
-			String lang);
+	public ResponseEntity<?> CustomizedReportView(String username, CustomizedReportRequest customReportForm);
 
 	public ResponseEntity<?> CustomizedReportdoc(String username, CustomizedReportRequest customReportForm,
-			HttpServletResponse response, String lang);
+			HttpServletResponse response);
 
 	public String CustomizedReportxls(String username, CustomizedReportRequest customReportForm,
-			HttpServletResponse response, String lang);
+			HttpServletResponse response);
 
 	public ResponseEntity<?> CustomizedReportpdf(String username, CustomizedReportRequest customReportForm,
-			HttpServletResponse response, String lang);
+			HttpServletResponse response);
 
 }

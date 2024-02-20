@@ -55,7 +55,7 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 	}
 
 	@Override
-	public ResponseEntity<?> ProfitReportview(String username, ProfitReportRequest customReportForm, String lang) {
+	public ResponseEntity<?> ProfitReportview(String username, ProfitReportRequest customReportForm) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		if (!userOptional.isPresent()) {
 			throw new NotFoundException(
@@ -87,21 +87,21 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 	}
 
 	@Override
-	public ResponseEntity<?> ProfitReportxls(String username, ProfitReportRequest customReportForm, String lang,
+	public ResponseEntity<?> ProfitReportxls(String username, ProfitReportRequest customReportForm,
 			HttpServletResponse response) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public ResponseEntity<?> ProfitReportpdf(String username, ProfitReportRequest customReportForm, String lang,
+	public ResponseEntity<?> ProfitReportpdf(String username, ProfitReportRequest customReportForm,
 			HttpServletResponse response) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public ResponseEntity<?> ProfitReportdoc(String username, ProfitReportRequest customReportForm, String lang,
+	public ResponseEntity<?> ProfitReportdoc(String username, ProfitReportRequest customReportForm, 
 			HttpServletResponse response) {
 		// TODO Auto-generated method stub
 		return null;

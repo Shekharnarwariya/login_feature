@@ -108,14 +108,13 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		return dataSource.getConnection();
 	}
 
-	public ResponseEntity<?> LatencyReportView(String username, LetencyReportRequest customReportForm, String lang) {
+	public ResponseEntity<?> LatencyReportView(String username, LetencyReportRequest customReportForm) {
 	    try {
-	    	locale = Customlocale.getLocaleByLanguage(lang);
 			List<DeliveryDTO> reportList = null;
 			if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
-				reportList = getSmscReportList(customReportForm, username, lang);
+				reportList = getSmscReportList(customReportForm, username);
 			} else {
-				reportList = getReportList(customReportForm, username, lang);
+				reportList = getReportList(customReportForm, username);
 			}
 
 	        if (reportList != null && !reportList.isEmpty()) {
@@ -147,7 +146,7 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 	    }
 	}
 
-	private List<DeliveryDTO> getReportList(LetencyReportRequest customReportForm, String username, String lang) throws SQLException {
+	private List<DeliveryDTO> getReportList(LetencyReportRequest customReportForm, String username) throws SQLException {
 		UserDAService userDAService = new UserDAServiceImpl();
 		if (customReportForm.getClientId() == null) {
 			return null;
@@ -403,7 +402,7 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		return new ArrayList<DeliveryDTO>(mapping.values());
 	}
 
-	private List<DeliveryDTO> getSmscReportList(LetencyReportRequest customReportForm, String username, String lang) throws SQLException {
+	private List<DeliveryDTO> getSmscReportList(LetencyReportRequest customReportForm, String username) throws SQLException {
 		UserDAService userDAService = new UserDAServiceImpl();
 		if (customReportForm.getClientId() == null) {
 			return null;
@@ -641,7 +640,7 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 
 	@Override
 	public ResponseEntity<?> LatencyReportxls(String username, LetencyReportRequest customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
@@ -651,12 +650,12 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
-			locale = Customlocale.getLocaleByLanguage(lang);
+		
 			List<DeliveryDTO> reportList = null;
 			if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
-				reportList = getSmscReportList(customReportForm, username, lang);
+				reportList = getSmscReportList(customReportForm, username);
 			} else {
-				reportList = getReportList(customReportForm, username, lang);
+				reportList = getReportList(customReportForm, username);
 			}
 			if (reportList != null && !reportList.isEmpty()) {
 				List<DeliveryDTO> print = null;
@@ -692,7 +691,7 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 
 	@Override
 	public ResponseEntity<?> LatencyReportpdf(String username, LetencyReportRequest customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			UserEntry user = userOptional
@@ -700,12 +699,11 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
-			locale = Customlocale.getLocaleByLanguage(lang);
 			List<DeliveryDTO> reportList = null;
 			if (customReportForm.getSmscnames() != null && customReportForm.getSmscnames().length > 0) {
-				reportList = getSmscReportList(customReportForm, username, lang);
+				reportList = getSmscReportList(customReportForm, username);
 			} else {
-				reportList = getReportList(customReportForm, username, lang);
+				reportList = getReportList(customReportForm, username);
 			}
 			if (reportList != null && !reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
@@ -741,7 +739,7 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 
 	@Override
 	public ResponseEntity<?> LatencyReportdoc(String username, LetencyReportRequest customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 
 		try {
@@ -751,7 +749,6 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
-			locale = Customlocale.getLocaleByLanguage(lang);
 			List<DeliveryDTO> reportList = null;
 
 			System.out.println("Report Size: " + reportList.size());
@@ -881,6 +878,8 @@ public class LatencyReportServiceImpl implements LatencyReportService {
 		List<DeliveryDTO> sortedlist = personStream.collect(Collectors.toList());
 		return sortedlist;
 	}
+
+	
 
 
 

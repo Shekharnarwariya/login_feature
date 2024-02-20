@@ -87,7 +87,7 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 
 	@Override
 	public ResponseEntity<?> execute(String username, SubmissionReportRequest customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 
 		String target = IConstants.SUCCESS_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -106,13 +106,8 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 		logger.info(messageResourceBundle.getLogMessage("submission.report.requested.message"), username);
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
-
-			// CustomReportForm customReportForm = (CustomReportForm) actionForm;
 			CustomReportDTO customReportDTO = new CustomReportDTO();
-			// BeanUtils.copyProperties(customReportDTO, customReportForm);
 			org.springframework.beans.BeanUtils.copyProperties(customReportForm, customReportDTO);
-			// String username = customReportDTO.getClientId();
 			String smsc = customReportDTO.getSmscName();
 			String country = customReportDTO.getCountry();
 			String sender = customReportDTO.getSenderId();

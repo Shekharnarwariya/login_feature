@@ -15,15 +15,15 @@ import jakarta.servlet.http.HttpServletResponse;
 @Service
 public interface PerformanceReportService {
 	
-	public ResponseEntity<?> PerformanceReportview(String username, PerformanceReportRequest customReportForm, String lang);
+	public ResponseEntity<?> PerformanceReportview(String username, PerformanceReportRequest customReportForm);
 
-	public ResponseEntity<?> PerformanceReportxls(String username, PerformanceReportRequest customReportForm, String lang,
+	public ResponseEntity<?> PerformanceReportxls(String username, PerformanceReportRequest customReportForm,
 			HttpServletResponse response);
 
-	public ResponseEntity<?> PerformanceReportPdf(String username, PerformanceReportRequest customReportForm, String lang,
+	public ResponseEntity<?> PerformanceReportPdf(String username, PerformanceReportRequest customReportForm,
 			HttpServletResponse response);
 
-	public ResponseEntity<?> PerformanceReportDoc(String username, PerformanceReportRequest customReportForm, String lang,
+	public ResponseEntity<?> PerformanceReportDoc(String username, PerformanceReportRequest customReportForm,
 			HttpServletResponse response);
 	
 

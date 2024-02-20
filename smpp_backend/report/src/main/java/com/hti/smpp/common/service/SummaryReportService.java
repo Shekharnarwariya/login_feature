@@ -14,16 +14,16 @@ import jakarta.servlet.http.HttpServletResponse;
 @Service
 public interface SummaryReportService {
 	
-	public ResponseEntity<?> SummaryReportview(String username, SummaryReportForm customReportForm, String lang);
+	public ResponseEntity<?> SummaryReportview(String username, SummaryReportForm customReportForm);
 	
 	public ResponseEntity<?>  SummaryReportxls(String username, SummaryReportForm customReportForm,
-			HttpServletResponse response,String lang);
+			HttpServletResponse respons);
 	
 	public ResponseEntity<?>  SummaryReportpdf(String username, SummaryReportForm customReportForm,
-			HttpServletResponse response,String lang);
+			HttpServletResponse response);
 	
 	public ResponseEntity<?>  SummaryReportdoc(String username, SummaryReportForm customReportForm,
-			HttpServletResponse response,String lang);
+			HttpServletResponse response);
 	
 	
 

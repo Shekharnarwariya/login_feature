@@ -115,7 +115,7 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 	String target = IConstants.FAILURE_KEY;
 
 	@Override
-	public ResponseEntity<?> SummaryReportview(String username, SummaryReportForm customReportForm, String lang) {
+	public ResponseEntity<?> SummaryReportview(String username, SummaryReportForm customReportForm) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
@@ -129,10 +129,9 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 
 		}
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
 			logger.info(messageResourceBundle.getLogMessage("run.summary.report.view.message"));
 
-			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry, lang);
+			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(), reportList.size());
 
@@ -155,7 +154,7 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 
 	@Override
 	public ResponseEntity<?> SummaryReportxls(String username, SummaryReportForm customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			UserEntry user = userOptional
@@ -170,14 +169,14 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE, new Object[] {user.getId()}));
 			}
 
-			Locale locale = Customlocale.getLocaleByLanguage(lang);
-			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry, lang);
+		
+			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry);
 
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("xls.report.size.message"), user.getSystemId(), reportList.size());
 
 
-				JasperPrint print = getJasperPrint(reportList, username, false, lang);
+				JasperPrint print = getJasperPrint(reportList, username, false);
 				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
 
 				byte[] xlsReport = generateXLSReport(print);
@@ -213,7 +212,7 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 	}
 
 	public ResponseEntity<?> SummaryReportpdf(String username, SummaryReportForm customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		Locale locale = null;
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -228,14 +227,12 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 			if (webMasterEntry == null) {
 				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE, new Object[] {user.getId()}));
 			}
-
-			locale = Customlocale.getLocaleByLanguage(lang);
-			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry, lang);
+			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry);
 
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("xls.report.size.message"), user.getSystemId(), reportList.size());
 
-				JasperPrint print = getJasperPrint(reportList, username, false, lang);
+				JasperPrint print = getJasperPrint(reportList, username, false);
 				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
 				byte[] pdfReport = generatePDFReport(print);
 
@@ -266,7 +263,7 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 
 	@Override
 	public ResponseEntity<byte[]> SummaryReportdoc(String username, SummaryReportForm customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			UserEntry user = userOptional
@@ -281,14 +278,14 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 
-			Locale locale = Customlocale.getLocaleByLanguage(lang);
-			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry, lang);
+	
+			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry);
 
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.size.doc.message"), user.getSystemId(), reportList.size());
 
 
-				JasperPrint print = getJasperPrint(reportList, username, false, lang);
+				JasperPrint print = getJasperPrint(reportList, username, false);
 				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
 
 				byte[] docReport = generateDocReport(print);
@@ -323,9 +320,7 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 		return byteArrayOutputStream.toByteArray();
 	}
 
-	private JasperPrint getJasperPrint(List reportList, String username, boolean paging, String lang) throws Exception {
-
-		locale = Customlocale.getLocaleByLanguage(lang);
+	private JasperPrint getJasperPrint(List reportList, String username, boolean paging) throws Exception {
 		logger.info(messageResourceBundle.getLogMessage("creating.design.message"));
 
 		JasperDesign design = JRXmlLoader.load(template_file);
@@ -415,7 +410,7 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 	}
 
 	private List<BatchDTO> getSummaryReportList(SummaryReportForm customReportForm, String username,
-			WebMasterEntry webMasterEntry, String lang) throws SQLException {
+			WebMasterEntry webMasterEntry) throws SQLException {
 		System.out.println("call get summary report list 390 ");
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
@@ -654,4 +649,5 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 		}
 	}
 
+	
 }

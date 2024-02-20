@@ -11,15 +11,15 @@ import jakarta.servlet.http.HttpServletResponse;
 @Service
 public interface SmscDlrReportReportService {
 
-	public ResponseEntity<?>  SmscDlrReportview(String username, SmscDlrReportRequest customReportForm, String lang);
+	public ResponseEntity<?>  SmscDlrReportview(String username, SmscDlrReportRequest customReportForm);
 
-	public ResponseEntity<?>  SmscDlrReportxls(String username, SmscDlrReportRequest customReportForm, String lang,
+	public ResponseEntity<?>  SmscDlrReportxls(String username, SmscDlrReportRequest customReportForm, 
 			HttpServletResponse response);
 
-	public ResponseEntity<?>  SmscDlrReportpdf(String username, SmscDlrReportRequest customReportForm, String lang,
+	public ResponseEntity<?>  SmscDlrReportpdf(String username, SmscDlrReportRequest customReportForm,
 			HttpServletResponse response);
 
-	public ResponseEntity<?>  SmscDlrReportdoc(String username, SmscDlrReportRequest customReportForm, String lang,
+	public ResponseEntity<?>  SmscDlrReportdoc(String username, SmscDlrReportRequest customReportForm,
 			HttpServletResponse response);
 
 }

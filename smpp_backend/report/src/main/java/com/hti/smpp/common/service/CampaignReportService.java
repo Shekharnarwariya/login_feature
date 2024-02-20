@@ -9,16 +9,16 @@ import jakarta.servlet.http.HttpServletResponse;
 @Service
 public interface CampaignReportService {
 	
-	public ResponseEntity<?> CampaignReportview(String username, CampaignReportRequest customReportForm,String lang);
+	public ResponseEntity<?> CampaignReportview(String username, CampaignReportRequest customReportForm);
 
-	public ResponseEntity<?> CampaignReportxls(String username, CampaignReportRequest customReportForm,
-			HttpServletResponse response,String lang);
-
-	public ResponseEntity<?> CampaignReportPdf(String username, CampaignReportRequest customReportForm,
-			HttpServletResponse response,String lang);
-
-	public ResponseEntity<?> CampaignReportDoc(String username, CampaignReportRequest customReportForm,
-			HttpServletResponse response,String lang);
+//	public ResponseEntity<?> CampaignReportxls(String username, CampaignReportRequest customReportForm,
+//			HttpServletResponse response);
+//
+//	public ResponseEntity<?> CampaignReportPdf(String username, CampaignReportRequest customReportForm,
+//			HttpServletResponse response);
+//
+//	public ResponseEntity<?> CampaignReportDoc(String username, CampaignReportRequest customReportForm,
+//			HttpServletResponse response);
 	
 
 }

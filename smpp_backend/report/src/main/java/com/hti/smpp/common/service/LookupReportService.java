@@ -14,19 +14,19 @@ import jakarta.servlet.http.HttpServletResponse;
 @Service
 public interface LookupReportService {
 
-	public ResponseEntity<?>  LookupReportview(String username, LookUpReportRequest customReportForm, String lang);
+	public ResponseEntity<?>  LookupReportview(String username, LookUpReportRequest customReportForm);
 
-	public ResponseEntity<?> LookupReportxls(String username, LookUpReportRequest customReportForm, String lang,
+	public ResponseEntity<?> LookupReportxls(String username, LookUpReportRequest customReportForm, 
 			HttpServletResponse response);
 
-	public ResponseEntity<?> LookupReportPdf(String username, LookUpReportRequest customReportForm, String lang,
+	public ResponseEntity<?> LookupReportPdf(String username, LookUpReportRequest customReportForm,
 			HttpServletResponse response);
 
-	public ResponseEntity<?> LookupReportDoc(String username, LookUpReportRequest customReportForm, String lang,
+	public ResponseEntity<?> LookupReportDoc(String username, LookUpReportRequest customReportForm, 
 			HttpServletResponse response);
 	
 
-	public ResponseEntity<?> LookupReportRecheck(String username, LookUpReportRequest customReportForm, String lang,
+	public ResponseEntity<?> LookupReportRecheck(String username, LookUpReportRequest customReportForm, 
 			HttpServletResponse response);
 	
 

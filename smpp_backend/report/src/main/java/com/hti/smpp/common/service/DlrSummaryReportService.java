@@ -13,15 +13,12 @@ import jakarta.servlet.http.HttpServletResponse;
 @Service
 public interface DlrSummaryReportService {
 
-	public ResponseEntity<?> DlrSummaryReportview(String username, DlrSummaryReport  customReportForm, String lang);
+	public ResponseEntity<?> DlrSummaryReportview(String username, DlrSummaryReport  customReportForm);
 
-	public ResponseEntity<?> DlrSummaryReportdoc(String username, DlrSummaryReport customReportForm, HttpServletResponse response,
-			String lang);
+	public ResponseEntity<?> DlrSummaryReportdoc(String username, DlrSummaryReport customReportForm, HttpServletResponse response);
 
-	public ResponseEntity<?> DlrSummaryReportdpdf(String username, DlrSummaryReport customReportForm, HttpServletResponse response,
-			String lang);
+	public ResponseEntity<?> DlrSummaryReportdpdf(String username, DlrSummaryReport customReportForm, HttpServletResponse response);
 
-	public ResponseEntity<?> DlrSummaryReportdxls(String username, DlrSummaryReport customReportForm, HttpServletResponse response,
-			String lang);
+	public ResponseEntity<?> DlrSummaryReportdxls(String username, DlrSummaryReport customReportForm, HttpServletResponse response);
 
 }

@@ -18,21 +18,20 @@ import net.sf.jasperreports.engine.JasperPrint;
 
 @Service
 public interface ReportService {
-	public ResponseEntity<?> BalanceReportView(String username, BalanceReportRequest customReportForm,String lang);
+	public ResponseEntity<?> BalanceReportView(String username, BalanceReportRequest customReportForm);
 
-	public ResponseEntity<?> BalanceReportxls(String username, BalanceReportRequest customReportForm, HttpServletResponse response,String lang);
+	public ResponseEntity<?> BalanceReportxls(String username, BalanceReportRequest customReportForm, HttpServletResponse response);
 
-	public ResponseEntity<?> balanceReportPdf(String username, BalanceReportRequest customReportForm, HttpServletResponse response,String lang);
+	public ResponseEntity<?> balanceReportPdf(String username, BalanceReportRequest customReportForm, HttpServletResponse response);
+	public ResponseEntity<?> BalanceReportDoc(String username, BalanceReportRequest customReportForm, HttpServletResponse response);
 
-	public ResponseEntity<?> BalanceReportDoc(String username, BalanceReportRequest customReportForm, HttpServletResponse response,String lang);
+	public ResponseEntity<?> BlockedReportView(String username, BlockedReportRequest customReportForm);
 
-	public ResponseEntity<?> BlockedReportView(String username, BlockedReportRequest customReportForm,String lang);
+	public ResponseEntity<?> BlockedReportxls(String username, BlockedReportRequest customReportForm, HttpServletResponse response);
 
-	public ResponseEntity<?> BlockedReportxls(String username, BlockedReportRequest customReportForm, HttpServletResponse response,String lang);
+	public ResponseEntity<?> BlockedReportPdf(String username, BlockedReportRequest customReportForm, HttpServletResponse response);
 
-	public ResponseEntity<?> BlockedReportPdf(String username, BlockedReportRequest customReportForm, HttpServletResponse response,String lang);
-
-	public ResponseEntity<?> BlockedReportDoc(String username, BlockedReportRequest customReportForm, HttpServletResponse response,String lang);
+	public ResponseEntity<?> BlockedReportDoc(String username, BlockedReportRequest customReportForm, HttpServletResponse response);
 
 
 

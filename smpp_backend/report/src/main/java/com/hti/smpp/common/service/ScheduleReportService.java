@@ -14,6 +14,6 @@ import jakarta.servlet.http.HttpServletResponse;
 @Service
 public interface ScheduleReportService {
 
-	public ResponseEntity<?> ScheduleReport(String username, ScheduleReportRequest customReportForm, String lang);
+	public ResponseEntity<?> ScheduleReport(String username, ScheduleReportRequest customReportForm);
 
 }

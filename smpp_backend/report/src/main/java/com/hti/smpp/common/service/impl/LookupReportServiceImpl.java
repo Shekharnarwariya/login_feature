@@ -85,17 +85,12 @@ import net.sf.jasperreports.engine.xml.JRXmlLoader;
 public class LookupReportServiceImpl implements LookupReportService {
 	private static final Logger logger = LoggerFactory.getLogger(LookupReportServiceImpl.class);
 
-	@Autowired
-	private DataBase dataBase;
+	
 
 	@Autowired
 	private UserEntryRepository userRepository;
 
-	@Autowired
-	private SalesRepository salesRepository;
-
-	@Autowired
-	private UserDAService userService;
+	
 	@Autowired
 	private WebMasterEntryRepository webMasterEntryRepository;
 
@@ -106,8 +101,8 @@ public class LookupReportServiceImpl implements LookupReportService {
 	private String template_file = IConstants.FORMAT_DIR + "report//lookupReport.jrxml";
 
 	@Override
-	public ResponseEntity<?> LookupReportview(String username, LookUpReportRequest customReportForm, String lang) {
-		String target = IConstants.SUCCESS_KEY;
+	public ResponseEntity<?> LookupReportview(String username, LookUpReportRequest customReportForm) {
+	
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
@@ -120,8 +115,6 @@ public class LookupReportServiceImpl implements LookupReportService {
 		}
 
 		try {
-
-			locale = Customlocale.getLocaleByLanguage(lang);
 
 			List<LookupReport> reportList = getLookupReport(customReportForm, user.getRole(), username);
 			if (reportList != null && !reportList.isEmpty()) {
@@ -147,10 +140,10 @@ public class LookupReportServiceImpl implements LookupReportService {
 	}
 
 	@Override
-	public ResponseEntity<?> LookupReportxls(String username, LookUpReportRequest customReportForm, String lang,
+	public ResponseEntity<?> LookupReportxls(String username, LookUpReportRequest customReportForm,
 			HttpServletResponse response) {
 
-		String target = IConstants.FAILURE_KEY;
+	
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
@@ -162,7 +155,6 @@ public class LookupReportServiceImpl implements LookupReportService {
 		}
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
 			List<LookupReport> reportList = getLookupReport(customReportForm, user.getRole(), username);
 			if (reportList != null && !reportList.isEmpty()) {
 				int total_rec = reportList.size();
@@ -219,8 +211,6 @@ public class LookupReportServiceImpl implements LookupReportService {
 					}
 				}
 				logger.info(messageResourceBundle.getLogMessage("finish.message"));
-
-				target = IConstants.SUCCESS_KEY;
 			} else {
 				throw new InternalServerException(messageResourceBundle
 						.getExMessage(ConstantMessages.ERROR_GENERATING_PDF_LOOKUP_REPORT_MESSAGE));
@@ -233,7 +223,7 @@ public class LookupReportServiceImpl implements LookupReportService {
 	}
 
 	@Override
-	public ResponseEntity<?> LookupReportPdf(String username, LookUpReportRequest customReportForm, String lang,
+	public ResponseEntity<?> LookupReportPdf(String username, LookUpReportRequest customReportForm, 
 			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -247,8 +237,6 @@ public class LookupReportServiceImpl implements LookupReportService {
 		}
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
-
 			List<LookupReport> reportList = getLookupReport(customReportForm, user.getRole(), username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
@@ -288,7 +276,7 @@ public class LookupReportServiceImpl implements LookupReportService {
 	}
 
 	@Override
-	public ResponseEntity<?> LookupReportDoc(String username, LookUpReportRequest customReportForm, String lang,
+	public ResponseEntity<?> LookupReportDoc(String username, LookUpReportRequest customReportForm, 
 			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -303,7 +291,6 @@ public class LookupReportServiceImpl implements LookupReportService {
 
 		try {
 
-			locale = Customlocale.getLocaleByLanguage(lang);
 			List<LookupReport> reportList = getLookupReport(customReportForm, user.getRole(), username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
@@ -346,7 +333,7 @@ public class LookupReportServiceImpl implements LookupReportService {
 	}
 
 	@Override
-	public ResponseEntity<?> LookupReportRecheck(String username, LookUpReportRequest customReportForm, String lang,
+	public ResponseEntity<?> LookupReportRecheck(String username, LookUpReportRequest customReportForm, 
 			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 		String sql = "select * from lookup_result where status='ACCEPTD' ";

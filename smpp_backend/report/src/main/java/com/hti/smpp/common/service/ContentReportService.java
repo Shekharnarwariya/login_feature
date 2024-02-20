@@ -12,15 +12,15 @@ import com.hti.smpp.common.response.DeliveryDTO;
 import jakarta.servlet.http.HttpServletResponse;
 @Service
 public interface ContentReportService {
-	public ResponseEntity<?> ContentReportView(String username, ContentReportRequest customReportForm,String lang);
+	public ResponseEntity<?> ContentReportView(String username, ContentReportRequest customReportForm);
 
 	public ResponseEntity<?> ContentReportxls(String username, ContentReportRequest customReportForm,
-			HttpServletResponse response,String lang);
+			HttpServletResponse response);
 
 	public ResponseEntity<?> ContentReportPdf(String username, ContentReportRequest customReportForm,
-			HttpServletResponse response,String lang);
+			HttpServletResponse response);
 
 	public ResponseEntity<?> ContentReportDoc(String username, ContentReportRequest customReportForm,
-			HttpServletResponse response,String lang);
+			HttpServletResponse response);
 
 }

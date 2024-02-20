@@ -125,7 +125,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 	private final String summary_template_file = IConstants.FORMAT_DIR + "report//SmscDlrSummaryReport.jrxml";
 
 	@Override
-	public ResponseEntity<?> SmscDlrReportview(String username, SmscDlrReportRequest customReportForm, String lang) {
+	public ResponseEntity<?> SmscDlrReportview(String username, SmscDlrReportRequest customReportForm) {
 		List<DeliveryDTO> target = new ArrayList<>();
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
@@ -139,8 +139,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 
 		}
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList = getReportList(customReportForm, username, webMasterEntry, lang);
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username, webMasterEntry);
 			if (!reportList.isEmpty()) {
 				System.out.println(user.getSystemId() + " Report Size: " + reportList.size());
 				//JasperPrint print = null;
@@ -163,7 +162,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 	}
 
 	@Override
-	public ResponseEntity<?> SmscDlrReportxls(String username, SmscDlrReportRequest customReportForm, String lang,
+	public ResponseEntity<?> SmscDlrReportxls(String username, SmscDlrReportRequest customReportForm,
 			HttpServletResponse response) {
 
 		List<DeliveryDTO> target = null;
@@ -178,8 +177,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE,new Object[] {user.getId()}));
 		}
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList = getReportList(customReportForm, username, webMasterEntry, lang);
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username, webMasterEntry);
 			Map<String, DeliveryDTO> map = new LinkedHashMap<String, DeliveryDTO>();
 			if (isSummary) {
 				Iterator itr = reportList.iterator();
@@ -294,7 +292,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 	}
 
 	@Override
-	public ResponseEntity<?> SmscDlrReportpdf(String username, SmscDlrReportRequest customReportForm, String lang,
+	public ResponseEntity<?> SmscDlrReportpdf(String username, SmscDlrReportRequest customReportForm,
 			HttpServletResponse response) {
 		List<DeliveryDTO> target = null;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -312,8 +310,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 		}
 
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList = getReportList(customReportForm, username, webMasterEntry, lang);
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username, webMasterEntry);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(user.getSystemId() + " ReportSize[pdf]:" + reportList.size());
 				JasperPrint print = null;
@@ -352,7 +349,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 	}
 
 	@Override
-	public ResponseEntity<?> SmscDlrReportdoc(String username, SmscDlrReportRequest customReportForm, String lang,
+	public ResponseEntity<?> SmscDlrReportdoc(String username, SmscDlrReportRequest customReportForm,
 			HttpServletResponse response) {
 		List<DeliveryDTO> target = null;
 
@@ -367,8 +364,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 			throw new NotFoundException("web MasterEntry not found for username: " + user.getId());
 		}
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList = getReportList(customReportForm, username, webMasterEntry, lang);
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username, webMasterEntry);
 			if (!reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
 				JasperPrint print = null;
@@ -852,7 +848,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 	}
 
 	private List<DeliveryDTO> getReportList(SmscDlrReportRequest customReportForm, String username,
-			WebMasterEntry webMasterEntry, String lang) throws Exception {
+			WebMasterEntry webMasterEntry) throws Exception {
 		List<DeliveryDTO> list = null;
 
 		// int back_day = 1;

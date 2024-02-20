@@ -118,8 +118,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	}
 
 	@Override
-	public ResponseEntity<?> CustomizedReportView(String username, CustomizedReportRequest customReportForm,
-			String lang) {
+	public ResponseEntity<?> CustomizedReportView(String username, CustomizedReportRequest customReportForm) {
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			UserEntry user = userOptional
@@ -129,8 +128,8 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 
-			locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList = getCustomizedReportList(customReportForm, username, lang);
+
+			List<DeliveryDTO> reportList = getCustomizedReportList(customReportForm, username);
 			if (customReportForm.getReportType().equalsIgnoreCase("Summary")) {
 				isSummary = true;
 			} else {
@@ -139,8 +138,8 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			System.out.println(isSummary);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(user.getSystemId() + " ReportSize[View]:" + reportList.size());
-				List<DeliveryDTO> print = isSummary ? getSummaryJasperPrint(reportList, false, username, lang)
-						: getCustomizedJasperPrint(reportList, false, username, lang);
+				List<DeliveryDTO> print = isSummary ? getSummaryJasperPrint(reportList, false, username)
+						: getCustomizedJasperPrint(reportList, false, username);
 				logger.info(user.getSystemId() + " <-- Report Finished --> ");
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 
@@ -158,14 +157,14 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		}
 	}
 
-	public List<DeliveryDTO> getSummaryJasperPrint(List reportList, boolean paging, String username, String lang)
+	public List<DeliveryDTO> getSummaryJasperPrint(List reportList, boolean paging, String username)
 			throws JRException {
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
 				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
-		locale = Customlocale.getLocaleByLanguage(lang);
+		
 		List<DeliveryDTO> print = null;
 		List<DeliveryDTO> report = null;
 		List<DeliveryDTO> design = null;
@@ -312,8 +311,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		return reportList;
 	}
 
-	private List<DeliveryDTO> getCustomizedJasperPrint(List<DeliveryDTO> reportList, boolean b, String username,
-			String lang) {
+	private List<DeliveryDTO> getCustomizedJasperPrint(List<DeliveryDTO> reportList, boolean b, String username) {
 
 		final String template_file = IConstants.FORMAT_DIR + "report//dlrReport.jrxml";
 		String template_sender_file = IConstants.FORMAT_DIR + "report//dlrReportSender.jrxml";
@@ -321,12 +319,12 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		String template_content_sender_file = IConstants.FORMAT_DIR + "report//dlrContentWithSender.jrxml";
 		String summary_template_file = IConstants.FORMAT_DIR + "report//dlrSummaryReport.jrxml";
 		String summary_sender_file = IConstants.FORMAT_DIR + "report//dlrSummarySender.jrxml";
-		locale = Customlocale.getLocaleByLanguage(lang);
+		
 		List<DeliveryDTO> print = null;
 		List<DeliveryDTO> report = null;
 		List<DeliveryDTO> design = null;
 		String groupby = "country";
-		locale = Customlocale.getLocaleByLanguage(lang);
+
 		boolean isContent = false;
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -504,8 +502,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		return sortedlist;
 	}
 
-	private List<DeliveryDTO> getCustomizedReportList(CustomizedReportRequest customReportForm, String username,
-			String lang) {
+	private List<DeliveryDTO> getCustomizedReportList(CustomizedReportRequest customReportForm, String username) {
 		String target = IConstants.FAILURE_KEY;
 		String groupby = "country";
 		String reportUser = null;
@@ -1780,7 +1777,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 
 	@Override
 	public String CustomizedReportxls(String username, CustomizedReportRequest customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		String target = IConstants.SUCCESS_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
@@ -1789,8 +1786,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username, lang);
+			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				int total_rec = reportList.size();
 				logger.info(user.getSystemId() + " ReportSize[xls]:" + total_rec);
@@ -1902,7 +1898,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 
 	@Override
 	public ResponseEntity<?> CustomizedReportpdf(String username, CustomizedReportRequest customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
@@ -1912,8 +1908,8 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username, lang);
+		
+			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(username + " ReportSize[pdf]:" + reportList.size());
 				JasperPrint print = null;
@@ -1923,10 +1919,10 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					isSummary = false;
 				}
 				if (isSummary) {
-					print = dataBase.getSummaryJasperPrint(reportList, false, username, lang);
+					print = dataBase.getSummaryJasperPrint(reportList, false, username);
 				} else {
 					// Uncomment this line if you have a method for customized JasperPrint
-					print = dataBase.getCustomizedJasperPrint(reportList, false, username, lang);
+					print = dataBase.getCustomizedJasperPrint(reportList, false, username);
 				}
 
 				if (print != null) {
@@ -1958,7 +1954,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 
 	@Override
 	public ResponseEntity<?> CustomizedReportdoc(String username, CustomizedReportRequest customReportForm,
-			HttpServletResponse response, String lang) {
+			HttpServletResponse response) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
@@ -1970,8 +1966,8 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 
 		String target = IConstants.SUCCESS_KEY;
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username, lang);
+			
+			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(user.getSystemId() + " ReportSize[doc]:" + reportList.size());
 				JasperPrint print = null;
@@ -1981,10 +1977,10 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					isSummary = false;
 				}
 				if (isSummary) {
-					print = dataBase.getSummaryJasperPrint(reportList, false, username, lang);
+					print = dataBase.getSummaryJasperPrint(reportList, false, username);
 				} else {
 					// Uncomment this line if you have a method for customized JasperPrint
-					print = dataBase.getCustomizedJasperPrint(reportList, false, username, lang);
+					print = dataBase.getCustomizedJasperPrint(reportList, false, username);
 				}
 
 				logger.info(user.getSystemId() + " <-- Preparing Outputstream --> ");

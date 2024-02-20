@@ -65,7 +65,7 @@ public class ScheduleReportServiceImpl implements ScheduleReportService {
 	private String reportUser = null;
 
 	@Override
-	public ResponseEntity<?> ScheduleReport(String username, ScheduleReportRequest customReportForm, String lang) {
+	public ResponseEntity<?> ScheduleReport(String username, ScheduleReportRequest customReportForm) {
 		String target = IConstants.SUCCESS_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
@@ -74,8 +74,7 @@ public class ScheduleReportServiceImpl implements ScheduleReportService {
 			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
 		try {
-			locale = Customlocale.getLocaleByLanguage(lang);
-			List<ScheduleEntryExt> reportList = getReportList(customReportForm, username, lang);
+			List<ScheduleEntryExt> reportList = getReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
 				// request.setAttribute("report", reportList);
@@ -93,7 +92,8 @@ public class ScheduleReportServiceImpl implements ScheduleReportService {
 		}
 	}
 
-	private List<ScheduleEntryExt> getReportList(ScheduleReportRequest customReportForm, String username, String lang)
+	private List<ScheduleEntryExt> getReportList(ScheduleReportRequest customReportForm, String username
+			)
 			throws SQLException {
 		List<ScheduleEntryExt> list = new ArrayList<ScheduleEntryExt>();
 		String sql = "select * from schedule_history where client_time between '" + customReportForm.getStartDate()
