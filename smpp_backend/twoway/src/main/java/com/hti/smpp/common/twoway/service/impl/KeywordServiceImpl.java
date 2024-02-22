@@ -1018,7 +1018,6 @@ public class KeywordServiceImpl implements KeywordService {
 			return ResponseEntity.ok(users);
 		}
 		
-=
 	@Override
 	public ResponseEntity<String> deleteAllKeyWordByID(List<Integer> ids, String username) {
 	    Optional<UserEntry> userOptional = userRepository.findBySystemId(username);

@@ -13,13 +13,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -39,8 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -75,6 +66,11 @@ import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MessageResourceBundle;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -99,7 +95,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 
 	@Autowired
 	private WebMasterEntryRepository webMasterRepo;
-	
+
 	@Autowired
 	private MessageResourceBundle messageResourceBundle;
 
@@ -115,10 +111,12 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		GroupDataEntryRequest form;
@@ -128,7 +126,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 			form = objectMapper.readValue(request, GroupDataEntryRequest.class);
 			form.setContactNumberFile(file);
 		} catch (JsonProcessingException e) {
-			throw new JsonProcessingError(messageResourceBundle.getExMessage(ConstantMessages.JSON_PROCESSING_ERROR,new Object[] {e.getLocalizedMessage()}));
+			throw new JsonProcessingError(messageResourceBundle.getExMessage(ConstantMessages.JSON_PROCESSING_ERROR,
+					new Object[] { e.getLocalizedMessage() }));
 		} catch (Exception ex) {
 			throw new InternalServerException(ex.getLocalizedMessage());
 		}
@@ -136,8 +135,9 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		String target = IConstants.FAILURE_KEY;
 
 		String systemId = user.getSystemId();
-		
-		logger.info(messageResourceBundle.getLogMessage("addbook.adding.groupdata.info"), systemId, user.getRole(), form.getGroupId());
+
+		logger.info(messageResourceBundle.getLogMessage("addbook.adding.groupdata.info"), systemId, user.getRole(),
+				form.getGroupId());
 		try {
 			int groupId = form.getGroupId();
 			String mode = form.getType();
@@ -147,7 +147,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 			if (mode.equalsIgnoreCase("multiple")) {
 				MultipartFile uploadedFile = form.getContactNumberFile();
 				if (uploadedFile == null) {
-					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_UPLOAD_FAILED));
+					throw new InternalServerException(
+							messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_UPLOAD_FAILED));
 				}
 				String file_name = uploadedFile.getOriginalFilename();
 				if (file_name.indexOf(".xls") > 0) {
@@ -170,20 +171,23 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 									String[] tokens = entry.split(",");
 									long number;
 									if (tokens.length == 0) {
-										logger.warn(messageResourceBundle.getLogMessage("addbook.invalid.entryformat"), x, entry);
+										logger.warn(messageResourceBundle.getLogMessage("addbook.invalid.entryformat"),
+												x, entry);
 										continue;
 									} else {
 										try {
 											number = Long.parseLong(tokens[4]);
 										} catch (Exception ex) {
-											logger.warn(messageResourceBundle.getLogMessage("addbook.invalid.number.entry.warn"),x,entry);
+											logger.warn(messageResourceBundle
+													.getLogMessage("addbook.invalid.number.entry.warn"), x, entry);
 											continue;
 										}
 										int age = 0;
 										try {
 											age = Integer.parseInt(tokens[6]);
 										} catch (Exception ex) {
-											throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_AGEPARSE_ERROR));
+											throw new InternalServerException(messageResourceBundle
+													.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_AGEPARSE_ERROR));
 										}
 										try {
 											String initials = null, first_name = null, middle_name = null,
@@ -205,14 +209,17 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 													tokens[8], tokens[9], tokens[10]));
 										} catch (Exception ex) {
 											logger.error(entry, ex.fillInStackTrace());
-											throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {ex.getLocalizedMessage()}));
+											throw new InternalServerException(messageResourceBundle.getExMessage(
+													ConstantMessages.ADDBOOK_ERROR_MSG,
+													new Object[] { ex.getLocalizedMessage() }));
 										}
 									}
 								}
 							}
 						} catch (Exception ex) {
 							logger.error("Error: " + ex.getLocalizedMessage());
-							throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {ex.getMessage()}));
+							throw new InternalServerException(messageResourceBundle.getExMessage(
+									ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] { ex.getMessage() }));
 						} finally {
 							if (bufferedReader != null) {
 								try {
@@ -223,7 +230,9 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 									throw new InternalServerException("IOException: " + ioe.getLocalizedMessage());
 								} catch (Exception ioe) {
 									logger.error(ioe.getLocalizedMessage());
-									throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {ioe.getLocalizedMessage()}));
+									throw new InternalServerException(
+											messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
+													new Object[] { ioe.getLocalizedMessage() }));
 								}
 							}
 						}
@@ -236,13 +245,15 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 								workbook = new HSSFWorkbook(form.getContactNumberFile().getInputStream());
 							}
 							Sheet firstSheet = workbook.getSheetAt(0);
-							logger.info(messageResourceBundle.getLogMessage("addbooksheet.total.rows.info"), firstSheet.getPhysicalNumberOfRows());
+							logger.info(messageResourceBundle.getLogMessage("addbooksheet.total.rows.info"),
+									firstSheet.getPhysicalNumberOfRows());
 							int column_count = 0;
 							for (Row nextRow : firstSheet) {
 								if (nextRow.getRowNum() == 0) {
 									column_count = nextRow.getPhysicalNumberOfCells();
 									if (column_count == 0) {
-										logger.warn(messageResourceBundle.getLogMessage("addbook.invalid.xls.format.warn"));
+										logger.warn(
+												messageResourceBundle.getLogMessage("addbook.invalid.xls.format.warn"));
 										break;
 									}
 								}
@@ -251,7 +262,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 								int age = 0;
 								long number = 0;
 								String cell_value = null;
-								logger.info(messageResourceBundle.getLogMessage("addbook.row.cell.counter.info"), nextRow.getRowNum(), nextRow.getPhysicalNumberOfCells());
+								logger.info(messageResourceBundle.getLogMessage("addbook.row.cell.counter.info"),
+										nextRow.getRowNum(), nextRow.getPhysicalNumberOfCells());
 								for (int cell_number = 0; cell_number < nextRow.getLastCellNum(); cell_number++) {
 									Cell cell = nextRow.getCell(cell_number);
 									cell_value = new DataFormatter().formatCellValue(cell);
@@ -259,7 +271,10 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 										try {
 											number = Long.parseLong(cell_value);
 										} catch (Exception ex) {
-											logger.warn(messageResourceBundle.getLogMessage("addbook.invalid.number.entry.warn"), nextRow.getRowNum(), cell_value);
+											logger.warn(
+													messageResourceBundle
+															.getLogMessage("addbook.invalid.number.entry.warn"),
+													nextRow.getRowNum(), cell_value);
 											break;
 										}
 									}
@@ -281,7 +296,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 												age = Integer.parseInt(cell_value);
 											} catch (Exception ex) {
 												logger.error(ex.getLocalizedMessage());
-												throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_AGEPARSE_ERROR));
+												throw new InternalServerException(messageResourceBundle.getExMessage(
+														ConstantMessages.ADDBOOK_GROUPDATA_AGEPARSE_ERROR));
 											}
 										} else if (cell_number == 7) {
 											profession = cell_value;
@@ -309,7 +325,9 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 							}
 						} catch (Exception ex) {
 							logger.error("Error: " + ex.getLocalizedMessage());
-							throw new WorkBookException(messageResourceBundle.getExMessage(ConstantMessages.WORKBOOK_PROCESSING_ERROR, new Object[]{ex.getLocalizedMessage()}));
+							throw new WorkBookException(
+									messageResourceBundle.getExMessage(ConstantMessages.WORKBOOK_PROCESSING_ERROR,
+											new Object[] { ex.getLocalizedMessage() }));
 						} finally {
 							if (workbook != null) {
 								try {
@@ -346,27 +364,33 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 							form.getNumber()[0], form.getEmail()[0], form.getAge()[0], form.getProfession()[0],
 							form.getCompany()[0], form.getArea()[0], form.getGender()[0]));
 				} else {
-					logger.error(messageResourceBundle.getLogMessage("addbook.invalid.number.error"),form.getNumber());
-					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_INVALID_NUMBER));
+					logger.error(messageResourceBundle.getLogMessage("addbook.invalid.number.error"), form.getNumber());
+					throw new NotFoundException(
+							messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_INVALID_NUMBER));
 				}
 			}
 			if (entry_list.isEmpty()) {
 				logger.error(messageResourceBundle.getLogMessage("addbook.groupdata.entry.list.empty.error"), target);
-				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_EMPTYDATASET));
+				throw new NotFoundException(
+						messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_EMPTYDATASET));
 			} else {
 				List<GroupDataEntry> groupData = this.groupDataEntryRepository.saveAll(entry_list);
 				target = IConstants.SUCCESS_KEY;
 				logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.entry.saved.info"), target);
-				return new ResponseEntity<>(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_SAVED), HttpStatus.CREATED);
+				return new ResponseEntity<>(
+						messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_SAVED),
+						HttpStatus.CREATED);
 			}
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (IndexOutOfBoundsException e) {
 			logger.error("Error: " + e.getLocalizedMessage() + ", Status: " + target);
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_INCOMPLETE_DATA));
+			throw new InternalServerException(
+					messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_INCOMPLETE_DATA));
 		} catch (Exception e) {
 			logger.error("Error: " + e.getLocalizedMessage() + ", Status: " + target);
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
+					new Object[] { e.getMessage() }));
 		}
 
 	}
@@ -383,10 +407,12 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 		String target = IConstants.FAILURE_KEY;
 		String uploadedNumbers = "";
@@ -504,15 +530,18 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		String systemId = user.getSystemId();
 
-		logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.list.bulk.info"), criteria.getGroupId(), systemId);
+		logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.list.bulk.info"), criteria.getGroupId(),
+				systemId);
 
 		List<GroupDataEntry> list = new ArrayList<GroupDataEntry>();
 		try {
@@ -521,7 +550,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 				templist = listGroupData(criteria);
 			} catch (Exception e) {
 				logger.error(e.getLocalizedMessage());
-				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_EMPTYDATASET));
+				throw new NotFoundException(
+						messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_EMPTYDATASET));
 			}
 
 			if (templist != null && !templist.isEmpty()) {
@@ -552,7 +582,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 			throw new NotFoundException(ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error(systemId, ex.toString());
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {ex.getMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
+					new Object[] { ex.getMessage() }));
 		}
 
 		return ResponseEntity.ok(list);
@@ -569,15 +600,18 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		String systemId = user.getSystemId();
 		List<Long> uploadedNumbers = new ArrayList<Long>();
-		logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.send.request.info"), criteria.getGroupId(), systemId);
+		logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.send.request.info"), criteria.getGroupId(),
+				systemId);
 		String target = IConstants.FAILURE_KEY;
 		ContactForBulk response = new ContactForBulk();
 		try {
@@ -608,7 +642,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 					}
 				} catch (Exception ex) {
 					logger.error("Error: " + ex.getLocalizedMessage());
-					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_TEMPLATE_UNABLEFIND));
+					throw new NotFoundException(
+							messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_TEMPLATE_UNABLEFIND));
 				}
 				response.setTemplates(templates);
 
@@ -617,15 +652,18 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 					if (webMasterEntry.getSenderId() != null && webMasterEntry.getSenderId().length() > 1) {
 						Set<String> senders = new HashSet<String>(
 								Arrays.asList(webMasterEntry.getSenderId().split(",")));
-						logger.info(messageResourceBundle.getLogMessage("addbook.configured.senders.info"), user.getSystemId(), senders);
+						logger.info(messageResourceBundle.getLogMessage("addbook.configured.senders.info"),
+								user.getSystemId(), senders);
 						response.setSenders(senders);
 					} else {
 						logger.error(messageResourceBundle.getLogMessage("addbook.no.senders.configured.error"));
 //						throw new InternalServerException("No Senders Configured");
 					}
 				} else {
-					logger.error(messageResourceBundle.getLogMessage("addbook.webmaster.entry.notfound.error"), user.getSystemId());
-					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND_WEBMASTER_ERROR));
+					logger.error(messageResourceBundle.getLogMessage("addbook.webmaster.entry.notfound.error"),
+							user.getSystemId());
+					throw new NotFoundException(
+							messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND_WEBMASTER_ERROR));
 				}
 				target = "proceed";
 			} else {
@@ -638,7 +676,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 			throw new NotFoundException(ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error(systemId, ex.fillInStackTrace());
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {ex.getMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
+					new Object[] { ex.getMessage() }));
 		}
 
 		return ResponseEntity.ok(response);
@@ -658,10 +697,12 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		String target = IConstants.FAILURE_KEY;
@@ -713,21 +754,26 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 					this.groupDataEntryRepository.saveAll(list);
 					target = IConstants.SUCCESS_KEY;
 				} else {
-					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_EMPTYDATASET));
+					throw new InternalServerException(
+							messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_EMPTYDATASET));
 				}
 
 			} catch (IndexOutOfBoundsException ex) {
 				logger.error(systemId, ex.getLocalizedMessage());
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_INCOMPLETE_DATA));
+				throw new InternalServerException(
+						messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_INCOMPLETE_DATA));
 			} catch (Exception ex) {
 				logger.error(systemId, ex.getLocalizedMessage());
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {ex.getMessage()}));
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
+						new Object[] { ex.getMessage() }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_UPDATE_ERROR));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_UPDATE_ERROR));
 		}
 		logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.modify.entry.info"), systemId, target);
-		return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.ADDBOOK_GROUPDATA_UPDATED), HttpStatus.CREATED);
+		return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.ADDBOOK_GROUPDATA_UPDATED),
+				HttpStatus.CREATED);
 	}
 
 	/**
@@ -738,7 +784,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	 */
 	private void logDeletedGroupData(String username, List<Integer> deletedContactsIds) {
 		if (!deletedContactsIds.isEmpty()) {
-			logger.info(messageResourceBundle.getLogMessage("addbook.contact.deleted.info"), username, deletedContactsIds);
+			logger.info(messageResourceBundle.getLogMessage("addbook.contact.deleted.info"), username,
+					deletedContactsIds);
 		}
 	}
 
@@ -751,7 +798,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	 */
 	private void logFailedDeletions(String username, List<Integer> failedDeletionIds) {
 		if (!failedDeletionIds.isEmpty()) {
-			logger.warn(messageResourceBundle.getLogMessage("addbook.contact.failed.deletion.warn"), username, failedDeletionIds);
+			logger.warn(messageResourceBundle.getLogMessage("addbook.contact.failed.deletion.warn"), username,
+					failedDeletionIds);
 		}
 	}
 
@@ -768,10 +816,12 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		String target = IConstants.FAILURE_KEY;
@@ -783,7 +833,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 				List<GroupDataEntry> groupdataToDelete = this.groupDataEntryRepository.findAllById(ids);
 
 				if (groupdataToDelete.isEmpty()) {
-					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_DELETECONTACT_NOTFOUND));
+					throw new NotFoundException(
+							messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_DELETECONTACT_NOTFOUND));
 				}
 
 				for (GroupDataEntry groupdata : groupdataToDelete) {
@@ -793,7 +844,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 					} catch (Exception e) {
 						logger.error("Error deleting group data with ID {}: {}", groupdata.getId(), e.getMessage(), e);
 						failedDeletionIds.add(groupdata.getId());
-						throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_DELETE_CONTACT, new Object[] {groupdata.getId()}));
+						throw new InternalServerException(messageResourceBundle.getExMessage(
+								ConstantMessages.ADDBOOK_ERROR_DELETE_CONTACT, new Object[] { groupdata.getId() }));
 					}
 				}
 
@@ -801,8 +853,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 				logDeletedGroupData(username, successfulDeletions);
 				logFailedDeletions(username, failedDeletionIds);
 			}
-			return ResponseEntity.status(HttpStatus.OK)
-					.body(messageResourceBundle.getMessage(ConstantMessages.ADDBOOK_GROUPDATA_DELETED, new Object[] {successfulDeletions}));
+			return ResponseEntity.status(HttpStatus.OK).body(messageResourceBundle
+					.getMessage(ConstantMessages.ADDBOOK_GROUPDATA_DELETED, new Object[] { successfulDeletions }));
 		} catch (NotFoundException e) {
 			logger.error("Error deleting group data: {}", e.getMessage());
 			target = IConstants.FAILURE_KEY;
@@ -810,7 +862,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		} catch (Exception e) {
 			logger.error("Error deleting group data: {}", e.getMessage(), e);
 			target = IConstants.FAILURE_KEY;
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getLocalizedMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
+					new Object[] { e.getLocalizedMessage() }));
 		}
 
 	}
@@ -942,7 +995,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	 * criteria.
 	 */
 	@Override
-	public ResponseEntity<?> modifyGroupDataExport(GroupDataEntryRequest form, String username) {
+	public ResponseEntity<?> modifyGroupDataExport(int groupId, String username) {
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
@@ -950,149 +1003,118 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		String systemId = user.getSystemId();
 		logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.export.request.info"), systemId);
 		String target = IConstants.FAILURE_KEY;
-		if (form.getId() != null && form.getId().length > 0) {
-			int groupId = form.getGroupId();
-			GroupDataEntry entry = null;
-			List<GroupDataEntry> list = new ArrayList<GroupDataEntry>();
-			Converters cc = new Converters();
-			try {
-				int[] id = form.getId();
-				String[] initials = form.getInitials();
-				String[] firstName = form.getFirstName();
-				String[] middleName = form.getMiddleName();
-				String[] lastName = form.getLastName();
-				int[] age = form.getAge();
-				String[] gender = form.getGender();
-				String[] email = form.getEmail();
-				long[] number = form.getNumber();
-				String[] company = form.getCompany();
-				String[] profession = form.getProfession();
-				String[] area = form.getArea();
+		List<GroupDataEntry> listGroup = groupDataEntryRepository.findByGroupIdOrderByIdAsc(groupId);
+		List<GroupDataEntry> list = new ArrayList<GroupDataEntry>();
+		if (!listGroup.isEmpty()) {
+			for (GroupDataEntry form : listGroup) {
+				GroupDataEntry entry = null;
+				Converters cc = new Converters();
+				int id = form.getId();
+				String initials = form.getInitials();
+				String firstName = form.getFirstName();
+				String middleName = form.getMiddleName();
+				String lastName = form.getLastName();
+				int age = form.getAge();
+				String gender = form.getGender();
+				String email = form.getEmail();
+				long number = form.getNumber();
+				String company = form.getCompany();
+				String profession = form.getProfession();
+				String area = form.getArea();
 				String first_name = null, middle_name = null, last_name = null, initial = null;
-				for (int i = 0; i < id.length; i++) {
-					initial = null;
-					first_name = null;
-					middle_name = null;
-					last_name = null;
-					if (initials[i] != null && initials[i].length() > 0) {
-						initial = new Converters().UTF16(initials[i]);
-					}
-					if (firstName[i] != null && firstName[i].length() > 0) {
-						first_name = new Converters().UTF16(firstName[i]);
-					}
-					if (middleName[i] != null && middleName[i].length() > 0) {
-						middle_name = new Converters().UTF16(middleName[i]);
-					}
-					if (lastName[i] != null && lastName[i].length() > 0) {
-						last_name = new Converters().UTF16(lastName[i]);
-					}
-					entry = new GroupDataEntry(groupId, cc.uniHexToCharMsg(initial), cc.uniHexToCharMsg(first_name),
-							cc.uniHexToCharMsg(middle_name), cc.uniHexToCharMsg(last_name), number[i], email[i], age[i],
-							profession[i], company[i], area[i], gender[i]);
-					entry.setId(id[i]);
-					list.add(entry);
+				initial = null;
+				first_name = null;
+				middle_name = null;
+				last_name = null;
+				if (initials != null && initials.length() > 0) {
+					initial = new Converters().UTF16(initials);
 				}
-				Workbook workbook = null;
-				try {
-					workbook = getWorkBook(list);
-				} catch (Exception e1) {
-					logger.error(messageResourceBundle.getLogMessage("addbook.error.message"),e1.getLocalizedMessage());
-					throw new WorkBookException(messageResourceBundle.getExMessage(ConstantMessages.WORKBOOK_PROCESSING_ERROR, new Object[] {e1.getLocalizedMessage()}));
+				if (firstName != null && firstName.length() > 0) {
+					first_name = new Converters().UTF16(firstName);
 				}
-				String filename = systemId + "_GroupData[" + groupId + "]" + ".xlsx";
-				ByteArrayOutputStream bos = new ByteArrayOutputStream();
-				
-				logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.creating.xlsx.info"), systemId);
-				workbook.write(bos);
-
-				try (InputStream in = new ByteArrayInputStream(bos.toByteArray())) {
-					HttpHeaders headers = new HttpHeaders();
-					headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-					headers.setContentDispositionFormData("attachment", filename);
-					InputStreamResource resource = new InputStreamResource(in);
-					target = "export";
-					logger.info(messageResourceBundle.getLogMessage("addbook.export.contact.target.info"), systemId, target);
-					return new ResponseEntity<>(resource, headers, HttpStatus.OK);
-				} catch (IOException e) {
-					logger.error(messageResourceBundle.getLogMessage("addbook.contact.xlsx.download.error"), e.getLocalizedMessage());
-					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getLocalizedMessage()}));
-				} catch (Exception e) {
-					logger.error(messageResourceBundle.getLogMessage("addbook.error.message"),e.getLocalizedMessage());
-					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getLocalizedMessage()}));
-				} finally {
-					try {
-						if (workbook != null) {
-							workbook.close();
-						}
-					} catch (IOException e) {
-						throw new WorkBookException(e.getLocalizedMessage());
-					} catch (Exception e) {
-						throw new InternalServerException(e.getLocalizedMessage());
-					}
+				if (middleName != null && middleName.length() > 0) {
+					middle_name = new Converters().UTF16(middleName);
 				}
-
-			} catch (Exception ex) {
-				logger.error(systemId, ex.toString());
-				throw new InternalServerException(ex.getLocalizedMessage());
+				if (lastName != null && lastName.length() > 0) {
+					last_name = new Converters().UTF16(lastName);
+				}
+				entry = new GroupDataEntry(groupId, cc.uniHexToCharMsg(initial), cc.uniHexToCharMsg(first_name),
+						cc.uniHexToCharMsg(middle_name), cc.uniHexToCharMsg(last_name), number, email, age, profession,
+						company, area, gender);
+				entry.setId(id);
+				list.add(entry);
 			}
+			Workbook workbook = null;
+			try {
+				workbook = getWorkBook(list);
+			} catch (Exception e1) {
+				logger.error(messageResourceBundle.getLogMessage("addbook.error.message"), e1.getLocalizedMessage());
+				throw new WorkBookException(messageResourceBundle.getExMessage(
+						ConstantMessages.WORKBOOK_PROCESSING_ERROR, new Object[] { e1.getLocalizedMessage() }));
+			}
+			String filename = systemId + "_GroupData[" + groupId + "]" + ".xlsx";
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+
+			logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.creating.xlsx.info"), systemId);
+			try {
+				workbook.write(bos);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			try (InputStream in = new ByteArrayInputStream(bos.toByteArray())) {
+				 byte[] bytes = bos.toByteArray();
+		            HttpHeaders headers = new HttpHeaders();
+		            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+		            String disposition = String.format("attachment; filename=\"%s\"", filename);
+		            headers.add(HttpHeaders.CONTENT_DISPOSITION, disposition);
+		            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+		            target=IConstants.SUCCESS_KEY;
+		            logger.info(messageResourceBundle.getLogMessage("addbook.export.contact.target.info"), systemId,
+							target);
+		            return ResponseEntity.ok()
+		                    .headers(headers)
+		                    .contentLength(bytes.length)
+		                    .body(new InputStreamResource(new ByteArrayInputStream(bytes)));
+			
+			} catch (IOException e) {
+				logger.error(messageResourceBundle.getLogMessage("addbook.contact.xlsx.download.error"),
+						e.getLocalizedMessage());
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
+						new Object[] { e.getLocalizedMessage() }));
+			} catch (Exception e) {
+				logger.error(messageResourceBundle.getLogMessage("addbook.error.message"), e.getLocalizedMessage());
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
+						new Object[] { e.getLocalizedMessage() }));
+			} finally {
+				try {
+					if (workbook != null) {
+						workbook.close();
+					}
+				} catch (IOException e) {
+					throw new WorkBookException(e.getLocalizedMessage());
+				} catch (Exception e) {
+					throw new InternalServerException(e.getLocalizedMessage());
+				}
+			}
+
 		} else {
 			logger.warn(messageResourceBundle.getLogMessage("addbook.no.record.found.error"));
 			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_NORECORD));
 		}
 	}
 
-	/**
-	 * Capitalizes the first letter of the input string.
-	 * 
-	 * @param str
-	 * @return
-	 */
-//	private String capitalize(String str) {
-//		return str.substring(0, 1).toUpperCase() + str.substring(1);
-//	}
-
-	/**
-	 * Retrieves the value of the specified property from a GroupDataEntry object
-	 * using reflection.
-	 * 
-	 * @param entry
-	 * @param property
-	 * @return
-	 */
-//	private String getProperty(GroupDataEntry entry, String property) {
-//		try {
-//			return (String) entry.getClass().getMethod("get" + capitalize(property)).invoke(entry);
-//		} catch (Exception e) {
-//			throw new RuntimeException("Error retrieving property value", e);
-//		}
-//	}
-
-	/**
-	 * Retrieves distinct values of a specified property for GroupDataEntry objects
-	 * with the given group ID.
-	 * 
-	 * @param groupId
-	 * @param property
-	 * @return
-	 */
-//	public List<String> distinctGroupData(int groupId, String property) {
-//		List<GroupDataEntry> entries = groupDataEntryRepository.findByGroupId(groupId);
-//
-//		List<String> distinctValues = entries.stream().map(entry -> getProperty(entry, property)).distinct()
-//				.collect(Collectors.toList());
-//
-//		return distinctValues;
-//
-//	}
 	/**
 	 * Searches for GroupData with specified options for editing.
 	 */
@@ -1105,15 +1127,18 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 		String target = "search";
 		String systemId = user.getSystemId();
 
-		logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.search.request.info"), systemId, user.getRole(), groupId);
+		logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.search.request.info"), systemId,
+				user.getRole(), groupId);
 
 		EditGroupDataSearch response = new EditGroupDataSearch();
 		Set<String> professions = new HashSet<String>();
@@ -1158,21 +1183,22 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	}
 
 	@Override
-	public Page<GroupDataEntry> getGroupDataEntryByGroupId(int groupId, PageRequest pageRequest, String username) {
+	public ResponseEntity<?> getGroupDataEntryByGroupId(int groupId, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
-		logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.listing.info"), groupId, pageRequest);
+		logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.listing.info"), groupId);
 		try {
-			Page<GroupDataEntry> response = this.groupDataEntryRepository.findByGroupIdOrderByIdAsc(groupId,
-					pageRequest);
+			List<GroupDataEntry> response = this.groupDataEntryRepository.findByGroupIdOrderByIdAsc(groupId);
 			response.forEach(entry -> {
 				if (entry.getInitials() != null && entry.getInitials().length() > 0) {
 					entry.setInitials(new Converters().uniHexToCharMsg(entry.getInitials()));
@@ -1189,9 +1215,10 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 
 			});
 			if (response.isEmpty()) {
-				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_EMPTYDATASET));
+				throw new NotFoundException(
+						messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_EMPTYDATASET));
 			} else {
-				return response;
+				return ResponseEntity.ok(response);
 			}
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getLocalizedMessage());

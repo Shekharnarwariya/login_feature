@@ -3,7 +3,6 @@ package com.hti.smpp.common.addressbook.controllers;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -134,10 +133,10 @@ public class AddressBookController {
 			@ApiResponse(responseCode = "404", description = "No Records Found To Delete.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	@DeleteMapping("/delete/group-entry")
-	public ResponseEntity<?> modifyGroupEntryDelete(@Valid @RequestBody GroupEntryRequest groupEntryRequest,
+	@DeleteMapping("/delete/group-entry/{id}")
+	public ResponseEntity<?> modifyGroupEntryDelete(@PathVariable int id,
 			@Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username) {
-		return this.entryService.modifyGroupEntryDelete(groupEntryRequest, username);
+		return this.entryService.modifyGroupEntryDelete(id, username);
 	}
 
 	// Contacts-----------------------------------------------------------------------------------------------------
@@ -188,10 +187,8 @@ public class AddressBookController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
 	@GetMapping("/get/contact/{groupId}")
 	public ResponseEntity<?> listContactData(@PathVariable(value = "groupId", required = true) int groupId,
-			@RequestParam(defaultValue = "0") int start, @RequestParam(defaultValue = "10") int limit,
 			@RequestHeader(value = "username", required = true) String username) {
-		PageRequest pageRequest = PageRequest.of(start / limit, limit);
-		return ResponseEntity.ok(this.contactEntryService.getContactByGroupId(groupId, pageRequest, username));
+		return ResponseEntity.ok(this.contactEntryService.getContactByGroupId(groupId, username));
 	}
 
 	/**
@@ -340,10 +337,10 @@ public class AddressBookController {
 			@ApiResponse(responseCode = "404", description = "No Content Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	@PostMapping("/export/group-data-entry")
-	public ResponseEntity<?> modifyGroupDataExport(@Valid @RequestBody GroupDataEntryRequest request,
+	@GetMapping("/export/group-data-entry/{id}")
+	public ResponseEntity<?> modifyGroupDataExport(@PathVariable int id,
 			@Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username) {
-		return this.groupDataEntryService.modifyGroupDataExport(request, username);
+		return this.groupDataEntryService.modifyGroupDataExport(id, username);
 	}
 
 	/**
@@ -369,10 +366,8 @@ public class AddressBookController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
 	@GetMapping("/get/group-data-entry/{groupId}")
 	public ResponseEntity<?> listGroupData(@PathVariable(value = "groupId", required = true) int groupId,
-			@RequestParam(defaultValue = "0") int start, @RequestParam(defaultValue = "10") int limit,
 			@RequestHeader(value = "username", required = true) String username) {
-		PageRequest pageRequest = PageRequest.of(start / limit, limit);
-		return ResponseEntity.ok(this.groupDataEntryService.getGroupDataEntryByGroupId(groupId, pageRequest, username));
+		return this.groupDataEntryService.getGroupDataEntryByGroupId(groupId, username);
 	}
 
 	// Other Api's For
@@ -428,7 +423,8 @@ public class AddressBookController {
 	 * @return : ContactForBulk response.
 	 */
 	@Operation(summary = "Get Contact with templates & senders", description = "Gives the Response With Templates & Sender By GroupId")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Successful response by group ids.",content = @Content(mediaType = "application/json", schema = @Schema(implementation = ContactForBulk.class))),
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Successful response by group ids.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ContactForBulk.class))),
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
@@ -473,8 +469,7 @@ public class AddressBookController {
 	 */
 
 	@Operation(summary = "Search GroupData By Criteria", description = "Returns the list of GroupDataEntry by criteria")
-	@ApiResponses(value = { 
-			@ApiResponse(responseCode = "200", description = "Successful response GroupDataEntry list"),
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Successful response GroupDataEntry list"),
 			@ApiResponse(responseCode = "404", description = "Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
@@ -493,7 +488,8 @@ public class AddressBookController {
 	 * @return : ResponseEntity with the result of the search
 	 */
 	@Operation(summary = "Get Groupdata with templates & senders", description = "Gives the Response With Templates & Sender As Per The Criteria")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Successful response for criteria",content = @Content(mediaType = "application/json", schema = @Schema(implementation = ContactForBulk.class))),
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Successful response for criteria", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ContactForBulk.class))),
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
