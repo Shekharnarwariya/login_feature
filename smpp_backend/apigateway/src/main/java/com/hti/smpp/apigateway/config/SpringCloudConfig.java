@@ -80,19 +80,19 @@ public class SpringCloudConfig {
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
 								.uri("lb://bsfm-service:8089"))
 
-				// Route for BSFM-SERVICE
+				// Route for TWOWAY-SERVICE
 				.route("twoway-service",
 						r -> r.path("/twoway/**")
 								.filters(f -> f.rewritePath("./twoway/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
 								.uri("lb://twoway-service:8090"))
 
-				// Route for BSFM-SERVICE
+				// Route for SUBSCRIPTION-SERVICE
 				.route("subscription-service",
 						r -> r.path("/subscription/**")
 								.filters(f -> f.rewritePath("./subscription/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
-								.uri("lb://subscription-service:8090"))
+								.uri("lb://subscription-service:8091"))
 
 				// Route for DLT-SERVICE
 				.route("dlt-service",

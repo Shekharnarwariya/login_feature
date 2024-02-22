@@ -48,7 +48,9 @@ import com.hti.smpp.common.smsc.repository.TrafficScheduleEntryRepository;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Constants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 import com.hti.smpp.common.util.MultiUtility;
 
 import jakarta.persistence.EntityManager;
@@ -94,6 +96,8 @@ public class SmscServiceImpl implements SmscService {
 	@Autowired
 	private UserEntryRepository userRepository;
 
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 	// Method to save an SMS entry
 	@Override
 	public String smscEntrySave(SmscEntryRequest smscEntryRequest, String username) {
@@ -103,10 +107,10 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		try {
@@ -118,16 +122,18 @@ public class SmscServiceImpl implements SmscService {
 			setConvertedRequestFields(convertedRequest, userEntry);
 			// Saving the SMS entry
 			SmscEntry savedEntry = smscEntryRepository.save(convertedRequest);
-			logger.info("SmscEntry saved successfully with id: " + savedEntry.getId());
+			logger.info(messageResourceBundle.getLogMessage("smscentry.saved.successfully"), savedEntry.getId());
+
 			MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
 			return "Successfully saved this id: " + savedEntry.getId();
 		} catch (NotFoundException e) {
 			System.out.println("run not found exception...");
-			logger.error("An error occurred while saving the SmscEntry: {}", e.getMessage());
-			throw new NotFoundException("Failed to save SmscEntry. Error: " + e.getMessage());
+			logger.error(messageResourceBundle.getLogMessage("smscentry.save.error"), e.getMessage());
+
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.FAILED_TO_SAVE_SMSC_ENTRY) + e.getMessage());
 		} catch (Exception e) {
-			logger.error("An error occurred while saving the SmscEntry: {}", e.getMessage());
-			throw new InternalServerException("Failed to save SmscEntry. Error: " + e.getMessage());
+			logger.error(messageResourceBundle.getLogMessage("smscentry.save.error"), e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.FAILED_TO_SAVE_SMSC_ENTRY) + e.getMessage());
 		}
 	}
 	// Helper method to set fields for the converted request
@@ -145,10 +151,10 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		try {
@@ -156,19 +162,33 @@ public class SmscServiceImpl implements SmscService {
 				SmscEntry convertRequest = ConvertRequest(smscEntryRequest);
 				convertRequest.setId(smscId);
 				smscEntryRepository.save(convertRequest);
-				logger.info("SmscEntry with ID " + smscId + " has been successfully updated.");
+				logger.info(messageResourceBundle.getLogMessage("smscentry.updated.successfully"), smscId);
+
 				MultiUtility.changeFlag(Constants.SMSC_FLAG_DIR + "" + convertRequest.getName() + ".txt", "505");
 				MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
 				return "SmscEntry with ID " + smscId + " has been successfully updated.";
 			} else {
-				throw new NotFoundException("SmscEntry with ID " + smscId + " not found. Update operation failed.");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_ENTRY_NOT_FOUND_UPDATE_FAILED, new Object[] {smscId}));
+
+
+
+ 
 			}
 		} catch (NotFoundException e) {
-			logger.error("An error occurred during the update operation: " + e.getMessage(), e);
-			throw new NotFoundException("Failed to update SmscEntry: " + e.getMessage());
+			logger.error(messageResourceBundle.getLogMessage("update.error"), e.getMessage(), e);
+
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.FAILED_TO_UPDATE_SMSC_ENTRY) +e.getMessage());
+
+
+
+
 		} catch (Exception e) {
 			logger.error("An unexpected error occurred during the update operation: " + e.getMessage(), e);
-			throw new InternalServerException("Failed to update SmscEntry: Unexpected error occurred.");
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SMS_ENTRY_UPDATE_FAILED_UNEXPECTED_ERROR));
+
+
+
+
 		}
 	}
 	// Method to delete an SMS entry
@@ -180,26 +200,31 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		try {
 			Optional<SmscEntry> smscEntryOptional = smscEntryRepository.findById(smscId);
 			if (!smscEntryOptional.isPresent()) {
-				throw new NotFoundException("SmscEntry with ID " + smscId + " was not found in the database.");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_ENTRY_NOT_FOUND, new Object[] {smscId}));
+
+
 			}
 			smscEntryRepository.deleteById(smscId);
-			logger.info("SmscEntry with ID " + smscId + " has been successfully deleted.");
+			logger.info(messageResourceBundle.getLogMessage("smscentry.deleted.successfully"), smscId);
+
 			MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
 			return "SmscEntry with ID " + smscId + " has been successfully deleted.";
 		} catch (NotFoundException e) {
-			logger.error("An error occurred during the update operation: " + e.getMessage());
+			logger.error(messageResourceBundle.getLogMessage("update.error"), e.getMessage());
+
 			throw new NotFoundException(e.getMessage());
 		} catch (Exception ex) {
-			logger.error("An error occurred during the delete operation: " + ex.getLocalizedMessage());
+			logger.error(messageResourceBundle.getLogMessage("delete.error"), ex.getLocalizedMessage());
+
 			throw new InternalServerException("Failed to delete SmscEntry: " + ex.getLocalizedMessage());
 		}
 	}
@@ -214,10 +239,10 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		try {
@@ -226,7 +251,8 @@ public class SmscServiceImpl implements SmscService {
 				CustomEntry entry = optionalEntry.get();
 				return entry;
 			} else {
-				throw new NotFoundException("Smsc CustomEntry with ID " + smscId + " not found");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.CUSTOM_ENTRY_NOT_FOUND, new Object[] {smscId}));
+
 			}
 		} catch (NotFoundException e) {
 			// Log the exception for debugging purposes
@@ -235,11 +261,14 @@ public class SmscServiceImpl implements SmscService {
 		} catch (DataAccessException e) {
 			// Log the exception for debugging purposes
 			logger.error("DataAccessError: " + e.getMessage());
-			throw new DataAccessError("Failed to retrieve Smsc CustomEntry with ID: " + smscId);
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.FAILED_RETRIEVE_CUSTOM_ENTRY, new Object[] {smscId}));
+
+
 		} catch (Exception e) {
 			// Log the exception for debugging purposes
-			logger.error("Unknown error occurred while retrieving CustomEntry: " + e.getMessage());
-			throw new InternalServerException("Failed to retrieve Smsc CustomEntry with ID: " + smscId);
+			logger.error(messageResourceBundle.getLogMessage("retrieve.customentry.error"), e.getMessage());
+
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.FAILED_RETRIEVE_CUSTOM_ENTRY, new Object[] {smscId}));
 		}
 	}
 
@@ -252,10 +281,10 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		try {
@@ -265,11 +294,15 @@ public class SmscServiceImpl implements SmscService {
 			MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
 			return "Successfully saved the CustomEntry.";
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while saving the CustomEntry: {}", e.getMessage(), e);
-			throw new DataAccessError("Failed to save CustomEntry. Data access error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("save.customentry.data.access.error"), e.getMessage(), e);
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.FAILED_SAVE_CUSTOM_ENTRY));
+
+
+
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while saving the CustomEntry: {}", e.getMessage(), e);
-			throw new InternalServerException("Failed to save CustomEntry. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("save.customentry.unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.FAILED_SAVE_CUSTOM_ENTRY_UN));
+
 		}
 	}
 	// Method to update a CustomEntry with the provided ID, based on user authorization
@@ -282,31 +315,37 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		try {
 			if (customEntryRepository.existsById(customId)) {
 				CustomEntry convertRequest = ConvertRequest(customRequest);
 				convertRequest.setSmscId(customId); // Ensure the ID is set
 				customEntryRepository.save(convertRequest);
-				logger.info("CustomEntry updated successfully");
+				logger.info(messageResourceBundle.getLogMessage("customentry.updated.successfully"));
+
 				MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
 				return "CustomEntry updated successfully";
 			} else {
-				throw new NotFoundException("CustomEntry not found with id: " + customId);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.CUSTOM_ENTRY_NOT_FOUND, new Object[]{customId}));
+
 			}
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while updating the CustomEntry: {}", e.getMessage(), e);
-			throw new DataAccessError("Failed to update CustomEntry. Data access error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("update.customentry.data.access.error"), e.getMessage(), e);
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.UPDATE_CUSTOM_ENTRY_DATA_ACCESS_ERROR));
+
 		} catch (NotFoundException e) {
 			logger.error("CustomEntryNotFoundException: {}", e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while updating the CustomEntry: {}", e.getMessage(), e);
-			throw new InternalServerException("Failed to update CustomEntry. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("update.customentry.unexpected.error"), e.getMessage(), e);
+
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.UPDATE_CUSTOM_ENTRY_UNEXPECTED_ERROR));
+
+
 		}
 	}
 	// Method to delete a CustomEntry with the provided ID, based on user authorization
@@ -318,31 +357,34 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			userEntry = userOptional.get();
 			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		try {
 			Optional<CustomEntry> optionalCustomEntry = customEntryRepository.findById(customId);
 			if (optionalCustomEntry.isPresent()) {
 				CustomEntry entry = optionalCustomEntry.get();
 				customEntryRepository.delete(entry);
-				logger.info("CustomEntry deleted successfully");
+				logger.info(messageResourceBundle.getLogMessage("customentry.deleted.successfully"));
 				MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
 				return "CustomEntry deleted successfully";
 			} else {
-				throw new NotFoundException("CustomEntry not found with id: " + customId);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.CUSTOM_ENTRY_NOT_FOUND, new Object[]{customId}));
+
 			}
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while deleting the CustomEntry: {}", e.getMessage(), e);
-			throw new DataAccessError("Failed to delete CustomEntry. Data access error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("delete.customentry.data.access.error"), e.getMessage(), e);
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.DELETE_CUSTOM_ENTRY_ERROR));
+
 		} catch (NotFoundException e) {
 			logger.error("CustomEntryNotFoundException: {}", e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while deleting the CustomEntry: {}", e.getMessage(), e);
-			throw new InternalServerException("Failed to delete CustomEntry. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("delete.customentry.unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.DELETE_CUSTOM_ENTRY_ERROR));
+
 		}
 	}
 	
@@ -356,24 +398,32 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		try {
 			List<LimitEntry> convertRequest = ConvertRequest(limitRequest);
 			limitEntryRepository.saveAll(convertRequest);
 			MultiUtility.changeFlag(Constants.SMSC_LT_FLAG_FILE, "707");
-			logger.info("LimitEntry Saved Successfully!");
+			logger.info(messageResourceBundle.getLogMessage("limitentry.saved.successfully"));
+
 			return "LimitEntry saved successfully.";
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while saving the LimitEntry: {}", e.getMessage(), e);
-			throw new DataAccessError("Failed to save LimitEntry. Data access error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("save.limitentry.data.access.error"), e.getMessage(), e);
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.SAVE_LIMIT_ENTRY_ERROR));
+
+
+
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while saving the LimitEntry: {}", e.getMessage(), e);
-			throw new InternalServerException("Failed to save LimitEntry. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("save.limitentry.unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SAVE_LIMIT_ENTRY_ERROR_UN));
+
+
+
+
 		}
 	}
 	
@@ -387,10 +437,10 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		try {
 			if (limitEntryRepository.existsById(limitId)) {
@@ -399,23 +449,31 @@ public class SmscServiceImpl implements SmscService {
 					if (entry.getId() == limitId) {
 						limitEntryRepository.save(entry);
 						MultiUtility.changeFlag(Constants.SMSC_LT_FLAG_FILE, "707");
-						logger.info("LimitId: " + limitId + " Updated Successfully!");
+						logger.info(messageResourceBundle.getLogMessage("limitid.updated.successfully"), limitId);
+
 						return "Limit updated successfully";
 					}
 				}
-				throw new InternalServerException("Failed to update LimitEntry: No matching ID found in the request");
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.UPDATE_LIMIT_ENTRY_ERROR));
+
 			} else {
-				throw new NotFoundException("Limit with the provided ID not found");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.LIMIT_NOT_FOUND));
+
 			}
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while updating the LimitEntry: {}", e.getMessage(), e);
-			throw new DataAccessError("Failed to update LimitEntry. Data access error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("update.limitentry.data.access.error"), e.getMessage(), e);
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.UPDATE_LIMIT_ENTRY_ERROR));
+
+
+
+
+
 		} catch (NotFoundException e) {
 			logger.error("LimitEntryNotFoundException: {}", e.getMessage(), e);
 			throw new NotFoundException("LimitEntryNotFoundException: " + e.getLocalizedMessage());
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while updating the LimitEntry: {}", e.getMessage(), e);
-			throw new InternalServerException("Failed to update LimitEntry. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("update.limitentry.unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.UPDATE_LIMIT_ENTRY_UNEXPECTED_ERROR));
 		}
 	}
 	
@@ -430,29 +488,34 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		try {
 			if (limitEntryRepository.existsById(limitId)) {
 				limitEntryRepository.deleteById(limitId);
-				logger.info("LimitEntry with ID " + limitId + " deleted successfully");
+				logger.info(messageResourceBundle.getLogMessage("limitentry.deleted.successfully"), limitId);
+
 				MultiUtility.changeFlag(Constants.SMSC_LT_FLAG_FILE, "707");
 				return "LimitEntry with ID " + limitId + " deleted successfully";
 			} else {
 				throw new NotFoundException("LimitEntry with ID " + limitId + " not found");
 			}
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while deleting the LimitEntry: {}", e.getMessage(), e);
-			throw new DataAccessError("Failed to delete LimitEntry. Data access error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("delete.limitentry.data.access.error"), e.getMessage(), e);
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.DELETE_LIMIT_ENTRY_DATA_ACCESS_ERROR));
+
+
+
 		} catch (NotFoundException e) {
 			logger.error("LimitEntryNotFoundException: {}", e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while deleting the LimitEntry: {}", e.getMessage(), e);
-			throw new InternalServerException("Failed to delete LimitEntry. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("delete.limitentry.unexpected.error"), e.getMessage(), e);
+
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.DELETE_LIMIT_ENTRY_UNEXPECTED_ERROR));
 		}
 	}
 	
@@ -468,22 +531,23 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		try {
 			List<LimitEntry> list = limitEntryRepository.findAll();
 			return list;
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while fetching the list of Limit Entries: {}", e.getMessage(),
-					e);
-			throw new DataAccessError("Failed to list Smsc limit Entries. Data access error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("fetch.limitentries.data.access.error"), e.getMessage(), e);
+
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.LIST_SMSC_LIMIT_ENTRIES_DATA_ACCESS_ERROR));
+
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while fetching the list of Limit Entries: {}", e.getMessage(),
-					e);
-			throw new InternalServerException("Failed to list Smsc limit Entries. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("fetch.limitentries.unexpected.error"), e.getMessage(), e);
+
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.LIST_SMSC_LIMIT_ENTRIES_UNEXPECTED_ERROR));
 		}
 	}
 
@@ -498,10 +562,10 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		try {
@@ -511,11 +575,13 @@ public class SmscServiceImpl implements SmscService {
 			logger.info("GroupEntry saved successfully");
 			return "GroupEntry saved successfully";
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while saving the GroupEntry: {}", e.getMessage(), e);
-			throw new DataAccessError("Failed to save GroupEntry. Data access error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("save.groupentry.data.access.error"), e.getMessage(), e);
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.SAVE_GROUP_ENTRY_DATA_ACCESS_ERROR));
+
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while saving the GroupEntry: {}", e.getMessage(), e);
-			throw new InternalServerException("Failed to save GroupEntry. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("save.groupentry.unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SAVE_GROUP_ENTRY_UNEXPECTED_ERROR));
+
 		}
 	}
 	// Method to update a GroupEntry based on user authorization
@@ -528,10 +594,10 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		try {
 			List<GroupEntry> convertRequest = ConvertRequest(groupRequest);
@@ -539,22 +605,30 @@ public class SmscServiceImpl implements SmscService {
 				if (groupEntryRepository.existsById(group.getId())) {
 					groupEntryRepository.save(group);
 					MultiUtility.changeFlag(Constants.DGM_FLAG_FILE, "707");
-					logger.info("GroupEntry updated successfully with Id: " + group.getId());
+					logger.info(messageResourceBundle.getLogMessage("groupentry.updated.successfully"), group.getId());
 				} else {
-					logger.info("Group not found with id: {}", group.getId());
-					throw new NotFoundException("Group not found with id: " + group.getId());
+					logger.info(messageResourceBundle.getLogMessage("group.not.found"), group.getId());
+
+					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.GROUP_NOT_FOUND, new Object[]{group.getId()}));
+
+
+
+
 				}
 			}
 			return "Group updated successfully.";
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while updating the GroupEntry: {}", e.getMessage(), e);
-			throw new DataAccessError("Failed to update GroupEntry. Data access error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("update.groupentry.data.access.error"), e.getMessage(), e);
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.FAILED_UPDATE_GROUP_ENTRY));
 		} catch (NotFoundException e) {
 			logger.error("GroupEntryNotFoundException: {}", e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while updating the GroupEntry: {}", e.getMessage(), e);
-			throw new InternalServerException("Failed to update GroupEntry. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("update.groupentry.unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.FAILED_UPDATE_GROUP_ENTRY_UN));
+
+
+
 		}
 	}
 	
@@ -568,29 +642,38 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		try {
 			Optional<GroupEntry> groupEntryOptional = groupEntryRepository.findById(groupId);
 			if (!groupEntryOptional.isPresent()) {
-				throw new NotFoundException("Group with ID " + groupId + " was not found in the database.");
+				throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.GROUP_NOT_FOUND, new Object[]{groupId}));
+
+
+
+
 			}
 			groupEntryRepository.deleteById(groupId);
-			logger.info("Group with ID " + groupId + " has been deleted successfully.");
+			logger.info(messageResourceBundle.getLogMessage("group.deleted.successfully"), groupId);
 			MultiUtility.changeFlag(Constants.DGM_FLAG_FILE, "707");
 			return "Group with ID " + groupId + " has been deleted successfully.";
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while deleting the GroupEntry: {}", e.getMessage(), e);
-			throw new DataAccessError("Failed to delete GroupEntry. Data access error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("delete.groupentry.data.access.error"), e.getMessage(), e);
+			throw new DataAccessError(messageResourceBundle.getMessage(ConstantMessages.GROUP_DELETE_ERROR));
 		} catch (NotFoundException e) {
-			logger.error("Group not found: {}", e.getMessage(), e);
+			logger.error(messageResourceBundle.getLogMessage("group.not.found.e"), e.getMessage(), e);
+
 			throw new NotFoundException("Group not found: " + e.getLocalizedMessage());
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while deleting the GroupEntry: {}", e.getMessage(), e);
-			throw new InternalServerException("Failed to delete GroupEntry. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("delete.groupentry.unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.GROUP_DELETE_UNEXPECTED_ERROR));
+
+
+
+
 		}
 	}
 
@@ -603,23 +686,24 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		try {
 			List<GroupEntry> list = groupEntryRepository.findAll();
 			return list;
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while fetching the list of Group Entries: {}", e.getMessage(),
-					e);
-			throw new DataAccessError("Failed to list Group Entries. Data access error occurred.");
-		} catch (Exception e) {
-			logger.error("An unexpected error occurred while fetching the list of Group Entries: {}", e.getMessage(),
-					e);
-			throw new InternalServerException("Failed to list Group Entries. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("delete.groupentry.unexpected.error"), e.getMessage(), e);
+					
+			throw new DataAccessError(messageResourceBundle.getMessage(ConstantMessages.GROUP_LIST_DATA_ACCESS_ERROR));
+        } catch (Exception e) {
+        	logger.error(messageResourceBundle.getLogMessage("fetch.groupentries.unexpected.error"), e.getMessage(), e);
+
+			throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.GROUP_LIST_UNEXPECTED_ERROR));
+
 		}
 	}
 
@@ -633,10 +717,10 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		try {
@@ -646,16 +730,21 @@ public class SmscServiceImpl implements SmscService {
 				groupMemberEntryRepository.save(entry);
 
 			}
-			logger.info("GroupMemberEntry Saved Successfully!");
+			logger.info(messageResourceBundle.getLogMessage("groupmemberentry.saved.successfully"));
 			MultiUtility.changeFlag(Constants.SMSC_FLAG_FILE, "707");
 			MultiUtility.changeFlag(Constants.DGM_FLAG_FILE, "707");
 			return "Group members saved successfully.";
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while saving the GroupMemberEntry: {}", e.getMessage(), e);
-			throw new DataAccessError("Failed to save GroupMemberEntry. Data access error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("save.groupmemberentry.data.access.error"), e.getMessage(), e);
+
+			throw new DataAccessError(messageResourceBundle.getMessage(ConstantMessages.GROUP_MEMBER_SAVE_DATA_ACCESS_ERROR));
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while saving the GroupMemberEntry: {}", e.getMessage(), e);
-			throw new InternalServerException("Failed to save GroupMemberEntry. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("save.groupmemberentry.unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.GROUP_MEMBER_SAVE_UNEXPECTED_ERROR));
+
+
+
+
 		}
 	}
 	
@@ -669,10 +758,10 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		try {
 			List<GroupMemberEntry> convertRequest = ConvertRequest(groupMemberRequest);
@@ -683,19 +772,29 @@ public class SmscServiceImpl implements SmscService {
 					MultiUtility.changeFlag(Constants.DGM_FLAG_FILE, "707");
 					logger.info("Group member updated with ID: " + entry.getId());
 				} else {
-					throw new NotFoundException("Group member not found with ID: " + entry.getId());
+					throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.GROUP_MEMBER_NOT_FOUND, new Object[]{entry.getId()}));
+
+
+
+
 				}
 			}
 			return "Group members updated successfully.";
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while updating the GroupMemberEntry: {}", e.getMessage(), e);
-			throw new DataAccessError("Failed to update GroupMemberEntry. Data access error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("update.groupmemberentry.data.access.error"), e.getMessage(), e);
+			throw new DataAccessError(messageResourceBundle.getMessage(ConstantMessages.UPDATE_GROUP_MEMBER_ENTRY_ERROR));
+
+
+
 		} catch (NotFoundException e) {
 			logger.error("GroupMemberNotFoundException: {}", e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while updating the GroupMemberEntry: {}", e.getMessage(), e);
-			throw new InternalServerException("Failed to update GroupMemberEntry. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("update.groupmemberentry.unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.UPDATE_GROUP_MEMBER_ENTRY_UNEXPECTED_ERROR));
+
+
+
 		}
 	}
 
@@ -708,15 +807,15 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		try {
 			if (groupMemberEntryRepository.existsById(groupMemberId)) {
 				groupMemberEntryRepository.deleteById(groupMemberId);
-				logger.info("Group member with ID " + groupMemberId + " has been deleted successfully.");
+				logger.info(messageResourceBundle.getLogMessage("groupmember.deleted.successfully"), groupMemberId);
 				MultiUtility.changeFlag(Constants.DGM_FLAG_FILE, "707");
 				return "Group member with ID " + groupMemberId + " has been deleted successfully.";
 			} else {
@@ -725,7 +824,7 @@ public class SmscServiceImpl implements SmscService {
 				throw new NotFoundException(errorMessage);
 			}
 		} catch (NotFoundException e) {
-			logger.error("Group member not found exception: {}", e.getMessage());
+			logger.error(messageResourceBundle.getLogMessage("groupmember.not.found.exception"), e.getMessage());
 			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
 			String errorMessage = "An unexpected error occurred while deleting the GroupMemberEntry: " + e.getMessage();
@@ -741,16 +840,18 @@ public class SmscServiceImpl implements SmscService {
 			List<TrafficScheduleEntry> convertedEntries = ConvertRequest(trafficScheduleRequest);
 			for (TrafficScheduleEntry entry : convertedEntries) {
 				trafficScheduleEntryRepository.save(entry);
-				logger.info("Traffic schedule saved with id: " + entry.getId());
+				logger.info(messageResourceBundle.getLogMessage("trafficschedule.saved.successfully"), entry.getId());
 				MultiUtility.changeFlag(Constants.SMSC_SH_FLAG_FILE, "707");
 			}
 			return "Traffic schedule saved successfully.";
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while saving the TrafficScheduleEntry: {}", e.getMessage(), e);
-			throw new DataAccessError("Failed to save TrafficScheduleEntry. Data access error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("save.trafficscheduleentry.data.access.error"), e.getMessage(), e);
+			throw new DataAccessError(messageResourceBundle.getMessage(ConstantMessages.SAVE_TRAFFIC_SCHEDULE_ENTRY_DATA_ACCESS_ERROR));
+
+
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while saving the TrafficScheduleEntry: {}", e.getMessage(), e);
-			throw new InternalServerException("Failed to save TrafficScheduleEntry. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("save.trafficscheduleentry.unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.SAVE_TRAFFIC_SCHEDULE_ENTRY_UNEXPECTED_ERROR));
 		}
 	}
    // Updates traffic schedule entries based on the provided TrafficScheduleRequest and performs authorization checks.
@@ -762,32 +863,36 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		try {
 			List<TrafficScheduleEntry> convertRequest = ConvertRequest(trafficScheduleRequest);
 			for (TrafficScheduleEntry entry : convertRequest) {
 				if (trafficScheduleEntryRepository.existsById(entry.getId())) {
 					trafficScheduleEntryRepository.save(entry);
-					logger.info("Traffic schedule saved with id: " + entry.getId());
+					logger.info(messageResourceBundle.getLogMessage("trafficschedule.saved.successfully"), entry.getId());
+
 					MultiUtility.changeFlag(Constants.SMSC_SH_FLAG_FILE, "707");
 				} else {
-					throw new NotFoundException("Traffic schedule not found with ID: " + entry.getId());
+					throw new NotFoundException(messageResourceBundle.getMessage(ConstantMessages.TRAFFIC_SCHEDULE_NOT_FOUND, new Object[]{entry.getId()}));
+
 				}
 			}
 			return "Traffic schedule updated successfully.";
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while updating the TrafficScheduleEntry: {}", e.getMessage(), e);
-			throw new DataAccessError("Failed to update TrafficScheduleEntry. Data access error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("update.trafficscheduleentry.data.access.error"), e.getMessage(), e);
+			throw new DataAccessError(messageResourceBundle.getMessage(ConstantMessages.TRAFFIC_SCHEDULE_UPDATE_ERROR));
 		} catch (NotFoundException e) {
 			logger.error("TrafficScheduleNotFoundException: {}", e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while updating the TrafficScheduleEntry: {}", e.getMessage(), e);
-			throw new InternalServerException("Failed to update TrafficScheduleEntry. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("update.trafficscheduleentry.unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(messageResourceBundle.getMessage(ConstantMessages.TRAFFIC_SCHEDULE_UPDATE_ERROR));
+
+
 		}
 	}
 
@@ -799,10 +904,10 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		try {
 			if (trafficScheduleEntryRepository.existsById(scheduleId)) {
@@ -810,15 +915,23 @@ public class SmscServiceImpl implements SmscService {
 				MultiUtility.changeFlag(Constants.SMSC_SH_FLAG_FILE, "707");
 				return "Traffic schedule with ID " + scheduleId + " deleted successfully.";
 			} else {
-				logger.error("Traffic schedule with ID {} does not exist", scheduleId);
-				throw new NotFoundException("Traffic schedule with ID " + scheduleId + " not found.");
+				logger.error(messageResourceBundle.getLogMessage("trafficschedule.not.exist"), scheduleId);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.TRAFFIC_SCHEDULE_NOT_FOUND, new Object[]{scheduleId}));
 			}
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while deleting the TrafficScheduleEntry: {}", e.getMessage(), e);
-			throw new DataAccessError("Failed to delete TrafficScheduleEntry. Data access error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("delete.trafficscheduleentry.data.access.error"), e.getMessage(), e);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.TRAFFIC_SCHEDULE_DELETE_ERROR));
+
+
+
+
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while deleting the TrafficScheduleEntry: {}", e.getMessage(), e);
-			throw new InternalServerException("Failed to delete TrafficScheduleEntry. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("delete.trafficscheduleentry.unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.TRAFFIC_SCHEDULE_DELETE_UNEXPECTED_ERROR));
+
+
+
+
 		}
 	}
 	
@@ -836,13 +949,20 @@ public class SmscServiceImpl implements SmscService {
 			}
 			return map;
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while fetching the list of TrafficScheduleEntries: {}",
-					e.getMessage(), e);
-			throw new DataAccessError("Failed to list TrafficScheduleEntries. Data access error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("fetch.trafficscheduleentries.data.access.error"), e.getMessage(), e);
+					
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.TRAFFIC_SCHEDULE_LIST_DATA_ACCESS_ERROR));
+
+
+
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while fetching the list of TrafficScheduleEntries: {}",
-					e.getMessage(), e);
-			throw new InternalServerException("Failed to list TrafficScheduleEntries. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("fetch.trafficscheduleentries.unexpected.error"), e.getMessage(), e);
+					
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.TRAFFIC_SCHEDULE_LIST_UNEXPECTED_ERROR));
+
+
+
+
 		}
 	}
 
@@ -872,11 +992,13 @@ public class SmscServiceImpl implements SmscService {
 			MultiUtility.changeFlag(Constants.SMSC_LOOP_FLAG_FILE, "707");
 			return "SmscLooping entry saved successfully";
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while saving the SmscLooping entry: {}", e.getMessage(), e);
+			logger.error(messageResourceBundle.getLogMessage("save.smscloopingentry.data.access.error"), e.getMessage(), e);
 			throw new DataAccessError("Failed to save SmscLooping entry. Data access error occurred.");
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while saving the SmscLooping entry: {}", e.getMessage(), e);
-			throw new InternalServerException("Failed to save SmscLooping entry. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("save.smscloopingentry.unexpected.error"), e.getMessage(), e);
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.SMS_LOOPING_SAVE_DATA_ACCESS_ERROR));
+
+
 		}
 	}
 	
@@ -891,10 +1013,10 @@ public class SmscServiceImpl implements SmscService {
 			user = userOptional.get();
 			// Check if the user is authorized as a super admin and system user
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		try {
 			  // Convert the request to a SmscLooping object
@@ -902,21 +1024,29 @@ public class SmscServiceImpl implements SmscService {
 			// Check if the SmscLooping entry exists
 			if (smscLoopingRepository.existsById(convertRequest.getSmscId())) {
 				smscLoopingRepository.save(convertRequest);
-				logger.info("SmscLooping entry updated with id: " + convertRequest.getSmscId());
+				logger.info(messageResourceBundle.getLogMessage("smscloopingentry.updated.successfully"), convertRequest.getSmscId());
 				MultiUtility.changeFlag(Constants.SMSC_LOOP_FLAG_FILE, "707");
 				return "SmscLooping entry updated successfully";
 			} else {
-				throw new NotFoundException("SmscLooping entry with the provided ID not found");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_LOOPING_ENTRY_NOT_FOUND));
+
+
+
+
 			}
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while updating the SmscLooping entry", e);
-			throw new DataAccessError("Failed to update SmscLooping entry. Data access error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("update.smscloopingentry.data.access.error"), e.getMessage(), e);
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.FAILED_UPDATE_SMS_LOOPING_ENTRY));
+
+
+
 		} catch (NotFoundException e) {
 			logger.error("NotFoundException: {}", e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while updating the SmscLooping entry", e);
-			throw new InternalServerException("Failed to update SmscLooping entry. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("update.smscloopingentry.unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.FAILED_UPDATE_SMS_LOOPING_ENTRY));
+
 		}
 	}
 	
@@ -934,10 +1064,10 @@ public class SmscServiceImpl implements SmscService {
 			
 			  // Check if the user is authorized as a super admin and system user
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		try {
@@ -945,21 +1075,29 @@ public class SmscServiceImpl implements SmscService {
 	            // Delete the SmscLooping entry, trigger a flag change, and return success message
 
 				smscLoopingRepository.deleteById(smscId);
-				logger.info("SmscLooping entry deleted with id: " + smscId);
+				logger.info(messageResourceBundle.getLogMessage("smscloopingentry.deleted.successfully"), smscId);
 				MultiUtility.changeFlag(Constants.SMSC_LOOP_FLAG_FILE, "707");
 				return "SmscLooping entry deleted successfully";
 			} else {
-				throw new NotFoundException("SmscLooping entry with the provided ID not found");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_LOOPING_ENTRY_NOT_FOUND));
+
+
+
 			}
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while deleting the SmscLooping entry: {}", e.getMessage(), e);
-			throw new DataAccessError("Failed to delete SmscLooping entry. Data access error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("delete.smscloopingentry.data.access.error"), e.getMessage(), e);
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.FAILED_TO_DELETE_SMS_LOOPING_ENTRY));
+
 		} catch (NotFoundException e) {
-			logger.error("SmscLooping entry not found: {}", e.getMessage(), e);
+			logger.error(messageResourceBundle.getLogMessage("smscloopingentry.not.found"), e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while deleting the SmscLooping entry: {}", e.getMessage(), e);
-			throw new InternalServerException("Failed to delete SmscLooping entry. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("delete.smscloopingentry.unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.FAILED_TO_DELETE_SMS_LOOPING_ENTRY));
+
+
+
+
 		}
 	}
 
@@ -974,27 +1112,32 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		try {
 			Optional<SmscLooping> loopingRule = smscLoopingRepository.findBySmscId((long) smscId);
 			if (loopingRule.isPresent()) {
 				return loopingRule.get();
 			} else {
-				throw new NotFoundException("SmscLooping rule not found with ID: " + smscId);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_LOOPING_RULE_NOT_FOUND, new Object[]{smscId}));
 			}
 		} catch (DataAccessException e) {
-			logger.error("A data access error occurred while retrieving the SmscLooping rule: {}", e.getMessage(), e);
-			throw new DataAccessError("Failed to retrieve SmscLooping rule. Data access error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("retrieve.smscloopingrule.data.access.error"), e.getMessage(), e);
+			throw new DataAccessError(messageResourceBundle.getExMessage(ConstantMessages.FAILED_TO_RETRIEVE_SMS_LOOPING_RULE));
+
+
+
 		} catch (NotFoundException e) {
 			logger.error("NotFoundException: {}", e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while retrieving the SmscLooping rule: {}", e.getMessage(), e);
-			throw new InternalServerException("Failed to retrieve SmscLooping rule. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("retrieve.smscloopingrule.unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.FAILED_TO_RETRIEVE_SMS_LOOPING_RULE));
+
+
 		}
 	}
 	
@@ -1010,16 +1153,20 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		try {
 			return smscLoopingRepository.findAll();
 		} catch (Exception e) {
-			logger.error("An unexpected error occurred while listing SmscLooping rules: {}", e.getMessage(), e);
-			throw new InternalServerException("Failed to list SmscLooping rules. Unexpected error occurred.");
+			logger.error(messageResourceBundle.getLogMessage("list.smscloopingrules.unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.FAILED_TO_LIST_SMS_LOOPING_RULES));
+
+
+
+
 		}
 	}
 
@@ -1080,11 +1227,12 @@ public class SmscServiceImpl implements SmscService {
 			smsc.setSourceAsDest(smscEntryRequest.isSourceAsDest());
 			smsc.setSton(smscEntryRequest.getSton());
 
-			logger.info("Converted SmscEntryRequest to SmscEntry successfully");
+			logger.info(messageResourceBundle.getLogMessage("convert.smscentryrequest.successfully"));
 			return smsc;
 		} catch (Exception e) {
-			logger.error("Error occurred while converting SmscEntryRequest to SmscEntry: {}", e.getMessage());
-			throw new InternalServerException("Error occurred while converting SmscEntryRequest to SmscEntry" + e);
+			logger.error(messageResourceBundle.getLogMessage("convert.smscentryrequest.error"), e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_CONVERTING_REQUEST_TO_ENTRY)+ e.getMessage());
+
 
 		}
 	}
@@ -1102,11 +1250,14 @@ public class SmscServiceImpl implements SmscService {
 			custom.setLston(customRequest.getSmscId());
 			custom.setSmscId(customRequest.getSmscId());
 			custom.setSourceLength(customRequest.getSourceLength());
-			logger.info("Converted CustomRequest to CustomEntry successfully");
+			logger.info(messageResourceBundle.getLogMessage("convert.customrequest.successfully"));
 			return custom;
 		} catch (Exception e) {
-			logger.error("Error occurred while converting CustomRequest to CustomEntry: {}", e.getMessage());
-			throw new InternalServerException("Error occurred while converting CustomRequest to CustomEntry" + e);
+			logger.error(messageResourceBundle.getLogMessage("convert.customrequest.error"), e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_CONVERTING_REQUEST_TO_CUSTOM_ENTRY )+ e.getMessage());
+
+
+
 
 		}
 	}
@@ -1140,11 +1291,14 @@ public class SmscServiceImpl implements SmscService {
 				}
 			}
 
-			logger.info("Converted GroupRequest to GroupEntry successfully");
+			logger.info(messageResourceBundle.getLogMessage("convert.grouprequest.successfully"));
 			return list;
 		} catch (Exception e) {
-			logger.error("Error occurred while converting GroupRequest to GroupEntry: {}", e.getMessage());
-			throw new InternalServerException("Error occurred while converting GroupRequest to GroupEntry" + e);
+			logger.error(messageResourceBundle.getLogMessage("convert.grouprequest.error"), e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_CONVERTING_REQUEST_TO_GROUP_ENTRY) + e.getMessage());
+
+
+
 
 		}
 	}
@@ -1179,12 +1333,12 @@ public class SmscServiceImpl implements SmscService {
 					logger.info(entry.toString());
 				}
 			}
-			logger.info("Converted GroupMemberRequest to GroupMemberEntry successfully");
+			logger.info(messageResourceBundle.getLogMessage("convert.groupmemberrequest.successfully"));
 			return list;
 		} catch (Exception e) {
 			logger.error("Error occurred while converting GroupMemberRequest to GroupMemberEntry: {}", e.getMessage());
-			throw new InternalServerException(
-					"Error occurred while converting GroupMemberRequest to GroupMemberEntry" + e);
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_CONVERTING_REQUEST_TO_GROUP_MEMBER_ENTRY) + e.getMessage());
+
 
 		}
 	}
@@ -1208,11 +1362,12 @@ public class SmscServiceImpl implements SmscService {
 				list.add(limit);
 			}
 
-			logger.info("Converted LimitRequest to LimitEntry successfully");
+			logger.info(messageResourceBundle.getLogMessage("convert.limitrequest.successfully"));
 			return list;
 		} catch (Exception e) {
-			logger.error("Error occurred while converting LimitRequest to LimitEntry: {}", e.getMessage());
-			throw new InternalServerException("Error occurred while converting LimitRequest to LimitEntry" + e);
+			logger.error(messageResourceBundle.getLogMessage("convert.groupmemberrequest.error"), e.getMessage());
+
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_CONVERTING_REQUEST_TO_LIMIT_ENTRY) + e.getMessage());
 
 		}
 	}
@@ -1231,11 +1386,14 @@ public class SmscServiceImpl implements SmscService {
 			smscLooping.setSenderId(smscLoopingRequest.getSenderId());
 			// smscLooping.setSmsc(smscLoopingRequest.);
 			smscLooping.setSmscId(smscLoopingRequest.getSmscId());
-			logger.info("Converted SmscLoopingRequest to SmscLooping successfully");
+			logger.info(messageResourceBundle.getLogMessage("convert.smscloopingrequest.successfully"));
 			return smscLooping;
 		} catch (Exception e) {
-			logger.error("Error occurred while converting SmscLoopingRequest to SmscLooping: {}", e.getMessage());
-			throw new InternalServerException("Error occurred while converting SmscLoopingRequest to SmscLooping" + e);
+			logger.error(messageResourceBundle.getLogMessage("convert.smscloopingrequest.error"), e.getMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_CONVERTING_REQUEST_TO_SMSC_LOOPING) + e.getMessage());
+
+
+
 
 		}
 	}
@@ -1263,16 +1421,16 @@ public class SmscServiceImpl implements SmscService {
 				list.add(new TrafficScheduleEntry(smscId[i], gmt[i], day[i], duration[i], downTime[i]));
 
 			}
-			logger.info("Converted TrafficScheduleRequest to TrafficScheduleEntry successfully");
+			logger.info(messageResourceBundle.getLogMessage("convert.trafficschedulerequest.successfully"));
 
 			return list;
 		} catch (Exception e) {
-			logger.error("Error occurred while converting TrafficScheduleRequest to TrafficScheduleEntry: {}",
-					e.getMessage());
-			throw new InternalServerException(
-					"Error occurred while converting TrafficScheduleRequest to TrafficScheduleEntry" + e);
+			logger.error(messageResourceBundle.getLogMessage("convert.trafficschedulerequest.error"), e.getMessage());
+					
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_CONVERTING_REQUEST_TO_TRAFFIC_SCHEDULE) + e.getMessage());
 
-		}
+
+	}
 	}
 	
 	/// Saves a SmscBsfmEntry based on the provided SmscBsfmEntryRequest and username
@@ -1285,17 +1443,17 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 
 		try {
 			SmscBsfmEntry smscBsfmEntry = new SmscBsfmEntry();
 			ConvertRequest(smscBsfmEntryRequest, smscBsfmEntry);
 			smscBsfmEntryRepository.save(smscBsfmEntry);
-			logger.info("SmscBsfmEntry Saved Successfully!");
+			logger.info(messageResourceBundle.getLogMessage("smscbsfmentry.saved.successfully"));
 			MultiUtility.changeFlag(Constants.SMSC_BSFM_FLAG_FILE, "707");
 		} catch (Exception e) {
 			logger.error(e.getLocalizedMessage());
@@ -1326,32 +1484,36 @@ public class SmscServiceImpl implements SmscService {
 			if (userOptional.isPresent()) {
 				user = userOptional.get();
 				if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-					throw new UnauthorizedException("User does not have the required roles for this operation.");
+					throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 				}
 			} else {
-				throw new NotFoundException("User not found with the provided username.");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 			}
 
 			List<TrafficScheduleEntry> trafficScheduleEntries = trafficScheduleEntryRepository.findAll();
 
 			// Log the successful retrieval of traffic schedule entries
-			logger.info("Successfully retrieved traffic schedule entries for user: {}", username);
+			logger.info(messageResourceBundle.getLogMessage("retrieve.trafficscheduleentries.successfully"), username);
+
 
 			// Process the list or return it directly based on your requirements
 			return trafficScheduleEntries;
 		} catch (NotFoundException | UnauthorizedException ex) {
 			// Log the exception with appropriate level (info, warn, error, etc.)
-			logger.error("Error in listTrafficSchedule for user {}: {}", username, ex.getMessage(), ex);
+			logger.error(messageResourceBundle.getLogMessage("listtrafficschedule.error"), username, ex.getMessage(), ex);
 
 			// Re-throw the exception for higher-level handling if needed
 			throw ex;
 		} catch (Exception ex) {
 			// Log unexpected exceptions with error level
-			logger.error("Unexpected error in listTrafficSchedule for user {}: {}", username, ex.getMessage(), ex);
+			logger.error(messageResourceBundle.getLogMessage("listtrafficschedule.unexpectederror"), username, ex.getMessage(), ex);
 
 			// Wrap and throw a generic exception for higher-level handling if needed
-			throw new InternalServerException(
-					"An unexpected error occurred while processing the request." + ex.getLocalizedMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.UNEXPECTED_ERROR_PROCESSING_REQUEST) + ex.getLocalizedMessage());
+
+
+
+
 		}
 	}
 
@@ -1365,38 +1527,42 @@ public class SmscServiceImpl implements SmscService {
 			if (userOptional.isPresent()) {
 				user = userOptional.get();
 				if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-					throw new UnauthorizedException("User does not have the required roles for this operation.");
+					throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 				}
 			} else {
-				throw new NotFoundException("User not found with the provided username.");
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 			}
 
 			List<SmscBsfmEntry> smscBsfmEntries = smscBsfmEntryRepository.findAll();
 
 			// Log the successful retrieval of SMS/C BSFM entries
-			logger.info("Successfully retrieved SMS/C BSFM entries for user: {}", username);
+			logger.info(messageResourceBundle.getLogMessage("retrieve.smscbsfmentries.successfully"), username);
 
 			// Process the list or return it directly based on your requirements
 			return smscBsfmEntries;
 		} catch (NotFoundException ex) {
 			// Log the exception with appropriate level (info, warn, error, etc.)
-			logger.error("Error in listSmscBsfm for user {}: {}", username, ex.getMessage(), ex);
+			logger.error(messageResourceBundle.getLogMessage("listsmscbsfm.error"), username, ex.getMessage(), ex);
+
 
 			// Re-throw the exception for higher-level handling if needed
 			throw new NotFoundException(ex.getMessage());
 		} catch (UnauthorizedException ex) {
 			// Log the exception with appropriate level (info, warn, error, etc.)
-			logger.error("Error in listSmscBsfm for user {}: {}", username, ex.getMessage(), ex);
+			logger.error(messageResourceBundle.getLogMessage("listsmscbsfm.error"), username, ex.getMessage(), ex);
 
 			// Re-throw the exception for higher-level handling if needed
 			throw new UnauthorizedException(ex.getMessage());
 		} catch (Exception ex) {
 			// Log unexpected exceptions with error level
-			logger.error("Unexpected error in listSmscBsfm for user {}: {}", username, ex.getMessage(), ex);
+			logger.error(messageResourceBundle.getLogMessage("listsmscbsfm.unexpectederror"), username, ex.getMessage(), ex);
 
 			// Wrap and throw a generic exception for higher-level handling if needed
-			throw new InternalServerException(
-					"An unexpected error occurred while processing the request." + ex.getLocalizedMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.UNEXPECTED_ERROR, new Object[]{ex.getLocalizedMessage()}));
+
+
+
+
 		}
 
 	}
@@ -1410,10 +1576,10 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		try {
 			if (smscBsfmEntryRepository.existsById(smscBsfmEntryRequest.getId())) {
@@ -1446,19 +1612,23 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		try {
 			if (smscBsfmEntryRepository.existsById(id)) {
 				smscBsfmEntryRepository.deleteById(id);
-				logger.info("Entry deleted with id: " + id);
+				logger.info(messageResourceBundle.getLogMessage("entry.deleted.successfully"), id);
 				MultiUtility.changeFlag(Constants.SMSC_BSFM_FLAG_FILE, "707");
 				return new ResponseEntity<>("Entry deleted successfully", HttpStatus.OK);
 			} else {
-				throw new NotFoundException("Entry not found with ID: " + id);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ENTRY_NOT_FOUND) +id);
+
+
+
+
 			}
 		} catch (NotFoundException e) {
 			logger.error("Entry not found: " + e.getLocalizedMessage());
@@ -1478,21 +1648,22 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		try {
 			Optional<SmscEntry> optionalSmscEntry = smscEntryRepository.findById(id);
 
 			if (optionalSmscEntry.isPresent()) {
 				SmscEntry smscEntry = optionalSmscEntry.get();
-				logger.info("Entry retrieved successfully with id: " + id);
+				logger.info(messageResourceBundle.getLogMessage("entry.retrieved.successfully"), id);
 				return new ResponseEntity<>(smscEntry, HttpStatus.OK);
 			} else {
-				logger.error("SMS entry not found with ID: " + id);
-				throw new NotFoundException("SMS entry not found with ID: " + id);
+				logger.error(messageResourceBundle.getLogMessage("sms.entry.notfound"), id);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_ENTRY_NOT_FOUND, new Object[]{id}));
+
 			}
 		} catch (NotFoundException e) {
 			logger.error("NotFoundException: " + e.getLocalizedMessage());
@@ -1513,10 +1684,10 @@ public class SmscServiceImpl implements SmscService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 		}
 		try {
 			Optional<GroupMemberEntry> optionalGroupMember = groupMemberEntryRepository.findById(id);
@@ -1525,7 +1696,11 @@ public class SmscServiceImpl implements SmscService {
 				GroupMemberEntry groupMember = optionalGroupMember.get();
 				return new ResponseEntity<>(groupMember, HttpStatus.OK);
 			} else {
-				throw new NotFoundException("Group member not found with ID: " + id);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.GROUP_MEMBER_NOT_FOUND, new Object[]{id}));
+
+
+
+
 			}
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getMessage());

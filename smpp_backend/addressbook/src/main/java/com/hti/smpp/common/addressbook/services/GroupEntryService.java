@@ -12,7 +12,7 @@ public interface GroupEntryService {
 
 	public ResponseEntity<?> modifyGroupEntryUpdate(GroupEntryRequest groupEntryRequest, String username);
 
-	public ResponseEntity<?> modifyGroupEntryDelete(GroupEntryRequest groupEntryRequest, String username);
+	public ResponseEntity<?> modifyGroupEntryDelete(int id, String username);
 
 	public ResponseEntity<?> listGroup(String purpose, String groupData, String username);
 }

@@ -2,14 +2,13 @@ package com.hti.smpp.common.addressbook.services;
 
 import java.util.List;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.hti.smpp.common.addressbook.request.ContactEntryRequest;
 import com.hti.smpp.common.addressbook.response.ContactForBulk;
 import com.hti.smpp.common.contacts.dto.ContactEntry;
+
 /**
  * Interface for ContactEntryService defining contact-related operations.
  */
@@ -20,8 +19,8 @@ public interface ContactEntryService {
 	public ResponseEntity<?> contactForBulk(List<Long> numbers, int groupId, String username);
 
 	public ResponseEntity<List<ContactEntry>> viewSearchContact(List<Integer> ids, String username);
-	
-	public Page<ContactEntry> getContactByGroupId(int groupId, PageRequest pageRequest,  String username); 
+
+	public List<ContactEntry> getContactByGroupId(int groupId, String username);
 
 	public ResponseEntity<ContactForBulk> proceedSearchContact(List<Integer> ids, String username);
 

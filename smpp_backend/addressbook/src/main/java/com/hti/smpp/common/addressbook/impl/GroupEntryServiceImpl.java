@@ -70,7 +70,7 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 
 	@Autowired
 	private MultiUserEntryRepository multiUserEntryRepository;
-	
+
 	@Autowired
 	private MessageResourceBundle messageResourceBundle;
 
@@ -85,14 +85,17 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		String systemId = user.getSystemId();
-		logger.info(messageResourceBundle.getLogMessage("addbook.group.add.contact.request.info"), systemId, user.getRole());
+		logger.info(messageResourceBundle.getLogMessage("addbook.group.add.contact.request.info"), systemId,
+				user.getRole());
 		String target = IConstants.FAILURE_KEY;
 		GroupEntryDTO entry = null;
 		int total = form.getName().length;
@@ -134,7 +137,8 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 
 					list.add(entry);
 				} else {
-					logger.warn(messageResourceBundle.getLogMessage("addbook.group.invalid.name.warn"), systemId, names[i]);
+					logger.warn(messageResourceBundle.getLogMessage("addbook.group.invalid.name.warn"), systemId,
+							names[i]);
 					continue;
 				}
 			}
@@ -144,18 +148,23 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 			} else {
 				this.groupEntryDTORepository.saveAll(list);
 				target = IConstants.SUCCESS_KEY;
-				logger.info(messageResourceBundle.getLogMessage("addbook.group.add.contact.status.info"), systemId, target);
-				return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.ADDBOOK_GROUP_SAVED), HttpStatus.CREATED);
+				logger.info(messageResourceBundle.getLogMessage("addbook.group.add.contact.status.info"), systemId,
+						target);
+				return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.ADDBOOK_GROUP_SAVED),
+						HttpStatus.CREATED);
 			}
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (DataIntegrityViolationException e) {
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUP_DUPLICATE_ENTRY));
+			throw new InternalServerException(
+					messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUP_DUPLICATE_ENTRY));
 		} catch (ArrayIndexOutOfBoundsException e) {
 			logger.error(systemId, e.getLocalizedMessage());
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_INCOMPLETE_DATA));
+			throw new InternalServerException(
+					messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_INCOMPLETE_DATA));
 		} catch (Exception e) {
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getLocalizedMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
+					new Object[] { e.getLocalizedMessage() }));
 		}
 
 	}
@@ -171,16 +180,19 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 		String target = IConstants.FAILURE_KEY;
 
 		String systemId = user.getSystemId();
 		GroupEntryDTO entry = null;
-		logger.info(messageResourceBundle.getLogMessage("addbook.group.modify.contact.request.info"), systemId, user.getRole());
+		logger.info(messageResourceBundle.getLogMessage("addbook.group.modify.contact.request.info"), systemId,
+				user.getRole());
 		List<GroupEntryDTO> list = new ArrayList<GroupEntryDTO>();
 		int[] id = form.getId();
 		String[] names = form.getName();
@@ -194,7 +206,8 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 						entry.setId(id[i]);
 						list.add(entry);
 					} else {
-						logger.warn(messageResourceBundle.getLogMessage("addbook.group.invalid.name.warn"), user.getRole(), names[i]);
+						logger.warn(messageResourceBundle.getLogMessage("addbook.group.invalid.name.warn"),
+								user.getRole(), names[i]);
 						continue;
 					}
 				}
@@ -204,7 +217,8 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 					target = IConstants.SUCCESS_KEY;
 				} else {
 					logger.error(messageResourceBundle.getLogMessage("addbook.update.list.empty.error"));
-					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_CONTACT_UPDATE_ERROR));
+					throw new InternalServerException(
+							messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_CONTACT_UPDATE_ERROR));
 				}
 
 			} catch (Exception e) {
@@ -216,7 +230,8 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_NORECORD));
 		}
 		logger.info(messageResourceBundle.getLogMessage("addbook.group.modify.contact.status.info"), systemId, target);
-		return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.ADDBOOK_GROUP_UPDATED), HttpStatus.CREATED);
+		return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.ADDBOOK_GROUP_UPDATED),
+				HttpStatus.CREATED);
 	}
 
 	/**
@@ -224,36 +239,39 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 	 * 
 	 * @param list
 	 */
-	private void deleteGroup(List<GroupEntryDTO> list) {
-		for (GroupEntryDTO entry : list) {
-			try {
-				if (this.groupEntryDTORepository.existsById(entry.getId())) {
-					this.groupEntryDTORepository.delete(entry);
-				} else {
-					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUP_NOTFOUND, new Object[] {entry.getId()}));
-				}
-			} catch (NotFoundException e) {
-				logger.error(e.getLocalizedMessage());
-				throw new NotFoundException(e.getLocalizedMessage());
-			} catch (Exception e) {
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUP_DELETE_FAILED));
-			}
-			if (entry.isGroupData()) {
-				List<GroupDataEntry> contacts = this.groupDataEntryRepository.findByGroupId(entry.getId());
-				if (!contacts.isEmpty()) {
-					this.groupDataEntryRepository.deleteAll(contacts);
-
-				} else {
-					logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.no.entry.found.info"));
-				}
+	private void deleteGroup(int id) {
+		GroupEntryDTO entry = null;
+		try {
+			Optional<GroupEntryDTO> groupOption = this.groupEntryDTORepository.findById(id);
+			if (groupOption.isPresent()) {
+				entry = groupOption.get();
+				this.groupEntryDTORepository.deleteById(entry.getId());
 			} else {
-				List<ContactEntry> contacts = this.contactRepo.findByGroupId(entry.getId());
-				if (!contacts.isEmpty()) {
-					this.contactRepo.deleteAll(contacts);
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUP_NOTFOUND,
+						new Object[] { entry.getId() }));
+			}
+		} catch (NotFoundException e) {
+			logger.error(e.getLocalizedMessage());
+			throw new NotFoundException(e.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new InternalServerException(
+					messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUP_DELETE_FAILED));
+		}
+		if (entry.isGroupData()) {
+			List<GroupDataEntry> contacts = this.groupDataEntryRepository.findByGroupId(entry.getId());
+			if (!contacts.isEmpty()) {
+				this.groupDataEntryRepository.deleteAll(contacts);
 
-				} else {
-					logger.info(messageResourceBundle.getLogMessage("addbook.contact.no.entry.found.info"));
-				}
+			} else {
+				logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.no.entry.found.info"));
+			}
+		} else {
+			List<ContactEntry> contacts = this.contactRepo.findByGroupId(entry.getId());
+			if (!contacts.isEmpty()) {
+				this.contactRepo.deleteAll(contacts);
+
+			} else {
+				logger.info(messageResourceBundle.getLogMessage("addbook.contact.no.entry.found.info"));
 			}
 		}
 	}
@@ -263,62 +281,29 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 	 */
 	@Override
 	@Transactional
-	public ResponseEntity<?> modifyGroupEntryDelete(GroupEntryRequest form, String username) {
-
+	public ResponseEntity<?> modifyGroupEntryDelete(int id, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		String target = IConstants.FAILURE_KEY;
 
 		String systemId = user.getSystemId();
+		logger.info(messageResourceBundle.getLogMessage("addbook.group.remove.contact.request.info"), systemId,
+				user.getRole());
+		deleteGroup(id);
+		target = IConstants.SUCCESS_KEY;
+		return ResponseEntity.ok(target);
 
-		GroupEntryDTO entry = null;
-		logger.info(messageResourceBundle.getLogMessage("addbook.group.remove.contact.request.info"), systemId, user.getRole());
-		List<GroupEntryDTO> list = new ArrayList<GroupEntryDTO>();
-		int[] id = form.getId();
-		String[] names = form.getName();
-		boolean[] groupData = form.getGroupData();
-
-		if (id != null && id.length > 0) {
-			try {
-				for (int i = 0; i < id.length; i++) {
-					entry = new GroupEntryDTO(names[i], systemId, groupData[i]);
-					entry.setId(id[i]);
-					list.add(entry);
-				}
-
-				if (!list.isEmpty()) {
-					deleteGroup(list);
-					target = IConstants.SUCCESS_KEY;
-				} else {
-					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_EMPTY_DATASET));
-				}
-
-			} catch (NotFoundException e) {
-				logger.error(systemId, e.toString());
-				throw new NotFoundException(e.getLocalizedMessage());
-			} catch (IndexOutOfBoundsException e) {
-				logger.error(systemId, e.toString());
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_INCOMPLETE_DATA));
-			} catch (Exception e) {
-				logger.error(systemId, e.toString());
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getLocalizedMessage()}));
-			}
-
-		} else {
-			logger.error(messageResourceBundle.getLogMessage("addbook.no.record.found.error"));
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_NORECORD));
-		}
-		logger.info(messageResourceBundle.getLogMessage("addbook.group.remove.contact.status.info"), systemId, target);
-		return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.ADDBOOK_GROUP_DELETED), HttpStatus.OK);
 	}
 
 	/**
@@ -398,10 +383,12 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		String target = IConstants.FAILURE_KEY;
@@ -412,7 +399,8 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 			webEntry = webMenu.get();
 
 		} else {
-			logger.error(messageResourceBundle.getLogMessage("addbook.webmaster.entry.notfound.error"),user.getSystemId());
+			logger.error(messageResourceBundle.getLogMessage("addbook.webmaster.entry.notfound.error"),
+					user.getSystemId());
 			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND_WEBMASTER_ERROR));
 		}
 
@@ -426,28 +414,34 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 					if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")
 							|| webEntry.isMessaging()) {
 					} else {
-						logger.error(messageResourceBundle.getLogMessage("addbook.group.invalid.request.error"), systemId, user.getRole());
+						logger.error(messageResourceBundle.getLogMessage("addbook.group.invalid.request.error"),
+								systemId, user.getRole());
 						target = "invalidRequest";
 						proceed = false;
-						throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+						throw new UnauthorizedException(messageResourceBundle
+								.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 					}
 				} else {
 					if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")
 							|| webEntry.isAddbook()) {
 					} else {
-						logger.error(messageResourceBundle.getLogMessage("addbook.group.invalid.request.error"), systemId, user.getRole());
+						logger.error(messageResourceBundle.getLogMessage("addbook.group.invalid.request.error"),
+								systemId, user.getRole());
 						target = "invalidRequest";
 						proceed = false;
-						throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+						throw new UnauthorizedException(messageResourceBundle
+								.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 					}
 				}
 			} else {
 				if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem") || webEntry.isAddbook()) {
 				} else {
-					logger.error(messageResourceBundle.getLogMessage("addbook.group.invalid.request.error"), systemId, user.getRole());
+					logger.error(messageResourceBundle.getLogMessage("addbook.group.invalid.request.error"), systemId,
+							user.getRole());
 					target = "invalidRequest";
 					proceed = false;
-					throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+					throw new UnauthorizedException(messageResourceBundle
+							.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 				}
 			}
 			List<GroupEntryDTO> list = null;
@@ -490,7 +484,8 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getLocalizedMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
+					new Object[] { e.getLocalizedMessage() }));
 		}
 		logger.info(messageResourceBundle.getLogMessage("addbook.group.setup.contacts.target.info"), target);
 
