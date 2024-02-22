@@ -302,9 +302,13 @@ public class ConstantMessages {
     public static final String NO_DATA_FOUND_IN_ROUTE_ENTRY_EXT_LIST = "no.data.found.in.route.entry.ext.list";
     public static final String ID_NOT_FOUND_OR_NULL = "id.not.found.or.null";
     public static final String ERROR_ADDING_ROUTE_ENTRIES = "error.adding.route.entries";
+    //two-way exception
+    public static final String TWOWAY_WEBMENU_ACCESS_ENTRY_NOT_FOUND = "twoway.webmenu.access.entry.notfound";
+    public static final String TWOWAY_KEYWORD_EXIST = "twoway.keyword.exist";
+    public static final String TWOWAY_KEYWORD_NOT_FOUND = "twoway.keyword.notfound";
+    public static final String TWOWAY_INTERNALSERVER_ERROR = "twoway.internalserver.error";
 
    // S M S C 
-    
     public static final String FAILED_TO_SAVE_SMSC_ENTRY = "failed.to.save.smsc.entry";
     public static final String FAILED_TO_UPDATE_SMSC_ENTRY = "failed.to.update.smsc.entry";
     public static final String SMS_ENTRY_NOT_FOUND_FOR_UPDATE = "sms.entry.not.found.for.update";
@@ -366,11 +370,13 @@ public class ConstantMessages {
     public static final String UNEXPECTED_ERROR_PROCESSING_REQUEST = "unexpected.error.processing.request";
     public static final String ENTRY_NOT_FOUND = "entry.not.found";
     public static final String UNEXPECTED_ERROR = "unexpected.error";
+    //two-way success messages
+    public static final String TWOWAY_KEYWORD_ADD_SUCCESS = "twoway.add.success";
+    public static final String TWOWAY_KEYWORD_UPDATED_SUCCESS = "twoway.update.success";
+    public static final String TWOWAY_KEYWORD_DELETED_SUCCESS = "twoway.delete.success";
+    public static final String TWOWAY_RECORD_UNAVAILABLE = "twoway.record.unavailable";
 
-
-
-
-
+    
     
     
 }
