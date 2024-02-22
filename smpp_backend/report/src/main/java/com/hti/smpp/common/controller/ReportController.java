@@ -1,15 +1,22 @@
 package com.hti.smpp.common.controller;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
 
 import com.hti.smpp.common.messages.dto.BulkEntry;
 import com.hti.smpp.common.request.AbortBatchReportRequest;
@@ -26,6 +33,7 @@ import com.hti.smpp.common.request.LookUpReportRequest;
 import com.hti.smpp.common.request.PerformanceReportRequest;
 import com.hti.smpp.common.request.ProfitReportRequest;
 import com.hti.smpp.common.request.ScheduleReportRequest;
+import com.hti.smpp.common.request.SendAttachmentRequest;
 import com.hti.smpp.common.request.SmscDlrReportRequest;
 import com.hti.smpp.common.request.SubmissionReportRequest;
 import com.hti.smpp.common.request.SummaryReportForm;
@@ -37,6 +45,7 @@ import com.hti.smpp.common.service.ContentReportService;
 import com.hti.smpp.common.service.CustomizedReportService;
 import com.hti.smpp.common.service.DashboardService;
 import com.hti.smpp.common.service.DlrSummaryReportService;
+import com.hti.smpp.common.service.FileAttachmentSenderService;
 import com.hti.smpp.common.service.LatencyReportService;
 import com.hti.smpp.common.service.LookupReportService;
 import com.hti.smpp.common.service.PerformanceReportService;
@@ -51,9 +60,12 @@ import com.hti.smpp.common.service.UserDeliveryReportService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
@@ -112,6 +124,9 @@ public class ReportController {
 
 	@Autowired
 	private DashboardService dashboardService;
+	
+	@Autowired
+	private FileAttachmentSenderService fileAttachmentSenderService;
 
 	@PostMapping("/dashboard")
 	@Operation(summary = "dashboard post Report", description = "dashboard post report")
@@ -628,5 +643,15 @@ public class ReportController {
 		return summaryReportService.SummaryReportdoc(username, customReportForm, response);
 
 	}
-
+	
+	@PostMapping(value="/send-attachment" ,consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@Operation(summary="send email with file atttachement to the User",description = "This endPoint send a file attaced to the email")
+	public ResponseEntity<?>sentAttachmentWithEmail(
+			@RequestPart(value="file",required = false) MultipartFile attachment,
+			@Parameter(description = "attach file for sending to the email",content = @Content(schema = @Schema(implementation = SendAttachmentRequest.class))) @RequestParam(value = "sendAttachmentRequest", required = true) String sendAttachmentRequest
+			){
+			fileAttachmentSenderService.sendEmailWithAttachment(attachment, sendAttachmentRequest);
+			return new ResponseEntity<>("Email Sent Successfully",HttpStatus.OK);
+		}
+	
 }
