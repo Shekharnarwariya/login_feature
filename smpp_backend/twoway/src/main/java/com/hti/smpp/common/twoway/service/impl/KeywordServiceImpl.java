@@ -1004,6 +1004,58 @@ public class KeywordServiceImpl implements KeywordService {
 		}
 		return ResponseEntity.ok(list);
 	}
-		
+	
+	@Override
+	public ResponseEntity<String> deleteAllKeyWordByID(List<Integer> ids, String username) {
+	    Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+	    UserEntry user = null;
+	    if (userOptional.isPresent()) {
+	        user = userOptional.get();
+	        if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+	            throw new UnauthorizedException("User does not have the required roles for this operation.");
+	        }
+	    } else {
+	        throw new NotFoundException("User not found with the provided username.");
+	    }
+	    String target = IConstants.FAILURE_KEY;
+	    String systemId = user.getSystemId();
+	    int userId = user.getId();
+	    WebMenuAccessEntry webMenu = null;
+	    Optional<WebMenuAccessEntry> webEntryOptional = this.webMenuRepo.findById(userId);
+	    if (webEntryOptional.isPresent()) {
+	        webMenu = webEntryOptional.get();
+	    } else {
+	        throw new NotFoundException("WebMenuAccessEntry not found.");
+	    }
+	    logger.info(systemId + "[" + user.getRole() + "] Delete Keywords Request: " + ids.toString());
+
+	    try {
+	    	if(!ids.isEmpty()) {
+	        for (Integer id : ids) {
+	            if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem") || webMenu.isTwoWay()) {
+	                this.keywordRepo.deleteById(id);
+	                target = IConstants.SUCCESS_KEY;
+	                MultiUtility.changeFlag(Constants.KEYWORD_FLAG_FILE, "707");
+	            } else {
+	                logger.info(systemId + "[" + user.getRole() + "] Unauthorized Request for ID: " + id);
+	                throw new UnauthorizedException("Unauthorized Request for ID: " + id);
+	            }
+	        }
+	    	}else {
+	    		logger.error("List can't be empty!!");    	
+	    		}
+	    }catch (UnauthorizedException e) {
+	        logger.error(systemId, e.toString());
+	        logger.error("Unauthorized Error: " + e.getMessage() + "[" + e.getCause() + "]");
+	        throw new UnauthorizedException(e.getLocalizedMessage());
+	    } catch (Exception e) {
+	        logger.error(systemId, e.toString());
+	        logger.error("Process Error: " + e.getMessage() + "[" + e.getCause() + "]");
+	        throw new InternalServerException(e.getLocalizedMessage());
+	    }
+
+	    return new ResponseEntity<String>(target, HttpStatus.OK);
+	}
+
 
 }

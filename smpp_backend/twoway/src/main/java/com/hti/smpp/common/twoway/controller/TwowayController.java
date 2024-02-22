@@ -17,6 +17,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import com.hti.smpp.common.twoway.dto.KeywordEntry;
 import com.hti.smpp.common.twoway.request.KeywordEntryForm;
+import com.hti.smpp.common.twoway.request.TwoWayDeleteRequest;
 import com.hti.smpp.common.twoway.request.TwowayReportForm;
 import com.hti.smpp.common.twoway.service.KeywordService;
 
@@ -112,7 +113,25 @@ public class TwowayController {
     	return this.keywordService.deleteKeyword(id, username);
     	
     }
-    
+    /**
+     * Deletes a keyword entry by ID.
+     * @param list<Integer>id
+     * @param username
+     * @return
+     */
+    @Operation(summary = "Delete All Keyword Entry", description = "Delete an all existing keyword entry")
+    @ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "All KeywordEntry Deleted Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "401", description = "Unauthorized.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+	})
+    @DeleteMapping("/delete-all-keyword")
+    public ResponseEntity<String> deleteAllKeyword( @RequestBody TwoWayDeleteRequest twoWayDeleteRequest, @RequestHeader(value="username", required = true) String username){
+    	return this.keywordService.deleteAllKeyWordByID(twoWayDeleteRequest.getIds(), username);
+    	
+    }
+   
     /**
      * Retrieves details of a specific keyword entry by ID.
      * @param id

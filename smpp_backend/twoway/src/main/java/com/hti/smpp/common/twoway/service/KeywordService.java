@@ -26,4 +26,5 @@ public interface KeywordService {
     public ResponseEntity<StreamingResponseBody> generateDoc(TwowayReportForm form, String locale, String username);
     public ResponseEntity<?> view(TwowayReportForm form, String locale, String username);
     public ResponseEntity<Collection<UserEntry>> setupTwowayReport(String username);
+    public ResponseEntity<String> deleteAllKeyWordByID(List<Integer> id, String username);
 }
