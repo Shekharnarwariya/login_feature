@@ -376,8 +376,13 @@ public class ConstantMessages {
     public static final String TWOWAY_KEYWORD_DELETED_SUCCESS = "twoway.delete.success";
     public static final String TWOWAY_RECORD_UNAVAILABLE = "twoway.record.unavailable";
 
-    
-    
+     //ALERT
+    public static final String ALERT_ENTITY_NOT_FOUND = "alert.entity.not.found";
+    public static final String UNABLE_TO_DELETE_ALERT = "unable.to.delete.alert";
+    public static final String UNABLE_TO_FIND_ALL_ALERTS = "unable.to.find.all.alerts";
+    public static final String ALERT_ENTRIES_NOT_FOUND = "alert.entries.not.found";
+    public static final String UPDATE_ALERT_ENTITY_FAILED = "update.alert.entity.failed";
+
     
 }
 

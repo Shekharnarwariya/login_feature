@@ -35,9 +35,11 @@ import com.hti.smpp.common.smsc.dto.SmscEntry;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Constants;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 import com.hti.smpp.common.util.MultiUtility;
 import com.hti.smpp.common.util.dto.AlertDTO;
 
@@ -53,6 +55,8 @@ public class AlertServiceImpl implements AlertService{
 	@Autowired
 	private UserEntryRepository userRepository;
 
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 	
 	
 	
@@ -66,10 +70,10 @@ public class AlertServiceImpl implements AlertService{
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		
 		
@@ -77,7 +81,8 @@ public class AlertServiceImpl implements AlertService{
 		
 		AlertDTO alert = new AlertDTO();
 		
-		logger.info("Add Performance Alert Request From " + user.getSystemId() + " [" + user.getRole() + "]");
+		logger.info(messageResourceBundle.getLogMessage("add.performance.alert.request"), user.getSystemId(), user.getRole());
+
 		
 		try {
 			BeanUtils.copyProperties(form, alert);
@@ -91,7 +96,8 @@ public class AlertServiceImpl implements AlertService{
 			}
 			addAlert(alert);
 			MultiUtility.changeFlag(Constants.ALERT_FLAG_FILE, "707");
-			logger.info("message: operation success");
+			logger.info(messageResourceBundle.getLogMessage("operation.success"));
+
 			target = IConstants.SUCCESS_KEY;
 		} catch (Exception e) {
 
@@ -138,10 +144,10 @@ public class AlertServiceImpl implements AlertService{
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		
 		String target = IConstants.FAILURE_KEY;
@@ -196,7 +202,7 @@ public class AlertServiceImpl implements AlertService{
 		AlertDTO alert = null;
 		try {
 			AlertEntity alertEntity = this.alertRepo.findById(id)
-					.orElseThrow(() -> new NotFoundException("Alert Entity Not Found!"));
+					.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ALERT_ENTITY_NOT_FOUND)));
 			String smsc = alertEntity.getRoutes();
 			String country = alertEntity.getCountries();
 			
@@ -259,21 +265,25 @@ public class AlertServiceImpl implements AlertService{
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		String target = IConstants.FAILURE_KEY;
 		try {
 			if (this.alertRepo.existsById(id)) {
 				this.alertRepo.deleteById(id);
 				target = IConstants.SUCCESS_KEY;
-				logger.info("Alert deleted successfully!");
+				logger.info(messageResourceBundle.getLogMessage("alert.deleted.successfully"));
+
 				MultiUtility.changeFlag(Constants.ALERT_FLAG_FILE, "101"); // remove flag
 			} else {
 				logger.error("Operation Failed");
-				throw new InternalServerException("Unable to delete alert.");
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.UNABLE_TO_DELETE_ALERT));
+
+
+
 			}
 		} catch (InternalServerException e) {
 			logger.error(e.toString());
@@ -293,21 +303,24 @@ public class AlertServiceImpl implements AlertService{
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		String target = IConstants.FAILURE_KEY;
 		List<AlertDTO> alertsValues = null;
 		try {
 			Map<Integer, AlertDTO> getAllAlerts = getAllAlerts();
 			if(getAllAlerts.isEmpty()) {
-				logger.error("All alerts not found!");
-				throw new NotFoundException("Unable to found all alerts!");
+				logger.error(messageResourceBundle.getLogMessage("all.alerts.notfound"));
+
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.UNABLE_TO_FIND_ALL_ALERTS));
+
 			} else {
 				target = IConstants.SUCCESS_KEY;
-				logger.info("All alerts fetched successfully!");
+				logger.info(messageResourceBundle.getLogMessage("all.alerts.fetched.successfully"));
+
 				alertsValues = new ArrayList<>(getAllAlerts.values());
 			}
 			
@@ -328,7 +341,8 @@ public class AlertServiceImpl implements AlertService{
 		Map<Integer, AlertDTO> list = new HashMap<Integer, AlertDTO>();
 		if (allAlertEntities.isEmpty()) {
 			logger.error("Unable to found AlertEntries!");
-			throw new NotFoundException("AlertEntries not found!");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ALERT_ENTRIES_NOT_FOUND));
+
 		} else {
 			Map<Integer, String> network_map = listCountries();
 			allAlertEntities.forEach(alert -> {
@@ -373,15 +387,15 @@ public class AlertServiceImpl implements AlertService{
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		String target = IConstants.FAILURE_KEY;
 		AlertDTO alert = new AlertDTO();
-		logger.info("Modify Performance Alert Request From " + user.getSystemId() + " ["
-				+ user.getRole() + "]");
+		logger.info(messageResourceBundle.getLogMessage("modify.performance.alert.request"), user.getSystemId(), user.getRole());
+
 		try {
 			BeanUtils.copyProperties(form, alert);
 			String[] countries = form.getCountries();
@@ -394,7 +408,7 @@ public class AlertServiceImpl implements AlertService{
 			}
 			modifyAlert(id,alert);
 			MultiUtility.changeFlag(Constants.ALERT_FLAG_FILE, "707");
-			logger.info("message: operation success");
+			logger.info(messageResourceBundle.getLogMessage("operation.success"));
 			target = IConstants.SUCCESS_KEY;
 		} catch (Exception e) {
 			logger.error(e.toString());
@@ -434,10 +448,13 @@ public class AlertServiceImpl implements AlertService{
 			AlertEntity saveUpdate = this.alertRepo.save(updateAlert);
 			logger.info("om");
 			if(saveUpdate != null) {
-				logger.info("AlertEntity updated successfully!");
+				logger.info(messageResourceBundle.getLogMessage("alertentity.updated.successfully"));
+
 			} else {
-				logger.error("Error updating the alert entity!");
-				throw new InternalServerException("Unable to update alert entity!");
+				logger.error(messageResourceBundle.getLogMessage("error.updating.alert.entity"));
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.UPDATE_ALERT_ENTITY_FAILED));
+
+
 			}
 			
 		} catch (InternalServerException e) {
@@ -462,10 +479,10 @@ public class AlertServiceImpl implements AlertService{
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 		
 		String systemId = user.getSystemId();
@@ -476,7 +493,8 @@ public class AlertServiceImpl implements AlertService{
 //		ActionMessages messages = new ActionMessages();
 //		ActionMessage message = null;
 		
-		logger.info(systemId + " Setup Alert Request");
+		logger.info(messageResourceBundle.getLogMessage("setup.alert.request"), systemId);
+
 			try {
 				Collection<String> smscList = listNames().values();
 				Map<Integer, String> countries = listCountries();
@@ -493,17 +511,13 @@ public class AlertServiceImpl implements AlertService{
 //				message = new ActionMessage("error.processError");
 			}
 		
-		logger.info(systemId + " Setup Alert Target:" + target);
+			logger.info(messageResourceBundle.getLogMessage("setup.alert.target"), systemId, target);
+
 //		messages.add(ActionMessages.GLOBAL_MESSAGE, message);
 //		saveMessages(request, messages);
 //		return mapping.findForward(target);
 	
 		return new ResponseEntity<>(setupAlertResponse,HttpStatus.CREATED);
 	}
-	
-	
-	
-	
 
-	
 }
