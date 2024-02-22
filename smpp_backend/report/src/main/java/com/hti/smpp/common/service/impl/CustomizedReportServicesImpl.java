@@ -436,6 +436,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				bar_chart_list.add(chartDTO);
 			}
 		}
+		
 //		JRBeanCollectionDataSource piechartDataSource = new JRBeanCollectionDataSource(chart_list);
 //		JRBeanCollectionDataSource barchart1DataSource = new JRBeanCollectionDataSource(bar_chart_list);
 //		parameters.put("piechartDataSource", piechartDataSource);
@@ -447,7 +448,9 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 //			logger.info(user.getSystemId() + " <-- Creating Virtualizer --> ");
 //			JRSwapFileVirtualizer virtualizer = new JRSwapFileVirtualizer(100,
 //					new JRSwapFile(IConstants.WEBAPP_DIR + "temp//", 1024, 512));
-//			parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
+//			parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);FuserEnrty
+		
+		
 //		}
 //		parameters.put(JRParameter.IS_IGNORE_PAGINATION, paging);
 //		ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);

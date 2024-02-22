@@ -3,6 +3,7 @@ package com.hti.smpp.common.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -240,8 +241,6 @@ public class ReportController {
 		return contentReportService.ContentReportView(username, customReportForm);
 	}
 
-	
-
 	@PostMapping("/content-report-pdf")
 	@Operation(summary = "content Report PDF", description = "Generate content report in PDF format")
 	public ResponseEntity<?> contentReportPdf(@Valid @Parameter(description = "Username") @RequestParam String username,
@@ -260,45 +259,15 @@ public class ReportController {
 	}
 
 	@Operation(summary = " Download User Delivery Report View")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Successfully downloaded DOC file"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
 	@PostMapping("/userDelivery-report-view")
 	public ResponseEntity<?> userDeliveryReportView(@Valid @RequestHeader String username,
 			@RequestBody UserDeliveryForm customReportForm) {
 		return deliveryService.UserDeliveryReportView(username, customReportForm);
-
 	}
 
-	@Operation(summary = "Download User Delivery Report as XLS")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Successfully downloaded XLS file"),
-			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
-	@PostMapping("/userDelivery-report-xls")
-	public ResponseEntity<?> userDeliveryReportXls(@Valid @RequestParam String username,
-			@RequestBody UserDeliveryForm customReportForm, HttpServletResponse response,
-			@Parameter(description = "language of the report") @RequestParam String lang) {
-		return deliveryService.UserDeliveryReportxls(username, customReportForm, response);
-	}
-
-	@Operation(summary = "Download User Delivery Report as PDF")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Successfully downloaded PDF file"),
-			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
-	@PostMapping("/userDelivery-report-pdf")
-	public ResponseEntity<?> userDeliveryReportPdf(@Valid @RequestParam String username,
-			@RequestBody UserDeliveryForm customReportForm, HttpServletResponse response,
-			@Parameter(description = "language of the report") @RequestParam String lang) {
-		return deliveryService.UserDeliveryReportPdf(username, customReportForm, response);
-
-	}
-
-	@Operation(summary = "Download User Delivery Report as DOC")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Successfully downloaded DOC file"),
-			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
-	@PostMapping("/userDelivery-report-doc")
-	public ResponseEntity<?> userDeliveryReportDoc(@Valid @RequestParam String username,
-			@RequestBody UserDeliveryForm customReportForm, HttpServletResponse response,
-			@Parameter(description = "language of the report") @RequestParam String lang) {
-		return deliveryService.UserDeliveryReportDoc(username, customReportForm, response);
-
-	}
-
+	
 	@Operation(summary = "Get Track Result Report")
 	@PostMapping("/track-result-report")
 	public ResponseEntity<TrackResultResponse> trackResultReport(@Valid @RequestParam String username,
@@ -319,8 +288,7 @@ public class ReportController {
 	@Operation(summary = "Download Lookup Report Excel")
 	@PostMapping("/lookup-report-xls")
 	public ResponseEntity<?> downloadLookupReportXLS(@Valid @RequestParam String username,
-			@RequestBody LookUpReportRequest customReportForm,
-			HttpServletResponse response) {
+			@RequestBody LookUpReportRequest customReportForm, HttpServletResponse response) {
 		return lookupReportService.LookupReportxls(username, customReportForm, response);
 
 	}
@@ -328,8 +296,7 @@ public class ReportController {
 	@Operation(summary = "Download Lookup Report PDF")
 	@PostMapping("/lookup-report-pdf")
 	public ResponseEntity<?> downloadLookupReportPDF(@Valid @RequestParam String username,
-			@RequestBody LookUpReportRequest customReportForm,
-			HttpServletResponse response) {
+			@RequestBody LookUpReportRequest customReportForm, HttpServletResponse response) {
 		return lookupReportService.LookupReportPdf(username, customReportForm, response);
 
 	}
@@ -337,8 +304,7 @@ public class ReportController {
 	@Operation(summary = "Download Lookup Report DOC")
 	@PostMapping("/lookup-report-doc")
 	public ResponseEntity<?> downloadLookupReportDoc(@Valid @RequestParam String username,
-			@RequestBody LookUpReportRequest customReportForm, 
-			HttpServletResponse response) {
+			@RequestBody LookUpReportRequest customReportForm, HttpServletResponse response) {
 		return lookupReportService.LookupReportDoc(username, customReportForm, response);
 
 	}
@@ -346,8 +312,7 @@ public class ReportController {
 	@Operation(summary = "Recheck Lookup Report")
 	@PostMapping("/recheck-report")
 	public ResponseEntity<?> recheckLookupReport(@Valid @RequestParam String username,
-			@RequestBody LookUpReportRequest customReportForm,
-			HttpServletResponse response) {
+			@RequestBody LookUpReportRequest customReportForm, HttpServletResponse response) {
 		return lookupReportService.LookupReportRecheck(username, customReportForm, response);
 
 	}
@@ -371,8 +336,7 @@ public class ReportController {
 	@Operation(summary = "Download Customized Report Excel")
 	@PostMapping("/customized-report-xls")
 	public ResponseEntity<String> downloadCustomizedReportXLS(@Valid @RequestParam String username,
-			@RequestBody CustomizedReportRequest customReportForm, 
-			HttpServletResponse response) {
+			@RequestBody CustomizedReportRequest customReportForm, HttpServletResponse response) {
 		String result = customizedReportService.CustomizedReportxls(username, customReportForm, response);
 		return ResponseEntity.ok(result);
 	}
@@ -380,8 +344,7 @@ public class ReportController {
 	@Operation(summary = "Download Customized Report PDF")
 	@PostMapping("/customized-report-pdf")
 	public ResponseEntity<?> downloadCustomizedReportPDF(@Valid @RequestParam String username,
-			@RequestBody CustomizedReportRequest customReportForm,
-			HttpServletResponse response) {
+			@RequestBody CustomizedReportRequest customReportForm, HttpServletResponse response) {
 		return customizedReportService.CustomizedReportpdf(username, customReportForm, response);
 	}
 
@@ -478,7 +441,7 @@ public class ReportController {
 	@Operation(summary = "Download Latency Report as PDF", description = "Download latency report in PDF format")
 	public ResponseEntity<?> downloadLatencyReportPDF(
 			@Valid @Parameter(description = "Username") @RequestParam String username,
-			@Parameter(description = "Custom Report Form") @RequestBody LetencyReportRequest customReportForm, 
+			@Parameter(description = "Custom Report Form") @RequestBody LetencyReportRequest customReportForm,
 			HttpServletResponse response) {
 		return latencyReportService.LatencyReportpdf(username, customReportForm, response);
 	}
