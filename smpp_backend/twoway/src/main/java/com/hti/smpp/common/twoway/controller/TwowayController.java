@@ -1,8 +1,10 @@
 package com.hti.smpp.common.twoway.controller;
 
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,13 +14,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.hti.smpp.common.exception.ExceptionResponse;
 import com.hti.smpp.common.twoway.dto.KeywordEntry;
 import com.hti.smpp.common.twoway.request.KeywordEntryForm;
-import com.hti.smpp.common.twoway.request.TwoWayDeleteRequest;
 import com.hti.smpp.common.twoway.request.TwowayReportForm;
 import com.hti.smpp.common.twoway.service.KeywordService;
 
@@ -74,8 +76,8 @@ public class TwowayController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
     })
     @GetMapping("/list-keyword")
-    public ResponseEntity<List<KeywordEntry>> listKeyword(@RequestHeader(value="username", required = true) String username){
-    	return this.keywordService.listKeyword(username);
+    public ResponseEntity<?> listKeyword(@RequestParam(value = "search",required=false) String search,@RequestParam(value = "start",required=false) String start,@RequestParam(value = "end",required=false) String end,@RequestParam(name = "page", defaultValue = "0") int page,@RequestParam(name = "size", defaultValue = "10") int size,@RequestHeader(value="username", required = true) String username){
+    	return this.keywordService.listKeyword(search,start,end,PageRequest.of(page, size),username);
     }
     
     /**
@@ -128,8 +130,8 @@ public class TwowayController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
 	})
     @DeleteMapping("/delete-all-keyword")
-    public ResponseEntity<String> deleteAllKeyword( @RequestBody TwoWayDeleteRequest twoWayDeleteRequest, @RequestHeader(value="username", required = true) String username){
-    	return this.keywordService.deleteAllKeyWordByID(twoWayDeleteRequest.getIds(), username);
+    public ResponseEntity<String> deleteAllKeyword(@RequestParam("ids") List<Integer> ids, @RequestHeader(value="username", required = true) String username){
+    	return this.keywordService.deleteAllKeyWordByID(ids, username);
     	
     }
    
@@ -226,9 +228,9 @@ public class TwowayController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class)))
     })
-    @PostMapping("/view")
-    public ResponseEntity<?> viewReport(@Valid @RequestBody TwowayReportForm form, @RequestHeader(value="username", required = true) String username){
-    	return this.keywordService.view(form,username);
+    @PostMapping("/view/report")
+    public ResponseEntity<?> viewReport(@Valid @RequestBody TwowayReportForm form, @RequestParam(name = "page", defaultValue = "1") int page, @RequestParam(name = "size", defaultValue = "10") int size,@RequestHeader(value="username", required = true) String username){
+    	return this.keywordService.view(form, page, size, username);
     }
     
     //----------------------------------------------------------------------------------------------------------------------------
