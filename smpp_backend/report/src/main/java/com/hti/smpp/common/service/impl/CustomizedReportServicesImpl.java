@@ -1103,6 +1103,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	}
 
 	public List getUnprocessedSummary(String query, String groupby) {
+		System.out.println("query4"+query);
 		List customReport = new ArrayList();
 		Connection con = null;
 		PreparedStatement pStmt = null;
@@ -1190,6 +1191,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	}
 
 	List getUnprocessedReport(String query, boolean hide_number, boolean isContent) {
+		System.out.println("query3"+query);
 		List customReport = new ArrayList();
 		Connection con = null;
 		PreparedStatement pStmt = null;
@@ -1369,6 +1371,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	}
 
 	public List getCustomizedReport(String username, String query, boolean hideNum) {
+		System.out.println("query1"+query);
 		List customReport = new ArrayList();
 		Connection con = null;
 		PreparedStatement pStmt = null;
@@ -1647,6 +1650,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	}
 
 	private Map getDlrReport(String reportUser, String query, boolean hideNum) {
+		System.out.println("query2"+query);
 		// public Map getDlrReport(String reportUser, String query, boolean hideNum)
 		// throws DBException {
 		Map customReport = new HashMap();

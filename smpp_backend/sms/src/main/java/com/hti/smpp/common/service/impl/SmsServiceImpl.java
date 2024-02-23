@@ -831,6 +831,8 @@ public class SmsServiceImpl implements SmsService {
 								}
 							}
 							SubmitSMResp submitResponse = null;
+						
+							System.out.println(SmsConverter.hexCodePointsToCharMsg(backupExt.getOrigMessage()));
 							try {
 								submitResponse = session.submit(msg);
 							} catch (Exception e) {
