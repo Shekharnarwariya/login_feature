@@ -138,7 +138,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			System.out.println(isSummary);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(user.getSystemId() + " ReportSize[View]:" + reportList.size());
-				List<DeliveryDTO> print = isSummary ? getSummaryJasperPrint(reportList, false, username)
+				List<DeliveryDTO> print = isSummary ? getSummaryJasperPrint(reportList, username)
 						: getCustomizedJasperPrint(reportList, false, username);
 				logger.info(user.getSystemId() + " <-- Report Finished --> ");
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
@@ -157,34 +157,13 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		}
 	}
 
-	public List<DeliveryDTO> getSummaryJasperPrint(List reportList, boolean paging, String username)
-			throws JRException {
+	public List<DeliveryDTO> getSummaryJasperPrint(List reportList, String username){
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-
 		UserEntry user = userOptional
 				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
-		
-		List<DeliveryDTO> print = null;
-		List<DeliveryDTO> report = null;
-		List<DeliveryDTO> design = null;
 		String groupby = "country";
 		String reportUser = null;
-		final String template_file = IConstants.FORMAT_DIR + "report//dlrReport.jrxml";
-		final String template_sender_file = IConstants.FORMAT_DIR + "report//dlrReportSender.jrxml";
-		final String template_content_file = IConstants.FORMAT_DIR + "report//dlrContentReport.jrxml";
-		final String template_content_sender_file = IConstants.FORMAT_DIR + "report//dlrContentWithSender.jrxml";
-		final String summary_template_file = IConstants.FORMAT_DIR + "report//dlrSummaryReport.jrxml";
-		final String summary_sender_file = IConstants.FORMAT_DIR + "report//dlrSummarySender.jrxml";
-
-//		Map parameters = new HashMap();
-//		if (groupby.equalsIgnoreCase("country")) {
-//			return country;
-//		} else {
-//			design = JRXmlLoader.load(summary_sender_file);
-//		}
-//
-//		report = JasperCompileManager.compileReport(design);
 		if (groupby.equalsIgnoreCase("country")) {
 			reportList = sortListByCountry(reportList);
 			logger.info(user.getSystemId() + " <-- Preparing Charts --> ");
@@ -245,12 +224,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				chartDTO = new DeliveryDTO("DELIVRD", delivered);
 				chartDTO.setCountry(country);
 				bar_chart_list.add(chartDTO);
-				// System.out.println(country + " -> " + total + " : " + delivered);
 			}
-//			JRBeanCollectionDataSource piechartDataSource = new JRBeanCollectionDataSource(chart_list);
-//			parameters.put("piechartDataSource", piechartDataSource);
-//			JRBeanCollectionDataSource barchart1DataSource = new JRBeanCollectionDataSource(bar_chart_list);
-//			parameters.put("barchart1DataSource", barchart1DataSource);
 		} else {
 			Map<String, DeliveryDTO> map = new LinkedHashMap<String, DeliveryDTO>();
 			reportList = sortListBySender(reportList);
@@ -270,8 +244,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					tempDTO.setOperator(reportDTO.getOperator());
 					tempDTO.setSender(reportDTO.getSender());
 				}
-				// System.out.println(key + " :-> " + reportDTO.getStatus() + " " +
-				// reportDTO.getStatusCount());
 				if (reportDTO.getStatus().startsWith("DELIV")) {
 					tempDTO.setDelivered(tempDTO.getDelivered() + reportDTO.getStatusCount());
 				}
@@ -294,20 +266,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				time_interval += " [ From " + first_date + " To " + last_date + " ]";
 			}
 		}
-//		JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(reportList);
-//		if (reportList.size() > 20000) {
-//			logger.info(user.getSystemId() + " <-- Creating Virtualizer --> ");
-//			JRSwapFileVirtualizer virtualizer = new JRSwapFileVirtualizer(1000,
-//					new JRSwapFile(IConstants.WEBAPP_DIR + "temp//", 2048, 1024));
-//			parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
-//		}
-//		parameters.put(JRParameter.IS_IGNORE_PAGINATION, paging);
-//		ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);
-//		parameters.put("REPORT_RESOURCE_BUNDLE", bundle);
-//		parameters.put("time_interval", time_interval);
-//		logger.info(user.getSystemId() + " <-- Filling Report Data --> ");
-//		print = JasperFillManager.fillReport(report, parameters, beanColDataSource);
-//		logger.info(user.getSystemId() + " <-- Filling Finished --> ");
 		return reportList;
 	}
 
