@@ -19,6 +19,9 @@ import jxl.write.WritableSheet;
 import jxl.write.WritableWorkbook;
 import jxl.write.WriteException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class FileContentGenerator {
 	
@@ -34,9 +37,16 @@ public class FileContentGenerator {
     WritableSheet sheet = null;
     File file = null;
     String fileName = null;
+    
+    private static final Logger logger = LoggerFactory.getLogger(FileContentGenerator.class);
+    
+    @Autowired
+	private MessageResourceBundle messageResourceBundle;
+
 
     public boolean createMccMncContent(ArrayList<MccMncDTO> list, String filename) {
         System.out.println("<---- File Creating with " + list.size() + " Records ---> ");
+    	logger.info("<---- " + messageResourceBundle.getLogMessage("network.info.fileCreating") + " ---> ", list.size());
         MccMncDTO mccMncDTO = null;
         try {
             file = new File(filename);
@@ -83,6 +93,7 @@ public class FileContentGenerator {
         } catch (IOException | WriteException ex) {
         	ex.printStackTrace();
             System.err.println(ex.getLocalizedMessage());
+        	logger.error(messageResourceBundle.getLogMessage("network.error.createFile"), ex.getMessage(), ex);
             return false;
         } finally {
             // Close the workbook in the finally block to ensure it's closed even if an exception occurs
