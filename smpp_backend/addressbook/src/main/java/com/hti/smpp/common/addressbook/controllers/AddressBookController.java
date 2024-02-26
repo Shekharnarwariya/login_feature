@@ -278,7 +278,7 @@ public class AddressBookController {
 			@RequestPart(value = "contactNumberFile", required = false) MultipartFile contactNumberFile,
 			@Parameter(description = "Group Data Entry request", content = @Content(schema = @Schema(implementation = GroupDataEntryRequest.class))) @RequestParam(value = "groupDataEntryRequest", required = true) String groupDataEntryRequest,
 			@Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username) {
-
+		System.out.println(groupDataEntryRequest);
 		return this.groupDataEntryService.saveGroupData(groupDataEntryRequest, contactNumberFile, username);
 	}
 

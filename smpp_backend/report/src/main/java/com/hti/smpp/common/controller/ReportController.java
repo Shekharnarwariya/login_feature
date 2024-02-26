@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -31,6 +32,7 @@ import com.hti.smpp.common.request.PerformanceReportRequest;
 import com.hti.smpp.common.request.ProfitReportRequest;
 import com.hti.smpp.common.request.ScheduleReportRequest;
 import com.hti.smpp.common.request.SendAttachmentRequest;
+import com.hti.smpp.common.request.SmsReportRequest;
 import com.hti.smpp.common.request.SmscDlrReportRequest;
 import com.hti.smpp.common.request.SubmissionReportRequest;
 import com.hti.smpp.common.request.SummaryReportForm;
@@ -334,6 +336,14 @@ public class ReportController {
 		return customizedReportService.CustomizedReportView(username, customReportForm);
 	}
 
+	
+	@GetMapping("/sms/report")
+	public ResponseEntity<?> getSmsReport(@RequestHeader String username,
+			@RequestBody SmsReportRequest smsReportRequest) {
+		return customizedReportService.SmsReport(username, smsReportRequest);
+	}
+	
+	
 	@Operation(summary = "Download Customized Report DOC")
 	@PostMapping("/customized-report-doc")
 	public ResponseEntity<?> downloadCustomizedReportDoc(@Valid @RequestParam String username,

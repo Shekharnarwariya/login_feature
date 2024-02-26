@@ -90,6 +90,17 @@ public class DeliveryDTO extends ReportBaseDTO {
 		this.status = status;
 	}
 
+	public DeliveryDTO(String msgid, String destination, String sender, double cost, String date, String time,
+			String status) {
+		setMsgid(msgid);
+		setCost(cost);
+		setDestination(destination);
+		setSender(sender);
+		setDate(date);
+		setTime(time);
+		this.status = status;
+	}
+
 	public DeliveryDTO(String status, int statusCount) {
 		this.status = status;
 		this.statusCount = statusCount;
@@ -314,5 +325,5 @@ public class DeliveryDTO extends ReportBaseDTO {
 				+ ", latencyRange=" + latencyRange + ", latencyCount=" + latencyCount + ", currency=" + currency
 				+ ", consumption=" + consumption + "]";
 	}
-	
+
 }

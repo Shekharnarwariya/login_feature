@@ -52,7 +52,9 @@ import com.hti.smpp.common.messages.dto.BulkMapEntry;
 import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.request.CustomReportDTO;
 import com.hti.smpp.common.request.CustomizedReportRequest;
+import com.hti.smpp.common.request.SmsReportRequest;
 import com.hti.smpp.common.response.DeliveryDTO;
+import com.hti.smpp.common.response.SmsListResponse;
 import com.hti.smpp.common.sales.dto.SalesEntry;
 import com.hti.smpp.common.sales.repository.SalesRepository;
 import com.hti.smpp.common.service.BulkDAService;
@@ -65,14 +67,12 @@ import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.Converter;
 import com.hti.smpp.common.util.Converters;
-import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.dto.SevenBitChar;
 
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
-import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperPrint;
@@ -127,8 +127,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
-
-
 			List<DeliveryDTO> reportList = getCustomizedReportList(customReportForm, username);
 			if (customReportForm.getReportType().equalsIgnoreCase("Summary")) {
 				isSummary = true;
@@ -157,7 +155,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		}
 	}
 
-	public List<DeliveryDTO> getSummaryJasperPrint(List reportList, String username){
+	public List<DeliveryDTO> getSummaryJasperPrint(List reportList, String username) {
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
@@ -277,7 +275,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		String template_content_sender_file = IConstants.FORMAT_DIR + "report//dlrContentWithSender.jrxml";
 		String summary_template_file = IConstants.FORMAT_DIR + "report//dlrSummaryReport.jrxml";
 		String summary_sender_file = IConstants.FORMAT_DIR + "report//dlrSummarySender.jrxml";
-		
+
 		List<DeliveryDTO> print = null;
 		List<DeliveryDTO> report = null;
 		List<DeliveryDTO> design = null;
@@ -394,7 +392,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				bar_chart_list.add(chartDTO);
 			}
 		}
-		
+
 //		JRBeanCollectionDataSource piechartDataSource = new JRBeanCollectionDataSource(chart_list);
 //		JRBeanCollectionDataSource barchart1DataSource = new JRBeanCollectionDataSource(bar_chart_list);
 //		parameters.put("piechartDataSource", piechartDataSource);
@@ -407,8 +405,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 //			JRSwapFileVirtualizer virtualizer = new JRSwapFileVirtualizer(100,
 //					new JRSwapFile(IConstants.WEBAPP_DIR + "temp//", 1024, 512));
 //			parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);FuserEnrty
-		
-		
+
 //		}
 //		parameters.put(JRParameter.IS_IGNORE_PAGINATION, paging);
 //		ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);
@@ -1061,7 +1058,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	}
 
 	public List getUnprocessedSummary(String query, String groupby) {
-		System.out.println("query4"+query);
+		System.out.println("query4" + query);
 		List customReport = new ArrayList();
 		Connection con = null;
 		PreparedStatement pStmt = null;
@@ -1149,7 +1146,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	}
 
 	List getUnprocessedReport(String query, boolean hide_number, boolean isContent) {
-		System.out.println("query3"+query);
 		List customReport = new ArrayList();
 		Connection con = null;
 		PreparedStatement pStmt = null;
@@ -1329,7 +1325,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	}
 
 	public List getCustomizedReport(String username, String query, boolean hideNum) {
-		System.out.println("query1"+query);
+		System.out.println("query1" + query);
 		List customReport = new ArrayList();
 		Connection con = null;
 		PreparedStatement pStmt = null;
@@ -1608,19 +1604,11 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	}
 
 	private Map getDlrReport(String reportUser, String query, boolean hideNum) {
-		System.out.println("query2"+query);
-		// public Map getDlrReport(String reportUser, String query, boolean hideNum)
-		// throws DBException {
 		Map customReport = new HashMap();
 		Connection con = null;
 		PreparedStatement pStmt = null;
 		ResultSet rs = null;
-		// DBMessage dbMsg = null;
-		// boolean replace = false;
 		String dest = "";
-		// if (hideNum.equalsIgnoreCase("yes")) {
-		// replace = true;
-		// }
 		System.out.println("SQL: " + query);
 		DeliveryDTO report = null;
 		String msg_id = null;
@@ -1873,7 +1861,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
 		try {
-		
+
 			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(username + " ReportSize[pdf]:" + reportList.size());
@@ -1931,7 +1919,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 
 		String target = IConstants.SUCCESS_KEY;
 		try {
-			
+
 			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(user.getSystemId() + " ReportSize[doc]:" + reportList.size());
@@ -1979,6 +1967,331 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			// Handle exceptions and return an appropriate response
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating the doc report");
 		}
+	}
 
+	@Override
+	public ResponseEntity<?> SmsReport(String username, SmsReportRequest smsReportRequest) {
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		UserEntry user = userOptional
+				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
+
+		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			throw new UnauthorizedException("User does not have the required roles for this operation.");
+		}
+		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
+		if (webMasterEntry == null) {
+			throw new NotFoundException("web MasterEntry  not fount username {}" + username);
+		}
+		String groupby = "country";
+		String reportUser = username;
+		boolean isContent = true;
+		List list = null;
+		List<DeliveryDTO> final_list = new ArrayList();
+		String startDate = smsReportRequest.getStartDate();
+		String endDate = smsReportRequest.getEndDate();
+		String campaign = "all";
+		String status = "%";
+		String senderId = "%";
+		String destination = "%";
+		String query = null;
+		to_gmt = null;
+		from_gmt = null;
+		logger.info(user.getSystemId() + ": " + webMasterEntry.getGmt() + " Default: " + IConstants.DEFAULT_GMT);
+		if (!webMasterEntry.getGmt().equalsIgnoreCase(IConstants.DEFAULT_GMT)) {
+			to_gmt = webMasterEntry.getGmt().replace("GMT", "");
+			from_gmt = IConstants.DEFAULT_GMT.replace("GMT", "");
+		}
+		if (smsReportRequest.getMessageId() != null) {
+			String messageId = smsReportRequest.getMessageId();
+			logger.info(user.getSystemId() + " Report Based On MessageId: " + messageId);
+			if (messageId != null && messageId.trim().length() > 0) {
+				isSummary = false;
+				String userQuery = "select username from mis_table where msg_id ='" + messageId + "'";
+				List userSet = getDistinctMisUser(userQuery);
+				if (!userSet.isEmpty()) {
+					reportUser = (String) userSet.remove(0);
+					if (to_gmt != null) {
+						query = "select CONVERT_TZ(submitted_time,'" + from_gmt + "','" + to_gmt
+								+ "') as submitted_time,";
+					} else {
+						query = "select submitted_time,";
+					}
+					query += "msg_id,source_no,dest_no,cost,status,deliver_time from mis_" + reportUser
+							+ " where msg_id ='" + messageId + "'";
+					logger.info(user.getSystemId() + " ReportSQL:" + query);
+					if (isContent) {
+						Map map = getSmsDlrReport(reportUser, query, webMasterEntry.isHideNum());
+						if (!map.isEmpty()) {
+							list = getMessageContent(map, reportUser);
+						}
+					}
+				}
+				final_list.addAll(list);
+				logger.info(user.getSystemId() + " End Based On MessageId. Final Report Size: " + final_list.size());
+			} else {
+				logger.info(user.getSystemId() + " Invalid MessageId");
+				throw new NotFoundException("messages ID not Found.....");
+			}
+		} else {
+			logger.info(user.getSystemId() + " Report Based On Criteria");
+			logger.info(user.getSystemId() + " Checking Report For " + reportUser);
+			if (groupby.equalsIgnoreCase("country")) {
+				query = "select count(msg_id) as count,date(submitted_time) as date,oprCountry,status,cost from mis_"
+						+ reportUser + " where ";
+			}
+			if (to_gmt != null) {
+				query = "select CONVERT_TZ(submitted_time,'" + from_gmt + "','" + to_gmt + "') as submitted_time,";
+			} else {
+				query = "select submitted_time,";
+			}
+			query += "msg_id,oprCountry,source_no,dest_no,cost,status,route_to_smsc,err_code,";
+			if (to_gmt != null) {
+				query += "CONVERT_TZ(deliver_time,'" + from_gmt + "','" + to_gmt + "') as deliver_time";
+			} else {
+				query += "deliver_time";
+			}
+			query += " from mis_" + reportUser + " where ";
+
+			if (status != null && status.trim().length() > 0) {
+				if (!status.equals("%")) {
+					query += "status = '" + status + "' and ";
+				}
+			}
+			if (senderId != null && senderId.trim().length() > 0) {
+				if (senderId.contains("%")) {
+					query += "source_no like \"" + senderId + "\" and ";
+				} else {
+					query += "source_no =\"" + senderId + "\" and ";
+				}
+			}
+			if (destination != null && destination.trim().length() > 0) {
+				if (destination.contains("%")) {
+					query += "dest_no like '" + destination + "' and ";
+				} else {
+					query += "dest_no ='" + destination + "' and ";
+				}
+			}
+			if (to_gmt != null) {
+				SimpleDateFormat client_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				client_formatter.setTimeZone(TimeZone.getTimeZone(webMasterEntry.getGmt()));
+				SimpleDateFormat local_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				try {
+					String start_msg_id = local_formatter.format(client_formatter.parse(startDate));
+					String end_msg_id = local_formatter.format(client_formatter.parse(endDate));
+					start_msg_id = start_msg_id.replaceAll("-", "");
+					start_msg_id = start_msg_id.replaceAll(":", "");
+					start_msg_id = start_msg_id.replaceAll(" ", "");
+					start_msg_id = start_msg_id.substring(2);
+					start_msg_id += "0000000";
+					end_msg_id = end_msg_id.replaceAll("-", "");
+					end_msg_id = end_msg_id.replaceAll(":", "");
+					end_msg_id = end_msg_id.replaceAll(" ", "");
+					end_msg_id = end_msg_id.substring(2);
+					end_msg_id += "0000000";
+					query += "msg_id between " + start_msg_id + " and " + end_msg_id;
+				} catch (Exception e) {
+					query += "submitted_time between CONVERT_TZ('" + startDate + "','" + to_gmt + "','" + from_gmt
+							+ "') and CONVERT_TZ('" + endDate + "','" + to_gmt + "','" + from_gmt + "')";
+				}
+			} else {
+				if (startDate.equalsIgnoreCase(endDate)) {
+					String start_msg_id = startDate.substring(2);
+					start_msg_id = start_msg_id.replaceAll("-", "");
+					start_msg_id = start_msg_id.replaceAll(":", "");
+					start_msg_id = start_msg_id.replaceAll(" ", "");
+					query += "msg_id like '" + start_msg_id + "%'";
+				} else {
+					String start_msg_id = startDate.substring(2);
+					start_msg_id = start_msg_id.replaceAll("-", "");
+					start_msg_id = start_msg_id.replaceAll(":", "");
+					start_msg_id = start_msg_id.replaceAll(" ", "");
+					start_msg_id += "0000000";
+					String end_msg_id = endDate.substring(2);
+					end_msg_id = end_msg_id.replaceAll("-", "");
+					end_msg_id = end_msg_id.replaceAll(":", "");
+					end_msg_id = end_msg_id.replaceAll(" ", "");
+					end_msg_id += "0000000";
+					query += "msg_id between " + start_msg_id + " and " + end_msg_id + "";
+				}
+			}
+			// query += " order by submitted_time DESC,oprCountry ASC,msg_id DESC";
+			logger.debug(user.getSystemId() + " ReportSQL:" + query);
+			if (isContent) {
+				Map map = getSmsDlrReport(reportUser, query, webMasterEntry.isHideNum());
+				if (!map.isEmpty()) {
+					list = getMessageContent(map, reportUser);
+				}
+			}
+			if (list != null && !list.isEmpty()) {
+				System.out.println(reportUser + " Report List Size --> " + list.size());
+				final_list.addAll(list);
+				list.clear();
+			}
+		}
+		boolean unproc = true;
+		if (status != null && status.trim().length() > 0) {
+			if (!status.equals("%")) {
+				unproc = false;
+			}
+		}
+		if (unproc) {
+			String cross_unprocessed_query = "";
+			if (to_gmt != null) {
+				cross_unprocessed_query = "select CONVERT_TZ(time,'" + from_gmt + "','" + to_gmt + "') as time,";
+			} else {
+				cross_unprocessed_query = "select time,";
+			}
+			cross_unprocessed_query += "msg_id,username,oprCountry,source_no,destination_no,cost,s_flag,smsc";
+			if (isContent) {
+				cross_unprocessed_query += ",content,dcs";
+			}
+			cross_unprocessed_query += " from table_name where ";
+
+			cross_unprocessed_query += "username in('" + String.join("','", username) + "') and ";
+			if (senderId != null && senderId.trim().length() > 0) {
+				if (senderId.contains("%")) {
+					cross_unprocessed_query += "source_no like \"" + senderId + "\" and ";
+				} else {
+					cross_unprocessed_query += "source_no =\"" + senderId + "\" and ";
+				}
+			}
+			if (destination != null && destination.trim().length() > 0) {
+				if (destination.contains("%")) {
+					cross_unprocessed_query += "destination_no like '" + destination + "' and ";
+				} else {
+					cross_unprocessed_query += "destination_no ='" + destination + "' and ";
+				}
+			}
+			System.out.println("cross_unprocessed_query " + cross_unprocessed_query);
+			if (to_gmt != null) {
+				SimpleDateFormat client_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				client_formatter.setTimeZone(TimeZone.getTimeZone(webMasterEntry.getGmt()));
+				SimpleDateFormat local_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				try {
+					String start_msg_id = local_formatter.format(client_formatter.parse(startDate));
+					String end_msg_id = local_formatter.format(client_formatter.parse(endDate));
+					start_msg_id = start_msg_id.replaceAll("-", "");
+					start_msg_id = start_msg_id.replaceAll(":", "");
+					start_msg_id = start_msg_id.replaceAll(" ", "");
+					start_msg_id = start_msg_id.substring(2);
+					start_msg_id += "0000000";
+					end_msg_id = end_msg_id.replaceAll("-", "");
+					end_msg_id = end_msg_id.replaceAll(":", "");
+					end_msg_id = end_msg_id.replaceAll(" ", "");
+					end_msg_id = end_msg_id.substring(2);
+					end_msg_id += "0000000";
+					cross_unprocessed_query += "msg_id between " + start_msg_id + " and " + end_msg_id;
+				} catch (Exception e) {
+					cross_unprocessed_query += "time between CONVERT_TZ('" + startDate + "','" + to_gmt + "','"
+							+ from_gmt + "') and CONVERT_TZ('" + endDate + "','" + to_gmt + "','" + from_gmt + "')";
+				}
+			} else {
+				if (startDate.equalsIgnoreCase(endDate)) {
+					String start_msg_id = startDate.substring(2);
+					start_msg_id = start_msg_id.replaceAll("-", "");
+					start_msg_id = start_msg_id.replaceAll(":", "");
+					start_msg_id = start_msg_id.replaceAll(" ", "");
+					cross_unprocessed_query += "msg_id like '" + start_msg_id + "%'";
+				} else {
+					String start_msg_id = startDate.substring(2);
+					start_msg_id = start_msg_id.replaceAll("-", "");
+					start_msg_id = start_msg_id.replaceAll(":", "");
+					start_msg_id = start_msg_id.replaceAll(" ", "");
+					start_msg_id += "0000000";
+					String end_msg_id = endDate.substring(2);
+					end_msg_id = end_msg_id.replaceAll("-", "");
+					end_msg_id = end_msg_id.replaceAll(":", "");
+					end_msg_id = end_msg_id.replaceAll(" ", "");
+					end_msg_id += "0000000";
+					cross_unprocessed_query += "msg_id between " + start_msg_id + " and " + end_msg_id + "";
+				}
+			}
+			List unproc_list = (List) getUnprocessedReport(
+					cross_unprocessed_query.replaceAll("table_name", "unprocessed"), webMasterEntry.isHideNum(),
+					isContent);
+			if (unproc_list != null && !unproc_list.isEmpty()) {
+				final_list.addAll(unproc_list);
+			}
+			unproc_list = (List) getUnprocessedReport(cross_unprocessed_query.replaceAll("table_name", "smsc_in"),
+					webMasterEntry.isHideNum(), isContent);
+			if (unproc_list != null && !unproc_list.isEmpty()) {
+				final_list.addAll(unproc_list);
+			}
+		}
+		logger.info(user.getSystemId() + " End Based On Criteria. Final Report Size: " + final_list.size());
+		List<SmsListResponse> listSmsResponse = new ArrayList<>();
+		SmsListResponse sms = null;
+		for (DeliveryDTO dto : final_list) {
+			sms = new SmsListResponse();
+			sms.setCategory(dto.getCategory());
+			sms.setMsgid(dto.getMsgid());
+			sms.setContent(dto.getContent());
+			sms.setCost(dto.getCost());
+			sms.setTime(dto.getDate() + dto.getTime());
+			sms.setDestination(dto.getDestination());
+			sms.setSender(dto.getSender());
+			sms.setStatus(dto.getStatus());
+			listSmsResponse.add(sms);
+		}
+		return ResponseEntity.ok(listSmsResponse);
+	}
+
+	private Map getSmsDlrReport(String reportUser2, String query, boolean hideNum) {
+		Map customReport = new HashMap();
+		Connection con = null;
+		PreparedStatement pStmt = null;
+		ResultSet rs = null;
+		String dest = "";
+		System.out.println("SQL: " + query);
+		DeliveryDTO report = null;
+		String msg_id = null;
+		try {
+			con = getConnection();
+			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
+					java.sql.ResultSet.CONCUR_READ_ONLY);
+			pStmt.setFetchSize(Integer.MIN_VALUE);
+			rs = pStmt.executeQuery();
+			if (rs != null) {
+				while (rs.next()) {
+					msg_id = rs.getString("msg_id");
+					try {
+						dest = rs.getString("dest_no");
+						if (hideNum) {
+							String newDest = dest.substring(0, dest.length() - 2);
+							dest = newDest + "**";
+						}
+						String[] time = rs.getString("submitted_time").split(" ");
+
+						report = new DeliveryDTO(msg_id, dest, rs.getString("source_no"), rs.getDouble("cost"), time[0],
+								time[1], rs.getString("status"));
+						report.setDeliverOn(rs.getString("deliver_time"));
+						customReport.put(rs.getString("msg_id"), report);
+					} catch (Exception sqle) {
+						logger.error(msg_id, sqle.fillInStackTrace());
+					}
+				}
+			}
+		} catch (SQLException ex) {
+			if (ex.getMessage().contains("Table") && ex.getMessage().contains("doesn't exist")) {
+				logger.info("<-- " + reportUser + " Mis & Content Table Doesn't Exist -->");
+			} else {
+				logger.error(" ", ex.fillInStackTrace());
+			}
+		} finally {
+			try {
+				if (pStmt != null) {
+					pStmt.close();
+				}
+				if (rs != null) {
+					rs.close();
+				}
+				if (con != null) {
+					con.close();
+					;
+				}
+			} catch (SQLException sqle) {
+			}
+		}
+		return customReport;
 	}
 }
