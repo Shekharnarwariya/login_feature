@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.request.CustomizedReportRequest;
+import com.hti.smpp.common.request.SmsReportRequest;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -19,5 +20,7 @@ public interface CustomizedReportService {
 
 	public ResponseEntity<?> CustomizedReportpdf(String username, CustomizedReportRequest customReportForm,
 			HttpServletResponse response);
+
+	public ResponseEntity<?> SmsReport(String username, SmsReportRequest smsReportRequest);
 
 }

@@ -31,8 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -61,7 +59,6 @@ import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.ConstantMessages;
-import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MessageResourceBundle;
 
@@ -83,7 +80,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 
 	@Autowired
 	private WebMasterEntryRepository webMasterRepo;
-	
+
 	@Autowired
 	private MessageResourceBundle messageResourceBundle;
 
@@ -98,10 +95,12 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		ContactEntryRequest form;
@@ -111,13 +110,15 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 			form = objectMapper.readValue(reqdata, ContactEntryRequest.class);
 			form.setFile(file);
 		} catch (JsonProcessingException e) {
-			throw new JsonProcessingError(messageResourceBundle.getExMessage(ConstantMessages.JSON_PROCESSING_ERROR,new Object[] {e.getMessage()}));
+			throw new JsonProcessingError(messageResourceBundle.getExMessage(ConstantMessages.JSON_PROCESSING_ERROR,
+					new Object[] { e.getMessage() }));
 		} catch (Exception ex) {
 			throw new InternalServerException(ex.getLocalizedMessage());
 		}
 
 		String target = IConstants.FAILURE_KEY;
-		logger.info(messageResourceBundle.getLogMessage("addbook.contact.addreq"),user.getSystemId(),user.getRole(),form.getGroupId());
+		logger.info(messageResourceBundle.getLogMessage("addbook.contact.addreq"), user.getSystemId(), user.getRole(),
+				form.getGroupId());
 		try {
 			int groupId = form.getGroupId();
 			String mode = form.getType();
@@ -127,7 +128,8 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 			if (mode.equalsIgnoreCase("multiple")) {
 				MultipartFile uploadedFile = form.getFile();
 				if (uploadedFile == null) {
-					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_UPLOAD_FAILED));
+					throw new InternalServerException(
+							messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_UPLOAD_FAILED));
 				}
 				String file_name = uploadedFile.getOriginalFilename();
 				if (file_name.indexOf(".xls") > 0) {
@@ -152,7 +154,8 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 									String name = null, email = null;
 									long number;
 									if (tokens.length == 0) {
-										logger.warn(messageResourceBundle.getLogMessage("addbook.invalid.entryformat"), x, entry);
+										logger.warn(messageResourceBundle.getLogMessage("addbook.invalid.entryformat"),
+												x, entry);
 										continue;
 									} else {
 										try {
@@ -161,7 +164,9 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 																							// character.
 											number = Long.parseLong(tokens[0]);
 										} catch (Exception ex) {
-											logger.warn(messageResourceBundle.getLogMessage("addbook.invalid.entryformat"), x, entry);
+											logger.warn(
+													messageResourceBundle.getLogMessage("addbook.invalid.entryformat"),
+													x, entry);
 											continue;
 										}
 										if (tokens.length == 2) {
@@ -178,7 +183,9 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 											name = new Converters().UTF16(name);
 										}
 										if (email != null && email.length() > 40) {
-											logger.info(messageResourceBundle.getLogMessage("addbook.email.truncate.info"), x, email.length());
+											logger.info(
+													messageResourceBundle.getLogMessage("addbook.email.truncate.info"),
+													x, email.length());
 											email = email.substring(0, 40);
 										}
 										entry_list.add(new ContactEntry(name, number, email, groupId));
@@ -186,8 +193,10 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 								}
 							}
 						} catch (Exception ex) {
-							logger.error(messageResourceBundle.getLogMessage("addbook.error.message"), ex.getLocalizedMessage());
-							throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {ex.getMessage()}));
+							logger.error(messageResourceBundle.getLogMessage("addbook.error.message"),
+									ex.getLocalizedMessage());
+							throw new InternalServerException(messageResourceBundle.getExMessage(
+									ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] { ex.getMessage() }));
 						} finally {
 							if (bufferedReader != null) {
 								try {
@@ -196,7 +205,8 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 									bufferedReader = null;
 									throw new InternalServerException("IOException: " + ioe.getLocalizedMessage());
 								} catch (Exception e) {
-									throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getMessage()}));
+									throw new InternalServerException(messageResourceBundle.getExMessage(
+											ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] { e.getMessage() }));
 								}
 							}
 						}
@@ -209,7 +219,8 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 								workbook = new HSSFWorkbook(form.getFile().getInputStream());
 							}
 							Sheet firstSheet = workbook.getSheetAt(0);
-							logger.info(messageResourceBundle.getLogMessage("addbooksheet.total.rows.info"), firstSheet.getPhysicalNumberOfRows());
+							logger.info(messageResourceBundle.getLogMessage("addbooksheet.total.rows.info"),
+									firstSheet.getPhysicalNumberOfRows());
 							// int x = 0;
 							int column_count = 0;
 							for (Row nextRow : firstSheet) {
@@ -217,7 +228,8 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 								if (nextRow.getRowNum() == 0) {
 									column_count = nextRow.getPhysicalNumberOfCells();
 									if (column_count == 0) {
-										logger.warn(messageResourceBundle.getLogMessage("addbook.invalid.xls.format.warn"));
+										logger.warn(
+												messageResourceBundle.getLogMessage("addbook.invalid.xls.format.warn"));
 										break;
 									}
 								}
@@ -231,7 +243,10 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 										try {
 											number = Long.parseLong(cell_value);
 										} catch (Exception ex) {
-											logger.warn(messageResourceBundle.getLogMessage("addbook.invalid.number.entry.warn"), nextRow.getRowNum(), cell_value);
+											logger.warn(
+													messageResourceBundle
+															.getLogMessage("addbook.invalid.number.entry.warn"),
+													nextRow.getRowNum(), cell_value);
 											break;
 										}
 									}
@@ -255,7 +270,8 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 										name = new Converters().UTF16(name);
 									}
 									if (email != null && email.length() > 40) {
-										logger.info(messageResourceBundle.getLogMessage("addbook.truncate.email.info"), nextRow.getRowNum(), email.length());
+										logger.info(messageResourceBundle.getLogMessage("addbook.truncate.email.info"),
+												nextRow.getRowNum(), email.length());
 										email = email.substring(0, 40);
 									}
 									entry_list.add(new ContactEntry(name, number, email, groupId));
@@ -263,7 +279,9 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 							}
 						} catch (Exception ex) {
 							logger.error("Error: " + ex.getLocalizedMessage());
-							throw new WorkBookException(messageResourceBundle.getExMessage(ConstantMessages.WORKBOOK_PROCESSING_ERROR, new Object[]{ex.getLocalizedMessage()}));
+							throw new WorkBookException(
+									messageResourceBundle.getExMessage(ConstantMessages.WORKBOOK_PROCESSING_ERROR,
+											new Object[] { ex.getLocalizedMessage() }));
 						} finally {
 							if (workbook != null) {
 								try {
@@ -294,7 +312,8 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 					entry_list.add(new ContactEntry(name, form.getNumber()[0], email, groupId));
 				} else {
 					logger.error(messageResourceBundle.getLogMessage("addbook.invalid.number.error"), form.getNumber());
-					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_NUMBER_NOT_FOUND_ERROR));
+					throw new NotFoundException(
+							messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_NUMBER_NOT_FOUND_ERROR));
 				}
 			}
 			if (entry_list.isEmpty()) {
@@ -303,14 +322,16 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 				List<ContactEntry> contacts = this.contactRepo.saveAll(entry_list);
 				target = IConstants.SUCCESS_KEY;
 				logger.info(messageResourceBundle.getLogMessage("addbook.contactentry.saved.info"), target);
-				return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.ADDBOOK_CONTACT_SAVED), HttpStatus.CREATED);
+				return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.ADDBOOK_CONTACT_SAVED),
+						HttpStatus.CREATED);
 			}
 		} catch (NotFoundException e) {
 			logger.error("Error: " + e.getLocalizedMessage() + ", Message: " + target);
 			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error("Error: " + e.getLocalizedMessage() + ", Message: " + target);
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
+					new Object[] { e.getMessage() }));
 		}
 
 	}
@@ -328,16 +349,18 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		String target = IConstants.FAILURE_KEY;
 		List<Long> uploadedNumbers = new ArrayList<Long>();
 		ContactForBulk response = new ContactForBulk();
-		
+
 		logger.info(messageResourceBundle.getLogMessage("addbook.proceed.contact.bulk.info"), user.getSystemId());
 
 		try {
@@ -367,7 +390,8 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 					}
 				} catch (Exception ex) {
 					logger.error(ex.getLocalizedMessage());
-					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND_TEMPLATES_ERROR, new Object[]{ex.getLocalizedMessage()}));
+					throw new NotFoundException(messageResourceBundle.getExMessage(
+							ConstantMessages.NOT_FOUND_TEMPLATES_ERROR, new Object[] { ex.getLocalizedMessage() }));
 				}
 
 				response.setTemplates(templates);
@@ -377,15 +401,18 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 					if (webMasterEntry.getSenderId() != null && webMasterEntry.getSenderId().length() > 1) {
 						Set<String> senders = new HashSet<String>(
 								Arrays.asList(webMasterEntry.getSenderId().split(",")));
-						logger.info(messageResourceBundle.getLogMessage("addbook.configured.senders.info"), user.getSystemId(), senders);
+						logger.info(messageResourceBundle.getLogMessage("addbook.configured.senders.info"),
+								user.getSystemId(), senders);
 						response.setSenders(senders);
 					} else {
 						logger.error(messageResourceBundle.getLogMessage("addbook.no.senders.configured.error"));
 //						throw new InternalServerException("No Senders Configured");
 					}
 				} else {
-					logger.error(messageResourceBundle.getLogMessage("addbook.webmaster.entry.notfound.error"), user.getSystemId());
-					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND_WEBMASTER_ERROR));
+					logger.error(messageResourceBundle.getLogMessage("addbook.webmaster.entry.notfound.error"),
+							user.getSystemId());
+					throw new NotFoundException(
+							messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND_WEBMASTER_ERROR));
 				}
 				target = IConstants.SUCCESS_KEY;
 			} else {
@@ -398,7 +425,8 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 			throw new NotFoundException(ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error("Process Error: " + ex.getMessage() + "[" + ex.getCause() + "]");
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {ex.getMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
+					new Object[] { ex.getMessage() }));
 		}
 
 		return ResponseEntity.ok(response);
@@ -417,10 +445,12 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		String systemId = user.getSystemId();
@@ -451,7 +481,8 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 			throw new NotFoundException(ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error(systemId, ex.toString());
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {ex.getMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
+					new Object[] { ex.getMessage() }));
 		}
 
 		return ResponseEntity.ok(list);
@@ -470,10 +501,12 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		String systemId = user.getSystemId();
@@ -518,8 +551,9 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 						logger.warn(messageResourceBundle.getLogMessage("addbook.no.template.exist.info"));
 					}
 				} catch (Exception ex) {
-					logger.error(messageResourceBundle.getLogMessage("addbook.error.message"),ex.getMessage());
-					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_TEMPLATE_UNABLEFIND));
+					logger.error(messageResourceBundle.getLogMessage("addbook.error.message"), ex.getMessage());
+					throw new NotFoundException(
+							messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_TEMPLATE_UNABLEFIND));
 				}
 
 				response.setTemplates(templates);
@@ -529,15 +563,18 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 					if (webMasterEntry.getSenderId() != null && webMasterEntry.getSenderId().length() > 1) {
 						Set<String> senders = new HashSet<String>(
 								Arrays.asList(webMasterEntry.getSenderId().split(",")));
-						logger.info(messageResourceBundle.getLogMessage("addbook.configured.senders.info"),systemId, senders);
+						logger.info(messageResourceBundle.getLogMessage("addbook.configured.senders.info"), systemId,
+								senders);
 						response.setSenders(senders);
 					} else {
 						logger.error(messageResourceBundle.getLogMessage("addbook.no.senders.configured.error"));
 //						throw new InternalServerException("No Senders Configured");
 					}
 				} else {
-					logger.error(messageResourceBundle.getLogMessage("addbook.webmaster.entry.notfound.error"),user.getSystemId());
-					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND_WEBMASTER_ERROR));
+					logger.error(messageResourceBundle.getLogMessage("addbook.webmaster.entry.notfound.error"),
+							user.getSystemId());
+					throw new NotFoundException(
+							messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND_WEBMASTER_ERROR));
 				}
 				target = "proceed";
 			} else {
@@ -550,7 +587,8 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 			throw new NotFoundException(ex.getLocalizedMessage());
 		} catch (Exception ex) {
 			logger.error(systemId, ex.toString());
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {ex.getMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
+					new Object[] { ex.getMessage() }));
 		}
 		return ResponseEntity.ok(response);
 	}
@@ -569,16 +607,19 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		String target = IConstants.FAILURE_KEY;
 		String systemId = user.getSystemId();
 		int groupId = form.getGroupId();
-		logger.info(messageResourceBundle.getLogMessage("addbook.modify.contact.request.info"), systemId, user.getRole(), groupId);
+		logger.info(messageResourceBundle.getLogMessage("addbook.modify.contact.request.info"), systemId,
+				user.getRole(), groupId);
 		ContactEntry entry = null;
 		List<ContactEntry> list = new ArrayList<ContactEntry>();
 		int[] id = form.getId();
@@ -602,32 +643,38 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 					target = IConstants.SUCCESS_KEY;
 				} else {
 					logger.error(messageResourceBundle.getLogMessage("addbook.update.list.empty.error"));
-					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_CONTACT_UPDATE_ERROR));
+					throw new InternalServerException(
+							messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_CONTACT_UPDATE_ERROR));
 				}
 			} catch (ArrayIndexOutOfBoundsException e) {
 				logger.error(systemId, e.getLocalizedMessage());
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_INCOMPLETE_DATA));
+				throw new InternalServerException(
+						messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_INCOMPLETE_DATA));
 			} catch (Exception e) {
 				logger.error(systemId, e.getLocalizedMessage());
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getMessage()}));
+				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
+						new Object[] { e.getMessage() }));
 			}
 		} else {
 			logger.error(messageResourceBundle.getLogMessage("addbook.no.record.found.error"));
 			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_NORECORD));
 		}
 		logger.info(messageResourceBundle.getLogMessage("addbook.modify.contact.status.info"), systemId, target);
-		return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.ADDBOOK_CONTACT_UPDATED), HttpStatus.CREATED);
+		return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.ADDBOOK_CONTACT_UPDATED),
+				HttpStatus.CREATED);
 	}
 
 	private void logDeletedContacts(String username, List<Integer> deletedContactsIds) {
 		if (!deletedContactsIds.isEmpty()) {
-			logger.info(messageResourceBundle.getLogMessage("addbook.contact.deleted.info"), username, deletedContactsIds);
+			logger.info(messageResourceBundle.getLogMessage("addbook.contact.deleted.info"), username,
+					deletedContactsIds);
 		}
 	}
 
 	private void logFailedDeletions(String username, List<Integer> failedDeletionIds) {
 		if (!failedDeletionIds.isEmpty()) {
-			logger.warn(messageResourceBundle.getLogMessage("addbook.contact.failed.deletion.warn"), username, failedDeletionIds);
+			logger.warn(messageResourceBundle.getLogMessage("addbook.contact.failed.deletion.warn"), username,
+					failedDeletionIds);
 		}
 	}
 
@@ -645,10 +692,12 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		String target = IConstants.FAILURE_KEY;
@@ -660,7 +709,8 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 				List<ContactEntry> contactsToDelete = null;
 				contactsToDelete = this.contactRepo.findAllById(ids);
 				if (contactsToDelete.isEmpty()) {
-					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_DELETECONTACT_NOTFOUND));
+					throw new NotFoundException(
+							messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_DELETECONTACT_NOTFOUND));
 				}
 
 				for (ContactEntry contact : contactsToDelete) {
@@ -670,7 +720,8 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 					} catch (Exception e) {
 						logger.error("Error deleting contact with ID {}: {}", contact.getId(), e.getMessage());
 						failedDeletionIds.add(contact.getId());
-						throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_DELETE_CONTACT, new Object[] {contact.getId()}));
+						throw new InternalServerException(messageResourceBundle.getExMessage(
+								ConstantMessages.ADDBOOK_ERROR_DELETE_CONTACT, new Object[] { contact.getId() }));
 					}
 				}
 
@@ -678,17 +729,19 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 				logDeletedContacts(username, successfulDeletions);
 				logFailedDeletions(username, failedDeletionIds);
 			} else {
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_DELETE_CONTACT, new Object[] {failedDeletionIds}));
+				throw new InternalServerException(messageResourceBundle.getExMessage(
+						ConstantMessages.ADDBOOK_ERROR_DELETE_CONTACT, new Object[] { failedDeletionIds }));
 			}
-			return ResponseEntity.status(HttpStatus.OK)
-					.body(messageResourceBundle.getMessage(ConstantMessages.ADDBOOK_CONTACT_DELETED, new Object[] {successfulDeletions}));
+			return ResponseEntity.status(HttpStatus.OK).body(messageResourceBundle
+					.getMessage(ConstantMessages.ADDBOOK_CONTACT_DELETED, new Object[] { successfulDeletions }));
 		} catch (NotFoundException e1) {
 			logger.error("Error Message: " + e1.getLocalizedMessage());
 			throw new NotFoundException(e1.getLocalizedMessage());
 		} catch (Exception e) {
 			logger.error("Error deleting contacts: {}", e.getMessage());
 			target = IConstants.FAILURE_KEY;
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
+					new Object[] { e.getMessage() }));
 		}
 	}
 
@@ -803,10 +856,12 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 
 		String target = IConstants.FAILURE_KEY;
@@ -814,7 +869,8 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		String systemId = user.getSystemId();
 
 		int groupId = form.getGroupId();
-		logger.info(messageResourceBundle.getLogMessage("addbook.export.contact.request.info"), systemId, user.getRole(), groupId);
+		logger.info(messageResourceBundle.getLogMessage("addbook.export.contact.request.info"), systemId,
+				user.getRole(), groupId);
 		List<ContactEntry> list = new ArrayList<ContactEntry>();
 		int[] id = form.getId();
 		String[] names = form.getName();
@@ -838,8 +894,10 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 				try {
 					workbook = getWorkBook(list);
 				} catch (Exception e1) {
-					logger.error(messageResourceBundle.getLogMessage("addbook.error.message"),e1.getLocalizedMessage());
-					throw new WorkBookException(messageResourceBundle.getExMessage(ConstantMessages.WORKBOOK_PROCESSING_ERROR, new Object[] {e1.getMessage()}));
+					logger.error(messageResourceBundle.getLogMessage("addbook.error.message"),
+							e1.getLocalizedMessage());
+					throw new WorkBookException(messageResourceBundle.getExMessage(
+							ConstantMessages.WORKBOOK_PROCESSING_ERROR, new Object[] { e1.getMessage() }));
 				}
 				String filename = systemId + "_Contact[" + groupId + "]" + ".xlsx";
 				ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -852,14 +910,18 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 					headers.setContentDispositionFormData("attachment", filename);
 					InputStreamResource resource = new InputStreamResource(in);
 					target = "export";
-					logger.info(messageResourceBundle.getLogMessage("addbook.export.contact.target.info"), systemId, target);
+					logger.info(messageResourceBundle.getLogMessage("addbook.export.contact.target.info"), systemId,
+							target);
 					return new ResponseEntity<>(resource, headers, HttpStatus.OK);
 				} catch (IOException e) {
-					logger.error(messageResourceBundle.getLogMessage("addbook.contact.xlsx.download.error"), e.getMessage());
-					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getMessage()}));
+					logger.error(messageResourceBundle.getLogMessage("addbook.contact.xlsx.download.error"),
+							e.getMessage());
+					throw new InternalServerException(messageResourceBundle
+							.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] { e.getMessage() }));
 				} catch (Exception e) {
-					logger.error(messageResourceBundle.getLogMessage("addbook.error.message"),e.getLocalizedMessage());
-					throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getMessage()}));
+					logger.error(messageResourceBundle.getLogMessage("addbook.error.message"), e.getLocalizedMessage());
+					throw new InternalServerException(messageResourceBundle
+							.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] { e.getMessage() }));
 				} finally {
 					try {
 						if (workbook != null) {
@@ -885,23 +947,22 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 	}
 
 	@Override
-	public Page<ContactEntry> getContactByGroupId(int groupId, PageRequest pageRequest, String username) {
+	public List<ContactEntry> getContactByGroupId(int groupId, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
-
-		logger.info(messageResourceBundle.getLogMessage("addbook.listing.contactentry.info"), groupId, pageRequest);
-
 		try {
-			Page<ContactEntry> response = this.contactRepo.findByGroupIdOrderByIdAsc(groupId, pageRequest);
+			List<ContactEntry> response = this.contactRepo.findByGroupId(groupId);
 			response.forEach(entry -> {
 				if (entry.getName() != null && entry.getName().length() > 0) {
 					entry.setName(new Converters().uniHexToCharMsg(entry.getName()));
@@ -915,7 +976,8 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getLocalizedMessage());
 		} catch (Exception e) {
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG, new Object[] {e.getMessage()}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
+					new Object[] { e.getMessage() }));
 		}
 
 	}

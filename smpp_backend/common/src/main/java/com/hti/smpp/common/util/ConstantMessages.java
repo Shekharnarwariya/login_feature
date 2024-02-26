@@ -303,10 +303,91 @@ public class ConstantMessages {
     public static final String NO_DATA_FOUND_IN_ROUTE_ENTRY_EXT_LIST = "no.data.found.in.route.entry.ext.list";
     public static final String ID_NOT_FOUND_OR_NULL = "id.not.found.or.null";
     public static final String ERROR_ADDING_ROUTE_ENTRIES = "error.adding.route.entries";
+
 	public static final String INTERNAL_SERVER_MESSAGE = "An unexpected internal server error has occurred. Please try again later or contact support if the problem persists.";
 
+    //two-way exception
+    public static final String TWOWAY_WEBMENU_ACCESS_ENTRY_NOT_FOUND = "twoway.webmenu.access.entry.notfound";
+    public static final String TWOWAY_KEYWORD_EXIST = "twoway.keyword.exist";
+    public static final String TWOWAY_KEYWORD_NOT_FOUND = "twoway.keyword.notfound";
+    public static final String TWOWAY_INTERNALSERVER_ERROR = "twoway.internalserver.error";
 
-    
+
+   // S M S C 
+    public static final String FAILED_TO_SAVE_SMSC_ENTRY = "failed.to.save.smsc.entry";
+    public static final String FAILED_TO_UPDATE_SMSC_ENTRY = "failed.to.update.smsc.entry";
+    public static final String SMS_ENTRY_NOT_FOUND_FOR_UPDATE = "sms.entry.not.found.for.update";
+    public static final String SMS_ENTRY_UPDATE_FAILED_UNEXPECTED_ERROR = "sms.entry.update.failed.unexpected.error";
+    public static final String SMS_ENTRY_NOT_FOUND_UPDATE_FAILED = "sms.entry.not.found.update.failed";
+    public static final String SMS_ENTRY_NOT_FOUND = "sms.entry.not.found";
+    public static final String CUSTOM_ENTRY_NOT_FOUND = "custom.entry.not.found";
+    public static final String FAILED_RETRIEVE_CUSTOM_ENTRY = "failed.retrieve.custom.entry";
+    public static final String FAILED_SAVE_CUSTOM_ENTRY = "failed.save.custom.entry";
+    public static final String FAILED_SAVE_CUSTOM_ENTRY_UN = "failed.save.custom.entry.un";
+    public static final String UPDATE_CUSTOM_ENTRY_DATA_ACCESS_ERROR = "update.custom.entry.data.access.error";
+    public static final String UPDATE_CUSTOM_ENTRY_UNEXPECTED_ERROR = "update.custom.entry.unexpected.error";
+    public static final String DELETE_CUSTOM_ENTRY_ERROR = "delete.custom.entry.error";
+    public static final String SAVE_LIMIT_ENTRY_ERROR = "save.limit.entry.error";
+    public static final String SAVE_LIMIT_ENTRY_ERROR_UN = "save.limit.entry.error.un";
+    public static final String UPDATE_LIMIT_ENTRY_ERROR = "update.limit.entry.error";
+    public static final String LIMIT_NOT_FOUND = "limit.not.found";
+    public static final String UPDATE_LIMIT_ENTRY_UNEXPECTED_ERROR = "update.limit.entry.unexpected.error";
+    public static final String DELETE_LIMIT_ENTRY_DATA_ACCESS_ERROR = "delete.limit.entry.data.access.error";
+    public static final String DELETE_LIMIT_ENTRY_UNEXPECTED_ERROR = "delete.limit.entry.unexpected.error";
+    public static final String LIST_SMSC_LIMIT_ENTRIES_DATA_ACCESS_ERROR = "list.smsc.limit.entries.data.access.error";
+    public static final String LIST_SMSC_LIMIT_ENTRIES_UNEXPECTED_ERROR = "list.smsc.limit.entries.unexpected.error";
+    public static final String SAVE_GROUP_ENTRY_DATA_ACCESS_ERROR = "save.group.entry.data.access.error";
+    public static final String SAVE_GROUP_ENTRY_UNEXPECTED_ERROR = "save.group.entry.unexpected.error";
+    public static final String GROUP_NOT_FOUND = "group.not.found";
+    public static final String FAILED_UPDATE_GROUP_ENTRY = "failed.update.group.entry";
+    public static final String FAILED_UPDATE_GROUP_ENTRY_UN = "failed.update.group.entry.un";
+    public static final String GROUP_DELETE_ERROR = "group.delete.error";
+    public static final String GROUP_DELETE_UNEXPECTED_ERROR = "group.delete.unexpected.error";
+    public static final String GROUP_LIST_DATA_ACCESS_ERROR = "group.list.data.access.error";
+    public static final String GROUP_LIST_UNEXPECTED_ERROR = "group.list.unexpected.error";
+    public static final String GROUP_MEMBER_SAVE_DATA_ACCESS_ERROR = "group.member.save.data.access.error";
+    public static final String GROUP_MEMBER_SAVE_UNEXPECTED_ERROR = "group.member.save.unexpected.error";
+    public static final String GROUP_MEMBER_NOT_FOUND = "group.member.not.found";
+    public static final String UPDATE_GROUP_MEMBER_ENTRY_ERROR = "update.group.member.entry.error";
+    public static final String UPDATE_GROUP_MEMBER_ENTRY_UNEXPECTED_ERROR = "update.group.member.entry.unexpected.error";
+    public static final String SAVE_TRAFFIC_SCHEDULE_ENTRY_DATA_ACCESS_ERROR = "save.traffic.schedule.entry.data.access.error";
+    public static final String SAVE_TRAFFIC_SCHEDULE_ENTRY_UNEXPECTED_ERROR = "save.traffic.schedule.entry.unexpected.error";
+    public static final String TRAFFIC_SCHEDULE_NOT_FOUND = "traffic.schedule.not.found";
+    public static final String TRAFFIC_SCHEDULE_UPDATE_ERROR = "traffic.schedule.update.error";
+    public static final String TRAFFIC_SCHEDULE_DELETE_ERROR = "traffic.schedule.delete.error";
+    public static final String TRAFFIC_SCHEDULE_DELETE_UNEXPECTED_ERROR = "traffic.schedule.delete.unexpected.error";
+    public static final String TRAFFIC_SCHEDULE_LIST_DATA_ACCESS_ERROR = "traffic.schedule.list.data.access.error";
+    public static final String TRAFFIC_SCHEDULE_LIST_UNEXPECTED_ERROR = "traffic.schedule.list.unexpected.error";
+    public static final String SMS_LOOPING_SAVE_DATA_ACCESS_ERROR = "sms.looping.save.data.access.error";
+    public static final String SMS_LOOPING_ENTRY_NOT_FOUND = "sms.looping.entry.not.found";
+    public static final String FAILED_UPDATE_SMS_LOOPING_ENTRY = "failed.update.sms.looping.entry";
+    public static final String FAILED_TO_DELETE_SMS_LOOPING_ENTRY = "failed.to.delete.sms.looping.entry";
+    public static final String SMS_LOOPING_RULE_NOT_FOUND = "sms.looping.rule.not.found";
+    public static final String FAILED_TO_RETRIEVE_SMS_LOOPING_RULE = "failed.to.retrieve.sms.looping.rule";
+    public static final String FAILED_TO_LIST_SMS_LOOPING_RULES = "failed.to.list.sms.looping.rules";
+    public static final String ERROR_CONVERTING_REQUEST_TO_ENTRY = "error.converting.request.to.entry";
+    public static final String ERROR_CONVERTING_REQUEST_TO_CUSTOM_ENTRY = "error.converting.request.to.custom.entry";
+    public static final String ERROR_CONVERTING_REQUEST_TO_GROUP_ENTRY = "error.converting.request.to.group.entry";
+    public static final String ERROR_CONVERTING_REQUEST_TO_GROUP_MEMBER_ENTRY = "error.converting.request.to.group.member.entry";
+    public static final String ERROR_CONVERTING_REQUEST_TO_LIMIT_ENTRY = "error.converting.request.to.limit.entry";
+    public static final String ERROR_CONVERTING_REQUEST_TO_SMSC_LOOPING = "error.converting.request.to.smsc.looping";
+    public static final String ERROR_CONVERTING_REQUEST_TO_TRAFFIC_SCHEDULE = "error.converting.request.to.traffic.schedule";
+    public static final String UNEXPECTED_ERROR_PROCESSING_REQUEST = "unexpected.error.processing.request";
+    public static final String ENTRY_NOT_FOUND = "entry.not.found";
+    public static final String UNEXPECTED_ERROR = "unexpected.error";
+    //two-way success messages
+    public static final String TWOWAY_KEYWORD_ADD_SUCCESS = "twoway.add.success";
+    public static final String TWOWAY_KEYWORD_UPDATED_SUCCESS = "twoway.update.success";
+    public static final String TWOWAY_KEYWORD_DELETED_SUCCESS = "twoway.delete.success";
+    public static final String TWOWAY_RECORD_UNAVAILABLE = "twoway.record.unavailable";
+
+     //ALERT
+    public static final String ALERT_ENTITY_NOT_FOUND = "alert.entity.not.found";
+    public static final String UNABLE_TO_DELETE_ALERT = "unable.to.delete.alert";
+    public static final String UNABLE_TO_FIND_ALL_ALERTS = "unable.to.find.all.alerts";
+    public static final String ALERT_ENTRIES_NOT_FOUND = "alert.entries.not.found";
+    public static final String UPDATE_ALERT_ENTITY_FAILED = "update.alert.entity.failed";
+
     
 }
 

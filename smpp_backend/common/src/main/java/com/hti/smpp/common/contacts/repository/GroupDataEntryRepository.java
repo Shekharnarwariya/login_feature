@@ -3,7 +3,6 @@ package com.hti.smpp.common.contacts.repository;
 
 import java.util.List;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,7 +19,7 @@ public interface GroupDataEntryRepository extends JpaRepository<GroupDataEntry, 
 	
 	public List<GroupDataEntry> findByNumberInAndGroupId(Long[] numbers, Integer groupId);
 	
-	Page<GroupDataEntry> findByGroupIdOrderByIdAsc(int groupId, PageRequest pageRequest);
+	public List<GroupDataEntry> findByGroupIdOrderByIdAsc(int groupId);
 	
 	@Query(value = "SELECT DISTINCT profession FROM groupcontacts", nativeQuery = true)
     List<String> findDistinctProfessions();

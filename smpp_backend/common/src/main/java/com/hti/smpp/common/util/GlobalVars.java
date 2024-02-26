@@ -35,7 +35,7 @@ public class GlobalVars {
 
 	// HazelcastInstance representing the distributed Hazelcast cluster.
 
-	public static boolean MASTER_CLIENT = false;
+	public static boolean MASTER_CLIENT = true;
 	public static boolean DB_CLUSTER = false;
 	public static IMap<Integer, BatchObject> BatchQueue;
 	public static IMap<Integer, BatchObject> HlrBatchQueue;

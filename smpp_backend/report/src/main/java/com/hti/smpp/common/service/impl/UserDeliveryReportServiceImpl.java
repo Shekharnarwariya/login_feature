@@ -139,159 +139,170 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 		}
 	}
 
-	@Override
-	public ResponseEntity<?> UserDeliveryReportxls(String username, UserDeliveryForm customReportForm,
-			HttpServletResponse response) {
-		String target = IConstants.FAILURE_KEY;
 
-		try {
+//	@Override
+//	public ResponseEntity<?> UserDeliveryReportxls(String username, UserDeliveryForm customReportForm,
+//			HttpServletResponse response) {
+//		String target = IConstants.FAILURE_KEY;
+//
+//		try {
+//
+//			List<DeliveryDTO> reportList = null;// getReportList(customReportForm, username);
+//			if (!reportList.isEmpty()) {
+//				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
+//
+//				List<DeliveryDTO> print = getJasperPrint(reportList, false);
+//
+//				// Update content type for Excel file
+//				response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+//				response.setHeader("Content-Disposition", "attachment; filename=UserDlr_"
+//						+ new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".xlsx");
+//
+//				OutputStream out = response.getOutputStream();
+//				JRExporter exporter = new JRXlsxExporter();
+//				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
+//				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
+//				exporter.setParameter(JRXlsExporterParameter.IS_ONE_PAGE_PER_SHEET, Boolean.FALSE);
+//				exporter.setParameter(JRXlsExporterParameter.MAXIMUM_ROWS_PER_SHEET, 60000);
+//				exporter.exportReport();
+//
+//				// Close the output stream
+//				if (out != null) {
+//					try {
+//						out.flush(); // Flush before closing
+//						out.close();
+//					} catch (IOException ioe) {
+//						logger.error(messageResourceBundle.getLogMessage("xls.outputstream.error.message"));
+//
+//					}
+//				}
+//
+//				target = IConstants.SUCCESS_KEY;
+//			} else {
+//				throw new NotFoundException(messageResourceBundle.getExMessage(
+//						ConstantMessages.USER_DELIVERY_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
+//
+//			}
+//		} catch (NotFoundException e) {
+//			throw new NotFoundException(e.getMessage());
+//		} catch (Exception e) {
+//			throw new InternalServerException(messageResourceBundle
+//					.getExMessage(ConstantMessages.ERROR_GETTING_DELIVERY_REPORT_MESSAGE, new Object[] { username }));
+//
+//		}
+//		return ResponseEntity.ok(target);
+//	}
+//
+//	@Override
+//	public ResponseEntity<?> UserDeliveryReportPdf(String username, UserDeliveryForm customReportForm,
+//			HttpServletResponse response) {
+//		String target = IConstants.FAILURE_KEY;
+//
+//		try {
+//			// Locale locale = Customlocale.getLocaleByLanguage(lang);
+//			List<DeliveryDTO> reportList = null;// getReportList(customReportForm, username);
+//			if (!reportList.isEmpty()) {
+//				logger.info(messageResourceBundle.getMessage("report.size"), reportList.size());
+//
+//				List<DeliveryDTO> print = getJasperPrint(reportList, false);
+//
+//				// Update content type for PDF file
+//				response.setContentType("application/pdf");
+//				response.setHeader("Content-Disposition", "attachment; filename=UserDlr_"
+//						+ new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".pdf");
+//
+//				logger.info(messageResourceBundle.getMessage("creating.pdf.message"));
+//
+//				OutputStream out = response.getOutputStream();
+//				JRExporter exporter = new JRPdfExporter();
+//				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
+//				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
+//				exporter.exportReport();
+//
+//				// Close the output stream
+//				out.flush(); // Flush before closing
+//				out.close();
+//
+//				target = IConstants.SUCCESS_KEY;
+//			} else {
+//				throw new NotFoundException(messageResourceBundle.getExMessage(
+//						ConstantMessages.USER_DELIVERY_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
+//			}
+//		} catch (NotFoundException e) {
+//			throw new NotFoundException(e.getMessage());
+//		} catch (IOException e) {
+//			logger.error(messageResourceBundle.getMessage("pdf.outputstream.closing.error.message"), e);
+//			// Handle IOException for OutputStream operations
+//		} catch (Exception e) {
+//			throw new InternalServerException(messageResourceBundle
+//					.getExMessage(ConstantMessages.ERROR_GETTING_DELIVERY_REPORT_MESSAGE, new Object[] { username }));
+//		}
+//		return ResponseEntity.ok(target);
+//	}
+//
+//	@Override
+//	public ResponseEntity<?> UserDeliveryReportDoc(String username, UserDeliveryForm customReportForm,
+//			HttpServletResponse response) {
+//		String target = IConstants.FAILURE_KEY;
+//
+//		try {
+//			// locale = Customlocale.getLocaleByLanguage(lang);
+//
+//			List<DeliveryDTO> reportList = null;// getReportList(customReportForm, username);
+//			if (!reportList.isEmpty()) {
+//				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
+//				List<DeliveryDTO> print = getJasperPrint(reportList, false);
+//
+//				// Update content type for DOCX file
+//				response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+//				response.setHeader("Content-Disposition", "attachment; filename=UserDlr_"
+//						+ new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".docx");
+//
+//				logger.info(messageResourceBundle.getMessage("creating.doc.message"), username);
+//				logger.info(messageResourceBundle.getLogMessage("creating.doc.message"), username);
+//
+//				OutputStream out = response.getOutputStream();
+//				JRExporter exporter = new JRDocxExporter();
+//				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
+//				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
+//				exporter.exportReport();
+//
+//				// Close the output stream
+//				if (out != null) {
+//					try {
+//						out.flush(); // Flush before closing
+//						out.close();
+//					} catch (IOException ioe) {
+//						logger.error(messageResourceBundle.getLogMessage("docx.outputstream.closing.error.message"));
+//
+//					}
+//				}
+//
+//				target = IConstants.SUCCESS_KEY;
+//			} else {
+//				throw new NotFoundException(messageResourceBundle.getExMessage(
+//						ConstantMessages.USER_DELIVERY_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
+//			}
+//		} catch (NotFoundException e) {
+//			throw new NotFoundException(e.getMessage());
+//		} catch (Exception e) {
+//			throw new InternalServerException(messageResourceBundle
+//					.getExMessage(ConstantMessages.ERROR_GETTING_DELIVERY_REPORT_MESSAGE, new Object[] { username }));
+//		}
+//		return ResponseEntity.ok(target);
+//	}
 
-			List<DeliveryDTO> reportList = null;// getReportList(customReportForm, username);
-			if (!reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
-
-				List<DeliveryDTO> print = getJasperPrint(reportList, false);
-
-				// Update content type for Excel file
-				response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-				response.setHeader("Content-Disposition", "attachment; filename=UserDlr_"
-						+ new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".xlsx");
-
-				OutputStream out = response.getOutputStream();
-				JRExporter exporter = new JRXlsxExporter();
-				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-				exporter.setParameter(JRXlsExporterParameter.IS_ONE_PAGE_PER_SHEET, Boolean.FALSE);
-				exporter.setParameter(JRXlsExporterParameter.MAXIMUM_ROWS_PER_SHEET, 60000);
-				exporter.exportReport();
-
-				// Close the output stream
-				if (out != null) {
-					try {
-						out.flush(); // Flush before closing
-						out.close();
-					} catch (IOException ioe) {
-						logger.error(messageResourceBundle.getLogMessage("xls.outputstream.error.message"));
-
-					}
-				}
-
-				target = IConstants.SUCCESS_KEY;
-			} else {
-				throw new NotFoundException(messageResourceBundle.getExMessage(
-						ConstantMessages.USER_DELIVERY_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
-
-			}
-		} catch (NotFoundException e) {
-			throw new NotFoundException(e.getMessage());
-		} catch (Exception e) {
-			throw new InternalServerException(messageResourceBundle
-					.getExMessage(ConstantMessages.ERROR_GETTING_DELIVERY_REPORT_MESSAGE, new Object[] { username }));
-
-		}
-		return ResponseEntity.ok(target);
-	}
-
-	@Override
-	public ResponseEntity<?> UserDeliveryReportPdf(String username, UserDeliveryForm customReportForm,
-			HttpServletResponse response) {
-		String target = IConstants.FAILURE_KEY;
-
-		try {
-			// Locale locale = Customlocale.getLocaleByLanguage(lang);
-			List<DeliveryDTO> reportList = null;// getReportList(customReportForm, username);
-			if (!reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getMessage("report.size"), reportList.size());
-
-				List<DeliveryDTO> print = getJasperPrint(reportList, false);
-
-				// Update content type for PDF file
-				response.setContentType("application/pdf");
-				response.setHeader("Content-Disposition", "attachment; filename=UserDlr_"
-						+ new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".pdf");
-
-				logger.info(messageResourceBundle.getMessage("creating.pdf.message"));
-
-				OutputStream out = response.getOutputStream();
-				JRExporter exporter = new JRPdfExporter();
-				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-				exporter.exportReport();
-
-				// Close the output stream
-				out.flush(); // Flush before closing
-				out.close();
-
-				target = IConstants.SUCCESS_KEY;
-			} else {
-				throw new NotFoundException(messageResourceBundle.getExMessage(
-						ConstantMessages.USER_DELIVERY_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
-			}
-		} catch (NotFoundException e) {
-			throw new NotFoundException(e.getMessage());
-		} catch (IOException e) {
-			logger.error(messageResourceBundle.getMessage("pdf.outputstream.closing.error.message"), e);
-			// Handle IOException for OutputStream operations
-		} catch (Exception e) {
-			throw new InternalServerException(messageResourceBundle
-					.getExMessage(ConstantMessages.ERROR_GETTING_DELIVERY_REPORT_MESSAGE, new Object[] { username }));
-		}
-		return ResponseEntity.ok(target);
-	}
-
-	@Override
-	public ResponseEntity<?> UserDeliveryReportDoc(String username, UserDeliveryForm customReportForm,
-			HttpServletResponse response) {
-		String target = IConstants.FAILURE_KEY;
-
-		try {
-			// locale = Customlocale.getLocaleByLanguage(lang);
-
-			List<DeliveryDTO> reportList = null;// getReportList(customReportForm, username);
-			if (!reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
-				List<DeliveryDTO> print = getJasperPrint(reportList, false);
-
-				// Update content type for DOCX file
-				response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-				response.setHeader("Content-Disposition", "attachment; filename=UserDlr_"
-						+ new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".docx");
-
-				logger.info(messageResourceBundle.getMessage("creating.doc.message"), username);
-				logger.info(messageResourceBundle.getLogMessage("creating.doc.message"), username);
-
-				OutputStream out = response.getOutputStream();
-				JRExporter exporter = new JRDocxExporter();
-				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-				exporter.exportReport();
-
-				// Close the output stream
-				if (out != null) {
-					try {
-						out.flush(); // Flush before closing
-						out.close();
-					} catch (IOException ioe) {
-						logger.error(messageResourceBundle.getLogMessage("docx.outputstream.closing.error.message"));
-
-					}
-				}
-
-				target = IConstants.SUCCESS_KEY;
-			} else {
-				throw new NotFoundException(messageResourceBundle.getExMessage(
-						ConstantMessages.USER_DELIVERY_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
-			}
-		} catch (NotFoundException e) {
-			throw new NotFoundException(e.getMessage());
-		} catch (Exception e) {
-			throw new InternalServerException(messageResourceBundle
-					.getExMessage(ConstantMessages.ERROR_GETTING_DELIVERY_REPORT_MESSAGE, new Object[] { username }));
-		}
-		return ResponseEntity.ok(target);
-	}
 
 	private List<DeliveryDTO> getJasperPrint(List<DeliveryDTO> reportList, boolean paging) throws JRException {
+//		logger.info(messageResourceBundle.getLogMessage("creating.design.message"));
+//
+//		JasperDesign design = JRXmlLoader.load(template_file);
+//		logger.info(messageResourceBundle.getLogMessage("compiling.message"));
+//
+//		JasperReport report = JasperCompileManager.compileReport(design);
+//		// ------------- Preparing databeancollection for chart ------------------
+//		logger.info(messageResourceBundle.getLogMessage("preparing.chart.message"));
+
 		Map<String, DeliveryDTO> key_map = new HashMap<String, DeliveryDTO>();
 		for (DeliveryDTO chartDTO : reportList) {
 			// ----------- report Data ----------------

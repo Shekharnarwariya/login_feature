@@ -9,6 +9,10 @@ public class UserDeliveryForm {
 
 	private String mode;
 	private String status;
+
+	private int page = 1; // Default to first page
+	private int pageSize = 10;
+
 	private String senderId;
 	private String destinationNumber;
 	private String reportType;
@@ -28,6 +32,26 @@ public class UserDeliveryForm {
 	private String startDate;
 	
 
+
+	public int getPage() {
+		return page;
+	}
+
+	public void setPage(int page) {
+		this.page = page;
+	}
+
+	public int getPageSize() {
+		return pageSize;
+	}
+
+	public void setPageSize(int pageSize) {
+		this.pageSize = pageSize;
+	}
+
+	public String getMode() {
+		return mode;
+	}
 
 	public void setMode(String mode) {
 		this.mode = mode;

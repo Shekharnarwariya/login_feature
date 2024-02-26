@@ -22,6 +22,7 @@ import com.hti.smpp.common.service.RouteDAService;
 import com.hti.smpp.common.service.SmscDAService;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.GlobalVarsSms;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 @Service
 public class RouteDAServiceImpl implements RouteDAService {
@@ -33,10 +34,15 @@ public class RouteDAServiceImpl implements RouteDAService {
 
 	@Autowired
 	private MmsRouteEntryRepository mmsRouteEntryRepository;
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 
 	@Override
 	public Map<Integer, RouteEntryExt> listRouteEntries(int userId, boolean hlr, boolean optional, boolean display) {
-		logger.info("Listing RouteEntries For " + userId + " hlr: " + hlr + " optional: " + optional);
+		
+		logger.info(messageResourceBundle.getLogMessage("log.listing.route_entries"), userId, hlr, optional);
+		
 		SmscDAService smscService = new SmscDAServiceImpl();
 		Map<Integer, RouteEntryExt> list = new HashMap<>();
 		Specification<RouteEntry> spec = (root, query, cb) -> cb.equal(root.get("userId"), userId);
@@ -83,7 +89,7 @@ public class RouteDAServiceImpl implements RouteDAService {
 				if (GlobalVarsSms.HlrRouteEntries.containsKey(basic.getId())) {
 					entry.setHlrRouteEntry(GlobalVarsSms.HlrRouteEntries.get(basic.getId()));
 				} else {
-					logger.info(basic.getId() + " Hlr Entry Not Found For: " + userId);
+					logger.info(messageResourceBundle.getLogMessage("hlr.entry.not.found") + basic.getId() + " For: " + userId);
 				}
 			}
 			if (optional) {
@@ -128,15 +134,17 @@ public class RouteDAServiceImpl implements RouteDAService {
 					entry.setRouteOptEntry(optEntry);
 					// --------------------------------------
 				} else {
-					logger.info(basic.getId() + " Optional Entry Not Found For: " + userId);
+					logger.info(messageResourceBundle.getLogMessage("optional.entry.not.found") , basic.getId() , userId);
+
 				}
 			}
 			list.put(basic.getId(), entry);
 		}
 		if (list.isEmpty()) {
-			logger.info("Routing Entries Not Found For " + userId);
+			logger.info(messageResourceBundle.getLogMessage("routing.entries.not.found") , userId);
+
 		} else {
-			logger.info(userId + " RouteEntries: " + list.size());
+			logger.info(messageResourceBundle.getLogMessage("route.entries.count"), userId, list.size());
 		}
 		return list;
 	}

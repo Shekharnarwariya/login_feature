@@ -4,8 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.hti.smpp.common.dto.MccMncDTO;
 import com.hti.smpp.common.exception.InternalServerException;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 import jxl.Workbook;
 import jxl.format.Alignment;
@@ -34,9 +39,16 @@ public class FileContentGenerator {
     WritableSheet sheet = null;
     File file = null;
     String fileName = null;
+    
+    private static final Logger logger = LoggerFactory.getLogger(FileContentGenerator.class);
+    
+    @Autowired
+	private MessageResourceBundle messageResourceBundle;
+
 
     public boolean createMccMncContent(ArrayList<MccMncDTO> list, String filename) {
         System.out.println("<---- File Creating with " + list.size() + " Records ---> ");
+    	logger.info("<---- " + messageResourceBundle.getLogMessage("network.info.fileCreating") + " ---> ", list.size());
         MccMncDTO mccMncDTO = null;
         try {
             file = new File(filename);
@@ -83,6 +95,7 @@ public class FileContentGenerator {
         } catch (IOException | WriteException ex) {
         	ex.printStackTrace();
             System.err.println(ex.getLocalizedMessage());
+        	logger.error(messageResourceBundle.getLogMessage("network.error.createFile"), ex.getMessage(), ex);
             return false;
         } finally {
             // Close the workbook in the finally block to ensure it's closed even if an exception occurs
