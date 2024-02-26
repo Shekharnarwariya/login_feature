@@ -9,6 +9,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import com.hti.smpp.common.twoway.dto.KeywordEntry;
 import com.hti.smpp.common.twoway.request.KeywordEntryForm;
+import com.hti.smpp.common.twoway.request.SearchCriteria;
 import com.hti.smpp.common.twoway.request.TwowayReportForm;
 import com.hti.smpp.common.user.dto.UserEntry;
 /**
@@ -17,7 +18,7 @@ import com.hti.smpp.common.user.dto.UserEntry;
 public interface KeywordService {
 	
 	public ResponseEntity<String> addKeyword(KeywordEntryForm form, String username);
-    public ResponseEntity<?> listKeyword(String search,String start,String end,Pageable pageable, String username);
+    public ResponseEntity<?> listKeyword(SearchCriteria criteria,Pageable pageable, String username);
     public ResponseEntity<?> updateKeyword(KeywordEntryForm form, String username); 
     public ResponseEntity<?> deleteKeyword(int id, String username);
     public ResponseEntity<Collection<UserEntry>> setupKeyword(String username);

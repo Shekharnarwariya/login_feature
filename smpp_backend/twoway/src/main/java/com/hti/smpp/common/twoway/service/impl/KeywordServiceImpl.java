@@ -52,6 +52,7 @@ import com.hti.smpp.common.twoway.dto.KeywordEntry;
 import com.hti.smpp.common.twoway.dto.ReportEntry;
 import com.hti.smpp.common.twoway.repository.KeywordEntryRepository;
 import com.hti.smpp.common.twoway.request.KeywordEntryForm;
+import com.hti.smpp.common.twoway.request.SearchCriteria;
 import com.hti.smpp.common.twoway.request.TwowayReportForm;
 import com.hti.smpp.common.twoway.service.KeywordService;
 import com.hti.smpp.common.user.dto.UserEntry;
@@ -65,7 +66,6 @@ import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MessageResourceBundle;
 import com.hti.smpp.common.util.MultiUtility;
-
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRExporter;
 import net.sf.jasperreports.engine.JRExporterParameter;
@@ -226,7 +226,7 @@ public class KeywordServiceImpl implements KeywordService {
 	 * Lists keyword entries based on user authorization and role.
 	 */
 	@Override
-	public ResponseEntity<?> listKeyword(String search, String start, String end, Pageable pageable, String username) {
+	public ResponseEntity<?> listKeyword(SearchCriteria criteria,Pageable pageable, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -261,16 +261,16 @@ public class KeywordServiceImpl implements KeywordService {
 
 		try {
 			if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				if (search != null) {
-					list = this.keywordRepo.searchKeyword(search, pageable);
+				if (criteria.getSearch() != null && criteria.getSearch().length()>0) {
+					list = this.keywordRepo.searchKeyword(criteria.getSearch(), pageable);
 					pr = new PaginationResponse(list.getNumber(), list.getSize(), list.getTotalPages(),
 							list.getTotalElements(), list.isLast(), list.isFirst());
 					content = list.getContent();
 					for (KeywordEntry entry : content) {
 						entry.setSystemId(entry.getCreatedBy());
 					}
-				} else if (start != null && end != null) {
-					list = this.keywordRepo.searchByDate(start, end, pageable);
+				} else if ((criteria.getStart() != null && criteria.getStart().length() > 0) && (criteria.getEnd() != null && criteria.getEnd().length()>0) && (criteria.getType() != null && criteria.getType().length()>0)) {
+					list = this.keywordRepo.searchByDate(criteria.getStart(), criteria.getEnd(), criteria.getType(), pageable);
 					pr = new PaginationResponse(list.getNumber(), list.getSize(), list.getTotalPages(),
 							list.getTotalElements(), list.isLast(), list.isFirst());
 					content = list.getContent();
@@ -310,16 +310,16 @@ public class KeywordServiceImpl implements KeywordService {
 					users = new Integer[1];
 					users[0] = user.getId();
 				}
-				if (search != null) {
-					list = this.keywordRepo.searchKeywordAndFindByUserIdIn(search, users, pageable);
+				if (criteria.getSearch() != null && criteria.getSearch().length()>0) {
+					list = this.keywordRepo.searchKeywordAndFindByUserIdIn(criteria.getSearch(), users, pageable);
 					pr = new PaginationResponse(list.getNumber(), list.getSize(), list.getTotalPages(),
 							list.getTotalElements(), list.isLast(), list.isFirst());
 					content = list.getContent();
 					for (KeywordEntry entry : content) {
 						entry.setSystemId(entry.getCreatedBy());
 					}
-				} else if (start != null && end != null) {
-					list = this.keywordRepo.searchByDateAndFindByUserIdIn(start, end, users, pageable);
+				} else if ((criteria.getStart() != null && criteria.getStart().length() > 0) && (criteria.getEnd() != null && criteria.getEnd().length()>0) && (criteria.getType() != null && criteria.getType().length()>0)) {
+					list = this.keywordRepo.searchByDateAndFindByUserIdIn(criteria.getStart(), criteria.getEnd(), criteria.getType(),users, pageable);
 					pr = new PaginationResponse(list.getNumber(), list.getSize(), list.getTotalPages(),
 							list.getTotalElements(), list.isLast(), list.isFirst());
 					content = list.getContent();
@@ -755,7 +755,7 @@ public class KeywordServiceImpl implements KeywordService {
 				} catch (Exception e) {
 					logger.error(e.toString());
 					throw new InternalServerException(e.getLocalizedMessage());
-				} finally {
+				}finally {
 					outputStream.close();
 				}
 			};
@@ -839,7 +839,7 @@ public class KeywordServiceImpl implements KeywordService {
 				} catch (Exception e) {
 					logger.error(e.toString());
 					throw new InternalServerException(e.getLocalizedMessage());
-				} finally {
+				}finally {
 					outputStream.close();
 				}
 			};
@@ -925,7 +925,8 @@ public class KeywordServiceImpl implements KeywordService {
 				} catch (Exception e) {
 					logger.error(e.toString());
 					throw new InternalServerException(e.getLocalizedMessage());
-				} finally {
+				}finally {
+
 					outputStream.close();
 				}
 			};
@@ -1188,11 +1189,14 @@ public class KeywordServiceImpl implements KeywordService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException("User does not have the required roles for this operation.");
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 		} else {
-			throw new NotFoundException("User not found with the provided username.");
-		}
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
+			}
+		
 		String target = IConstants.FAILURE_KEY;
 		String systemId = user.getSystemId();
 		int userId = user.getId();
@@ -1201,9 +1205,11 @@ public class KeywordServiceImpl implements KeywordService {
 		if (webEntryOptional.isPresent()) {
 			webMenu = webEntryOptional.get();
 		} else {
-			throw new NotFoundException("WebMenuAccessEntry not found.");
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.TWOWAY_WEBMENU_ACCESS_ENTRY_NOT_FOUND));
 		}
-		logger.info(systemId + "[" + user.getRole() + "] Delete Keywords Request: " + ids.toString());
+		logger.info(messageResourceBundle.getLogMessage("twoway.delete.keyword.request.info"),
+				systemId + "[" + user.getRole() + "]", ids);
 
 		try {
 			if (!ids.isEmpty()) {
@@ -1213,25 +1219,23 @@ public class KeywordServiceImpl implements KeywordService {
 						target = IConstants.SUCCESS_KEY;
 						MultiUtility.changeFlag(Constants.KEYWORD_FLAG_FILE, "707");
 					} else {
-						logger.info(systemId + "[" + user.getRole() + "] Unauthorized Request for ID: " + id);
-						throw new UnauthorizedException("Unauthorized Request for ID: " + id);
+						throw new UnauthorizedException(messageResourceBundle
+								.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 					}
 				}
-			} else {
-				logger.error("List can't be empty!!");
 			}
+
 		} catch (UnauthorizedException e) {
-			logger.error(systemId, e.toString());
-			logger.error("Unauthorized Error: " + e.getMessage() + "[" + e.getCause() + "]");
+			logger.error(messageResourceBundle.getLogMessage("twoway.unauthorized.access.error"), e.getMessage(),
+					e.getCause());
 			throw new UnauthorizedException(e.getLocalizedMessage());
 		} catch (Exception e) {
-			logger.error(systemId, e.toString());
-			logger.error("Process Error: " + e.getMessage() + "[" + e.getCause() + "]");
-			throw new InternalServerException(e.getLocalizedMessage());
+			throw new InternalServerException(messageResourceBundle.getExMessage(
+					ConstantMessages.TWOWAY_INTERNALSERVER_ERROR, new Object[] { e.getLocalizedMessage() }));
 		}
 
-		return new ResponseEntity<String>(
-				messageResourceBundle.getMessage(ConstantMessages.TWOWAY_KEYWORD_DELETED_SUCCESS), HttpStatus.OK);
+		return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.TWOWAY_KEYWORD_DELETED_SUCCESS),
+				HttpStatus.OK);
 	}
 
 }
