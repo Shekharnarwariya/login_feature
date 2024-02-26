@@ -32,6 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,22 +49,21 @@ import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.request.ContentReportRequest;
 import com.hti.smpp.common.request.CustomReportDTO;
+import com.hti.smpp.common.request.PaginationRequest;
 import com.hti.smpp.common.response.DeliveryDTO;
+import com.hti.smpp.common.response.PaginatedResponse;
 import com.hti.smpp.common.service.ContentReportService;
-import com.hti.smpp.common.service.UserDAService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.ConstantMessages;
-import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MessageResourceBundle;
 import com.logica.smpp.Data;
 
-import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
@@ -117,31 +118,56 @@ public class ContentReportServiceImpl implements ContentReportService {
 
 		}
 
+		PaginationRequest paginationRequest = customReportForm.getPaginationRequest();
+		Pageable p = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
+
 		try {
 
-			List<DeliveryDTO> reportList = getContentReportList(customReportForm, username);
+			List<DeliveryDTO> reportList = getContentReportList(customReportForm, username, p);
 			System.out.println(reportList);
 
 			if (reportList != null && !reportList.isEmpty()) {
+				int totalPages = 0;
+				String tableName = "mis_" + username.toLowerCase();
+				long totalElements = 0l;
+				String countSql = "SELECT (" + "SELECT COUNT(*) FROM " + tableName + ") + ("
+						+ "SELECT COUNT(DISTINCT msg_id) " + "FROM (" + "SELECT msg_id FROM smsc_in WHERE username = ? "
+						+ "UNION " + "SELECT msg_id FROM unprocessed WHERE username = ?"
+						+ ") AS combined_unique_msg_ids" + ") AS total_count";
+				try (Connection connection = getConnection();
+						PreparedStatement pStmt = connection.prepareStatement(countSql)) {
+					pStmt.setString(1, username);
+					pStmt.setString(2, username);
+					try (ResultSet rs = pStmt.executeQuery()) {
+						if (rs.next()) {
+							totalElements = rs.getLong(1);
+							totalPages = (int) Math.ceil((double) totalElements / p.getPageSize());
+						}
+					}
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(),
+						reportList.size());
+				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(),
+						reportList.size());
 				logger.info(messageResourceBundle.getLogMessage("report.view.size.message"), user.getSystemId(),
 						reportList.size());
 
 				// JasperPrint print = dataBase.getJasperPrint(reportList, false, username);
 				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
-				// Return ResponseEntity with the list in the response body
-				return new ResponseEntity<>(reportList, HttpStatus.OK);
+				PaginatedResponse<DeliveryDTO> paginatedResponse = new PaginatedResponse<>(reportList,
+						p.getPageNumber(), p.getPageSize(), totalElements, totalPages-1);
+				return ResponseEntity.ok(paginatedResponse);
 			} else {
-				throw new InternalServerException(
-						messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_MESSAGE));
+				throw new NotFoundException(
+						messageResourceBundle.getExMessage(ConstantMessages.DATA_NOT_FOUND_CONTENT));
 
 			}
 		} catch (NotFoundException e) {
 			// Log NotFoundException
-			logger.error(messageResourceBundle.getLogMessage("dlr.content.report.data.not.found"), username, e);
-
 			throw new NotFoundException(e.getMessage());
 		} catch (IllegalArgumentException e) {
-			// Log IllegalArgumentException
 			logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
 
 			throw new BadRequestException(messageResourceBundle
@@ -150,10 +176,7 @@ public class ContentReportServiceImpl implements ContentReportService {
 		} catch (Exception e) {
 			// Log other exceptions
 			logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
-
-			throw new InternalServerException(messageResourceBundle
-					.getExMessage(ConstantMessages.INTERNAL_SERVER_LATENCY_EXCEPTION, new Object[] { username }));
-
+			throw new InternalServerException(e.getMessage());
 		}
 	}
 
@@ -172,7 +195,7 @@ public class ContentReportServiceImpl implements ContentReportService {
 
 		try {
 
-			List<DeliveryDTO> reportList = getContentReportList(customReportForm, username);
+			List<DeliveryDTO> reportList = null;// getContentReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.size.doc.message"), user.getSystemId(),
 						reportList.size());
@@ -345,9 +368,8 @@ public class ContentReportServiceImpl implements ContentReportService {
 		}
 
 		try {
-	
 
-			List<DeliveryDTO> reportList = getContentReportList(customReportForm, username);
+			List<DeliveryDTO> reportList = null;// getContentReportList(customReportForm, username,pageable);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.size.pdf.message"), user.getSystemId(),
 						reportList.size());
@@ -411,7 +433,7 @@ public class ContentReportServiceImpl implements ContentReportService {
 
 		try {
 
-			List<DeliveryDTO> reportList = getContentReportList(customReportForm, username);
+			List<DeliveryDTO> reportList = null;// getContentReportList(customReportForm, username,pageable);
 			if (reportList != null && !reportList.isEmpty()) {
 				int total_rec = reportList.size();
 				logger.info(messageResourceBundle.getLogMessage("xls.report.size.message"), user.getSystemId(),
@@ -479,8 +501,8 @@ public class ContentReportServiceImpl implements ContentReportService {
 		}
 	}
 
-	public List<DeliveryDTO> getContentReportList(ContentReportRequest customReportForm, String username) {
-
+	public List<DeliveryDTO> getContentReportList(ContentReportRequest customReportForm, String username,
+			Pageable pageable) {
 		if (customReportForm.getClientId() == null) {
 			return null;
 		}
@@ -630,36 +652,67 @@ public class ContentReportServiceImpl implements ContentReportService {
 						+ " order by A.msg_id,A.destination_no,A.source_no;";
 			}
 		}
-		logger.info(user.getSystemId() + " ReportSQL:" + query);
-		System.out.println("this is line run 455");
-		List<DeliveryDTO> list = contentWiseDlrReport(query, report_user, webMasterEntry.isHideNum());
-		logger.info(messageResourceBundle.getLogMessage("report.sql.message"), user.getSystemId(), query);
 
-		List<DeliveryDTO> unproc_list_1 = contentWiseUprocessedReport(unproc_query.replaceAll("table_name", "smsc_in"),
+		int remainingSize = pageable.getPageSize();
+		int currentOffset = pageable.getPageNumber() * pageable.getPageSize();
+		List<DeliveryDTO> combinedList = new ArrayList<>();
+		List<DeliveryDTO> list = contentWiseDlrReport(query + " LIMIT " + remainingSize + " OFFSET " + currentOffset,
 				report_user, webMasterEntry.isHideNum());
-		list.addAll(unproc_list_1);
+		combinedList.addAll(list);
+		remainingSize -= list.size();
+		currentOffset = Math.max(0, currentOffset - list.size());
+		System.out.println("currentOffset" + currentOffset);
 		logger.info(messageResourceBundle.getLogMessage("report.sql.message"), user.getSystemId(), query);
 
-		List<DeliveryDTO> unproc_list_2 = contentWiseUprocessedReport(
-				unproc_query.replaceAll("table_name", "unprocessed"), report_user, webMasterEntry.isHideNum());
-		list.addAll(unproc_list_2);
-		logger.info(messageResourceBundle.getLogMessage("end.criteria.report.message"), user.getSystemId(),
-				list.size());
+		if (remainingSize > 0) {
+			List<DeliveryDTO> unproc_list_1 = contentWiseUprocessedReport(
+					unproc_query.replaceAll("table_name", "smsc_in") + " LIMIT " + remainingSize + " OFFSET "
+							+ currentOffset,
+					report_user, webMasterEntry.isHideNum());
+			combinedList.addAll(unproc_list_1);
+			remainingSize -= unproc_list_1.size();
+			currentOffset = Math.max(0, currentOffset - unproc_list_1.size());
+		}
+		logger.info(messageResourceBundle.getLogMessage("report.sql.message"), user.getSystemId(), query);
 
-		return list;
+		if (remainingSize > 0) {
+			List<DeliveryDTO> unproc_list_2 = contentWiseUprocessedReport(
+					unproc_query.replaceAll("table_name", "unprocessed") + " LIMIT " + remainingSize + " OFFSET "
+							+ currentOffset,
+					report_user, webMasterEntry.isHideNum());
+			combinedList.addAll(unproc_list_2);
+		}
+		logger.info(messageResourceBundle.getLogMessage("end.criteria.report.message"), user.getSystemId(),
+				combinedList.size());
+		return combinedList;
+//		logger.info(user.getSystemId() + " ReportSQL:" + query);
+//		System.out.println("this is line run 455");
+//		List<DeliveryDTO> list = contentWiseDlrReport(query, report_user, webMasterEntry.isHideNum());
+//		logger.info(messageResourceBundle.getLogMessage("report.sql.message"), user.getSystemId(), query);
+//
+//		List<DeliveryDTO> unproc_list_1 = contentWiseUprocessedReport(unproc_query.replaceAll("table_name", "smsc_in"),
+//				report_user, webMasterEntry.isHideNum());
+//		list.addAll(unproc_list_1);
+//		logger.info(messageResourceBundle.getLogMessage("report.sql.message"), user.getSystemId(), query);
+//
+//		List<DeliveryDTO> unproc_list_2 = contentWiseUprocessedReport(
+//				unproc_query.replaceAll("table_name", "unprocessed"), report_user, webMasterEntry.isHideNum());
+//		list.addAll(unproc_list_2);
+//		logger.info(messageResourceBundle.getLogMessage("end.criteria.report.message"), user.getSystemId(),
+//				list.size());
+//
+//		return list;
 	}
 
 	@Transactional
 	public List<DeliveryDTO> contentWiseDlrReport(String sql, String report_user, boolean hidenumber) {
+		System.out.println(sql);
 		List<DeliveryDTO> list = new ArrayList<DeliveryDTO>();
 		Connection con = null;
-		// private DBConnection dbCon = null;
 		PreparedStatement pStmt = null;
-		Connection db_con = null;
 		ResultSet rs = null;
 		Map<String, Map<Integer, String>> content_map = new HashMap<String, Map<Integer, String>>();
 		try {
-
 			con = getConnection();
 			pStmt = con.prepareStatement(sql, java.sql.ResultSet.TYPE_FORWARD_ONLY,
 					java.sql.ResultSet.CONCUR_READ_ONLY);
@@ -829,6 +882,8 @@ public class ContentReportServiceImpl implements ContentReportService {
 					reportDTO.setContent(message);
 					reportDTO.setMsgid(msg_id);
 					list.add(reportDTO);
+
+					logger.info("SQL: " + sql);
 				}
 			}
 		} catch (Exception sqle) {
@@ -836,6 +891,20 @@ public class ContentReportServiceImpl implements ContentReportService {
 			throw new InternalServerException(messageResourceBundle.getExMessage(
 					ConstantMessages.CONTENT_WISE_PROCESS_DATA_ERROR, new Object[] { sqle.getMessage() }));
 
+		}
+		finally {
+			try {
+				if (pStmt != null) {
+					pStmt.close();
+				}
+				if (rs != null) {
+					rs.close();
+				}
+				if (con != null) {
+			con.close();
+				}
+			} catch (SQLException sqle) {
+			}
 		}
 		return list;
 	}
@@ -1086,9 +1155,22 @@ public class ContentReportServiceImpl implements ContentReportService {
 			throw new InternalServerException(messageResourceBundle.getExMessage(
 					ConstantMessages.CONTENT_WISE_PROCESS_DATA_ERROR, new Object[] { sqle.getMessage() }));
 		}
-
-		logger.info(messageResourceBundle.getLogMessage("report.list.size.message"), report_user, list.size());
-
+	//	logger.info(messageResourceBundle.getLogMessage("report.list.size.message"), report_user, list.size());
+		finally {
+			try {
+				if (pStmt != null) {
+					pStmt.close();
+				}
+				if (rs != null) {
+					rs.close();
+				}
+				if (con != null) {
+			con.close();
+				}
+			} catch (SQLException sqle) {
+			}
+		}
+			
 		return list;
 	}
 }

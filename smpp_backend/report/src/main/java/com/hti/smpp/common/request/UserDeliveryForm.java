@@ -5,10 +5,10 @@ import jakarta.validation.constraints.Pattern;
 
 public class UserDeliveryForm {
 	
+	private PaginationRequest paginationRequest; 
 
 	private String mode;
 	private String status;
-	
 	private String senderId;
 	private String destinationNumber;
 	private String reportType;
@@ -145,6 +145,16 @@ public class UserDeliveryForm {
 
 	public void setStartDate(String startDate) {
 		this.startDate = startDate;
+	}
+
+	
+	
+	public PaginationRequest getPaginationRequest() {
+		return paginationRequest;
+	}
+
+	public void setPaginationRequest(PaginationRequest paginationRequest) {
+		this.paginationRequest = paginationRequest;
 	}
 
 	@Override

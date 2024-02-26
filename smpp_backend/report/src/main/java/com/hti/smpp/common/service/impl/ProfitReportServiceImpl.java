@@ -4,8 +4,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,7 +15,10 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -33,13 +37,14 @@ import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.MessageResourceBundle;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 
 @Service
 public class ProfitReportServiceImpl implements ProfitReportService {
 	@Autowired
 	private UserEntryRepository userRepository;
 
-	private Logger logger = LoggerFactory.getLogger(UserDeliveryReportServiceImpl.class);
+	private Logger logger = LoggerFactory.getLogger(ProfitReportServiceImpl.class);
 
 	@Autowired
 	private DataSource dataSource;
@@ -54,37 +59,36 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 		return dataSource.getConnection();
 	}
 
-	@Override
-	public ResponseEntity<?> ProfitReportview(String username, ProfitReportRequest customReportForm) {
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		if (!userOptional.isPresent()) {
-			throw new NotFoundException(
-					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
-		}
-		UserEntry user = userOptional.get();
-		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
-					new Object[] { username }));
-		}
-		try {
-			List<ProfitReportEntry> profitReportList = getProfitReportList(customReportForm, false, user);
-			if (profitReportList != null && !profitReportList.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(),
-						profitReportList.size());
-				return new ResponseEntity<>(profitReportList, HttpStatus.OK);
-			} else {
-				throw new NotFoundException(messageResourceBundle
-						.getExMessage(ConstantMessages.PROFIT_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
+	 @Transactional
+    @Override
+    public ResponseEntity<?> ProfitReportview(String username, ProfitReportRequest customReportForm, int page, int size) {
+        UserEntry user = userRepository.findBySystemId(username)
+                .orElseThrow(() -> new NotFoundException(messageResourceBundle
+                        .getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[]{username})));
 
-			}
-		} catch (NotFoundException ex) {
-			throw new NotFoundException(ex.getMessage());
-		} catch (Exception ex) {
-			throw new InternalServerException(messageResourceBundle
-					.getExMessage(ConstantMessages.ERROR_GETTING_PROFIT_REPORT_MESSAGE, new Object[] { username }));
-
-		}
-	}
+        if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+            throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
+                    new Object[]{username}));
+        }
+        
+        Pageable pageable = PageRequest.of(page, size);
+        try {
+            Page<ProfitReportEntry> profitReportPage = getProfitReportList(customReportForm, pageable, user);
+            if (!profitReportPage.isEmpty()) {
+                logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(),
+                        profitReportPage.getTotalElements());
+                return ResponseEntity.ok().body(profitReportPage);
+            } else {
+                throw new NotFoundException(messageResourceBundle
+                        .getExMessage(ConstantMessages.PROFIT_REPORT_NOT_FOUND_MESSAGE, new Object[]{username}));
+            }
+        } catch (NotFoundException ex) {
+            throw new NotFoundException(ex.getMessage());
+        } catch (Exception ex) {
+            throw new InternalServerException(messageResourceBundle
+                    .getExMessage(ConstantMessages.ERROR_GETTING_PROFIT_REPORT_MESSAGE, new Object[]{username}));
+        }
+    }
 
 	@Override
 	public ResponseEntity<?> ProfitReportxls(String username, ProfitReportRequest customReportForm,
@@ -250,40 +254,42 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 //		return null;
 //	}
 //
-	private List<ProfitReportEntry> getProfitReportList(ProfitReportRequest customReportForm, boolean paging,
-			UserEntry user) throws Exception {
-		String[] start_date = customReportForm.getStartDate().split("-");
-		String[] end_date = customReportForm.getEndDate().split("-");
-		Calendar calendar = Calendar.getInstance();
-		calendar.set(Calendar.DATE, Integer.parseInt(end_date[2]));
-		calendar.set(Calendar.MONTH, (Integer.parseInt(end_date[1])) - 1);
-		calendar.set(Calendar.YEAR, Integer.parseInt(end_date[0]));
-		calendar.add(Calendar.DATE, 1);
-		String end_date_str = new SimpleDateFormat("yyMMdd").format(calendar.getTime()) + "0000000000000";
-		String start_date_str = (start_date[0].substring(2)) + "" + start_date[1] + "" + start_date[2]
-				+ "0000000000000";
-		ReportCriteria rc = new ReportCriteria();
-		rc.setStartMsgId(Long.parseLong(start_date_str));
-		rc.setEndMsgId(Long.parseLong(end_date_str));
-		if (user.getRole().equalsIgnoreCase("superadmin")) {
-			rc.setResellerId(Integer.parseInt(customReportForm.getClientId()));
-		} else {
-			rc.setResellerId(user.getId());
-			if (!customReportForm.getClientId().equalsIgnoreCase("0")) {
-				rc.setUserId(Integer.parseInt(customReportForm.getClientId()));
-			}
-		}
+	private Page<ProfitReportEntry> getProfitReportList(ProfitReportRequest reportRequest, Pageable pageable, UserEntry user) {
+	    LocalDate startDate = LocalDate.parse(reportRequest.getStartDate());
+	    LocalDate endDate = LocalDate.parse(reportRequest.getEndDate()).plusDays(1); // Include the end day in the range
 
-		List<ProfitReportEntry> list = listProfitReport(rc);
-		if (list.isEmpty()) {
-			logger.info(messageResourceBundle.getLogMessage("no.report.data.found.message"), user.getSystemId());
+	    String startMsgId = startDate.format(DateTimeFormatter.ofPattern("yyMMdd")) + "0000000000000";
+	    String endMsgId = endDate.format(DateTimeFormatter.ofPattern("yyMMdd")) + "0000000000000";
 
-			return null;
-		}
-		return list;
+	    ReportCriteria criteria = new ReportCriteria();
+	    criteria.setStartMsgId(Long.parseLong(startMsgId));
+	    criteria.setEndMsgId(Long.parseLong(endMsgId));
+
+	    if ("superadmin".equalsIgnoreCase(user.getRole()) && !"0".equals(reportRequest.getClientId())) {
+	        criteria.setResellerId(Integer.parseInt(reportRequest.getClientId()));
+	    } else {
+	        criteria.setResellerId(user.getId());
+	        if (!"0".equals(reportRequest.getClientId())) {
+	            criteria.setUserId(Integer.parseInt(reportRequest.getClientId()));
+	        }
+	    }
+
+	    try {
+	        Page<ProfitReportEntry> reportEntries = reportDAOImpl.listProfitReport(criteria, pageable);
+	        if (reportEntries.isEmpty()) {
+	            logger.info(messageResourceBundle.getLogMessage("no.report.data.found.message"), user.getSystemId());
+	            return new PageImpl<>(Collections.emptyList(), pageable, 0); // Return an empty page to maintain null safety
+	        }
+	        return reportEntries;
+	    } catch (Exception e) {
+	        logger.error("Error fetching profit report list", e);
+	        // Return an empty page with the original pageable information
+	        return new PageImpl<>(Collections.emptyList(), pageable, 0);
+	    }
 	}
 
-//
+
+
 //	private static boolean isValidDate(int year, int month, int day) {
 //		try {
 //			LocalDate.of(year, month, day);
@@ -321,31 +327,33 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 //
 //		return sortedlist;
 //	}
-//
-	public List<ProfitReportEntry> listProfitReport(ReportCriteria rc) {
-		List<ProfitReportEntry> list = reportDAOImpl.listProfitReport(rc);
-		for (ProfitReportEntry entry : list) {
-			if (GlobalVars.NetworkEntries.containsKey(entry.getNetworkId())) {
-				entry.setCountry(GlobalVars.NetworkEntries.get(entry.getNetworkId()).getCountry());
-				entry.setOperator(GlobalVars.NetworkEntries.get(entry.getNetworkId()).getOperator());
-			}
-			UserEntry userEntry = userRepository.findById(entry.getUserId()).get();
-			if (userEntry != null) {
-				entry.setUsername(userEntry.getSystemId());
 
-			} else {
-				String username = getRemovedUsername(entry.getUserId());
-				if (username != null) {
-					entry.setUsername(username);
-				} else {
-					entry.setUsername("-");
-				}
-			}
-		}
+	public Page<ProfitReportEntry> listProfitReport(ReportCriteria rc, Pageable pageable) {
+	    // Retrieve the list of profit report entries from the DAO
+	    Page<ProfitReportEntry> list = reportDAOImpl.listProfitReport(rc,  pageable);
 
-		return list;
+	    // Enhanced loop with more robust null handling and leveraging Java 8 features
+	    list.forEach(entry -> {
+	        // Update country and operator based on network ID, if available
+	        Optional.ofNullable(GlobalVars.NetworkEntries.get(entry.getNetworkId()))
+	                .ifPresent(networkEntry -> {
+	                    entry.setCountry(networkEntry.getCountry());
+	                    entry.setOperator(networkEntry.getOperator());
+	                });
 
+	        // Attempt to set the username from the UserEntry if present; otherwise, use a removed username or default to "-"
+	        userRepository.findById(entry.getUserId())
+	                .map(UserEntry::getSystemId)  // If UserEntry is present, get the system ID
+	                .or(() -> Optional.ofNullable(getRemovedUsername(entry.getUserId()))) // If not, try getting removed username
+	                .ifPresentOrElse(
+	                        entry::setUsername, // If a username is found, set it
+	                        () -> entry.setUsername("-") // Otherwise, set username to "-"
+	                );
+	    });
+
+	    return list;
 	}
+
 
 	public String getRemovedUsername(int userId) {
 		String query = "select system_id from user_removed where id=?";

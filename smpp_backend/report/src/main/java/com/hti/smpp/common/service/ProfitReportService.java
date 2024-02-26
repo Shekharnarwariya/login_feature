@@ -12,7 +12,7 @@ import net.sf.jasperreports.engine.JasperPrint;
 @Service
 public interface ProfitReportService {
 
-	public ResponseEntity<?> ProfitReportview(String username, ProfitReportRequest customReportForm);
+	public ResponseEntity<?> ProfitReportview(String username, ProfitReportRequest customReportForm, int page, int size);
 
 	public ResponseEntity<?>  ProfitReportxls(String username, ProfitReportRequest customReportForm,
 			HttpServletResponse response);

@@ -5,6 +5,10 @@ import jakarta.validation.constraints.Pattern;
 
 
 public class BalanceReportRequest {
+	
+	private PaginationRequest paginationRequest; 
+	
+	
 	  @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$", message = "endDate must be in the format yyyy-MM-dd HH:mm:ss")
 		
 	  @NotBlank(message = "senderId must not be blank")
@@ -34,6 +38,12 @@ public class BalanceReportRequest {
 	    private String eyear;
 
 	
+	public PaginationRequest getPaginationRequest() {
+			return paginationRequest;
+		}
+		public void setPaginationRequest(PaginationRequest paginationRequest) {
+			this.paginationRequest = paginationRequest;
+		}
 	public String getSenderId() {
 		return senderId;
 	}

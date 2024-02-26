@@ -8,6 +8,8 @@ import jakarta.validation.constraints.Size;
 
 public class BlockedReportRequest {
 	
+	private PaginationRequest paginationRequest; 
+	
 	    private String senderId;
 
 	    private String clientId;
@@ -32,6 +34,15 @@ public class BlockedReportRequest {
 	   
 	
 	
+	public PaginationRequest getPaginationRequest() {
+	return paginationRequest;
+}
+public void setPaginationRequest(PaginationRequest paginationRequest) {
+	this.paginationRequest = paginationRequest;
+}
+public void setBsfmRule(Integer bsfmRule) {
+	this.bsfmRule = bsfmRule;
+}
 	public int getBsfmRule() {
 		return bsfmRule;
 	}

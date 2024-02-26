@@ -645,9 +645,10 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 		DeliveryDTO report = null;
 		System.out.println("UnprocessedSummary:" + query);
 		try {
-			Connection connection = jdbcTemplate.getDataSource().getConnection();
+			//Connection connection = jdbcTemplate.getDataSource().getConnection();
 
 			con = getConnection();
+			
 			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
 					java.sql.ResultSet.CONCUR_READ_ONLY);
 			pStmt.setFetchSize(Integer.MIN_VALUE);
@@ -755,8 +756,10 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 					rs.close();
 				}
 				if (con != null) {
-					// dbCon.releaseConnection(con);
+					con.close();
 				}
+				
+				
 			} catch (SQLException sqle) {
 			}
 		}

@@ -68,6 +68,8 @@ public class GlobalVars {
 	// ---------- smsc -------------------------------
 	public static IMap<Integer, SmscEntry> SmscEntries;
 	
+	
+	
 	public static MultiMap<Integer, GroupMemberEntry> SmscGroupMember;
 	// --------- routing entries ---------------------
 	public static IMap<Integer, RouteEntry> BasicRouteEntries;

@@ -3,6 +3,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 public class DlrSummaryReport {
+	private PaginationRequest paginationRequest; 
 	private String smin;
 	private String shour;
 	private String sday;
@@ -20,7 +21,16 @@ public class DlrSummaryReport {
 	private String country;
 	private String operator;
 	private String campaign;
+	
+	
+	
 
+	public PaginationRequest getPaginationRequest() {
+		return paginationRequest;
+	}
+	public void setPaginationRequest(PaginationRequest paginationRequest) {
+		this.paginationRequest = paginationRequest;
+	}
 	@NotBlank(message = "EndDate must not be blank")
 	private String endDate;
 

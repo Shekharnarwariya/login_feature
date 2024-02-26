@@ -63,15 +63,18 @@ import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
+import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Converter;
 import com.hti.smpp.common.util.Converters;
 import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 import com.hti.smpp.common.util.dto.SevenBitChar;
 
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.BadRequestException;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JasperExportManager;
@@ -94,6 +97,8 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 
 	@Autowired
 	private BulkDAService bulkService;
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 
 	boolean isSummary;
 	private static final Logger logger = LoggerFactory.getLogger(CustomizedReportServicesImpl.class);
@@ -128,7 +133,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 
-
 			List<DeliveryDTO> reportList = getCustomizedReportList(customReportForm, username);
 			if (customReportForm.getReportType().equalsIgnoreCase("Summary")) {
 				isSummary = true;
@@ -144,16 +148,23 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 
 			} else {
-				throw new Exception("No data found for the CustomizedReport report");
+				throw new NotFoundException(
+						messageResourceBundle.getExMessage(ConstantMessages.CUSTOMIZED_REPORT_NOT_FOUND_MESSAGE));
 			}
-		} catch (UnauthorizedException e) {
-			// Handle unauthorized exception
-			e.printStackTrace();
-			throw new InternalServerException("Error processing in the CustomizedReport report");
+		} catch (NotFoundException e) {
+			// Log NotFoundException
+			throw new NotFoundException(e.getMessage());
+		} catch (IllegalArgumentException e) {
+
+			logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
+
+			throw new BadRequestException(messageResourceBundle
+					.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] { e.getMessage() }));
+
 		} catch (Exception e) {
-			// Handle other general exceptions
-			e.printStackTrace();
-			throw new InternalServerException("Error processing in the CustomizedReport report");
+			// Log other exceptions
+			logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(e.getMessage());
 		}
 	}
 
@@ -164,7 +175,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 
 		UserEntry user = userOptional
 				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
-		
+
 		List<DeliveryDTO> print = null;
 		List<DeliveryDTO> report = null;
 		List<DeliveryDTO> design = null;
@@ -319,7 +330,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		String template_content_sender_file = IConstants.FORMAT_DIR + "report//dlrContentWithSender.jrxml";
 		String summary_template_file = IConstants.FORMAT_DIR + "report//dlrSummaryReport.jrxml";
 		String summary_sender_file = IConstants.FORMAT_DIR + "report//dlrSummarySender.jrxml";
-		
+
 		List<DeliveryDTO> print = null;
 		List<DeliveryDTO> report = null;
 		List<DeliveryDTO> design = null;
@@ -1460,7 +1471,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		try {
 			con = getConnection();
 
-			// con = dbCon.getConnection();
 			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
 					java.sql.ResultSet.CONCUR_READ_ONLY);
 			pStmt.setFetchSize(Integer.MIN_VALUE);
@@ -1591,7 +1601,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					rs.close();
 				}
 				if (con != null) {
-					// dbCon.releaseConnection(con);
+				
 					con.close();
 				}
 			} catch (SQLException sqle) {
@@ -1601,10 +1611,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	}
 
 	public String hexCodePointsToCharMsg(String msg) {
-		// logger.info("got request ");
-		// this mthd made decreasing codes, only.
-		//// This mthd will take msg who contain hex values of unicode, then it will
-		// convert this msg to Unicode from hex.
 		boolean reqNULL = false;
 		byte[] charsByt, var;
 		int x = 0;
@@ -1644,8 +1650,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	}
 
 	private Map getDlrReport(String reportUser, String query, boolean hideNum) {
-		// public Map getDlrReport(String reportUser, String query, boolean hideNum)
-		// throws DBException {
 		Map customReport = new HashMap();
 		Connection con = null;
 		PreparedStatement pStmt = null;
@@ -1723,13 +1727,11 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				}
 				if (con != null) {
 					con.close();
-					;
 				}
 			} catch (SQLException sqle) {
 			}
 		}
 		return customReport;
-
 	}
 
 	public List<String> getDistinctMisUser(String userQuery) {
@@ -1908,7 +1910,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			throw new UnauthorizedException("User does not have the required roles for this operation.");
 		}
 		try {
-		
+
 			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(username + " ReportSize[pdf]:" + reportList.size());
@@ -1966,7 +1968,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 
 		String target = IConstants.SUCCESS_KEY;
 		try {
-			
+
 			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(user.getSystemId() + " ReportSize[doc]:" + reportList.size());

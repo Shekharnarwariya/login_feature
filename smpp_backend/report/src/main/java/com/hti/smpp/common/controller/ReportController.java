@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -47,6 +48,7 @@ import com.hti.smpp.common.service.SmscDlrReportReportService;
 import com.hti.smpp.common.service.SubmissionReportService;
 import com.hti.smpp.common.service.SummaryReportService;
 import com.hti.smpp.common.service.TrackResultService;
+import com.hti.smpp.common.service.TransactionReportService;
 import com.hti.smpp.common.service.UserDeliveryReportService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -56,6 +58,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import jakarta.ws.rs.HeaderParam;
 
 @RestController
 @RequestMapping("/reports")
@@ -82,6 +85,8 @@ public class ReportController {
 
 	@Autowired
 	private ContentReportService contentReportService;
+	@Autowired
+	 private  TransactionReportService transactionReportService;
 
 	@Autowired
 	private CustomizedReportService customizedReportService;
@@ -496,9 +501,16 @@ public class ReportController {
 	@PostMapping("/profit-report-view")
 	@Operation(summary = "Profit Report View", description = "View profit report")
 	public ResponseEntity<?> profitReportView(
-			@Valid @Parameter(description = "Username") @RequestHeader String username,
-			@Parameter(description = "Custom Report Form") @RequestBody ProfitReportRequest customReportForm) {
-		return profitReportService.ProfitReportview(username, customReportForm);
+	        @Valid @Parameter(description = "Username") @RequestHeader String username,
+	        @Parameter(description = "Custom Report Form") @RequestBody ProfitReportRequest customReportForm) {
+
+	    // Extract page and size from the customReportForm
+	    int page = customReportForm.getPage();
+	    int size = customReportForm.getSize();
+
+	    // Validate page and size if necessary (e.g., ensure size is not too large)
+
+	    return profitReportService.ProfitReportview(username, customReportForm, page, size);
 	}
 
 	@PostMapping("/profit-report-xls")
@@ -628,5 +640,13 @@ public class ReportController {
 		return summaryReportService.SummaryReportdoc(username, customReportForm, response);
 
 	}
+	
 
+
+
+    @GetMapping("/transactions")
+    public ResponseEntity<?> executeTransaction(@RequestHeader("username") String username) {
+        return transactionReportService.executeTransaction(username);
+    }
 }
+
