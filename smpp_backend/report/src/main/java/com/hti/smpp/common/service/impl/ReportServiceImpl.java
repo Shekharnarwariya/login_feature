@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -30,6 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -52,7 +55,9 @@ import com.hti.smpp.common.request.BlockedReportRequest;
 import com.hti.smpp.common.request.CampaignReportRequest;
 import com.hti.smpp.common.request.CustomReportDTO;
 import com.hti.smpp.common.request.CustomReportForm;
+import com.hti.smpp.common.request.PaginationRequest;
 import com.hti.smpp.common.response.DeliveryDTO;
+import com.hti.smpp.common.response.PaginatedResponse;
 import com.hti.smpp.common.service.ReportService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
@@ -112,7 +117,6 @@ public class ReportServiceImpl implements ReportService {
 		return dataSource.getConnection();
 	}
 
-	@Override
 	public ResponseEntity<?> BalanceReportView(String username, BalanceReportRequest customReportForm) {
 		String target = IConstants.FAILURE_KEY;
 		try {
@@ -150,7 +154,8 @@ public class ReportServiceImpl implements ReportService {
 	public ResponseEntity<?> BalanceReportxls(String username, BalanceReportRequest customReportForm,
 			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
-
+		PaginationRequest paginationRequest = customReportForm.getPaginationRequest();
+		Pageable p = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
 		try {
 
 			Map<String, List<DeliveryDTO>> reportList = dataBase.getBalanceReportList(customReportForm, username);
@@ -198,6 +203,8 @@ public class ReportServiceImpl implements ReportService {
 	public ResponseEntity<?> balanceReportPdf(String username, BalanceReportRequest customReportForm,
 			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
+		PaginationRequest paginationRequest = customReportForm.getPaginationRequest();
+		Pageable p = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
 		try {
 
 			Map<String, List<DeliveryDTO>> reportList = dataBase.getBalanceReportList(customReportForm, username);
@@ -238,6 +245,8 @@ public class ReportServiceImpl implements ReportService {
 	public ResponseEntity<?> BalanceReportDoc(String username, BalanceReportRequest customReportForm,
 			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
+		PaginationRequest paginationRequest = customReportForm.getPaginationRequest();
+		Pageable p = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
 
 		try {
 
@@ -281,7 +290,9 @@ public class ReportServiceImpl implements ReportService {
 	@Override
 	public ResponseEntity<?> BlockedReportView(String username, BlockedReportRequest customReportForm) {
 		String target = IConstants.FAILURE_KEY;
-
+		
+		PaginationRequest paginationRequest = customReportForm.getPaginationRequest();
+		Pageable p = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
 		try {
 
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username);

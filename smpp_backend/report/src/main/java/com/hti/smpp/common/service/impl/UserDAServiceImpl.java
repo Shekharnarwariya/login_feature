@@ -1,9 +1,12 @@
 package com.hti.smpp.common.service.impl;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
@@ -12,19 +15,35 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.hti.smpp.common.service.UserDAO;
 import com.hti.smpp.common.service.UserDAService;
+import com.hti.smpp.common.user.dto.BalanceEntry;
+import com.hti.smpp.common.user.dto.RechargeEntry;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
+import com.hti.smpp.common.user.repository.BalanceEntryRepository;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.GlobalVars;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @Service
 public class UserDAServiceImpl implements UserDAService {
+	
 
 	private Logger logger = LoggerFactory.getLogger(UserDAServiceImpl.class);
+	
+	@Autowired
+	private UserDAO userDAO;
 
 	@Autowired
-	private UserEntryRepository userEntryRepository;
+	private UserEntryRepository userRepository;
+	
+	@Autowired
+	private BalanceEntryRepository balanceEntryRepository;
+	
+	
+
 
 	public UserDAServiceImpl() {
 		GlobalVars.UserEntries = GlobalVars.hazelInstance.getMap("user_entries");
@@ -244,7 +263,7 @@ public class UserDAServiceImpl implements UserDAService {
 	public Map<Integer, String> listUsers() {
 		logger.debug("listUsers()");
 		Map<Integer, String> map = new HashMap<Integer, String>();
-		for (UserEntry entry : userEntryRepository.findAll()) {
+		for (UserEntry entry : userRepository.findAll()) {
 			map.put(entry.getId(), entry.getSystemId());
 		}
 		Map<Integer, String> sortedMap = map.entrySet().stream()
@@ -384,69 +403,82 @@ public class UserDAServiceImpl implements UserDAService {
 //		return userDAO.saveRechargeEntry(entry);
 //	}
 //
-//	@Override
-//	public Map<Integer, RechargeEntry> listRecentRecharges(Integer[] userid) {
-//		logger.debug("listRecentRecharges(" + userid + ")");
-//		Map<Integer, RechargeEntry> map = new HashMap<Integer, RechargeEntry>();
-//		List<RechargeEntry> results = userDAO.listRecentRecharges(userid);
-//		for (RechargeEntry entry : results) {
-//			map.put(entry.getUserId(), entry);
-//		}
-//		return map;
-//	}
-//
-//	@Override
-//	public Map<Integer, List<RechargeEntry>> listTransactions(Integer[] userid, String txnType, String startTime,
-//			String endTime) {
-//		logger.debug("listTransactions(" + userid + ")");
-//		// Map<Integer, UserEntryExt> usermap = listUserBalance();
-//		Map<Integer, List<RechargeEntry>> map = new HashMap<Integer, List<RechargeEntry>>();
-//		List<RechargeEntry> list = userDAO.listTransactions(userid, txnType, startTime, endTime);
-//		for (RechargeEntry entry : list) {
-//			String particular = entry.getParticular();
-//			String[] particular_arr = particular.split("_");
-//			entry.setParticular(particular_arr[0]);
-//			String effectiveUser = particular_arr[1];
-//			entry.setEffectiveUser(effectiveUser);
-//			if (GlobalVars.UserEntries.containsKey(entry.getUserId())) {
-//				UserEntry userEntry = GlobalVars.UserEntries.get(entry.getUserId());
-//				BalanceEntry balance = GlobalVars.BalanceEntries.get(entry.getUserId());
-//				logger.debug(userEntry.getSystemId() + "[" + userEntry.getRole() + "]: " + entry);
-//				entry.setSystemId(userEntry.getSystemId());
-//				if (userEntry.getRole().equalsIgnoreCase("superadmin")
-//						|| userEntry.getRole().equalsIgnoreCase("system")) {
-//					if (GlobalVars.UserMapping.containsKey(effectiveUser)) {
-//						int effective_user_id = GlobalVars.UserMapping.get(effectiveUser);
-//						if (GlobalVars.BalanceEntries.containsKey(effective_user_id)) {
-//							BalanceEntry effectiveBalanceEntry = GlobalVars.BalanceEntries.get(effective_user_id);
-//							entry.setWalletFlag(effectiveBalanceEntry.getWalletFlag());
-//						} else {
-//							entry.setWalletFlag(balance.getWalletFlag());
-//						}
-//					} else {
-//						entry.setWalletFlag(balance.getWalletFlag());
-//					}
-//				} else {
-//					entry.setWalletFlag(balance.getWalletFlag());
-//				}
-//			}
-//			List<RechargeEntry> entrylist = null;
-//			if (map.containsKey(entry.getUserId())) {
-//				entrylist = map.get(entry.getUserId());
-//			} else {
-//				entrylist = new ArrayList<RechargeEntry>();
-//			}
-//			entrylist.add(entry);
-//			map.put(entry.getUserId(), entrylist);
-//		}
-//		return map;
-//	}
-//
-//	@Override
-//	public Map<Integer, List<RechargeEntry>> listTransactions(Integer[] userid) {
-//		return listTransactions(userid, null, null, null);
-//	}
-//
+	@Override
+	public Map<Integer, RechargeEntry> listRecentRecharges(Integer[] userid) {
+		logger.debug("listRecentRecharges(" + userid + ")");
+		Map<Integer, RechargeEntry> map = new HashMap<Integer, RechargeEntry>();
+		List<RechargeEntry> results =(List<RechargeEntry>) listRecentRecharges(userid);
+		for (RechargeEntry entry : results) {
+			map.put(entry.getUserId(), entry);
+		}
+		return map;
+	}
+
+
+
+	
+
+	@Override
+	public Map<Integer, List<RechargeEntry>> listTransactions(Integer[] userid, String txnType, String startTime,
+			String endTime) {
+		logger.debug("listTransactions(" + userid + ")");
+		// Map<Integer, UserEntryExt> usermap = listUserBalance();
+		Map<Integer, List<RechargeEntry>> map = new HashMap<Integer, List<RechargeEntry>>();
+		List<RechargeEntry> list = userDAO.listTransactions(userid, txnType, startTime, endTime);
+		for (RechargeEntry entry : list) {
+			String particular = entry.getParticular();
+			String[] particular_arr = particular.split("_");
+			entry.setParticular(particular_arr[0]);
+			String effectiveUser = particular_arr[1];
+			entry.setEffectiveUser(effectiveUser);
+			if ( userRepository.findById(entry.getUserId()) != null) {
+				UserEntry userEntry =  userRepository.findById(userid[0]).get();
+				Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findById(userid[0]);
+
+				BalanceEntry balance;
+				if (balanceOptional.isPresent()) {
+				    balance = balanceOptional.get();
+				} else {
+				    throw new EntityNotFoundException("Balance entry not found for user ID: " + userid[0]);
+				}
+				logger.debug(userEntry.getSystemId() + "[" + userEntry.getRole() + "]: " + entry);
+				entry.setSystemId(userEntry.getSystemId());
+				if (userEntry.getRole().equalsIgnoreCase("superadmin")
+						|| userEntry.getRole().equalsIgnoreCase("system")) {
+					if (GlobalVars.UserMapping.containsKey(effectiveUser)) {
+						int effective_user_id = GlobalVars.UserMapping.get(effectiveUser);
+						if (GlobalVars.BalanceEntries.containsKey(effective_user_id)) {
+							BalanceEntry effectiveBalanceEntry = GlobalVars.BalanceEntries.get(effective_user_id);
+							entry.setWalletFlag(effectiveBalanceEntry.getWalletFlag());
+						} else {
+							entry.setWalletFlag(balance.getWalletFlag());
+						}
+					} else {
+						entry.setWalletFlag(balance.getWalletFlag());
+					}
+				} else {
+					entry.setWalletFlag(balance.getWalletFlag());
+				}
+			}
+			List<RechargeEntry> entrylist = null;
+			if (map.containsKey(entry.getUserId())) {
+				entrylist = map.get(entry.getUserId());
+			} else {
+				entrylist = new ArrayList<RechargeEntry>();
+			}
+			entrylist.add(entry);
+			map.put(entry.getUserId(), entrylist);
+		}
+		return map;
+	}
+
+	@Override
+	public Map<Integer, List<RechargeEntry>> listTransactions(Integer[] userid) {
+		return listTransactions(userid, null, null, null);
+	}
+
+	
+	
 //	@Override
 //	public void saveAccessLogEntry(AccessLogEntry entry) {
 //		userDAO.saveAccessLogEntry(entry);

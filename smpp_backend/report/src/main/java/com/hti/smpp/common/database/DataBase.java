@@ -48,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -461,6 +462,12 @@ public class DataBase {
 				first = getConsumptionReport(unproc_query.replaceFirst("table_name", "smsc_in"));
 				second = getConsumptionReport(unproc_query.replaceFirst("table_name", "unprocessed"));
 			}
+			
+			///////////////////
+//			int limit = pageable.getPageSize();
+//			int offset = pageable.getPageNumber() * pageable.getPageSize();
+//			unproc_query += "LIMIT " + limit + " OFFSET " + offset;
+			logger.info("SQL: " + unproc_query);
 			/*
 			 * Predicate<Integer, UserEntry> p = new
 			 * PredicateBuilderImpl().getEntryObject().get("systemId") .in(users.toArray(new
@@ -585,32 +592,33 @@ public class DataBase {
 	}
 
 	public Map<String, List<DeliveryDTO>> getConsumptionSummaryReport(String query) {
-		Map<String, List<DeliveryDTO>> map = new HashMap<>();
-		try (Connection con = jdbcTemplate.getDataSource().getConnection();
-				PreparedStatement pStmt = con.prepareStatement(query);
-				ResultSet rs = pStmt.executeQuery()) {
+	    Map<String, List<DeliveryDTO>> map = new HashMap<>();
+	    try (Connection con = getConnection();
+	         PreparedStatement pStmt = con.prepareStatement(query);
+	         ResultSet rs = pStmt.executeQuery()) {
 
-			while (rs.next()) {
-				DeliveryDTO entry = new DeliveryDTO();
-				String username = rs.getString("username");
-				List<DeliveryDTO> list = map.computeIfAbsent(username, k -> new ArrayList<>());
+	        while (rs.next()) {
+	            DeliveryDTO entry = new DeliveryDTO();
+	            String username = rs.getString("username");
+	            List<DeliveryDTO> list = map.computeIfAbsent(username, k -> new ArrayList<>());
 
-				entry.setSubmitted(rs.getInt("count"));
-				entry.setUsername(username);
-				entry.setCost(rs.getDouble("cost_sum"));
+	            entry.setSubmitted(rs.getInt("count"));
+	            entry.setUsername(username);
+	            entry.setCost(rs.getDouble("cost_sum"));
 
-				list.add(entry);
-			}
-		} catch (SQLException sqle) {
-			sqle.printStackTrace();
-		}
-
-		return map;
+	            list.add(entry);
+	        }
+	    } catch (SQLException sqle) {
+	        logger.error("", sqle);
+	    }
+	    // No need for a finally block to close resources when using try-with-resources
+	    return map;
 	}
+
 
 	public Map<String, List<DeliveryDTO>> getConsumptionReport(String query) {
 		Map<String, List<DeliveryDTO>> map = new HashMap<>();
-		try (Connection con = jdbcTemplate.getDataSource().getConnection();
+		try (Connection con = getConnection();
 				PreparedStatement pStmt = con.prepareStatement(query);
 				ResultSet rs = pStmt.executeQuery()) {
 
@@ -649,7 +657,6 @@ public class DataBase {
 			// Handle or log the exception
 			sqle.printStackTrace();
 		}
-
 		return map;
 	}
 
@@ -2283,7 +2290,7 @@ public class DataBase {
 		ResultSet rs = null;
 		DeliveryDTO report = null;
 		try {
-			Connection connection = jdbcTemplate.getDataSource().getConnection();
+			Connection connection = getConnection();
 
 			// con = dbCon.getConnection();
 			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
@@ -2348,7 +2355,7 @@ public class DataBase {
 					rs.close();
 				}
 				if (con != null) {
-					// dbCon.releaseConnection(con);
+					con.close();
 				}
 			} catch (SQLException sqle) {
 			}
@@ -2383,7 +2390,7 @@ public class DataBase {
 				}
 			}
 			if (con != null) {
-				// dbCon.releaseConnection(con);
+			con.close();
 			}
 		}
 		return userSet;
@@ -2403,7 +2410,7 @@ public class DataBase {
 		String msg_id = null;
 		try {
 			Set<String> flags = getSmscErrorFlagSymbol();
-			Connection connection = jdbcTemplate.getDataSource().getConnection();
+			Connection connection = getConnection();
 
 			// con = dbCon.getConnection();
 			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
@@ -2501,7 +2508,7 @@ public class DataBase {
 					rs.close();
 				}
 				if (con != null) {
-					// dbCon.releaseConnection(con);
+					con.close();
 				}
 			} catch (SQLException sqle) {
 			}
@@ -2517,7 +2524,7 @@ public class DataBase {
 		ResultSet rs = null;
 		String sql = "select distinct(Flag_symbol) from smsc_error_code";
 		try {
-			Connection connection = jdbcTemplate.getDataSource().getConnection();
+			Connection connection = getConnection();
 
 			// con = dbCon.getConnection();
 			pStmt = con.prepareStatement(sql);
@@ -2539,7 +2546,7 @@ public class DataBase {
 					rs.close();
 				}
 				if (con != null) {
-					// dbCon.releaseConnection(con);
+					con.close();
 				}
 			} catch (SQLException sqle) {
 			}
@@ -2555,7 +2562,7 @@ public class DataBase {
 		DeliveryDTO report = null;
 		System.out.println("UnprocessedSummary:" + query);
 		try {
-			Connection connection = jdbcTemplate.getDataSource().getConnection();
+			Connection connection = getConnection();
 
 			// con = dbCon.getConnection();
 			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
@@ -2627,7 +2634,7 @@ public class DataBase {
 					rs.close();
 				}
 				if (con != null) {
-					// dbCon.releaseConnection(con);
+				con.close();
 				}
 			} catch (SQLException sqle) {
 			}
@@ -2714,7 +2721,7 @@ public class DataBase {
 					rs.close();
 				}
 				if (con != null) {
-					// dbCon.releaseConnection(con);
+				con.close();
 				}
 			} catch (SQLException sqle) {
 			}
@@ -2733,9 +2740,7 @@ public class DataBase {
 			keys = keys.substring(1, keys.length() - 1);
 			sql = "select msg_id,dcs,content from content_" + username + " where msg_id in(" + keys + ")";
 
-			Connection connection = jdbcTemplate.getDataSource().getConnection();
-
-			// con = dbCon.getConnection();
+			Connection connection = getConnection();
 			pStmt = con.prepareStatement(sql, java.sql.ResultSet.TYPE_FORWARD_ONLY,
 					java.sql.ResultSet.CONCUR_READ_ONLY);
 			pStmt.setFetchSize(Integer.MIN_VALUE);
@@ -2783,7 +2788,7 @@ public class DataBase {
 					rs.close();
 				}
 				if (con != null) {
-					// dbCon.releaseConnection(con);
+		con.close();
 				}
 			} catch (SQLException sqle) {
 			}
@@ -2808,7 +2813,7 @@ public class DataBase {
 		DeliveryDTO report = null;
 		String msg_id = null;
 		try {
-			Connection connection = jdbcTemplate.getDataSource().getConnection();
+			Connection connection = getConnection();
 
 			// con = dbCon.getConnection();
 			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
@@ -2872,7 +2877,7 @@ public class DataBase {
 					rs.close();
 				}
 				if (con != null) {
-					// dbCon.releaseConnection(con);
+					con.close();
 				}
 			} catch (SQLException sqle) {
 			}
@@ -2899,7 +2904,7 @@ public class DataBase {
 		}
 		logger.info("SQL: " + query);
 		try {
-			Connection connection = jdbcTemplate.getDataSource().getConnection();
+			Connection connection = getConnection();
 
 			// con = Connection.getConnection();
 			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
@@ -2932,7 +2937,7 @@ public class DataBase {
 					rs.close();
 				}
 				if (con != null) {
-					// dbCon.releaseConnection(con);
+				con.close();
 				}
 			} catch (SQLException sqle) {
 			}
@@ -3546,8 +3551,6 @@ public class DataBase {
 		DeliveryDTO report = null;
 		System.out.println("UnprocessedSummary:" + query);
 		try {
-			Connection connection = jdbcTemplate.getDataSource().getConnection();
-
 			con = getConnection();
 			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
 					java.sql.ResultSet.CONCUR_READ_ONLY);
@@ -3598,7 +3601,7 @@ public class DataBase {
 					rs.close();
 				}
 				if (con != null) {
-					// dbCon.releaseConnection(con);
+				con.close();
 				}
 			} catch (SQLException sqle) {
 			}

@@ -8,6 +8,9 @@ import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.report.dto.ProfitReportEntry;
@@ -15,6 +18,7 @@ import com.hti.smpp.common.report.dto.ReportCriteria;
 import com.hti.smpp.common.service.ReportDAO;
 import com.hti.smpp.common.util.MessageResourceBundle;
 
+import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
@@ -35,50 +39,38 @@ public class ReportDAOImpl implements ReportDAO {
 		this.sessionFactory = sessionFactory;
 	}
 
-	public List<ProfitReportEntry> listProfitReport(ReportCriteria rc) {
-		logger.info("report Criteria" + rc);
+	public Page<ProfitReportEntry> listProfitReport(ReportCriteria rc, Pageable pageable) {
+	    Session session = null;
+	    try {
+	        session = sessionFactory.openSession();
+	        CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+	        CriteriaQuery<ProfitReportEntry> criteriaQuery = criteriaBuilder.createQuery(ProfitReportEntry.class);
+	        Root<ProfitReportEntry> root = criteriaQuery.from(ProfitReportEntry.class);
 
-		Session session = null;
+	        List<Predicate> predicates = new ArrayList<>();
+	        // Your existing predicate logic here...
 
-		try {
-			session = sessionFactory.openSession();
-			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-			CriteriaQuery<ProfitReportEntry> query = criteriaBuilder.createQuery(ProfitReportEntry.class);
-			Root<ProfitReportEntry> root = query.from(ProfitReportEntry.class);
-			List<Predicate> predicates = new ArrayList<>();
-			predicates.add(criteriaBuilder.equal(root.get("wallet"), true));
+	        criteriaQuery.select(root).where(predicates.toArray(new Predicate[0]));
 
-			if (rc.getStartMsgId() > 0 && rc.getEndMsgId() > 0) {
-				predicates.add(criteriaBuilder.between(root.get("msgId"), rc.getStartMsgId(), rc.getEndMsgId()));
-			}
+	        // Apply sorting and pagination
+	        Query query = session.createQuery(criteriaQuery);
 
-			if (rc.getResellerId() > 0) {
-				predicates.add(criteriaBuilder.equal(root.get("resellerId"), rc.getResellerId()));
-			}
+	        // Apply pagination
+	        int totalRows = query.getResultList().size(); // Get total rows without pagination
+	        query.setFirstResult((int) pageable.getOffset());
+	        query.setMaxResults(pageable.getPageSize());
 
-			if (rc.getUserId() > 0) {
-				predicates.add(criteriaBuilder.equal(root.get("userId"), rc.getUserId()));
-			}
+	        List<ProfitReportEntry> entries = query.getResultList();
 
-			// Build the where clause with the collected predicates
-			query.select(root).where(predicates.toArray(new Predicate[0]));
+	        logger.info(messageResourceBundle.getLogMessage("profit.report.entries.message"), entries.size());
 
-			// Execute the query
-			List<ProfitReportEntry> list = session.createQuery(query).getResultList();
-
-			logger.info(messageResourceBundle.getLogMessage("profit.report.entries.message"), list.size());
-
-			// You might need to handle the connection accordingly based on your
-			// application's requirements.
-
-			return list;
-		} finally {
-			// Close the session in a finally block to ensure it's closed even if an
-			// exception occurs.
-			if (session != null) {
-				session.close();
-			}
-		}
+	        return new PageImpl<>(entries, pageable, totalRows);
+	    } finally {
+	        if (session != null) {
+	            session.close();
+	        }
+	    }
 	}
 
+	
 }

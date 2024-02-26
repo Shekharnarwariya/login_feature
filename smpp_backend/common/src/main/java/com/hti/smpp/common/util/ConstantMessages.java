@@ -195,7 +195,7 @@ public class ConstantMessages {
     public static final String BAD_REQUEST_EXCEPTION_MESSAGE = "badRequestException.message";
     public static final String INTERNAL_SERVER_EXCEPTION = "campaign.report.data.not.found";
     public static final String UNAUTHORIZED_EXCEPTION_MESSAGE = "user.unauthorized.operation";
-    public static final String INTERNAL_SERVER_MESSAGE = "dlr.content.report.data.not.found";
+    public static final String DATA_NOT_FOUND_CONTENT = "dlr.content.report.data.not.found";
     public static final String INTERNAL_SERVER_LATENCY_EXCEPTION = "latency.report.error";
     public static final String NO_DATA_FOUND = "report.data.not.found";
     public static final String XLS_GENERATING_ERROR = "xls.report.error";
@@ -206,6 +206,7 @@ public class ConstantMessages {
     public static final String CUSTOMIZED_REPORT_NOT_FOUND_MESSAGE = "customized.report.data.not.found";
     public static final String CUSTOMIZED_REPORT_PROCESSING_ERROR_MESSAGE = "customized.report.processing.error";
     public static final String FAILED_GENERATE_JASPER_PRINT_MESSAGE = "jasperprint.generation.failed";
+    
     
     //DLR Summary Report
     public static final String NO_DATA_FOUND_DLR_SUMMARY_REPORT = "dlr.summary.report.data.not.found";
@@ -302,11 +303,15 @@ public class ConstantMessages {
     public static final String NO_DATA_FOUND_IN_ROUTE_ENTRY_EXT_LIST = "no.data.found.in.route.entry.ext.list";
     public static final String ID_NOT_FOUND_OR_NULL = "id.not.found.or.null";
     public static final String ERROR_ADDING_ROUTE_ENTRIES = "error.adding.route.entries";
+
+	public static final String INTERNAL_SERVER_MESSAGE = "An unexpected internal server error has occurred. Please try again later or contact support if the problem persists.";
+
     //two-way exception
     public static final String TWOWAY_WEBMENU_ACCESS_ENTRY_NOT_FOUND = "twoway.webmenu.access.entry.notfound";
     public static final String TWOWAY_KEYWORD_EXIST = "twoway.keyword.exist";
     public static final String TWOWAY_KEYWORD_NOT_FOUND = "twoway.keyword.notfound";
     public static final String TWOWAY_INTERNALSERVER_ERROR = "twoway.internalserver.error";
+
 
    // S M S C 
     public static final String FAILED_TO_SAVE_SMSC_ENTRY = "failed.to.save.smsc.entry";

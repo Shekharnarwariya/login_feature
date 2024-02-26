@@ -114,33 +114,30 @@ public class CampaignReportImpl implements CampaignReportService {
 	public ResponseEntity<?> CampaignReportview(String username, CampaignReportRequest customReportForm) {
 		try {
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-			UserEntry user = userOptional
-					.orElseThrow(() ->new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
-
+			UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 
 			}
 
-			
-			
 			List<DeliveryDTO> print = getReportList(customReportForm, username, false);
-			
-			
-			if (print != null && !print.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(), print.size());
-				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
 
-				
+			if (print != null && !print.isEmpty()) {
+				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(),
+						print.size());
+				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
 
 				// Return ResponseEntity with the list in the response body
 				return new ResponseEntity<>(print, HttpStatus.OK);
 			} else {
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_EXCEPTION,new Object[] {username}));
+				throw new InternalServerException(messageResourceBundle
+						.getExMessage(ConstantMessages.INTERNAL_SERVER_EXCEPTION, new Object[] { username }));
 
 			}
-		//	return new ResponseEntity<>(print, HttpStatus.OK);
+			// return new ResponseEntity<>(print, HttpStatus.OK);
 		} catch (DataNotFoundException | UnauthorizedException | ParameterMismatchException e) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
 		} catch (Exception e) {
@@ -150,13 +147,15 @@ public class CampaignReportImpl implements CampaignReportService {
 							+ " within the specified date range.");
 		}
 	}
+
 	private List<DeliveryDTO> getReportList(CampaignReportRequest customReportForm, String username, boolean paging) {
 		if (customReportForm.getClientId() == null) {
 			return null;
 		}
 		Optional<UserEntry> usersOptional = userRepository.findBySystemId(username);
 		if (!usersOptional.isPresent()) {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 		UserEntry user = usersOptional.get();
 
@@ -287,12 +286,14 @@ public class CampaignReportImpl implements CampaignReportService {
 				while (!users.isEmpty()) {
 					String report_user = (String) users.remove(0);
 					try {
-						logger.info(messageResourceBundle.getLogMessage("checking.report.message"), user.getSystemId(), report_user);
+						logger.info(messageResourceBundle.getLogMessage("checking.report.message"), user.getSystemId(),
+								report_user);
 
 						String sql = "select msg_id,DATE(submitted_time) as date,source_no,status from mis_"
 								+ report_user + " where msg_id between " + start_date_str + " and " + end_date_str;
 						List<DeliveryDTO> part_list = getCampaignReport(sql);
-						logger.info(messageResourceBundle.getLogMessage("processing.entries.message"), report_user, part_list.size());
+						logger.info(messageResourceBundle.getLogMessage("processing.entries.message"), report_user,
+								part_list.size());
 
 						Map<String, Map<String, Map<String, DeliveryDTO>>> date_wise_map = new HashMap<String, Map<String, Map<String, DeliveryDTO>>>();
 						// int total_submitted = 0;
@@ -378,7 +379,8 @@ public class CampaignReportImpl implements CampaignReportService {
 		chart_list.add(new DeliveryDTO("OTHERS", final_others));
 		List<DeliveryDTO> print = null;
 		if (!final_list.isEmpty()) {
-			logger.info(messageResourceBundle.getLogMessage("prepared.list.message"), user.getSystemId(), final_list.size());
+			logger.info(messageResourceBundle.getLogMessage("prepared.list.message"), user.getSystemId(),
+					final_list.size());
 
 			final_list = sortList(final_list);
 //			JasperDesign design = null;
@@ -427,7 +429,6 @@ public class CampaignReportImpl implements CampaignReportService {
 
 	public List<BulkMapEntry> list(String[] systemId, long from, long to) {
 		logger.info(messageResourceBundle.getLogMessage("checking.systemId.message"), systemId, from, to);
-
 
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<BulkMapEntry> criteriaQuery = criteriaBuilder.createQuery(BulkMapEntry.class);
@@ -591,7 +592,6 @@ public class CampaignReportImpl implements CampaignReportService {
 		return list;
 	}
 
-	
 //	@Override
 //	public ResponseEntity<?> CampaignReportxls(String username, CampaignReportRequest customReportForm,
 //	        HttpServletResponse response, String lang) {

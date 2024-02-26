@@ -7,5 +7,4 @@ import com.hti.smpp.common.user.dto.RechargeEntry;
 
 @Repository
 public interface RechargeEntryRepository extends JpaRepository<RechargeEntry, Integer> {
-
 }

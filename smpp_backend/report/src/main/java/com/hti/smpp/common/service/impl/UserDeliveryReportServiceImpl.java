@@ -23,6 +23,8 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -34,8 +36,10 @@ import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.network.dto.NetworkEntry;
+import com.hti.smpp.common.request.PaginationRequest;
 import com.hti.smpp.common.request.UserDeliveryForm;
 import com.hti.smpp.common.response.DeliveryDTO;
+import com.hti.smpp.common.response.PaginatedResponse;
 import com.hti.smpp.common.service.UserDeliveryReportService;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
@@ -76,6 +80,8 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 	@Override
 	public ResponseEntity<?> UserDeliveryReportView(String username, UserDeliveryForm customReportForm) {
 		String target = IConstants.FAILURE_KEY;
+		PaginationRequest paginationRequest = customReportForm.getPaginationRequest();
+		Pageable p = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
 
 		try {
 //			locale = Customlocale.getLocaleByLanguage(lang);
@@ -88,20 +94,33 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
 
-			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
+			List<DeliveryDTO> reportList = getReportList(customReportForm, username, p);
 			if (reportList != null && !reportList.isEmpty()) {
-
+				int totalPages = 0;
+				String countSql = "SELECT COUNT(*) FROM report_summary WHERE username = ? AND time ";
+				try (Connection connection = getConnection();
+						PreparedStatement pStmt = connection.prepareStatement(countSql)) {
+					pStmt.setString(1, username);
+					try (ResultSet rs = pStmt.executeQuery()) {
+						if (rs.next()) {
+							long totalElements = rs.getLong(1);
+							totalPages = (int) Math.ceil((double) totalElements / p.getPageSize());
+						}
+					}
+				} catch (SQLException e) {
+					e.printStackTrace(); // Properly handle or log the exception
+				}
 				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(),
 						reportList.size());
-
 				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(),
 						reportList.size());
-
-				List<DeliveryDTO> print = getJasperPrint(reportList, false);
+		
+				//List<DeliveryDTO> print = getJasperPrint(reportList, false);
 				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
-
+				PaginatedResponse<DeliveryDTO> paginatedResponse = new PaginatedResponse<>(reportList,
+						p.getPageNumber(), p.getPageSize(), reportList.size(), totalPages);
 				target = IConstants.SUCCESS_KEY;
-				return new ResponseEntity<>(reportList, HttpStatus.OK);
+				return ResponseEntity.ok(paginatedResponse);
 				// Return the file in the ResponseEntity
 				// return new ResponseEntity<>(pdfReport, headers, HttpStatus.OK);
 
@@ -119,6 +138,159 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 
 		}
 	}
+
+
+//	@Override
+//	public ResponseEntity<?> UserDeliveryReportxls(String username, UserDeliveryForm customReportForm,
+//			HttpServletResponse response) {
+//		String target = IConstants.FAILURE_KEY;
+//
+//		try {
+//
+//			List<DeliveryDTO> reportList = null;// getReportList(customReportForm, username);
+//			if (!reportList.isEmpty()) {
+//				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
+//
+//				List<DeliveryDTO> print = getJasperPrint(reportList, false);
+//
+//				// Update content type for Excel file
+//				response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+//				response.setHeader("Content-Disposition", "attachment; filename=UserDlr_"
+//						+ new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".xlsx");
+//
+//				OutputStream out = response.getOutputStream();
+//				JRExporter exporter = new JRXlsxExporter();
+//				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
+//				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
+//				exporter.setParameter(JRXlsExporterParameter.IS_ONE_PAGE_PER_SHEET, Boolean.FALSE);
+//				exporter.setParameter(JRXlsExporterParameter.MAXIMUM_ROWS_PER_SHEET, 60000);
+//				exporter.exportReport();
+//
+//				// Close the output stream
+//				if (out != null) {
+//					try {
+//						out.flush(); // Flush before closing
+//						out.close();
+//					} catch (IOException ioe) {
+//						logger.error(messageResourceBundle.getLogMessage("xls.outputstream.error.message"));
+//
+//					}
+//				}
+//
+//				target = IConstants.SUCCESS_KEY;
+//			} else {
+//				throw new NotFoundException(messageResourceBundle.getExMessage(
+//						ConstantMessages.USER_DELIVERY_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
+//
+//			}
+//		} catch (NotFoundException e) {
+//			throw new NotFoundException(e.getMessage());
+//		} catch (Exception e) {
+//			throw new InternalServerException(messageResourceBundle
+//					.getExMessage(ConstantMessages.ERROR_GETTING_DELIVERY_REPORT_MESSAGE, new Object[] { username }));
+//
+//		}
+//		return ResponseEntity.ok(target);
+//	}
+//
+//	@Override
+//	public ResponseEntity<?> UserDeliveryReportPdf(String username, UserDeliveryForm customReportForm,
+//			HttpServletResponse response) {
+//		String target = IConstants.FAILURE_KEY;
+//
+//		try {
+//			// Locale locale = Customlocale.getLocaleByLanguage(lang);
+//			List<DeliveryDTO> reportList = null;// getReportList(customReportForm, username);
+//			if (!reportList.isEmpty()) {
+//				logger.info(messageResourceBundle.getMessage("report.size"), reportList.size());
+//
+//				List<DeliveryDTO> print = getJasperPrint(reportList, false);
+//
+//				// Update content type for PDF file
+//				response.setContentType("application/pdf");
+//				response.setHeader("Content-Disposition", "attachment; filename=UserDlr_"
+//						+ new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".pdf");
+//
+//				logger.info(messageResourceBundle.getMessage("creating.pdf.message"));
+//
+//				OutputStream out = response.getOutputStream();
+//				JRExporter exporter = new JRPdfExporter();
+//				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
+//				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
+//				exporter.exportReport();
+//
+//				// Close the output stream
+//				out.flush(); // Flush before closing
+//				out.close();
+//
+//				target = IConstants.SUCCESS_KEY;
+//			} else {
+//				throw new NotFoundException(messageResourceBundle.getExMessage(
+//						ConstantMessages.USER_DELIVERY_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
+//			}
+//		} catch (NotFoundException e) {
+//			throw new NotFoundException(e.getMessage());
+//		} catch (IOException e) {
+//			logger.error(messageResourceBundle.getMessage("pdf.outputstream.closing.error.message"), e);
+//			// Handle IOException for OutputStream operations
+//		} catch (Exception e) {
+//			throw new InternalServerException(messageResourceBundle
+//					.getExMessage(ConstantMessages.ERROR_GETTING_DELIVERY_REPORT_MESSAGE, new Object[] { username }));
+//		}
+//		return ResponseEntity.ok(target);
+//	}
+//
+//	@Override
+//	public ResponseEntity<?> UserDeliveryReportDoc(String username, UserDeliveryForm customReportForm,
+//			HttpServletResponse response) {
+//		String target = IConstants.FAILURE_KEY;
+//
+//		try {
+//			// locale = Customlocale.getLocaleByLanguage(lang);
+//
+//			List<DeliveryDTO> reportList = null;// getReportList(customReportForm, username);
+//			if (!reportList.isEmpty()) {
+//				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
+//				List<DeliveryDTO> print = getJasperPrint(reportList, false);
+//
+//				// Update content type for DOCX file
+//				response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+//				response.setHeader("Content-Disposition", "attachment; filename=UserDlr_"
+//						+ new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".docx");
+//
+//				logger.info(messageResourceBundle.getMessage("creating.doc.message"), username);
+//				logger.info(messageResourceBundle.getLogMessage("creating.doc.message"), username);
+//
+//				OutputStream out = response.getOutputStream();
+//				JRExporter exporter = new JRDocxExporter();
+//				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
+//				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
+//				exporter.exportReport();
+//
+//				// Close the output stream
+//				if (out != null) {
+//					try {
+//						out.flush(); // Flush before closing
+//						out.close();
+//					} catch (IOException ioe) {
+//						logger.error(messageResourceBundle.getLogMessage("docx.outputstream.closing.error.message"));
+//
+//					}
+//				}
+//
+//				target = IConstants.SUCCESS_KEY;
+//			} else {
+//				throw new NotFoundException(messageResourceBundle.getExMessage(
+//						ConstantMessages.USER_DELIVERY_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
+//			}
+//		} catch (NotFoundException e) {
+//			throw new NotFoundException(e.getMessage());
+//		} catch (Exception e) {
+//			throw new InternalServerException(messageResourceBundle
+//					.getExMessage(ConstantMessages.ERROR_GETTING_DELIVERY_REPORT_MESSAGE, new Object[] { username }));
+//		}
+//		return ResponseEntity.ok(target);
+//	}
 
 
 	private List<DeliveryDTO> getJasperPrint(List<DeliveryDTO> reportList, boolean paging) throws JRException {
@@ -177,7 +349,7 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 		return final_list;
 	}
 
-	private List<DeliveryDTO> getReportList(UserDeliveryForm customReportForm, String username)
+	private List<DeliveryDTO> getReportList(UserDeliveryForm customReportForm, String username, Pageable pageable)
 			throws Exception {
 		List<DeliveryDTO> list = null;
 		// int back_day = 1;
@@ -218,6 +390,9 @@ public class UserDeliveryReportServiceImpl implements UserDeliveryReportService 
 				sql += "and oprCountry in (" + oprCountry + ") ";
 			}
 		}
+		int limit = pageable.getPageSize();
+		int offset = pageable.getPageNumber() * pageable.getPageSize();
+		sql += "LIMIT " + limit + " OFFSET " + offset;
 		logger.info("SQL: " + sql);
 		list = getUserDeliveryReport(sql);
 		return list;

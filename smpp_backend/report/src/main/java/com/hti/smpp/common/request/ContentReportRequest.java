@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class ContentReportRequest {
+	
+	private PaginationRequest paginationRequest; 
 
 	@NotBlank(message = "EndDate must not be blank")
 	private String endDate;
@@ -20,6 +22,16 @@ public class ContentReportRequest {
 	private String operator;
 	private String sday;
 	private String eday;
+	
+	
+
+	public PaginationRequest getPaginationRequest() {
+		return paginationRequest;
+	}
+
+	public void setPaginationRequest(PaginationRequest paginationRequest) {
+		this.paginationRequest = paginationRequest;
+	}
 
 	public String getSday() {
 		return sday;

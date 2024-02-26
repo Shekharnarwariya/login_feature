@@ -1,14 +1,15 @@
 package com.hti.smpp.common.service;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import com.hti.smpp.common.dto.UserEntryExt;
+import com.hti.smpp.common.user.dto.RechargeEntry;
 import com.hti.smpp.common.user.dto.UserEntry;
 
 @Service
-public interface UserDAService {
+public interface UserDAService  {
 	// public int saveUserEntry(UserEntryExt entry);
 
 //	public int saveRechargeEntry(RechargeEntry entry);
@@ -77,12 +78,16 @@ public interface UserDAService {
 //
 //
 //	// -------------- Recharge Entries -------------------
-//	public Map<Integer, RechargeEntry> listRecentRecharges(Integer[] userid);
-//
-//	public Map<Integer, List<RechargeEntry>> listTransactions(Integer[] userid, String txnType, String startTime,
-//			String endTime);
-//
-//	public Map<Integer, List<RechargeEntry>> listTransactions(Integer[] userid);
+	public Map<Integer, RechargeEntry> listRecentRecharges(Integer[] userid);
+
+	public Map<Integer, List<RechargeEntry>> listTransactions(Integer[] userid, String txnType, String startTime,
+			String endTime);
+
+	public Map<Integer, List<RechargeEntry>> listTransactions(Integer[] userid);
+	
+	
+	
+	
 //
 //	// ----------- Web Access Log entries -----------------
 //	public void saveAccessLogEntry(AccessLogEntry entry);
