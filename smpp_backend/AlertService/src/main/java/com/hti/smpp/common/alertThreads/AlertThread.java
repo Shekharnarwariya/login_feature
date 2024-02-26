@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,6 +51,7 @@ import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
+import com.hti.smpp.common.util.MessageResourceBundle;
 import com.hti.smpp.common.util.MultiUtility;
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
@@ -113,6 +115,9 @@ public class AlertThread implements Runnable {
 	@Autowired
 	private EmailSender emailSender;
 	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
+	
 
 	private Logger logger = LoggerFactory.getLogger(AlertThread.class);
 //	private boolean stop = false;
@@ -174,6 +179,8 @@ public class AlertThread implements Runnable {
 
 	public AlertThread() {
 		System.out.println("***** Price Change Alert Thread Started ******* ");
+		logger.info(messageResourceBundle.getLogMessage("alert.info.priceChangeThreadStarted"));
+
 	}
 
 //	static Thread thread = new Thread("AlertThread");
@@ -204,6 +211,8 @@ public class AlertThread implements Runnable {
 	@Scheduled(cron = "*/10 * * * * *")
 	public void alertSchedulerTask() {
 		System.out.println("<---- Schedule Check Running -----> ");
+		logger.info(messageResourceBundle.getLogMessage("alert.info.scheduleCheckRunning"));
+
 		
 		if (GlobalVars.MASTER_CLIENT) {
 			sleep = true;
@@ -214,8 +223,10 @@ public class AlertThread implements Runnable {
 				checkForPriceChange();
 				if (sleep) {
 					System.out.println("<-- Alert Task Sleeping --> ");
+					logger.info(messageResourceBundle.getLogMessage("alert.info.alertTaskSleeping"));
 				} else {
 					System.out.println("<-- Alert Task Not Sleeping --> ");
+					logger.info(messageResourceBundle.getLogMessage("alert.info.alertTaskNotSleeping"));
 				}
 			} catch (Exception e) {
 				logger.error("", e.fillInStackTrace());
@@ -224,6 +235,7 @@ public class AlertThread implements Runnable {
 			}
 		} else {
 			System.out.println("<-- Alert Task Not Executed, MASTER_CLIENT is false --> ");
+			logger.info(messageResourceBundle.getLogMessage("alert.info.alertTaskNotExecuted"));
 		}
 	}
 
@@ -279,13 +291,15 @@ public class AlertThread implements Runnable {
 //	}
 
 	public void check() {
-		logger.info("<-- Command to check Price Changes --> ");
+		logger.info(messageResourceBundle.getLogMessage("alert.info.priceChangeCheck"));
 		if (isSleep) {
 			System.out.println("<-- Interrupting Alert Thread --> ");
+			logger.info(messageResourceBundle.getLogMessage("alert.info.interruptAlertThread"));
 			thread.interrupt();
 			// System.out.println("After Interrupt Status --> " + thread.getState());
 		} else {
 			System.out.println("<-- Alert Thread Already Processing --> ");
+			logger.info(messageResourceBundle.getLogMessage("alert.info.alertThreadAlreadyProcessing"));
 			sleep = false;
 		}
 	}
@@ -304,6 +318,7 @@ public class AlertThread implements Runnable {
 		try {
 			Map<Integer, UserEntryExt> usermap = listUserEntries();
 			System.out.println("***** Checking For loadUserCache Alert ******* ");
+			logger.info(messageResourceBundle.getLogMessage("alert.info.checkingLoadUserCache"));
 			for (Map.Entry<Integer, UserEntryExt> entry : usermap.entrySet()) {
 				system_id = entry.getValue().getUserEntry().getSystemId();
 				LocalModel localModel = new LocalModel();
@@ -331,6 +346,7 @@ public class AlertThread implements Runnable {
 
 	private void checkForPriceChange() {
 		System.out.println("***** Checking For Price Change Alert ******* ");
+		logger.info(messageResourceBundle.getLogMessage("alert.info.checkingPriceChange"));
 		Map<Integer, List<RouteEntryExt>> alert_map = new HashMap<Integer, List<RouteEntryExt>>();
 		boolean schedule = false;
 		boolean proceed = false;
@@ -338,9 +354,11 @@ public class AlertThread implements Runnable {
 			Map<Integer, List<RouteEntryExt>> map = alertThreadDbInfo.checkForPriceChange();
 			if (map.isEmpty()) {
 				System.out.println("***** No Price Change Found ******* ");
+				logger.info(messageResourceBundle.getLogMessage("alert.info.noPriceChange"));
 				map = alertThreadDbInfo.checkForPriceChangeSch();
 				if (map.isEmpty()) {
 					System.out.println("***** No Price Change Schedules Found ******* ");
+					logger.info(messageResourceBundle.getLogMessage("alert.info.noPriceChangeSchedules"));
 				} else {
 					proceed = true;
 					schedule = true;
@@ -382,6 +400,7 @@ public class AlertThread implements Runnable {
 							}
 							if (network == null) {
 								System.out.println(user_id + " -> Network Record Not Found For :" + prefix);
+								logger.error(messageResourceBundle.getLogMessage("alert.error.networkRecordNotFound"), user_id + " -> " + prefix);
 								route.setCountry("Default");
 								route.setOperator("Default");
 								route.setMcc("-");
@@ -414,10 +433,10 @@ public class AlertThread implements Runnable {
 					int user_id = entry.getKey();
 					List<RouteEntryExt> list = entry.getValue();
 					if (schedule) {
-						logger.info("Creating Price Change Schedule Alert Email For " + user_id + " Entries: "
-								+ list.size());
+						logger.info(messageResourceBundle.getLogMessage("alert.info.priceChangeScheduleEmail"), user_id, list.size());
+
 					} else {
-						logger.info("Creating Price Change Alert Email For " + user_id + " Entries: " + list.size());
+						logger.info(messageResourceBundle.getLogMessage("alert.info.priceChangeAlertEmail"), user_id, list.size());
 					}
 					// sort list by country/Operator
 					list.sort(Comparator.comparing(RouteEntryExt::getCountry, String.CASE_INSENSITIVE_ORDER)
@@ -438,8 +457,7 @@ public class AlertThread implements Runnable {
 							if (UserLocalEntry.get(master_id).getDomainEmail() != null) {
 								from = UserLocalEntry.get(master_id).getDomainEmail();
 							} else {
-								logger.info(
-										systemId + "[" + user_id + "]" + " DomainEmail[" + master_id + "] Not Found");
+								logger.info(messageResourceBundle.getLogMessage("alert.info.domainEmailNotFound"), systemId, user_id, master_id);
 							}
 						}
 						// String subject = "BroadNet - Prices Update";
@@ -474,14 +492,14 @@ public class AlertThread implements Runnable {
 							coverage_report[0] = getCoverageReportXLS(systemId, list, currency, map_covergae);
 							coverage_report[1] = getCoverageReportPDF(systemId, list, currency, map_covergae);
 							send(email, from, content, subject, coverage_report, false);
-							logger.info("Price Change Alert[" + systemId + "] Sent from:" + from + " To:" + email);
+							logger.info(messageResourceBundle.getLogMessage("alert.info.priceChangeAlertSent"), systemId, from, email);
 						} catch (Exception ex) {
 							flag = "error";
-							logger.info(ex + " While Sending price Change Alert to " + systemId);
+							logger.error(messageResourceBundle.getLogMessage("alert.error.priceChangeAlertSending"), systemId, ex);
 						}
 					} else {
 						flag = "error";
-						logger.info(" Email Not Found For price Change Alert " + user_id);
+						logger.info(messageResourceBundle.getLogMessage("alert.info.priceChangeEmailNotFound"), user_id);
 					}
 					// System.out.println(user + " Update Flag: " + list.size());
 					while (!list.isEmpty()) {
@@ -583,6 +601,8 @@ public class AlertThread implements Runnable {
 				multipart.addBodyPart(messageBodyPart);
 			} else {
 				System.out.println("Header Image not exists: " + fi.getName());
+				logger.info(messageResourceBundle.getLogMessage("alert.headerImageNotFound"), fi.getName());
+
 			}
 			// third part (the image)
 			fi = new File(IConstants.FORMAT_DIR + "images//footer.jpg");
@@ -596,6 +616,7 @@ public class AlertThread implements Runnable {
 				multipart.addBodyPart(messageBodyPart);
 			} else {
 				System.out.println("Footer Image not exists: " + fi.getName());
+				logger.info(messageResourceBundle.getLogMessage("alert.footerImageNotFound"), fi.getName());
 			}
 			fi = new File(IConstants.FORMAT_DIR + "images//footer_2.png");
 			if (fi.exists()) {
@@ -620,6 +641,7 @@ public class AlertThread implements Runnable {
 				multipart.addBodyPart(messageBodyPart);
 			} else {
 				System.out.println("Lebanon Image not exists: " + fi.getName());
+				logger.info(messageResourceBundle.getLogMessage("alert.lebanonImageNotFound"), fi.getName());
 			}
 			fi = new File(IConstants.FORMAT_DIR + "images//uae.png");
 			if (fi.exists()) {
@@ -632,6 +654,7 @@ public class AlertThread implements Runnable {
 				multipart.addBodyPart(messageBodyPart);
 			} else {
 				System.out.println("UAE Image not exists: " + fi.getName());
+				logger.info(messageResourceBundle.getLogMessage("alert.uaeImageNotFound"), fi.getName());
 			}
 			fi = new File(IConstants.FORMAT_DIR + "images//contact.jpg");
 			if (fi.exists()) {
@@ -644,6 +667,7 @@ public class AlertThread implements Runnable {
 				multipart.addBodyPart(messageBodyPart);
 			} else {
 				System.out.println("Contact Image not exists: " + fi.getName());
+				logger.info(messageResourceBundle.getLogMessage("alert.contactImageNotFound"), fi.getName());
 			}
 			/*
 			 * fi = new File(IConstants.webPath + "\\format\\images\\facebook.png"); if
@@ -1010,11 +1034,11 @@ public class AlertThread implements Runnable {
 	}
 
 	public void stopThread() {
-		logger.info("***** Alert Thread Stopping ******* ");
+		logger.info(messageResourceBundle.getLogMessage("alert.alertThreadStopping"));
 		sleep = false;
 		stop = true;
 		if (isSleep) {
-			logger.info("<-- Interrupting Alert Thread --> ");
+			logger.info(messageResourceBundle.getLogMessage("alert.interruptingAlertThread"));
 			thread.interrupt();
 		}
 	}
@@ -1036,7 +1060,7 @@ public class AlertThread implements Runnable {
 	}
 
 	public Map<Integer, UserEntryExt> listUserEntries() {
-		logger.debug("listUserEntries():" + GlobalVars.UserEntries);
+		logger.info(MessageFormat.format(messageResourceBundle.getLogMessage("info.listUserEntries"), GlobalVars.UserEntries));
 		Map<Integer, UserEntryExt> map = new LinkedHashMap<Integer, UserEntryExt>();
 		List<UserEntry> all = userEntryRepository.findAll();
 		for (UserEntry userId : all) {
@@ -1048,7 +1072,7 @@ public class AlertThread implements Runnable {
 	}
 
 	public UserEntryExt getUserEntryExt(int userid) {
-		logger.debug("getUserEntry(" + userid + ")");
+		logger.info(MessageFormat.format(messageResourceBundle.getLogMessage("info.getUserEntry"), userid));
 		if (userEntryRepository.existsById(userid)) {
 
 			UserEntry userEntry = this.userEntryRepository.findById(userid).get();
@@ -1061,7 +1085,7 @@ public class AlertThread implements Runnable {
 			entry.setWebMasterEntry(webEntry);
 //			entry.setProfessionEntry(GlobalVars.ProfessionEntries.get(userid));
 			entry.setProfessionEntry(this.professionEntryRepository.findById(userid).get());
-			logger.debug("end getUserEntry(" + userid + ")");
+			logger.info(MessageFormat.format(messageResourceBundle.getLogMessage("info.endGetUserEntry"), userid));
 			return entry;
 		} else {
 			return null;
@@ -1117,7 +1141,7 @@ public class AlertThread implements Runnable {
 				list.put(entry.getBasic().getNetworkId(), entry);
 			}
 		} else {
-			logger.info("listing RouteEntries From Database: " + userId);
+			logger.info(messageResourceBundle.getLogMessage("network.info.listRouteEntries"), userId);
 //			List<RouteEntry> db_list = routeDAO.listRoute(userId);
 			List<RouteEntry> db_list = routeEntryRepository.findByUserId(userId);
 			for (RouteEntry basic : db_list) {
