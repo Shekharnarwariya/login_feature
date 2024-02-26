@@ -24,10 +24,20 @@ public class ContactEntry {
 	private String email;
 	@Column(name = "number")
 	private long number;
+	@Column(name = "createdOn")
+	private String createdOn;
 
 	public ContactEntry() {
 	}
 
+	public ContactEntry(String name, long number, String email, int groupId, String createdOn) {
+		this.name = name;
+		this.number = number;
+		this.email = email;
+		this.groupId = groupId;
+		this.createdOn = createdOn;
+	}
+	
 	public ContactEntry(String name, long number, String email, int groupId) {
 		this.name = name;
 		this.number = number;
@@ -74,9 +84,19 @@ public class ContactEntry {
 	public void setNumber(long number) {
 		this.number = number;
 	}
-
-	public String toString() {
-		return "ContactEntry: id=" + id + ",groupId=" + groupId + ",name=" + name + ",Email=" + email + ",number="
-				+ number;
+	
+	public String getCreatedOn() {
+		return createdOn;
 	}
+
+	public void setCreatedOn(String createdOn) {
+		this.createdOn = createdOn;
+	}
+
+	@Override
+	public String toString() {
+		return "ContactEntry [id=" + id + ", groupId=" + groupId + ", name=" + name + ", email=" + email + ", number="
+				+ number + ", createdOn=" + createdOn + "]";
+	}
+
 }

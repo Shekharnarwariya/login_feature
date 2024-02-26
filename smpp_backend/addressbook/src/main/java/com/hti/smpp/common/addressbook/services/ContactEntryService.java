@@ -20,7 +20,7 @@ public interface ContactEntryService {
 
 	public ResponseEntity<List<ContactEntry>> viewSearchContact(List<Integer> ids, String username);
 
-	public List<ContactEntry> getContactByGroupId(int groupId, String username);
+	public List<ContactEntry> getContactByGroupId(int groupId,String start, String end, String search, String username);
 
 	public ResponseEntity<ContactForBulk> proceedSearchContact(List<Integer> ids, String username);
 

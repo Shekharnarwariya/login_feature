@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.hti.smpp.common.contacts.dto.GroupDataEntry;
@@ -14,7 +15,10 @@ import com.hti.smpp.common.contacts.dto.GroupDataEntry;
 public interface GroupDataEntryRepository extends JpaRepository<GroupDataEntry, Integer>{
 
 	public List<GroupDataEntry> findByGroupId(int groupId);
-
+	
+	@Query("SELECT g FROM GroupDataEntry g WHERE g.createdOn BETWEEN :start AND :end")
+	List<GroupDataEntry> findGroupDataByDate(@Param("start") String start, @Param("end") String end);
+	
 	public long countByGroupId(int groupId);
 	
 	public List<GroupDataEntry> findByNumberInAndGroupId(Long[] numbers, Integer groupId);
@@ -29,5 +33,6 @@ public interface GroupDataEntryRepository extends JpaRepository<GroupDataEntry, 
 	
 	@Query(value = "SELECT DISTINCT area FROM groupcontacts", nativeQuery = true)
 	List<String> findDistinctArea();
+	
 
 }

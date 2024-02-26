@@ -32,5 +32,5 @@ public interface GroupDataEntryService {
 
 	public ResponseEntity<?> editGroupDataSearch(int groupId, String username);
 	
-	public ResponseEntity<?> getGroupDataEntryByGroupId(int groupId,String username);
+	public ResponseEntity<?> getGroupDataEntryByGroupId(int groupId,String start,String end,String search,String username);
 }
