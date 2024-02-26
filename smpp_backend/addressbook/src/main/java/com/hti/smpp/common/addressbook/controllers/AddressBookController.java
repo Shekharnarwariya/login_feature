@@ -160,7 +160,7 @@ public class AddressBookController {
 			@RequestPart(value = "contactFile", required = false) MultipartFile contactFile,
 			@Parameter(description = "Contact Entry request", content = @Content(schema = @Schema(implementation = ContactEntryRequest.class))) @RequestParam(value = "contactEntryRequest", required = true) String contactEntryRequest,
 			@Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username) {
-
+		System.out.println(contactEntryRequest);
 		return this.contactEntryService.saveContactEntry(contactEntryRequest, contactFile, username);
 
 	}
