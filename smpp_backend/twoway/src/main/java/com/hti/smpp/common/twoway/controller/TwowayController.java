@@ -21,6 +21,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import com.hti.smpp.common.exception.ExceptionResponse;
 import com.hti.smpp.common.twoway.dto.KeywordEntry;
 import com.hti.smpp.common.twoway.request.KeywordEntryForm;
+import com.hti.smpp.common.twoway.request.SearchCriteria;
 import com.hti.smpp.common.twoway.request.TwowayReportForm;
 import com.hti.smpp.common.twoway.service.KeywordService;
 
@@ -76,8 +77,8 @@ public class TwowayController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
     })
     @GetMapping("/list-keyword")
-    public ResponseEntity<?> listKeyword(@RequestParam(value = "search",required=false) String search,@RequestParam(value = "start",required=false) String start,@RequestParam(value = "end",required=false) String end,@RequestParam(name = "page", defaultValue = "0") int page,@RequestParam(name = "size", defaultValue = "10") int size,@RequestHeader(value="username", required = true) String username){
-    	return this.keywordService.listKeyword(search,start,end,PageRequest.of(page, size),username);
+    public ResponseEntity<?> listKeyword(@RequestBody SearchCriteria criteria,@RequestParam(name = "page", defaultValue = "0") int page, @RequestParam(name = "size", defaultValue = "10") int size ,@RequestHeader(value="username", required = true) String username){
+    	return this.keywordService.listKeyword(criteria,PageRequest.of(page,size),username);
     }
     
     /**
@@ -228,7 +229,7 @@ public class TwowayController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class)))
     })
-    @PostMapping("/view/report")
+    @GetMapping("/view/report")
     public ResponseEntity<?> viewReport(@Valid @RequestBody TwowayReportForm form, @RequestParam(name = "page", defaultValue = "1") int page, @RequestParam(name = "size", defaultValue = "10") int size,@RequestHeader(value="username", required = true) String username){
     	return this.keywordService.view(form, page, size, username);
     }
