@@ -11,14 +11,13 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.hti.smpp.common.dto.MccMncDTO;
 import com.hti.smpp.common.exception.InternalServerException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.hti.smpp.common.util.MessageResourceBundle;
 
 
@@ -149,10 +148,10 @@ public class FileDataParser {
                                 try {
                                     int id = Integer.parseInt(cell);
                                     mccMncDTO.setId(id);
-                                } catch (NumberFormatException nfe) {
-                                    Ignore
+                                } catch (NumberFormatException nfe) {                                  
+                                   System.out.println( nfe.getMessage());
                                 } catch (NullPointerException ne) {
-                                    Ignore
+                                	System.out.println( ne.getMessage());
                                 }
                             }
                         }
