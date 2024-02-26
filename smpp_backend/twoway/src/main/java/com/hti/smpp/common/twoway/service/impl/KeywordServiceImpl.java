@@ -1007,7 +1007,7 @@ public class KeywordServiceImpl implements KeywordService {
 					+ reportForm.getEndTime() + "'";
 		}
 		int offset = (page - 1) * size;
-		sql += " LIMIT " + page + " OFFSET " + offset;
+		sql += " LIMIT " + size + " OFFSET " + offset;
 		List<ReportEntry> list = new ArrayList<ReportEntry>();
 
 		try {

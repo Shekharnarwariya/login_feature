@@ -148,10 +148,12 @@ public class FileDataParser {
                                 try {
                                     int id = Integer.parseInt(cell);
                                     mccMncDTO.setId(id);
-                                } catch (NumberFormatException nfe) {
-                      
+
+                                } catch (NumberFormatException nfe) {                                  
+                                   System.out.println( nfe.getMessage());
                                 } catch (NullPointerException ne) {
-                               
+                                	System.out.println( ne.getMessage());
+
                                 }
                             }
                         }
