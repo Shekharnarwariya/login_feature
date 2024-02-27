@@ -340,10 +340,10 @@ public class AddressBookController {
 			@ApiResponse(responseCode = "404", description = "No Content Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	@GetMapping("/export/group-data-entry/{id}")
-	public ResponseEntity<?> modifyGroupDataExport(@PathVariable int id,
+	@PostMapping("/export/group-data-entry")
+	public ResponseEntity<?> modifyGroupDataExport(@Valid @RequestBody GroupDataEntryRequest request,
 			@Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username) {
-		return this.groupDataEntryService.modifyGroupDataExport(id, username);
+		return this.groupDataEntryService.modifyGroupDataExport(request, username);
 	}
 
 	/**
