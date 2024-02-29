@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.hti.smpp.common.addressbook.request.ContactEntryRequest;
+import com.hti.smpp.common.addressbook.request.UpdateContactRequest;
 import com.hti.smpp.common.addressbook.response.ContactForBulk;
 import com.hti.smpp.common.contacts.dto.ContactEntry;
 
@@ -24,7 +25,7 @@ public interface ContactEntryService {
 
 	public ResponseEntity<ContactForBulk> proceedSearchContact(List<Integer> ids, String username);
 
-	public ResponseEntity<?> modifyContactUpdate(ContactEntryRequest request, String username);
+	public ResponseEntity<?> modifyContactUpdate(UpdateContactRequest updateContactRequest, String username);
 
 	public ResponseEntity<?> modifyContactDelete(List<Integer> ids, String username);
 

@@ -22,6 +22,7 @@ import com.hti.smpp.common.addressbook.request.ContactEntryRequest;
 import com.hti.smpp.common.addressbook.request.GroupDataEntryRequest;
 import com.hti.smpp.common.addressbook.request.GroupEntryRequest;
 import com.hti.smpp.common.addressbook.request.SearchCriteria;
+import com.hti.smpp.common.addressbook.request.UpdateContactRequest;
 import com.hti.smpp.common.addressbook.response.ContactForBulk;
 import com.hti.smpp.common.addressbook.response.EditGroupDataSearch;
 import com.hti.smpp.common.addressbook.services.ContactEntryService;
@@ -210,9 +211,9 @@ public class AddressBookController {
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
 	@PutMapping("/update/contact")
-	public ResponseEntity<?> modifyContactUpdate(@Valid @RequestBody ContactEntryRequest request,
+	public ResponseEntity<?> modifyContactUpdate(@Valid @RequestBody UpdateContactRequest updateContactRequest,
 			@Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username) {
-		return this.contactEntryService.modifyContactUpdate(request, username);
+		return this.contactEntryService.modifyContactUpdate(updateContactRequest, username);
 	}
 
 	/**
