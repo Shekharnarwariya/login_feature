@@ -15,6 +15,7 @@ public class CorsConfig {
 		CorsConfiguration corsConfig = new CorsConfiguration();
 		 // Allow requests from "http://localhost:3000"
 		corsConfig.addAllowedOrigin("http://localhost:3000");
+		corsConfig.addAllowedOrigin("http://localhost:5173");
 		corsConfig.addAllowedOrigin("https://smpp.vercel.app");
 		corsConfig.addAllowedOrigin("http://5.32.122.147:3000/");
 		// Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
