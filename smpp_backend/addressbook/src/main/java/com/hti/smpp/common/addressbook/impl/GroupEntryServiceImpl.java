@@ -377,7 +377,6 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 	 */
 	@Override
 	public ResponseEntity<?> listGroup(String purpose, String groupData, String username) {
-
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -395,20 +394,16 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 
 		WebMenuAccessEntry webEntry = null;
 		Optional<WebMenuAccessEntry> webMenu = this.webMenuRepo.findById(user.getId());
-		if (webMenu.isPresent()) {
-			webEntry = webMenu.get();
-
-		} else {
+		if (!webMenu.isPresent()) {
 			logger.error(messageResourceBundle.getLogMessage("addbook.webmaster.entry.notfound.error"),
 					user.getSystemId());
 			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND_WEBMASTER_ERROR));
 		}
-
+		webEntry = webMenu.get();
 		String systemId = user.getSystemId();
 		boolean proceed = true;
 		ListGroupResponse response = new ListGroupResponse();
 		try {
-
 			if (purpose != null) {
 				if (purpose.equalsIgnoreCase("sms")) {
 					if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")

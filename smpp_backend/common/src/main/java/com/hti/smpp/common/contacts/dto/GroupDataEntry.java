@@ -41,10 +41,12 @@ public class GroupDataEntry {
 	private String area;
 	@Column(name = "gender")
 	private String gender;
+	@Column(name = "createdOn")
+	private String createdOn;
 
 	public GroupDataEntry() {
 	}
-
+	
 	public GroupDataEntry(int groupId, String initials, String firstName, String middleName, String lastName,
 			long number, String email, int age, String profession, String company, String area, String gender) {
 		this.groupId = groupId;
@@ -60,6 +62,24 @@ public class GroupDataEntry {
 		this.area = area;
 		this.gender = gender;
 	}
+
+	public GroupDataEntry(int groupId, String initials, String firstName, String middleName, String lastName,
+			long number, String email, int age, String profession, String company, String area, String gender, String createdOn) {
+		this.groupId = groupId;
+		this.initials = initials;
+		this.firstName = firstName;
+		this.middleName = middleName;
+		this.lastName = lastName;
+		this.email = email;
+		this.number = number;
+		this.age = age;
+		this.company = company;
+		this.profession = profession;
+		this.area = area;
+		this.gender = gender;
+		this.createdOn = createdOn;
+	}
+	
 
 	public int getId() {
 		return id;
@@ -163,6 +183,14 @@ public class GroupDataEntry {
 
 	public void setGender(String gender) {
 		this.gender = gender;
+	}
+
+	public String getCreatedOn() {
+		return createdOn;
+	}
+
+	public void setCreatedOn(String createdOn) {
+		this.createdOn = createdOn;
 	}
 
 	public String toString() {

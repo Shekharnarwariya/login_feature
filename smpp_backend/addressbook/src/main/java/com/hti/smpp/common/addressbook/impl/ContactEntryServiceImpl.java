@@ -7,12 +7,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.BorderStyle;
@@ -41,6 +43,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hti.smpp.common.addressbook.request.ContactEntryRequest;
+import com.hti.smpp.common.addressbook.request.UpdateContactRequest;
 import com.hti.smpp.common.addressbook.response.ContactForBulk;
 import com.hti.smpp.common.addressbook.services.ContactEntryService;
 import com.hti.smpp.common.addressbook.utils.Converters;
@@ -102,7 +105,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 			throw new NotFoundException(
 					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
-
+		String createdOn = LocalDate.now() + "";
 		ContactEntryRequest form;
 
 		try {
@@ -188,7 +191,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 													x, email.length());
 											email = email.substring(0, 40);
 										}
-										entry_list.add(new ContactEntry(name, number, email, groupId));
+										entry_list.add(new ContactEntry(name, number, email, groupId, createdOn));
 									}
 								}
 							}
@@ -274,7 +277,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 												nextRow.getRowNum(), email.length());
 										email = email.substring(0, 40);
 									}
-									entry_list.add(new ContactEntry(name, number, email, groupId));
+									entry_list.add(new ContactEntry(name, number, email, groupId, createdOn));
 								}
 							}
 						} catch (Exception ex) {
@@ -309,7 +312,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 							email = form.getEmail()[0];
 						}
 					}
-					entry_list.add(new ContactEntry(name, form.getNumber()[0], email, groupId));
+					entry_list.add(new ContactEntry(name, form.getNumber()[0], email, groupId, createdOn));
 				} else {
 					logger.error(messageResourceBundle.getLogMessage("addbook.invalid.number.error"), form.getNumber());
 					throw new NotFoundException(
@@ -599,7 +602,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 	 */
 	@Override
 	@Transactional
-	public ResponseEntity<?> modifyContactUpdate(ContactEntryRequest form, String username) {
+	public ResponseEntity<?> modifyContactUpdate(UpdateContactRequest updateContactRequest, String username) {
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
@@ -617,27 +620,27 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 
 		String target = IConstants.FAILURE_KEY;
 		String systemId = user.getSystemId();
-		int groupId = form.getGroupId();
+		int groupId = updateContactRequest.getGroupId();
 		logger.info(messageResourceBundle.getLogMessage("addbook.modify.contact.request.info"), systemId,
 				user.getRole(), groupId);
 		ContactEntry entry = null;
 		List<ContactEntry> list = new ArrayList<ContactEntry>();
-		int[] id = form.getId();
-		String[] names = form.getName();
-		String[] emails = form.getEmail();
-		long[] numbers = form.getNumber();
+		int id = updateContactRequest.getId();
+		String names = updateContactRequest.getName();
+		String emails = updateContactRequest.getEmail();
+		long numbers = updateContactRequest.getNumber();
 
-		if (id != null && id.length > 0) {
+		if (contactRepo.existsById(id)) {
 			try {
-				for (int i = 0; i < id.length; i++) {
-					if (names[i] != null && names[i].length() > 0) {
-						entry = new ContactEntry(new Converters().UTF16(names[i]), numbers[i], emails[i], groupId);
-					} else {
-						entry = new ContactEntry(null, numbers[i], emails[i], groupId);
-					}
-					entry.setId(id[i]);
-					list.add(entry);
+				if (names != null && names.length() > 0) {
+					entry = new ContactEntry(new Converters().UTF16(names), numbers, emails, groupId);
+				} else {
+					entry = new ContactEntry(null, numbers, emails, groupId);
 				}
+				entry.setCreatedOn(LocalDate.now() + "");
+				entry.setId(id);
+				list.add(entry);
+
 				if (!list.isEmpty()) {
 					this.contactRepo.saveAll(list);
 					target = IConstants.SUCCESS_KEY;
@@ -947,7 +950,8 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 	}
 
 	@Override
-	public List<ContactEntry> getContactByGroupId(int groupId, String username) {
+	public List<ContactEntry> getContactByGroupId(int groupId, String start, String end, String search,
+			String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = null;
@@ -962,13 +966,31 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 		try {
-			List<ContactEntry> response = this.contactRepo.findByGroupId(groupId);
-			response.forEach(entry -> {
-				if (entry.getName() != null && entry.getName().length() > 0) {
-					entry.setName(new Converters().uniHexToCharMsg(entry.getName()));
+			List<ContactEntry> response = null;
+			if (start != null && start.length() > 0 && end != null && end.length() > 0) {
+				response = this.contactRepo.findContactByDate(start, end);
+				response.forEach(entry -> {
+					if (entry.getName() != null && entry.getName().length() > 0) {
+						entry.setName(new Converters().uniHexToCharMsg(entry.getName()));
+					}
+				});
+			} else {
+				response = this.contactRepo.findByGroupId(groupId);
+				response.forEach(entry -> {
+					if (entry.getName() != null && entry.getName().length() > 0) {
+						entry.setName(new Converters().uniHexToCharMsg(entry.getName()));
+					}
+				});
+				if (search != null && search.length() > 0) {
+					response = response.stream()
+							.filter(g -> g.getName().toLowerCase().contains(search.toLowerCase())
+									|| g.getEmail().toLowerCase().contains(search.toLowerCase())
+									|| Long.toString(g.getNumber()).contains(search.toLowerCase()))
+							.collect(Collectors.toList());
 				}
-			});
-			if (response.isEmpty()) {
+			}
+
+			if (response.isEmpty() || response == null) {
 				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_NO_CONTACT));
 			} else {
 				return response;

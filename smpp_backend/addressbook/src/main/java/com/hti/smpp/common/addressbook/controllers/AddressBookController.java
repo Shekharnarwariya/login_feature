@@ -22,6 +22,7 @@ import com.hti.smpp.common.addressbook.request.ContactEntryRequest;
 import com.hti.smpp.common.addressbook.request.GroupDataEntryRequest;
 import com.hti.smpp.common.addressbook.request.GroupEntryRequest;
 import com.hti.smpp.common.addressbook.request.SearchCriteria;
+import com.hti.smpp.common.addressbook.request.UpdateContactRequest;
 import com.hti.smpp.common.addressbook.response.ContactForBulk;
 import com.hti.smpp.common.addressbook.response.EditGroupDataSearch;
 import com.hti.smpp.common.addressbook.services.ContactEntryService;
@@ -187,8 +188,11 @@ public class AddressBookController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
 	@GetMapping("/get/contact/{groupId}")
 	public ResponseEntity<?> listContactData(@PathVariable(value = "groupId", required = true) int groupId,
+			@Parameter(description = "From date in yyyy-MM-dd format") @RequestParam(value = "start", required = false) String start,
+			@Parameter(description = "To date in yyyy-MM-dd format") @RequestParam(value = "end", required = false) String end,
+			@RequestParam(value = "search", required = false) String search,
 			@RequestHeader(value = "username", required = true) String username) {
-		return ResponseEntity.ok(this.contactEntryService.getContactByGroupId(groupId, username));
+		return ResponseEntity.ok(this.contactEntryService.getContactByGroupId(groupId, start, end, search, username));
 	}
 
 	/**
@@ -207,9 +211,9 @@ public class AddressBookController {
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
 	@PutMapping("/update/contact")
-	public ResponseEntity<?> modifyContactUpdate(@Valid @RequestBody ContactEntryRequest request,
+	public ResponseEntity<?> modifyContactUpdate(@Valid @RequestBody UpdateContactRequest updateContactRequest,
 			@Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username) {
-		return this.contactEntryService.modifyContactUpdate(request, username);
+		return this.contactEntryService.modifyContactUpdate(updateContactRequest, username);
 	}
 
 	/**
@@ -337,10 +341,10 @@ public class AddressBookController {
 			@ApiResponse(responseCode = "404", description = "No Content Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "502", description = "Bad Gateway.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	@GetMapping("/export/group-data-entry/{id}")
-	public ResponseEntity<?> modifyGroupDataExport(@PathVariable int id,
+	@PostMapping("/export/group-data-entry")
+	public ResponseEntity<?> modifyGroupDataExport(@Valid @RequestBody GroupDataEntryRequest request,
 			@Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username) {
-		return this.groupDataEntryService.modifyGroupDataExport(id, username);
+		return this.groupDataEntryService.modifyGroupDataExport(request, username);
 	}
 
 	/**
@@ -366,8 +370,11 @@ public class AddressBookController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
 	@GetMapping("/get/group-data-entry/{groupId}")
 	public ResponseEntity<?> listGroupData(@PathVariable(value = "groupId", required = true) int groupId,
+			@Parameter(description = "From date in yyyy-MM-dd format") @RequestParam(value = "start", required = false) String start,
+			@Parameter(description = "To date in yyyy-MM-dd format") @RequestParam(value = "end", required = false) String end,
+			@RequestParam(value = "search", required = false) String search,
 			@RequestHeader(value = "username", required = true) String username) {
-		return this.groupDataEntryService.getGroupDataEntryByGroupId(groupId, username);
+		return this.groupDataEntryService.getGroupDataEntryByGroupId(groupId, start, end, search, username);
 	}
 
 	// Other Api's For

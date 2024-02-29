@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import com.hti.smpp.common.dto.Network;
 import com.hti.smpp.common.route.dto.RouteEntry;
 import com.hti.smpp.common.route.dto.RouteEntryExt;
+import com.hti.smpp.common.util.MessageResourceBundle;
 
 @Component
 @Service
@@ -30,6 +31,9 @@ public class AlertThreadDbInfo {
 	private Logger logger = LoggerFactory.getLogger(AlertThreadDbInfo.class);
 
 	private DataSource dataSource;
+	
+	@Autowired
+	private MessageResourceBundle messageResourceBundle;
 
 	@Autowired
 	public AlertThreadDbInfo(DataSource dataSource) {
@@ -46,6 +50,7 @@ public class AlertThreadDbInfo {
 		PreparedStatement pStmt = null;
 		ResultSet res = null;
 		System.out.println("DataSource: " + this.dataSource);
+		logger.info(messageResourceBundle.getLogMessage("dataSource.info"), this.dataSource);
 		try {
 			con = getConnection();
 			String query1 = "select username,price_change_subject from custom_setting";
@@ -292,7 +297,7 @@ public class AlertThreadDbInfo {
 			if (executeBatch.length > 0) {
 				isUpdate = true;
 			}
-			logger.info("Total Records Updated (Routing Flag) : " + executeBatch.length);
+			logger.info(messageResourceBundle.getLogMessage("routingFlag.info"), executeBatch.length);
 		} catch (SQLException sqle) {
 			logger.error(" ", sqle.fillInStackTrace());
 		} finally {
@@ -332,7 +337,7 @@ public class AlertThreadDbInfo {
 			if (executeBatch.length > 0) {
 				isUpdate = true;
 			}
-			logger.info("Total Records Updated (Routing Flag) : " + executeBatch.length);
+			logger.info(messageResourceBundle.getLogMessage("routingFlag.info"), executeBatch.length);
 		} catch (SQLException sqle) {
 			logger.error(" ", sqle.fillInStackTrace());
 		} finally {

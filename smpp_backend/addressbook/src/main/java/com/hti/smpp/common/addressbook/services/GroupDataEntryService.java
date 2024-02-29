@@ -28,9 +28,9 @@ public interface GroupDataEntryService {
 
 	public ResponseEntity<?> modifyGroupDataDelete(List<Integer> ids, String username);
 
-	public ResponseEntity<?> modifyGroupDataExport(int id, String username);
+	public ResponseEntity<?> modifyGroupDataExport(GroupDataEntryRequest request, String username);
 
 	public ResponseEntity<?> editGroupDataSearch(int groupId, String username);
 	
-	public ResponseEntity<?> getGroupDataEntryByGroupId(int groupId,String username);
+	public ResponseEntity<?> getGroupDataEntryByGroupId(int groupId,String start,String end,String search,String username);
 }

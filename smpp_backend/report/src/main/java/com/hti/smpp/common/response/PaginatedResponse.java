@@ -60,4 +60,8 @@ public class PaginatedResponse<T> {
 		this.totalPages = totalPages;
 	}
 
+	public PaginatedResponse() {
+		super();
+	}
+
 }

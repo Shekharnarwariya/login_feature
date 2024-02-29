@@ -7,12 +7,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -135,6 +137,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		String target = IConstants.FAILURE_KEY;
 
 		String systemId = user.getSystemId();
+		String createdOn = LocalDate.now() + "";
 
 		logger.info(messageResourceBundle.getLogMessage("addbook.adding.groupdata.info"), systemId, user.getRole(),
 				form.getGroupId());
@@ -206,7 +209,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 											}
 											entry_list.add(new GroupDataEntry(groupId, initials, first_name,
 													middle_name, last_name, number, tokens[5], age, tokens[7],
-													tokens[8], tokens[9], tokens[10]));
+													tokens[8], tokens[9], tokens[10], createdOn));
 										} catch (Exception ex) {
 											logger.error(entry, ex.fillInStackTrace());
 											throw new InternalServerException(messageResourceBundle.getExMessage(
@@ -320,7 +323,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 										+ ",gender=" + gender);
 								if (number > 0) {
 									entry_list.add(new GroupDataEntry(groupId, initial, firstname, middlename, lastname,
-											number, email, age, profession, company, area, gender));
+											number, email, age, profession, company, area, gender, createdOn));
 								}
 							}
 						} catch (Exception ex) {
@@ -362,7 +365,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 					}
 					entry_list.add(new GroupDataEntry(groupId, initial, firstname, middlename, lastname,
 							form.getNumber()[0], form.getEmail()[0], form.getAge()[0], form.getProfession()[0],
-							form.getCompany()[0], form.getArea()[0], form.getGender()[0]));
+							form.getCompany()[0], form.getArea()[0], form.getGender()[0], createdOn));
 				} else {
 					logger.error(messageResourceBundle.getLogMessage("addbook.invalid.number.error"), form.getNumber());
 					throw new NotFoundException(
@@ -995,7 +998,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	 * criteria.
 	 */
 	@Override
-	public ResponseEntity<?> modifyGroupDataExport(int groupId, String username) {
+	public ResponseEntity<?> modifyGroupDataExport(GroupDataEntryRequest form, String username) {
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
@@ -1003,115 +1006,102 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle
-						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
+				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 		} else {
-			throw new NotFoundException(
-					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
+			throw new NotFoundException("User not found with the provided username.");
 		}
 
 		String systemId = user.getSystemId();
-		logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.export.request.info"), systemId);
+		logger.info("Group Data Export Request by " + systemId);
 		String target = IConstants.FAILURE_KEY;
-		List<GroupDataEntry> listGroup = groupDataEntryRepository.findByGroupIdOrderByIdAsc(groupId);
-		List<GroupDataEntry> list = new ArrayList<GroupDataEntry>();
-		if (!listGroup.isEmpty()) {
-			for (GroupDataEntry form : listGroup) {
-				GroupDataEntry entry = null;
-				Converters cc = new Converters();
-				int id = form.getId();
-				String initials = form.getInitials();
-				String firstName = form.getFirstName();
-				String middleName = form.getMiddleName();
-				String lastName = form.getLastName();
-				int age = form.getAge();
-				String gender = form.getGender();
-				String email = form.getEmail();
-				long number = form.getNumber();
-				String company = form.getCompany();
-				String profession = form.getProfession();
-				String area = form.getArea();
+		if (form.getId() != null && form.getId().length > 0) {
+			int groupId = form.getGroupId();
+			GroupDataEntry entry = null;
+			List<GroupDataEntry> list = new ArrayList<GroupDataEntry>();
+			Converters cc = new Converters();
+			try {
+				int[] id = form.getId();
+				String[] initials = form.getInitials();
+				String[] firstName = form.getFirstName();
+				String[] middleName = form.getMiddleName();
+				String[] lastName = form.getLastName();
+				int[] age = form.getAge();
+				String[] gender = form.getGender();
+				String[] email = form.getEmail();
+				long[] number = form.getNumber();
+				String[] company = form.getCompany();
+				String[] profession = form.getProfession();
+				String[] area = form.getArea();
 				String first_name = null, middle_name = null, last_name = null, initial = null;
-				initial = null;
-				first_name = null;
-				middle_name = null;
-				last_name = null;
-				if (initials != null && initials.length() > 0) {
-					initial = new Converters().UTF16(initials);
-				}
-				if (firstName != null && firstName.length() > 0) {
-					first_name = new Converters().UTF16(firstName);
-				}
-				if (middleName != null && middleName.length() > 0) {
-					middle_name = new Converters().UTF16(middleName);
-				}
-				if (lastName != null && lastName.length() > 0) {
-					last_name = new Converters().UTF16(lastName);
-				}
-				entry = new GroupDataEntry(groupId, cc.uniHexToCharMsg(initial), cc.uniHexToCharMsg(first_name),
-						cc.uniHexToCharMsg(middle_name), cc.uniHexToCharMsg(last_name), number, email, age, profession,
-						company, area, gender);
-				entry.setId(id);
-				list.add(entry);
-			}
-			Workbook workbook = null;
-			try {
-				workbook = getWorkBook(list);
-			} catch (Exception e1) {
-				logger.error(messageResourceBundle.getLogMessage("addbook.error.message"), e1.getLocalizedMessage());
-				throw new WorkBookException(messageResourceBundle.getExMessage(
-						ConstantMessages.WORKBOOK_PROCESSING_ERROR, new Object[] { e1.getLocalizedMessage() }));
-			}
-			String filename = systemId + "_GroupData[" + groupId + "]" + ".xlsx";
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-
-			logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.creating.xlsx.info"), systemId);
-			try {
-				workbook.write(bos);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-			try (InputStream in = new ByteArrayInputStream(bos.toByteArray())) {
-				 byte[] bytes = bos.toByteArray();
-		            HttpHeaders headers = new HttpHeaders();
-		            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-		            String disposition = String.format("attachment; filename=\"%s\"", filename);
-		            headers.add(HttpHeaders.CONTENT_DISPOSITION, disposition);
-		            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-		            target=IConstants.SUCCESS_KEY;
-		            logger.info(messageResourceBundle.getLogMessage("addbook.export.contact.target.info"), systemId,
-							target);
-		            return ResponseEntity.ok()
-		                    .headers(headers)
-		                    .contentLength(bytes.length)
-		                    .body(new InputStreamResource(new ByteArrayInputStream(bytes)));
-			
-			} catch (IOException e) {
-				logger.error(messageResourceBundle.getLogMessage("addbook.contact.xlsx.download.error"),
-						e.getLocalizedMessage());
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
-						new Object[] { e.getLocalizedMessage() }));
-			} catch (Exception e) {
-				logger.error(messageResourceBundle.getLogMessage("addbook.error.message"), e.getLocalizedMessage());
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
-						new Object[] { e.getLocalizedMessage() }));
-			} finally {
-				try {
-					if (workbook != null) {
-						workbook.close();
+				for (int i = 0; i < id.length; i++) {
+					initial = null;
+					first_name = null;
+					middle_name = null;
+					last_name = null;
+					if (initials[i] != null && initials[i].length() > 0) {
+						initial = new Converters().UTF16(initials[i]);
 					}
-				} catch (IOException e) {
-					throw new WorkBookException(e.getLocalizedMessage());
-				} catch (Exception e) {
-					throw new InternalServerException(e.getLocalizedMessage());
+					if (firstName[i] != null && firstName[i].length() > 0) {
+						first_name = new Converters().UTF16(firstName[i]);
+					}
+					if (middleName[i] != null && middleName[i].length() > 0) {
+						middle_name = new Converters().UTF16(middleName[i]);
+					}
+					if (lastName[i] != null && lastName[i].length() > 0) {
+						last_name = new Converters().UTF16(lastName[i]);
+					}
+					entry = new GroupDataEntry(groupId, cc.uniHexToCharMsg(initial), cc.uniHexToCharMsg(first_name),
+							cc.uniHexToCharMsg(middle_name), cc.uniHexToCharMsg(last_name), number[i], email[i], age[i],
+							profession[i], company[i], area[i], gender[i]);
+					entry.setId(id[i]);
+					list.add(entry);
 				}
-			}
+				Workbook workbook = null;
+				try {
+					workbook = getWorkBook(list);
+				} catch (Exception e1) {
+					logger.error("WorkBook Error: " + e1.getLocalizedMessage());
+					throw new WorkBookException("WorkBook Exception: " + e1.getLocalizedMessage());
+				}
+				String filename = systemId + "_GroupData[" + groupId + "]" + ".xlsx";
+				ByteArrayOutputStream bos = new ByteArrayOutputStream();
+				logger.info(systemId + " Creating GroupData XLSx ");
+				workbook.write(bos);
 
+				try (InputStream in = new ByteArrayInputStream(bos.toByteArray())) {
+					HttpHeaders headers = new HttpHeaders();
+					headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+					headers.setContentDispositionFormData("attachment", filename);
+					InputStreamResource resource = new InputStreamResource(in);
+					target = "export";
+					logger.info(systemId + " Export Contact Target:" + target);
+					return new ResponseEntity<>(resource, headers, HttpStatus.OK);
+				} catch (IOException e) {
+					logger.error("Contact XLSx Download Error: {}", e.toString());
+					throw new InternalServerException(e.getLocalizedMessage());
+				} catch (Exception e) {
+					logger.error("Unexpected exception: " + e.getLocalizedMessage());
+					throw new InternalServerException(e.getLocalizedMessage());
+				} finally {
+					try {
+						if (workbook != null) {
+							workbook.close();
+						}
+					} catch (IOException e) {
+						throw new WorkBookException(e.getLocalizedMessage());
+					} catch (Exception e) {
+						throw new InternalServerException(e.getLocalizedMessage());
+					}
+				}
+
+			} catch (Exception ex) {
+				logger.error(systemId, ex.toString());
+				throw new InternalServerException(ex.getLocalizedMessage());
+			}
 		} else {
-			logger.warn(messageResourceBundle.getLogMessage("addbook.no.record.found.error"));
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_NORECORD));
+			logger.error(systemId + " No GroupData Records Found To Export");
+			throw new NotFoundException(systemId + " No GroupData Records Found To Export");
 		}
 	}
 
@@ -1183,7 +1173,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	}
 
 	@Override
-	public ResponseEntity<?> getGroupDataEntryByGroupId(int groupId, String username) {
+	public ResponseEntity<?> getGroupDataEntryByGroupId(int groupId,String start,String end,String search,String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -1198,22 +1188,46 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		}
 		logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.listing.info"), groupId);
 		try {
-			List<GroupDataEntry> response = this.groupDataEntryRepository.findByGroupIdOrderByIdAsc(groupId);
-			response.forEach(entry -> {
-				if (entry.getInitials() != null && entry.getInitials().length() > 0) {
-					entry.setInitials(new Converters().uniHexToCharMsg(entry.getInitials()));
+			List<GroupDataEntry> response = null;
+			if(start!=null && start.length()>0 && end!=null && end.length()>0) {
+				response = this.groupDataEntryRepository.findGroupDataByDate(start, end);
+				response.forEach(entry -> {
+					if (entry.getInitials() != null && entry.getInitials().length() > 0) {
+						entry.setInitials(new Converters().uniHexToCharMsg(entry.getInitials()));
+					}
+					if (entry.getFirstName() != null && entry.getFirstName().length() > 0) {
+						entry.setFirstName(new Converters().uniHexToCharMsg(entry.getFirstName()));
+					}
+					if (entry.getMiddleName() != null && entry.getMiddleName().length() > 0) {
+						entry.setMiddleName(new Converters().uniHexToCharMsg(entry.getMiddleName()));
+					}
+					if (entry.getLastName() != null && entry.getLastName().length() > 0) {
+						entry.setLastName(new Converters().uniHexToCharMsg(entry.getLastName()));
+					}
+				});
+			}else {
+				response = this.groupDataEntryRepository.findByGroupIdOrderByIdAsc(groupId);
+				response.forEach(entry -> {
+					if (entry.getInitials() != null && entry.getInitials().length() > 0) {
+						entry.setInitials(new Converters().uniHexToCharMsg(entry.getInitials()));
+					}
+					if (entry.getFirstName() != null && entry.getFirstName().length() > 0) {
+						entry.setFirstName(new Converters().uniHexToCharMsg(entry.getFirstName()));
+					}
+					if (entry.getMiddleName() != null && entry.getMiddleName().length() > 0) {
+						entry.setMiddleName(new Converters().uniHexToCharMsg(entry.getMiddleName()));
+					}
+					if (entry.getLastName() != null && entry.getLastName().length() > 0) {
+						entry.setLastName(new Converters().uniHexToCharMsg(entry.getLastName()));
+					}
+				});
+			
+				if(search!=null && search.length()>0) {
+					response = response.stream().filter(g -> g.getInitials().toLowerCase().contains(search.toLowerCase()) || g.getEmail().toLowerCase().contains(search.toLowerCase()) || Long.toString(g.getNumber()).contains(search) || g.getFirstName().toLowerCase().contains(search.toLowerCase()) || g.getMiddleName().toLowerCase().contains(search.toLowerCase()) || g.getLastName().toLowerCase().contains(search.toLowerCase()) || Integer.toString(g.getAge()).contains(search.toLowerCase()) || g.getCompany().toLowerCase().contains(search.toLowerCase()) || g.getProfession().toLowerCase().contains(search.toLowerCase()) || g.getArea().toLowerCase().contains(search.toLowerCase()) || g.getGender().toLowerCase().contains(search.toLowerCase())).collect(Collectors.toList());
 				}
-				if (entry.getFirstName() != null && entry.getFirstName().length() > 0) {
-					entry.setFirstName(new Converters().uniHexToCharMsg(entry.getFirstName()));
-				}
-				if (entry.getMiddleName() != null && entry.getMiddleName().length() > 0) {
-					entry.setMiddleName(new Converters().uniHexToCharMsg(entry.getMiddleName()));
-				}
-				if (entry.getLastName() != null && entry.getLastName().length() > 0) {
-					entry.setLastName(new Converters().uniHexToCharMsg(entry.getLastName()));
-				}
-
-			});
+			}
+			
+			
 			if (response.isEmpty()) {
 				throw new NotFoundException(
 						messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_EMPTYDATASET));
