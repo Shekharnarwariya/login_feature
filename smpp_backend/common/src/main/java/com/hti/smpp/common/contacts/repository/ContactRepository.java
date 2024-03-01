@@ -13,10 +13,14 @@ import com.hti.smpp.common.contacts.dto.ContactEntry;
 public interface ContactRepository extends JpaRepository<ContactEntry, Integer> {
 
 	public List<ContactEntry> findByGroupId(int groupId);
-	
-	@Query("SELECT c FROM ContactEntry c WHERE c.createdOn BETWEEN :start AND :end")
-	List<ContactEntry> findContactByDate(@Param("start") String start, @Param("end") String end);
-	
+
+//	@Query("SELECT c FROM ContactEntry c WHERE c.createdOn BETWEEN :start AND :end")
+//	List<ContactEntry> findContactByDate(@Param("start") String start, @Param("end") String end);
+
 	public long countByGroupId(int groupId);
+
+	@Query("SELECT c FROM ContactEntry c WHERE c.groupId = :groupId AND c.createdOn BETWEEN :start AND :end")
+	List<ContactEntry> findContactByDateAndGroupId(@Param("start") String start, @Param("end") String end,
+			@Param("groupId") int groupId);
 
 }

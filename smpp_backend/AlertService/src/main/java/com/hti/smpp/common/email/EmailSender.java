@@ -88,11 +88,13 @@ public class EmailSender {
 		this.javaMailSender = javaMailSender;
 	}
 
-	public void sendEmail(String emailTo, String subject, String emailContent) {
+	public void sendEmail(String emailTo, String emailContent, String subject) {
 		try {
 			
 			MimeMessage message = javaMailSender.createMimeMessage();
 			MimeMessageHelper helper = new MimeMessageHelper(message, true);
+			
+//			helper.setText(emailContent, true);
 
 			
 			//Context context = createContext(sourceMap);
