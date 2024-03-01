@@ -197,7 +197,6 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 		int[] id = form.getId();
 		String[] names = form.getName();
 		boolean[] groupData = form.getGroupData();
-		// ContactDAService service = new ContactDAServiceImpl();
 		if (id != null && id.length > 0) {
 			try {
 				for (int i = 0; i < id.length; i++) {

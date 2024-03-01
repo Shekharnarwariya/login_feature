@@ -712,8 +712,9 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		String systemId = user.getSystemId();
 
 		logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.update.request.info"), systemId);
-
-		if (form.getId() != null && form.getId().length > 0) {
+		Optional<GroupDataEntry> groupOptional = groupDataEntryRepository.findById(form.getId()[0]);
+		if (groupOptional.isPresent()) {
+			GroupDataEntry groupDataEntry = groupOptional.get();
 			int groupId = form.getGroupId();
 			GroupDataEntry entry = null;
 			List<GroupDataEntry> list = new ArrayList<GroupDataEntry>();
@@ -751,6 +752,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 					entry = new GroupDataEntry(groupId, initial, first_name, middle_name, last_name, number[i],
 							email[i], age[i], profession[i], company[i], area[i], gender[i]);
 					entry.setId(id[i]);
+					entry.setCreatedOn(groupDataEntry.getCreatedOn());
 					list.add(entry);
 				}
 				if (!list.isEmpty()) {
@@ -770,7 +772,9 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_ERROR_MSG,
 						new Object[] { ex.getMessage() }));
 			}
-		} else {
+		} else
+
+		{
 			throw new NotFoundException(
 					messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_UPDATE_ERROR));
 		}
@@ -1173,7 +1177,8 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 	}
 
 	@Override
-	public ResponseEntity<?> getGroupDataEntryByGroupId(int groupId,String start,String end,String search,String username) {
+	public ResponseEntity<?> getGroupDataEntryByGroupId(int groupId, String start, String end, String search,
+			String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -1189,7 +1194,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 		logger.info(messageResourceBundle.getLogMessage("addbook.groupdata.listing.info"), groupId);
 		try {
 			List<GroupDataEntry> response = null;
-			if(start!=null && start.length()>0 && end!=null && end.length()>0) {
+			if (start != null && start.length() > 0 && end != null && end.length() > 0) {
 				response = this.groupDataEntryRepository.findGroupDataByDate(start, end);
 				response.forEach(entry -> {
 					if (entry.getInitials() != null && entry.getInitials().length() > 0) {
@@ -1205,7 +1210,7 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 						entry.setLastName(new Converters().uniHexToCharMsg(entry.getLastName()));
 					}
 				});
-			}else {
+			} else {
 				response = this.groupDataEntryRepository.findByGroupIdOrderByIdAsc(groupId);
 				response.forEach(entry -> {
 					if (entry.getInitials() != null && entry.getInitials().length() > 0) {
@@ -1221,13 +1226,24 @@ public class GroupDataEntryServiceImpl implements GroupDataEntryService {
 						entry.setLastName(new Converters().uniHexToCharMsg(entry.getLastName()));
 					}
 				});
-			
-				if(search!=null && search.length()>0) {
-					response = response.stream().filter(g -> g.getInitials().toLowerCase().contains(search.toLowerCase()) || g.getEmail().toLowerCase().contains(search.toLowerCase()) || Long.toString(g.getNumber()).contains(search) || g.getFirstName().toLowerCase().contains(search.toLowerCase()) || g.getMiddleName().toLowerCase().contains(search.toLowerCase()) || g.getLastName().toLowerCase().contains(search.toLowerCase()) || Integer.toString(g.getAge()).contains(search.toLowerCase()) || g.getCompany().toLowerCase().contains(search.toLowerCase()) || g.getProfession().toLowerCase().contains(search.toLowerCase()) || g.getArea().toLowerCase().contains(search.toLowerCase()) || g.getGender().toLowerCase().contains(search.toLowerCase())).collect(Collectors.toList());
+
+				if (search != null && search.length() > 0) {
+					response = response.stream()
+							.filter(g -> g.getInitials().toLowerCase().contains(search.toLowerCase())
+									|| g.getEmail().toLowerCase().contains(search.toLowerCase())
+									|| Long.toString(g.getNumber()).contains(search)
+									|| g.getFirstName().toLowerCase().contains(search.toLowerCase())
+									|| g.getMiddleName().toLowerCase().contains(search.toLowerCase())
+									|| g.getLastName().toLowerCase().contains(search.toLowerCase())
+									|| Integer.toString(g.getAge()).contains(search.toLowerCase())
+									|| g.getCompany().toLowerCase().contains(search.toLowerCase())
+									|| g.getProfession().toLowerCase().contains(search.toLowerCase())
+									|| g.getArea().toLowerCase().contains(search.toLowerCase())
+									|| g.getGender().toLowerCase().contains(search.toLowerCase()))
+							.collect(Collectors.toList());
 				}
 			}
-			
-			
+
 			if (response.isEmpty()) {
 				throw new NotFoundException(
 						messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_GROUPDATA_EMPTYDATASET));
