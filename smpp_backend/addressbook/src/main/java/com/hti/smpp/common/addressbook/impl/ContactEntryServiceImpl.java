@@ -968,7 +968,7 @@ public class ContactEntryServiceImpl implements ContactEntryService {
 		try {
 			List<ContactEntry> response = null;
 			if (start != null && start.length() > 0 && end != null && end.length() > 0) {
-				response = this.contactRepo.findContactByDate(start, end);
+				response = this.contactRepo.findContactByDateAndGroupId(start, end, groupId);
 				response.forEach(entry -> {
 					if (entry.getName() != null && entry.getName().length() > 0) {
 						entry.setName(new Converters().uniHexToCharMsg(entry.getName()));

@@ -18,6 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
@@ -38,10 +39,12 @@ import com.hti.smpp.common.dto.Network;
 import com.hti.smpp.common.dto.UserEntryExt;
 import com.hti.smpp.common.email.EmailSender;
 import com.hti.smpp.common.network.dto.NetworkEntry;
+import com.hti.smpp.common.network.repository.NetworkEntryRepository;
 import com.hti.smpp.common.route.dto.RouteEntry;
 import com.hti.smpp.common.route.dto.RouteEntryExt;
 import com.hti.smpp.common.route.repository.RouteEntryRepository;
 import com.hti.smpp.common.smsc.dto.SmscEntry;
+import com.hti.smpp.common.smsc.repository.SmscEntryRepository;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.DlrSettingEntryRepository;
@@ -110,6 +113,12 @@ public class AlertThread implements Runnable {
 	ProfessionEntryRepository professionEntryRepository;
 
 	@Autowired
+	SmscEntryRepository smscEntryRepository;
+	
+	@Autowired
+	NetworkEntryRepository networkEntryRepository;
+
+	@Autowired
 	private AlertThreadDbInfo alertThreadDbInfo;
 	
 	@Autowired
@@ -117,7 +126,6 @@ public class AlertThread implements Runnable {
 	
 	@Autowired
 	private MessageResourceBundle messageResourceBundle;
-	
 
 	private Logger logger = LoggerFactory.getLogger(AlertThread.class);
 //	private boolean stop = false;
@@ -179,7 +187,10 @@ public class AlertThread implements Runnable {
 
 	public AlertThread() {
 		System.out.println("***** Price Change Alert Thread Started ******* ");
+
+
 		logger.info(messageResourceBundle.getLogMessage("alert.info.priceChangeThreadStarted"));
+
 
 	}
 
@@ -208,7 +219,8 @@ public class AlertThread implements Runnable {
 	private String username;
 	private String[] arr = {};
 
-	@Scheduled(cron = "*/10 * * * * *")
+//	@Scheduled(cron = "*/10 * * * * *")
+	@Scheduled(cron = "0 */30 * * * *")
 	public void alertSchedulerTask() {
 		System.out.println("<---- Schedule Check Running -----> ");
 		logger.info(messageResourceBundle.getLogMessage("alert.info.scheduleCheckRunning"));
@@ -488,9 +500,10 @@ public class AlertThread implements Runnable {
 						try {
 							String content = createPriceChangeContent(list, systemId, schedule);
 							String[] coverage_report = new String[2];
-							Map<Integer, RouteEntryExt> map_covergae = listCoverage(systemId, true, true);
+							Map<Integer, RouteEntryExt> map_covergae = listCoverage(user_id, true, true);
 							coverage_report[0] = getCoverageReportXLS(systemId, list, currency, map_covergae);
 							coverage_report[1] = getCoverageReportPDF(systemId, list, currency, map_covergae);
+							
 							send(email, from, content, subject, coverage_report, false);
 							logger.info(messageResourceBundle.getLogMessage("alert.info.priceChangeAlertSent"), systemId, from, email);
 						} catch (Exception ex) {
@@ -1060,6 +1073,9 @@ public class AlertThread implements Runnable {
 	}
 
 	public Map<Integer, UserEntryExt> listUserEntries() {
+
+//		logger.info(MessageFormat.format(messageResourceBundle.getLogMessage("info.listUserEntries"), GlobalVars.UserEntries));
+
 		logger.info(MessageFormat.format(messageResourceBundle.getLogMessage("info.listUserEntries"), GlobalVars.UserEntries));
 		Map<Integer, UserEntryExt> map = new LinkedHashMap<Integer, UserEntryExt>();
 		List<UserEntry> all = userEntryRepository.findAll();
@@ -1072,7 +1088,11 @@ public class AlertThread implements Runnable {
 	}
 
 	public UserEntryExt getUserEntryExt(int userid) {
+
+//		logger.info(MessageFormat.format(messageResourceBundle.getLogMessage("info.getUserEntry"), userid));
+
 		logger.info(MessageFormat.format(messageResourceBundle.getLogMessage("info.getUserEntry"), userid));
+
 		if (userEntryRepository.existsById(userid)) {
 
 			UserEntry userEntry = this.userEntryRepository.findById(userid).get();
@@ -1085,17 +1105,21 @@ public class AlertThread implements Runnable {
 			entry.setWebMasterEntry(webEntry);
 //			entry.setProfessionEntry(GlobalVars.ProfessionEntries.get(userid));
 			entry.setProfessionEntry(this.professionEntryRepository.findById(userid).get());
+
+//			logger.info(MessageFormat.format(messageResourceBundle.getLogMessage("info.endGetUserEntry"), userid));
+
 			logger.info(MessageFormat.format(messageResourceBundle.getLogMessage("info.endGetUserEntry"), userid));
+
 			return entry;
 		} else {
 			return null;
 		}
 	}
 
-	public Map<Integer, RouteEntryExt> listCoverage(String systemId, boolean display, boolean cached) {
-		int userId = GlobalVars.UserMapping.get(systemId);
-		return listCoverage(userId, display, cached);
-	}
+//	public Map<Integer, RouteEntryExt> listCoverage(String systemId, boolean display, boolean cached) {
+//		int userId = GlobalVars.UserMapping.get(systemId);
+//		return listCoverage(userId, display, cached);
+//	}
 
 	public Map<Integer, RouteEntryExt> listCoverage(int userId, boolean display, boolean cached) {
 		Map<Integer, RouteEntryExt> list = new LinkedHashMap<Integer, RouteEntryExt>();
@@ -1106,26 +1130,33 @@ public class AlertThread implements Runnable {
 			group_name_mapping = listGroupNames();
 		}
 		if (cached) {
-			Predicate<Integer, RouteEntry> p = new PredicateBuilderImpl().getEntryObject().get("userId").equal(userId);
-			for (RouteEntry basic : GlobalVars.BasicRouteEntries.values(p)) {
-				RouteEntryExt entry = new RouteEntryExt(basic);
-				if (display) {
-					// ------ set user values -----------------
-					if (GlobalVars.UserEntries.containsKey(basic.getUserId())) {
-						entry.setSystemId(GlobalVars.UserEntries.get(basic.getUserId()).getSystemId());
-						entry.setMasterId(GlobalVars.UserEntries.get(basic.getUserId()).getMasterId());
-						entry.setCurrency(GlobalVars.UserEntries.get(basic.getUserId()).getCurrency());
-						entry.setAccountType(GlobalVars.WebmasterEntries.get(basic.getUserId()).getAccountType());
-					}
+//			Predicate<Integer, RouteEntry> p = new PredicateBuilderImpl().getEntryObject().get("userId").equal(userId);
+			List<RouteEntry> route_list = routeEntryRepository.findByUserId(userId);
+			for (RouteEntry basic : route_list) {
+			    RouteEntryExt entry = new RouteEntryExt(basic);
+			    if (display) {
+			        // ------ set user values -----------------
+			    	 Optional<UserEntry> userEntryOptional = userEntryRepository.findById(basic.getUserId());
+			    	 WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(basic.getUserId());
+			         if (userEntryOptional.isPresent()) {
+			             UserEntry userEntry = userEntryOptional.get();
+			             entry.setSystemId(userEntry.getSystemId());
+			             entry.setMasterId(userEntry.getMasterId());
+			             entry.setCurrency(userEntry.getCurrency());
+			             entry.setAccountType(webMasterEntry.getAccountType());			             
+			        }
 					// ------ set network values -----------------
 					// NetworkEntry network = CacheService.getNetworkEntry(entry.getNetworkId());
-					if (GlobalVars.NetworkEntries.containsKey(entry.getBasic().getNetworkId())) {
-						NetworkEntry network = GlobalVars.NetworkEntries.get(entry.getBasic().getNetworkId());
-						entry.setCountry(network.getCountry());
-						entry.setOperator(network.getOperator());
-						entry.setMcc(network.getMcc());
-						entry.setMnc(network.getMnc());
-					}
+			         if (networkEntryRepository.existsById(entry.getBasic().getNetworkId())) {
+			        	    Optional<NetworkEntry> networkEntryOptional = networkEntryRepository.findById(entry.getBasic().getNetworkId());
+			        	    if (networkEntryOptional.isPresent()) {
+			        	        NetworkEntry network = networkEntryOptional.get();
+			        	        entry.setCountry(network.getCountry());
+			        	        entry.setOperator(network.getOperator());
+			        	        entry.setMcc(network.getMcc());
+			        	        entry.setMnc(network.getMnc());
+			        	    }
+			        }
 					// ------ set Smsc values -----------------
 					if (entry.getBasic().getSmscId() == 0) {
 						entry.setSmsc("Down");
@@ -1141,6 +1172,9 @@ public class AlertThread implements Runnable {
 				list.put(entry.getBasic().getNetworkId(), entry);
 			}
 		} else {
+
+//			logger.info(messageResourceBundle.getLogMessage("network.info.listRouteEntries"), userId);
+
 			logger.info(messageResourceBundle.getLogMessage("network.info.listRouteEntries"), userId);
 //			List<RouteEntry> db_list = routeDAO.listRoute(userId);
 			List<RouteEntry> db_list = routeEntryRepository.findByUserId(userId);
@@ -1148,21 +1182,27 @@ public class AlertThread implements Runnable {
 				RouteEntryExt entry = new RouteEntryExt(basic);
 				if (display) {
 					// ------ set user values -----------------
-					if (GlobalVars.UserEntries.containsKey(entry.getBasic().getUserId())) {
-						entry.setSystemId(GlobalVars.UserEntries.get(basic.getUserId()).getSystemId());
-						entry.setMasterId(GlobalVars.UserEntries.get(basic.getUserId()).getMasterId());
-						entry.setCurrency(GlobalVars.UserEntries.get(basic.getUserId()).getCurrency());
-						entry.setAccountType(GlobalVars.WebmasterEntries.get(basic.getUserId()).getAccountType());
-					}
+					Optional<UserEntry> userEntryOptional = userEntryRepository.findById(basic.getUserId());
+			    	 WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(basic.getUserId());
+			         if (userEntryOptional.isPresent()) {
+			             UserEntry userEntry = userEntryOptional.get();
+			             entry.setSystemId(userEntry.getSystemId());
+			             entry.setMasterId(userEntry.getMasterId());
+			             entry.setCurrency(userEntry.getCurrency());
+			             entry.setAccountType(webMasterEntry.getAccountType());			             
+			        }
 					// ------ set network values -----------------
 					// NetworkEntry network = CacheService.getNetworkEntry(entry.getNetworkId());
-					if (GlobalVars.NetworkEntries.containsKey(entry.getBasic().getNetworkId())) {
-						NetworkEntry network = GlobalVars.NetworkEntries.get(entry.getBasic().getNetworkId());
-						entry.setCountry(network.getCountry());
-						entry.setOperator(network.getOperator());
-						entry.setMcc(network.getMcc());
-						entry.setMnc(network.getMnc());
-					}
+			         if (networkEntryRepository.existsById(entry.getBasic().getNetworkId())) {
+			        	    Optional<NetworkEntry> networkEntryOptional = networkEntryRepository.findById(entry.getBasic().getNetworkId());
+			        	    if (networkEntryOptional.isPresent()) {
+			        	        NetworkEntry network = networkEntryOptional.get();
+			        	        entry.setCountry(network.getCountry());
+			        	        entry.setOperator(network.getOperator());
+			        	        entry.setMcc(network.getMcc());
+			        	        entry.setMnc(network.getMnc());
+			        	    }
+			        }
 					// ------ set Smsc values -----------------
 					if (entry.getBasic().getSmscId() == 0) {
 						entry.setSmsc("Down");
@@ -1183,7 +1223,10 @@ public class AlertThread implements Runnable {
 
 	public Map<Integer, String> listNames() {
 		Map<Integer, String> names = new HashMap<Integer, String>();
-		for (SmscEntry entry : GlobalVars.SmscEntries.values()) {
+		
+		List<SmscEntry> groups = smscEntryRepository.findAll();
+		
+		for (SmscEntry entry : groups) {
 			names.put(entry.getId(), entry.getName());
 		}
 		names = names.entrySet().stream().sorted(Entry.comparingByValue())
