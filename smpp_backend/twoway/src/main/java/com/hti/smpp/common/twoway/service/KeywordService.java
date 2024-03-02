@@ -18,7 +18,7 @@ import com.hti.smpp.common.user.dto.UserEntry;
 public interface KeywordService {
 	
 	public ResponseEntity<String> addKeyword(KeywordEntryForm form, String username);
-    public ResponseEntity<?> listKeyword(SearchCriteria criteria,Pageable pageable, String username);
+    public ResponseEntity<?> listKeyword(String search, String start, String end, String type, Pageable pageable, String username);
     public ResponseEntity<?> updateKeyword(KeywordEntryForm form, String username); 
     public ResponseEntity<?> deleteKeyword(int id, String username);
     public ResponseEntity<Collection<UserEntry>> setupKeyword(String username);
