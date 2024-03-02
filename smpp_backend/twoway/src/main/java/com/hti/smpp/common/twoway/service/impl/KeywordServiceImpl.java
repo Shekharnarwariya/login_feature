@@ -66,6 +66,8 @@ import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MessageResourceBundle;
 import com.hti.smpp.common.util.MultiUtility;
+import com.netflix.discovery.converters.Auto;
+
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRExporter;
 import net.sf.jasperreports.engine.JRExporterParameter;
@@ -226,7 +228,7 @@ public class KeywordServiceImpl implements KeywordService {
 	 * Lists keyword entries based on user authorization and role.
 	 */
 	@Override
-	public ResponseEntity<?> listKeyword(SearchCriteria criteria,Pageable pageable, String username) {
+	public ResponseEntity<?> listKeyword(String search, String start, String end, String type,Pageable pageable, String username) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -261,16 +263,16 @@ public class KeywordServiceImpl implements KeywordService {
 
 		try {
 			if (Access.isAuthorized(user.getRole(), "isAuthorizedSuperAdminAndSystem")) {
-				if (criteria.getSearch() != null && criteria.getSearch().length()>0) {
-					list = this.keywordRepo.searchKeyword(criteria.getSearch(), pageable);
+				if (search != null && search.length()>0) {
+					list = this.keywordRepo.searchKeyword(search, pageable);
 					pr = new PaginationResponse(list.getNumber(), list.getSize(), list.getTotalPages(),
 							list.getTotalElements(), list.isLast(), list.isFirst());
 					content = list.getContent();
 					for (KeywordEntry entry : content) {
 						entry.setSystemId(entry.getCreatedBy());
 					}
-				} else if ((criteria.getStart() != null && criteria.getStart().length() > 0) && (criteria.getEnd() != null && criteria.getEnd().length()>0) && (criteria.getType() != null && criteria.getType().length()>0)) {
-					list = this.keywordRepo.searchByDate(criteria.getStart(), criteria.getEnd(), criteria.getType(), pageable);
+				} else if ((start != null && start.length() > 0) && (end != null && end.length()>0) && (type != null && type.length()>0)) {
+					list = this.keywordRepo.searchByDate(start, end, type, pageable);
 					pr = new PaginationResponse(list.getNumber(), list.getSize(), list.getTotalPages(),
 							list.getTotalElements(), list.isLast(), list.isFirst());
 					content = list.getContent();
@@ -310,16 +312,16 @@ public class KeywordServiceImpl implements KeywordService {
 					users = new Integer[1];
 					users[0] = user.getId();
 				}
-				if (criteria.getSearch() != null && criteria.getSearch().length()>0) {
-					list = this.keywordRepo.searchKeywordAndFindByUserIdIn(criteria.getSearch(), users, pageable);
+				if (search != null && search.length()>0) {
+					list = this.keywordRepo.searchKeywordAndFindByUserIdIn(search, users, pageable);
 					pr = new PaginationResponse(list.getNumber(), list.getSize(), list.getTotalPages(),
 							list.getTotalElements(), list.isLast(), list.isFirst());
 					content = list.getContent();
 					for (KeywordEntry entry : content) {
 						entry.setSystemId(entry.getCreatedBy());
 					}
-				} else if ((criteria.getStart() != null && criteria.getStart().length() > 0) && (criteria.getEnd() != null && criteria.getEnd().length()>0) && (criteria.getType() != null && criteria.getType().length()>0)) {
-					list = this.keywordRepo.searchByDateAndFindByUserIdIn(criteria.getStart(), criteria.getEnd(), criteria.getType(),users, pageable);
+				} else if ((start != null && start.length() > 0) && (end != null && end.length()>0) && (type != null && type.length()>0)) {
+					list = this.keywordRepo.searchByDateAndFindByUserIdIn(start, end, type,users, pageable);
 					pr = new PaginationResponse(list.getNumber(), list.getSize(), list.getTotalPages(),
 							list.getTotalElements(), list.isLast(), list.isFirst());
 					content = list.getContent();
