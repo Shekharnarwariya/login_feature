@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -112,7 +113,7 @@ public class DownloadServiceImpl implements DownloadService{
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
-			}
+		}
 		} else {
 			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
@@ -172,6 +173,70 @@ public class DownloadServiceImpl implements DownloadService{
 		}
 
 	}
+	@Override
+	public ResponseEntity<List<Object>> downloadPricingInList(String username) {
+        List<Object> resultList = new ArrayList<>();
+
+        Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+        UserEntry user = null;
+        if (userOptional.isPresent()) {
+            user = userOptional.get();
+            if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+                throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+            }
+        } else {
+            throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+        }
+
+        boolean proceedFurther = true;
+       // String filename = null;
+        String userid = user.getSystemId();
+        logger.info("Coverage Report Request " + user.getSystemId());
+
+      //  proceedFurther = checkClientFlag(userid);
+
+        if (proceedFurther) {
+            try {
+            	Collection<RouteEntryExt> result = getCoverageReportInList(user.getSystemId(), user.getId(), false);
+                
+                if (!result.isEmpty()) {
+                	for (RouteEntryExt entry : result) {
+                        Map<String, Object> entryMap = new HashMap<>();
+                        entryMap.put("username",entry.getSystemId());
+                        entryMap.put("country", entry.getCountry());
+                        entryMap.put("operator", entry.getOperator());
+                        entryMap.put("mcc", entry.getMcc());
+                        entryMap.put("mnc", entry.getMnc());
+                        entryMap.put("cost", entry.getBasic().getCost());
+                        entryMap.put("currency", entry.getCurrency());
+                        entryMap.put("remarks", entry.getRemarks());
+                        resultList.add(entryMap);
+                    }
+                } else {
+                    System.out.println("Routing Error For " + userid);
+                    throw new InternalServerException("Routing Error For " + userid);
+                }
+            } catch (WriteException | IOException | DocumentException e) {
+                e.printStackTrace();
+                proceedFurther = false;
+                throw new InternalServerException(e.getMessage());
+            } catch (NotFoundException e) {
+                proceedFurther = false;
+                throw new NotFoundException(e.getMessage());
+            } catch (Exception e) {
+                e.printStackTrace();
+                proceedFurther = false;
+                throw new InternalServerException("Requested Resource is Temporary Unavailable");
+            }
+
+        } else {
+            throw new InternalServerException("Unable to proceed the request!");
+        }
+        return ResponseEntity.ok(resultList);
+    }
+	
+	
+	
 	
 	private boolean checkClientFlag(String userId){
 	    try {
@@ -513,7 +578,7 @@ public class DownloadServiceImpl implements DownloadService{
 						}
 					}
 				} catch (Exception ex) {
-				}
+			}
 //				mnc = mnc.replaceAll(",", "|");
 				strbuff.append(mnc);
 				strbuff.append(',');
@@ -544,6 +609,12 @@ public class DownloadServiceImpl implements DownloadService{
 			filename = getCoverageReportCSV(username, list);
 		}
 		return filename;
+	}
+	
+	
+	private Collection<RouteEntryExt>  getCoverageReportInList(String username, int userid, boolean cached) throws WriteException, IOException, DocumentException {
+		Collection<RouteEntryExt> list = listCoverage(userid, true, cached).values();
+		return list;
 	}
 	
 
