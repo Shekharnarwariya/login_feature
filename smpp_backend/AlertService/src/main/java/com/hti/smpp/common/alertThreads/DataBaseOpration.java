@@ -7,9 +7,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
@@ -17,45 +21,68 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
+import com.hazelcast.query.Predicate;
+import com.hazelcast.query.impl.PredicateBuilderImpl;
+import com.hti.smpp.common.contacts.dto.GroupEntry;
+import com.hti.smpp.common.contacts.repository.GroupEntryRepository;
 import com.hti.smpp.common.dto.Network;
+import com.hti.smpp.common.dto.UserEntryExt;
+import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.route.dto.RouteEntry;
 import com.hti.smpp.common.route.dto.RouteEntryExt;
-import com.hti.smpp.common.util.MessageResourceBundle;
+import com.hti.smpp.common.route.repository.RouteEntryRepository;
+import com.hti.smpp.common.smsc.dto.SmscEntry;
+import com.hti.smpp.common.user.dto.DlrSettingEntry;
+import com.hti.smpp.common.user.dto.ProfessionEntry;
+import com.hti.smpp.common.user.dto.UserEntry;
+import com.hti.smpp.common.user.dto.WebMasterEntry;
+import com.hti.smpp.common.user.repository.DlrSettingEntryRepository;
+import com.hti.smpp.common.user.repository.ProfessionEntryRepository;
+import com.hti.smpp.common.user.repository.UserEntryRepository;
+import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
+import com.hti.smpp.common.util.GlobalVars;
 
 @Component
-@Service
-public class AlertThreadDbInfo {
+public class DataBaseOpration {
 
-	private Logger logger = LoggerFactory.getLogger(AlertThreadDbInfo.class);
+	private static final Logger logger = LoggerFactory.getLogger(DataBaseOpration.class);
 
+	@Autowired
 	private DataSource dataSource;
-	
-	@Autowired
-	private MessageResourceBundle messageResourceBundle;
-
-	@Autowired
-	public AlertThreadDbInfo(DataSource dataSource) {
-		this.dataSource = dataSource;
-	}
 
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
 	}
 
+	@Autowired
+	private GroupEntryRepository groupEntryRepository;
+
+	@Autowired
+	private RouteEntryRepository routeEntryRepository;
+
+	@Autowired
+	private UserEntryRepository userEntryRepository;
+
+	@Autowired
+	private DlrSettingEntryRepository dlrSettingEntryRepository;
+
+	@Autowired
+	private WebMasterEntryRepository masterEntryRepository;
+
+	@Autowired
+	private ProfessionEntryRepository professionEntryRepository;
+
 	public Map<String, String> checkCustomSettings() {
 		Map<String, String> custom = new HashMap<String, String>();
 		Connection con = null;
-		PreparedStatement pStmt = null;
+		PreparedStatement pStmt1 = null;
 		ResultSet res = null;
-		System.out.println("DataSource: " + this.dataSource);
-		logger.info(messageResourceBundle.getLogMessage("dataSource.info"), this.dataSource);
 		try {
 			con = getConnection();
 			String query1 = "select username,price_change_subject from custom_setting";
-			pStmt = con.prepareStatement(query1);
-			res = pStmt.executeQuery();
+			pStmt1 = con.prepareStatement(query1);
+			res = pStmt1.executeQuery();
 			while (res.next()) {
 				String username = res.getString("username");
 				String price_change_subject = res.getString("price_change_subject");
@@ -72,12 +99,11 @@ public class AlertThreadDbInfo {
 					res.close();
 					res = null;
 				}
-				if (pStmt != null) {
-					pStmt.close();
-					pStmt = null;
+				if (pStmt1 != null) {
+					pStmt1.close();
+					pStmt1 = null;
 				}
 				if (con != null) {
-//					dbCon.releaseConnection(con);
 					con.close();
 				}
 			} catch (SQLException sqle) {
@@ -86,16 +112,44 @@ public class AlertThreadDbInfo {
 		return custom;
 	}
 
+	public Map<Integer, UserEntryExt> listUserEntries() {
+		List<UserEntry> listUser = userEntryRepository.findAll();
+		logger.debug("listUserEntries():" + listUser.size());
+		Map<Integer, UserEntryExt> map = new LinkedHashMap<Integer, UserEntryExt>();
+		for (UserEntry user : listUser) {
+			UserEntryExt entry = getUserEntryExt(user);
+			map.put(user.getId(), entry);
+		}
+		return map;
+	}
+
+	public UserEntryExt getUserEntryExt(UserEntry user) {
+		logger.debug("getUserEntry(" + user.getId() + ")");
+		Optional<DlrSettingEntry> dltOptional = dlrSettingEntryRepository.findById(user.getId());
+		WebMasterEntry webMasterOptional = masterEntryRepository.findByUserId(user.getId());
+		Optional<ProfessionEntry> professionalOptional = professionEntryRepository.findByUserId(user.getId());
+		if (dltOptional.isPresent() && webMasterOptional != null && professionalOptional.isPresent()) {
+			UserEntryExt entry = new UserEntryExt(user);
+			entry.setDlrSettingEntry(dltOptional.get());
+			entry.setWebMasterEntry(webMasterOptional);
+			entry.setProfessionEntry(professionalOptional.get());
+			logger.debug("end getUserEntry(" + user.getId() + ")");
+			return entry;
+		} else {
+			return null;
+		}
+	}
+
 	public Map<Integer, List<RouteEntryExt>> checkForPriceChange() throws SQLException {
 		Map<Integer, List<RouteEntryExt>> routing = new HashMap<Integer, List<RouteEntryExt>>();
 		Connection con = null;
-		PreparedStatement pStmt = null;
+		PreparedStatement pStmt1 = null;
 		ResultSet res = null;
 		try {
 			con = getConnection();
 			String query1 = "select id,user_id,network_id,CAST(cost_old AS CHAR) AS cost_old,CAST(cost_new AS CHAR) AS cost_new,smsc_old_id,smsc_new_id,affected_date from routemaster_updates where flag='false'";
-			pStmt = con.prepareStatement(query1);
-			res = pStmt.executeQuery();
+			pStmt1 = con.prepareStatement(query1);
+			res = pStmt1.executeQuery();
 			RouteEntryExt routingDTO = null;
 			RouteEntry entry = null;
 			while (res.next()) {
@@ -144,12 +198,11 @@ public class AlertThreadDbInfo {
 					res.close();
 					res = null;
 				}
-				if (pStmt != null) {
-					pStmt.close();
-					pStmt = null;
+				if (pStmt1 != null) {
+					pStmt1.close();
+					pStmt1 = null;
 				}
 				if (con != null) {
-//					dbCon.releaseConnection(con);
 					con.close();
 				}
 			} catch (SQLException sqle) {
@@ -215,7 +268,6 @@ public class AlertThreadDbInfo {
 					pStmt1 = null;
 				}
 				if (con != null) {
-//					dbCon.releaseConnection(con);
 					con.close();
 				}
 			} catch (SQLException sqle) {
@@ -269,11 +321,120 @@ public class AlertThreadDbInfo {
 				}
 			}
 			if (con != null) {
-//				dbCon.releaseConnection(con);
 				con.close();
 			}
 		}
 		return networklist;
+	}
+
+	public Map<Integer, RouteEntryExt> listCoverage(String systemId, boolean display, boolean cached) {
+		int userId = GlobalVars.UserMapping.get(systemId);
+		return listCoverage(userId, display, cached);
+	}
+
+	public Map<Integer, RouteEntryExt> listCoverage(int userId, boolean display, boolean cached) {
+		Map<Integer, RouteEntryExt> list = new LinkedHashMap<Integer, RouteEntryExt>();
+		Map<Integer, String> smsc_name_mapping = null;
+		Map<Integer, String> group_name_mapping = null;
+		if (display) {
+			smsc_name_mapping = listNames();
+			group_name_mapping = listGroupNames();
+		}
+		if (cached) {
+			Predicate<Integer, RouteEntry> p = new PredicateBuilderImpl().getEntryObject().get("userId").equal(userId);
+			for (RouteEntry basic : GlobalVars.BasicRouteEntries.values(p)) {
+				RouteEntryExt entry = new RouteEntryExt(basic);
+				if (display) {
+					// ------ set user values -----------------
+					if (GlobalVars.UserEntries.containsKey(basic.getUserId())) {
+						entry.setSystemId(GlobalVars.UserEntries.get(basic.getUserId()).getSystemId());
+						entry.setMasterId(GlobalVars.UserEntries.get(basic.getUserId()).getMasterId());
+						entry.setCurrency(GlobalVars.UserEntries.get(basic.getUserId()).getCurrency());
+						entry.setAccountType(GlobalVars.WebmasterEntries.get(basic.getUserId()).getAccountType());
+					}
+					// ------ set network values -----------------
+					// NetworkEntry network = CacheService.getNetworkEntry(entry.getNetworkId());
+					if (GlobalVars.NetworkEntries.containsKey(entry.getBasic().getNetworkId())) {
+						NetworkEntry network = GlobalVars.NetworkEntries.get(entry.getBasic().getNetworkId());
+						entry.setCountry(network.getCountry());
+						entry.setOperator(network.getOperator());
+						entry.setMcc(network.getMcc());
+						entry.setMnc(network.getMnc());
+					}
+					// ------ set Smsc values -----------------
+					if (entry.getBasic().getSmscId() == 0) {
+						entry.setSmsc("Down");
+					} else {
+						if (smsc_name_mapping.containsKey(entry.getBasic().getSmscId())) {
+							entry.setSmsc(smsc_name_mapping.get(entry.getBasic().getSmscId()));
+						}
+					}
+					if (group_name_mapping.containsKey(entry.getBasic().getGroupId())) {
+						entry.setGroup(group_name_mapping.get(entry.getBasic().getGroupId()));
+					}
+				}
+				list.put(entry.getBasic().getNetworkId(), entry);
+			}
+		} else {
+			logger.info("listing RouteEntries From Database: " + userId);
+			List<RouteEntry> db_list = routeEntryRepository.findByUserId(userId);
+			for (RouteEntry basic : db_list) {
+				RouteEntryExt entry = new RouteEntryExt(basic);
+				if (display) {
+					// ------ set user values -----------------
+					if (GlobalVars.UserEntries.containsKey(entry.getBasic().getUserId())) {
+						entry.setSystemId(GlobalVars.UserEntries.get(basic.getUserId()).getSystemId());
+						entry.setMasterId(GlobalVars.UserEntries.get(basic.getUserId()).getMasterId());
+						entry.setCurrency(GlobalVars.UserEntries.get(basic.getUserId()).getCurrency());
+						entry.setAccountType(GlobalVars.WebmasterEntries.get(basic.getUserId()).getAccountType());
+					}
+					// ------ set network values -----------------
+					// NetworkEntry network = CacheService.getNetworkEntry(entry.getNetworkId());
+					if (GlobalVars.NetworkEntries.containsKey(entry.getBasic().getNetworkId())) {
+						NetworkEntry network = GlobalVars.NetworkEntries.get(entry.getBasic().getNetworkId());
+						entry.setCountry(network.getCountry());
+						entry.setOperator(network.getOperator());
+						entry.setMcc(network.getMcc());
+						entry.setMnc(network.getMnc());
+					}
+					// ------ set Smsc values -----------------
+					if (entry.getBasic().getSmscId() == 0) {
+						entry.setSmsc("Down");
+					} else {
+						if (smsc_name_mapping.containsKey(entry.getBasic().getSmscId())) {
+							entry.setSmsc(smsc_name_mapping.get(entry.getBasic().getSmscId()));
+						}
+					}
+					if (group_name_mapping.containsKey(entry.getBasic().getGroupId())) {
+						entry.setGroup(group_name_mapping.get(entry.getBasic().getGroupId()));
+					}
+				}
+				list.put(entry.getBasic().getNetworkId(), entry);
+			}
+		}
+		return list;
+	}
+
+	public Map<Integer, String> listNames() {
+		Map<Integer, String> names = new HashMap<Integer, String>();
+		for (SmscEntry entry : GlobalVars.SmscEntries.values()) {
+			names.put(entry.getId(), entry.getName());
+		}
+		names = names.entrySet().stream().sorted(Entry.comparingByValue())
+				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+		return names;
+	}
+
+	public Map<Integer, String> listGroupNames() {
+		Map<Integer, String> names = new HashMap<Integer, String>();
+		names.put(0, "NONE");
+		List<GroupEntry> groups = groupEntryRepository.findAll();
+		for (GroupEntry entry : groups) {
+			names.put(entry.getId(), entry.getName());
+		}
+		names = names.entrySet().stream().sorted(Entry.comparingByValue())
+				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+		return names;
 	}
 
 	public boolean updateRoutingFlagSch(Map list) {
@@ -297,7 +458,7 @@ public class AlertThreadDbInfo {
 			if (executeBatch.length > 0) {
 				isUpdate = true;
 			}
-			logger.info(messageResourceBundle.getLogMessage("routingFlag.info"), executeBatch.length);
+			logger.info("Total Records Updated (Routing Flag) : " + executeBatch.length);
 		} catch (SQLException sqle) {
 			logger.error(" ", sqle.fillInStackTrace());
 		} finally {
@@ -307,7 +468,6 @@ public class AlertThreadDbInfo {
 					pStmt = null;
 				}
 				if (con != null) {
-//					dbCon.releaseConnection(con);
 					con.close();
 				}
 			} catch (SQLException sqle) {
@@ -337,7 +497,7 @@ public class AlertThreadDbInfo {
 			if (executeBatch.length > 0) {
 				isUpdate = true;
 			}
-			logger.info(messageResourceBundle.getLogMessage("routingFlag.info"), executeBatch.length);
+			logger.info("Total Records Updated (Routing Flag) : " + executeBatch.length);
 		} catch (SQLException sqle) {
 			logger.error(" ", sqle.fillInStackTrace());
 		} finally {
@@ -347,7 +507,6 @@ public class AlertThreadDbInfo {
 					pStmt = null;
 				}
 				if (con != null) {
-//					dbCon.releaseConnection(con);
 					con.close();
 				}
 			} catch (SQLException sqle) {
