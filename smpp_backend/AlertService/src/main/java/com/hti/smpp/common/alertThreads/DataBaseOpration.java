@@ -33,8 +33,10 @@ import com.hti.smpp.common.route.dto.RouteEntry;
 import com.hti.smpp.common.route.dto.RouteEntryExt;
 import com.hti.smpp.common.route.repository.RouteEntryRepository;
 import com.hti.smpp.common.smsc.dto.SmscEntry;
+import com.hti.smpp.common.smsc.repository.SmscEntryRepository;
 import com.hti.smpp.common.user.dto.DlrSettingEntry;
 import com.hti.smpp.common.user.dto.ProfessionEntry;
+import com.hti.smpp.common.user.dto.User;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.DlrSettingEntryRepository;
@@ -72,6 +74,9 @@ public class DataBaseOpration {
 
 	@Autowired
 	private ProfessionEntryRepository professionEntryRepository;
+
+	@Autowired
+	private SmscEntryRepository smscEntryRepository;
 
 	public Map<String, String> checkCustomSettings() {
 		Map<String, String> custom = new HashMap<String, String>();
@@ -328,7 +333,8 @@ public class DataBaseOpration {
 	}
 
 	public Map<Integer, RouteEntryExt> listCoverage(String systemId, boolean display, boolean cached) {
-		int userId = GlobalVars.UserMapping.get(systemId);
+		User user = userEntryRepository.getUsers(systemId).get();
+		int userId = user.getUserId();
 		return listCoverage(userId, display, cached);
 	}
 
@@ -341,16 +347,16 @@ public class DataBaseOpration {
 			group_name_mapping = listGroupNames();
 		}
 		if (cached) {
-			Predicate<Integer, RouteEntry> p = new PredicateBuilderImpl().getEntryObject().get("userId").equal(userId);
-			for (RouteEntry basic : GlobalVars.BasicRouteEntries.values(p)) {
+			for (RouteEntry basic : routeEntryRepository.findAll()) {
 				RouteEntryExt entry = new RouteEntryExt(basic);
 				if (display) {
+					Optional<UserEntry> userOptional = userEntryRepository.findById(basic.getUserId());
 					// ------ set user values -----------------
-					if (GlobalVars.UserEntries.containsKey(basic.getUserId())) {
-						entry.setSystemId(GlobalVars.UserEntries.get(basic.getUserId()).getSystemId());
-						entry.setMasterId(GlobalVars.UserEntries.get(basic.getUserId()).getMasterId());
-						entry.setCurrency(GlobalVars.UserEntries.get(basic.getUserId()).getCurrency());
-						entry.setAccountType(GlobalVars.WebmasterEntries.get(basic.getUserId()).getAccountType());
+					if (userOptional.isPresent()) {
+						entry.setSystemId(userOptional.get().getSystemId());
+						entry.setMasterId(userOptional.get().getMasterId());
+						entry.setCurrency(userOptional.get().getCurrency());
+						entry.setAccountType(masterEntryRepository.findByUserId(basic.getUserId()).getAccountType());
 					}
 					// ------ set network values -----------------
 					// NetworkEntry network = CacheService.getNetworkEntry(entry.getNetworkId());
@@ -417,7 +423,8 @@ public class DataBaseOpration {
 
 	public Map<Integer, String> listNames() {
 		Map<Integer, String> names = new HashMap<Integer, String>();
-		for (SmscEntry entry : GlobalVars.SmscEntries.values()) {
+		List<SmscEntry> listSmsc = smscEntryRepository.findAll();
+		for (SmscEntry entry : listSmsc) {
 			names.put(entry.getId(), entry.getName());
 		}
 		names = names.entrySet().stream().sorted(Entry.comparingByValue())

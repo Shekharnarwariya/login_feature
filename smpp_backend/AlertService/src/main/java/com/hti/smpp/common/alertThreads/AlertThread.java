@@ -376,6 +376,8 @@ public class AlertThread implements Runnable {
 							logger.info("Price Change Alert[" + systemId + "] Sent from:" + from + " To:" + email);
 						} catch (Exception ex) {
 							flag = "error";
+							ex.printStackTrace();
+							System.out.println("catch run");
 							logger.info(ex + " While Sending price Change Alert to " + systemId);
 						}
 					} else {
