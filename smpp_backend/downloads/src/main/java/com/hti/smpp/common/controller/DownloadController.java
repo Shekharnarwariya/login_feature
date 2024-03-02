@@ -1,5 +1,7 @@
 package com.hti.smpp.common.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,5 +25,8 @@ public class DownloadController {
 	public ResponseEntity<?> downloadPricingFormat(@RequestParam("format") String format, @RequestHeader("username") String username){
 		return this.downloadService.downloadPricing(format, username);
 	}
-
+	@GetMapping("/pricing-list")
+	public ResponseEntity<List<Object>> downloadPricingInList(@RequestHeader("username") String username){
+		return this.downloadService.downloadPricingInList(username);
+	}
 }
