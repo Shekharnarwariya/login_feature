@@ -402,7 +402,7 @@ public class DownloadServiceImpl implements DownloadService{
 	
 	private String getCoverageReportXLS(String username, Collection<RouteEntryExt> coverageList)
 			throws WriteException, IOException {
-		String filename = IConstants.WEBAPP_DIR + "report//" + username + "_coverage.xls";
+		String filename = IConstants.WEBSMPP_EXT_DIR + "report//" + username + "_coverage.xls";
 		WritableFont courier = new WritableFont(WritableFont.createFont("Calibri"), 11, WritableFont.BOLD);
 		WritableFont times = new WritableFont(WritableFont.createFont("Calibri"), 11);
 		WritableCellFormat courierformat = new WritableCellFormat(courier);
@@ -450,7 +450,7 @@ public class DownloadServiceImpl implements DownloadService{
 	
 	private String getCoverageReportPDF(String username, Collection<RouteEntryExt> coverageList)
 			throws DocumentException, FileNotFoundException, IOException {
-		String filename = IConstants.WEBAPP_DIR + "report//" + username + "_coverage.pdf";
+		String filename = IConstants.WEBSMPP_EXT_DIR + "report//" + username + "_coverage.pdf";
 		Document document = new Document(PageSize.A4, 5, 5, 35, 35);
 		PdfWriter.getInstance(document, new FileOutputStream(filename));
 		// ---Font Definitions------------------------
@@ -460,7 +460,7 @@ public class DownloadServiceImpl implements DownloadService{
 		Font font_ConHead = new Font(Font.COURIER, 11, 1, Color.red);
 		Font font_Content = new Font(Font.TIMES_ROMAN, 10, 1, Color.BLACK);
 		// ---Font Definitions------------------------
-		Image logo = Image.getInstance(IConstants.WEBAPP_DIR + "//images//logo.jpg");
+		Image logo = Image.getInstance(IConstants.WEBSMPP_EXT_DIR + "//images//logo.jpg");
 		logo.setAlignment(Image.MIDDLE);
 		logo.scaleToFit(30, 24);
 		String report_Heading = "Current Pricing List";
@@ -545,7 +545,7 @@ public class DownloadServiceImpl implements DownloadService{
 	
 	private String getCoverageReportCSV(String username, Collection<RouteEntryExt> coverageList) throws IOException {
 		System.out.println("CoverageList Size: " + coverageList.size());
-		String filename = IConstants.WEBAPP_DIR + "report//" + username + "_coverage.csv";
+		String filename = IConstants.WEBSMPP_EXT_DIR + "report//" + username + "_coverage.csv";
 		try {
 			FileWriter writer = new FileWriter(filename);
 			StringBuffer strbuff = new StringBuffer();
