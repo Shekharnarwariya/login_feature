@@ -9,7 +9,6 @@ import java.util.StringTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -48,8 +47,6 @@ import jakarta.mail.util.ByteArrayDataSource;
 
 @Service
 public class FileAttachmentSenderServiceImpl implements FileAttachmentSenderService {
-	@Autowired
-	private JavaMailSender javaMailSender;
 
 	@Autowired
 	private UserEntryRepository userEntryRepository;
@@ -60,32 +57,34 @@ public class FileAttachmentSenderServiceImpl implements FileAttachmentSenderServ
 	@Autowired
 	private MessageResourceBundle messageResourceBundle;
 
-	@Autowired
-	public FileAttachmentSenderServiceImpl(JavaMailSender javaMailSender) {
-		this.javaMailSender = javaMailSender;
-	}
-
 	String emailSubject = "Confirmation: Successful Completion of Action";
 
-	String Emailtemplate = "<!DOCTYPE html>\r\n" + "<html lang=\"en\">\r\n" + "<head>\r\n"
-			+ "    <meta charset=\"UTF-8\">\r\n"
-			+ "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n"
-			+ "    <title>Success Report</title>\r\n" + "</head>\r\n" + "\r\n"
-			+ "<body style=\"font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4;\">\r\n"
-			+ "    <div class=\"container\"\r\n"
-			+ "        style=\"max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);\">\r\n"
-			+ "        <h1 style=\"color: #8dc165; text-align: center;\">Successful!!</h1>\r\n"
-			+ "        <p style=\"color: #666666; line-height: 1.6; text-align: center;\">Hello <span\r\n"
-			+ "                style=\"font-weight: bold; color: #666666;\">User</span>,</p>\r\n"
-			+ "        <div class=\"report\" style=\"background-color: #f9f9f9; padding: 15px; border-radius: 5px;\">\r\n"
-			+ "            <div class=\"section-content\" style=\"margin-left: 15px;\">\r\n"
-			+ "                <p>This is to inform you that your recent action was successful. Congratulations!</p>\r\n"
-			+ "                <p>We have attached a document below for your convenience. It contains detailed information related to\r\n"
-			+ "                    your recent activity.</p>\r\n" + "            </div>\r\n" + "        </div>\r\n"
-			+ "        <p style=\"color: #666666; line-height: 1.6; text-align: center;\">If you have any questions or need further\r\n"
-			+ "            assistance, please feel free to contact us.</p>\r\n"
-			+ "        <p style=\"color: #666666; line-height: 1.6; text-align: center;\">Best regards,<br> [Your Organization]</p>\r\n"
-			+ "    </div>\r\n" + "</body>\r\n" + "\r\n" + "</html>";
+	String emailTemplate = "<!DOCTYPE html>" + "<html lang=\"en\">" + "<head>" + "    <meta charset=\"UTF-8\">"
+			+ "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+			+ "    <title>Report Confirmation</title>" + "    <style>"
+			+ "        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }"
+			+ "        .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }"
+			+ "        .report { background-color: #f9f9f9; padding: 15px; border-radius: 5px; }"
+			+ "        .section-content { margin-left: 15px; }" + "        .footer {" + "            display: flex;"
+			+ "            flex-direction: column;" + "            align-items: center;"
+			+ "            text-align: center;" + "            padding: 1rem;"
+			+ "            background-color: #334163;" + "            color: #ffffff;" + "        }" + "    </style>"
+			+ "</head>" + "<body>" + "    <div class=\"container\">"
+			+ "        <h1 style=\"color: #8dc165; text-align: center;\">Report Successfully Generated!</h1>"
+			+ "        <p style=\"color: #666666; line-height: 1.6; text-align: center;\">"
+			+ "            Hello <strong> {User} </strong>," + "        </p>" + "        <div class=\"report\">"
+			+ "            <div class=\"section-content\">"
+			+ "                <p>We are pleased to inform you that your request for the report has been processed successfully.</p>"
+			+ "                <p>A document containing detailed information about your request is attached with this email. Please review it at your earliest convenience.</p>"
+			+ "                <p>If the document is not attached, please ensure to check your email's attachments section or contact our support team for assistance.</p>"
+			+ "            </div>" + "        </div>"
+			+ "        <p style=\"color: #666666; line-height: 1.6; text-align: center;\">"
+			+ "            If you have any questions or require further assistance, do not hesitate to reach out to us."
+			+ "        </p>" + "        <p style=\"color: #666666; line-height: 1.6; text-align: center;\">"
+			+ "            Best regards,<br>" + "             Supports Department Team<br>" + "        </p>"
+			+ "    </div>" + "    <div class=\"footer\">"
+			+ "        <p>The Broad Net | Kemp House 152-160 City Road London, England, EC1V 2NX.</p>"
+			+ "        <p>© 2023 Broadnet. All Rights Reserved.</p>" + "    </div>" + "</body>" + "</html>";
 
 	private Logger logger = LoggerFactory.getLogger(FileAttachmentSenderServiceImpl.class);
 
@@ -99,7 +98,7 @@ public class FileAttachmentSenderServiceImpl implements FileAttachmentSenderServ
 
 		Optional<UserEntry> masterOptional = userEntryRepository.findBySystemId(user.getMasterId());
 
-		UserEntry master = userOptional.orElseThrow(() -> new NotFoundException(messageResourceBundle
+		UserEntry master = masterOptional.orElseThrow(() -> new NotFoundException(messageResourceBundle
 				.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { user.getMasterId() })));
 
 		Optional<ProfessionEntry> professionOptional = professionEntryRepository.findByUserId(user.getId());
@@ -109,7 +108,7 @@ public class FileAttachmentSenderServiceImpl implements FileAttachmentSenderServ
 
 		Optional<ProfessionEntry> professionOptionalmaster = professionEntryRepository.findByUserId(master.getId());
 
-		ProfessionEntry professionmaster = professionOptional.orElseThrow(() -> new NotFoundException(
+		ProfessionEntry professionmaster = professionOptionalmaster.orElseThrow(() -> new NotFoundException(
 				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { master.getId() })));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
@@ -127,19 +126,24 @@ public class FileAttachmentSenderServiceImpl implements FileAttachmentSenderServ
 		} catch (Exception e) {
 			throw new InternalServerException("Failed to upload file!!");
 		}
-
 		String from = IConstants.SUPPORT_EMAIL[0];
-		if (emailRequest.getSenderEmail() == null) {
+		System.out.println("This is the default email: " + from);
+		if (emailRequest.getSenderEmail() != null && !emailRequest.getSenderEmail().isEmpty()) {
 			from = emailRequest.getSenderEmail();
-		} else if (profession.getDomainEmail() != null) {
+		} else if (profession != null && profession.getDomainEmail() != null
+				&& !profession.getDomainEmail().isEmpty()) {
 			from = profession.getDomainEmail();
-		} else if (professionmaster.getDomainEmail() != null) {
+		} else if (professionmaster != null && professionmaster.getDomainEmail() != null
+				&& !profession.getDomainEmail().isEmpty()) {
 			from = professionmaster.getDomainEmail();
 		} else {
-			logger.info(username + "[" + user.getId() + "]" + " DomainEmail[" + master.getSystemId() + "] Not Found");
+			logger.info(username + "[" + user.getId() + "] DomainEmail[" + master.getSystemId() + "] Not Found");
 		}
 		try {
-			send(emailRequest.getReceiverEmail(), from, Emailtemplate, emailSubject, emailRequest.getAttachment(), false);
+			String personalizedEmailTemplate = emailTemplate.replace("{User}",
+					emailRequest.getSenderFirstName() + " " + emailRequest.getSenderLastName());
+			send(emailRequest.getReceiverEmail(), from, personalizedEmailTemplate, emailSubject,
+					emailRequest.getAttachment(), false);
 		} catch (AddressException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -164,6 +168,7 @@ public class FileAttachmentSenderServiceImpl implements FileAttachmentSenderServ
 		props.put("mail.smtp.port", IConstants.smtpPort + "");
 		Session mailSession = Session.getDefaultInstance(props);
 		Message message = new MimeMessage(mailSession);
+		System.out.println("this is sender ID" + from);
 		message.setFrom(new InternetAddress(from, from));
 		InternetAddress[] address;
 		if (to.contains(",")) {
@@ -196,6 +201,7 @@ public class FileAttachmentSenderServiceImpl implements FileAttachmentSenderServ
 			// first part (the html) & Coverage Attachment
 			BodyPart messageBodyPart = new MimeBodyPart();
 			messageBodyPart.setContent(content, "text/html");
+			multipart.addBodyPart(messageBodyPart);
 			if (attachment != null && !attachment.isEmpty()) {
 				BodyPart attachmentBodyPart = new MimeBodyPart();
 				// Convert MultipartFile to DataSource
