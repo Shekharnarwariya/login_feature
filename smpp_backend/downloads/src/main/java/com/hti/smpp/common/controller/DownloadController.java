@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.hti.smpp.common.service.DownloadService;
 
-import jakarta.servlet.http.HttpServletResponse;
-
 @RestController
 @RequestMapping("/download")
 public class DownloadController {
