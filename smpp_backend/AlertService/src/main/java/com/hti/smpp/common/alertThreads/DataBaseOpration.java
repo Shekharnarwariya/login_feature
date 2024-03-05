@@ -22,8 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.hazelcast.query.Predicate;
-import com.hazelcast.query.impl.PredicateBuilderImpl;
 import com.hti.smpp.common.contacts.dto.GroupEntry;
 import com.hti.smpp.common.contacts.repository.GroupEntryRepository;
 import com.hti.smpp.common.dto.Network;
@@ -522,4 +520,39 @@ public class DataBaseOpration {
 		return isUpdate;
 	}
 
+	public List<WebMasterEntry> findWebMaster() {
+		try {
+			return masterEntryRepository.findByMinFlag(true);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public List<WebMasterEntry> findAllWebMaster() {
+		try {
+			return masterEntryRepository.findAll();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public List<ProfessionEntry> ProfessioData() {
+		try {
+			return professionEntryRepository.findEntriesWithValidDomainEmail();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public List<WebMasterEntry> findAllById(Set<Integer> sentMinBalAlertEmail) {
+		try {
+			return masterEntryRepository.findAllById(sentMinBalAlertEmail);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 }

@@ -78,13 +78,13 @@ public interface UserDAService  {
 //
 //
 //	// -------------- Recharge Entries -------------------
-	public Map<Integer, RechargeEntry> listRecentRecharges(Integer[] userid);
-
-	public Map<Integer, List<RechargeEntry>> listTransactions(Integer[] userid, String txnType, String startTime,
-			String endTime);
-
-	public Map<Integer, List<RechargeEntry>> listTransactions(Integer[] userid);
-	
+//	public Map<Integer, RechargeEntry> listRecentRecharges(Integer[] userid);
+//
+//	public Map<Integer, List<RechargeEntry>> listTransactions(Integer[] userid, String txnType, String startTime,
+//			String endTime);
+//
+//	public Map<Integer, List<RechargeEntry>> listTransactions(Integer[] userid);
+//	
 	
 	
 	

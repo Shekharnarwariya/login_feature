@@ -27,6 +27,7 @@ import org.hibernate.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.impl.PredicateBuilderImpl;
@@ -64,6 +65,7 @@ import jxl.write.WritableSheet;
 import jxl.write.WritableWorkbook;
 import jxl.write.WriteException;
 
+@Service
 public class ReportService  {
 	//IDatabaseService dbService = HtiSmsDB.getInstance();
 	// private static Map network_map = null;

@@ -31,12 +31,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.sql.DataSource;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -63,6 +66,7 @@ import org.springframework.expression.ParseException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.hazelcast.query.Predicate;
@@ -86,13 +90,14 @@ import com.hti.smpp.common.user.dto.ProfessionEntry;
 import com.hti.smpp.common.user.dto.RechargeEntry;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
+import com.hti.smpp.common.user.repository.BalanceEntryRepository;
+import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.ContextListener;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MultiUtility;
 
 import jakarta.activation.DataHandler;
-import jakarta.activation.DataSource;
 import jakarta.activation.FileDataSource;
 import jakarta.mail.BodyPart;
 import jakarta.mail.Message;
@@ -109,15 +114,24 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-public class MISCounterThread implements Runnable  {
+@Service
+public class MISCounterThread implements Runnable {
 
 	@Autowired
 	private UserDAService userService;
+
 	@Autowired
 	private SessionFactory sessionFactory;
+
 	@Autowired
 	private RestTemplate restTemplate;
-	
+
+	@Autowired
+	private UserEntryRepository userRepository;
+
+	@Autowired
+	private BalanceEntryRepository balanceEntryRepository;
+
 	@Autowired
 	private SalesDAO salesDAO;
 
@@ -125,16 +139,20 @@ public class MISCounterThread implements Runnable  {
 	private DataSource dataSource;
 
 	public Connection getConnection() throws SQLException {
-		return ((MISCounterThread) dataSource).getConnection();
+		return dataSource.getConnection();
 	}
 
-	// private IDatabaseService dbService = HtiSmsDB.getInstance();
-	// private boolean changedate = false;
+	@Autowired
+	private DataBaseOpration service;
+
 	private boolean isStop = false;
-	private String fileName = IConstants.WEBAPP_DIR + "report//MIS.txt";
+
+	private String fileName = IConstants.WEBSMPP_EXT_DIR + "report//MIS.txt";
+
 	private Logger logger = LoggerFactory.getLogger(MISCounterThread.class);
 	private boolean morning_report;
 	private UserEntry internalUser;
+	Integer[] userid = null;
 	private Thread thread = null;
 	// ------------private caches ------------------
 	private Set<Integer> sentMinBalAlertEmail = new HashSet<Integer>();
@@ -143,29 +161,33 @@ public class MISCounterThread implements Runnable  {
 	private Map<String, String> ProfessionRecord = new HashMap<String, String>();
 
 	public MISCounterThread() {
-		thread = new Thread("MisCounterThread");
+		thread = new Thread(this, "MisCounterThread");
 		thread.start();
 		logger.info("****************MIS Counter Thread Started************************");
 	}
 
 	private Map<String, String> listDomainEmail() {
-		Map<String, String> map = new HashMap<String, String>();
-		Predicate<Integer, ProfessionEntry> p = new PredicateBuilderImpl().getEntryObject().get("domainEmail")
-				.isNotNull();
-		for (ProfessionEntry entry : GlobalVars.ProfessionEntries.values(p)) {
-			if (entry.getDomainEmail().contains("@") && entry.getDomainEmail().contains(".")) {
-				UserEntry userEntry = GlobalVars.UserEntries.get(entry.getUserId());
-				map.put(userEntry.getSystemId(), entry.getDomainEmail());
+		List<ProfessionEntry> entriesWithValidEmail = service.ProfessioData();
+		Map<String, String> emailMap = new HashMap<>();
+
+		for (ProfessionEntry entry : entriesWithValidEmail) {
+			Optional<UserEntry> userOptional = userRepository.findById(entry.getUserId());
+			UserEntry userEntry = null;
+			if (userOptional.isPresent()) {
+				userEntry = userOptional.get();
+			}
+			if (userEntry != null) {
+				emailMap.put(userEntry.getSystemId(), entry.getDomainEmail());
 			}
 		}
-		return map;
+
+		return emailMap;
 	}
 
 	private List<UserEntryExt> listMisUsers() {
 		List<UserEntryExt> list = new ArrayList<UserEntryExt>();
-		EntryObject e = new PredicateBuilderImpl().getEntryObject();
-		Predicate<Integer, WebMasterEntry> p = e.is("misReport").and(e.get("email").isNotNull());
-		for (WebMasterEntry entry : GlobalVars.WebmasterEntries.values(p)) {
+		List<WebMasterEntry> webMasterOptional = service.findAllById(sentMinBalAlertEmail);
+		for (WebMasterEntry entry : webMasterOptional) {
 			if (entry.getEmail().contains("@") && entry.getEmail().contains(".")) {
 				UserEntry userEntry = GlobalVars.UserEntries.get(entry.getUserId());
 				BalanceEntry balance = GlobalVars.BalanceEntries.get(entry.getUserId());
@@ -189,16 +211,18 @@ public class MISCounterThread implements Runnable  {
 			logger.info("*** No Expired UserAccount Found ***");
 		} else {
 			for (UserEntry entry : GlobalVars.UserEntries.values(p)) {
-				WebMasterEntry webEntry = GlobalVars.WebmasterEntries.get(entry.getId());
-				if (webEntry.getExecutiveId() > 0) {
+				// WebMasterEntry webEntry = GlobalVars.WebmasterEntries.get(entry.getId());
+
+				List<WebMasterEntry> webEntry = service.findAllWebMaster();
+				if (((WebMasterEntry) webEntry).getExecutiveId() > 0) {
 					Set<UserEntry> set = null;
-					if (expiredUsers.containsKey(webEntry.getExecutiveId())) {
-						set = expiredUsers.get(webEntry.getExecutiveId());
+					if (expiredUsers.containsKey(((WebMasterEntry) webEntry).getExecutiveId())) {
+						set = expiredUsers.get(((WebMasterEntry) webEntry).getExecutiveId());
 					} else {
 						set = new HashSet<UserEntry>();
 					}
 					set.add(entry);
-					expiredUsers.put(webEntry.getExecutiveId(), set);
+					expiredUsers.put(((WebMasterEntry) webEntry).getExecutiveId(), set);
 				}
 			}
 			logger.info("Expired: " + expiredUsers);
@@ -328,13 +352,19 @@ public class MISCounterThread implements Runnable  {
 				.equal(executiveId);
 		for (WebMasterEntry entry : GlobalVars.WebmasterEntries.values(p)) {
 			UserEntry userEntry = GlobalVars.UserEntries.get(entry.getUserId());
-			BalanceEntry balance = GlobalVars.BalanceEntries.get(entry.getUserId());
-			if (userEntry != null) {
+			BalanceEntry balanceEntry = null;
+			Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findByUserId(userid[0]);
+			if (balanceOptional.isPresent()) {
+				balanceEntry = balanceOptional.get();
+			}
+
+			if (userEntry != null && balanceEntry != null) {
 				UserEntryExt ext = new UserEntryExt(userEntry);
 				ext.setWebMasterEntry(entry);
-				ext.setBalance(balance);
+				ext.setBalance(balanceEntry);
 				list.add(ext);
 			}
+
 		}
 		return list;
 	}
@@ -342,28 +372,33 @@ public class MISCounterThread implements Runnable  {
 	private List<UserEntryExt> listMinBalanceUsers() {
 		logger.info("listing min balance Alert Users.");
 		List<UserEntryExt> list = new ArrayList<UserEntryExt>();
-		Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject().is("minFlag");
-		for (WebMasterEntry entry : GlobalVars.WebmasterEntries.values(p)) {
+		List<WebMasterEntry> webMaster = service.findWebMaster();
+		for (WebMasterEntry entry : webMaster) {
 			boolean add = false;
-			UserEntry userEntry = GlobalVars.UserEntries.get(entry.getUserId());
-			logger.info(userEntry.getSystemId() + ": Minimum balance[" + entry.getMinBalance() + "] Alert Enabled");
-			if (userEntry != null) {
-				BalanceEntry balance = GlobalVars.BalanceEntries.get(entry.getUserId());
-				logger.info(userEntry.getSystemId() + " Wallet: " + balance.getWalletFlag() + " Amount: "
-						+ balance.getWalletAmount());
-				if (balance.getWalletFlag().equalsIgnoreCase("No")) {
-					if (entry.getMinBalance() >= balance.getCredits()) {
+			Optional<UserEntry> userOptional = userRepository.findById(entry.getUserId());
+			if (userOptional.isPresent()) {
+				UserEntry userEntry = userOptional.get();
+				logger.info(userEntry.getSystemId() + ": Minimum balance[" + entry.getMinBalance() + "] Alert Enabled");
+				BalanceEntry balanceEntry = null;
+				Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findByUserId(entry.getUserId());
+				if (balanceOptional.isPresent()) {
+					balanceEntry = balanceOptional.get();
+				}
+				logger.info(userEntry.getSystemId() + " Wallet: " + balanceEntry.getWalletFlag() + " Amount: "
+						+ balanceEntry.getWalletAmount());
+				if (balanceEntry.getWalletFlag().equalsIgnoreCase("No")) {
+					if (entry.getMinBalance() >= balanceEntry.getCredits()) {
 						add = true;
 					}
 				} else {
-					if (entry.getMinBalance() >= balance.getWalletAmount()) {
+					if (entry.getMinBalance() >= balanceEntry.getWalletAmount()) {
 						add = true;
 					}
 				}
 				if (add) {
 					UserEntryExt ext = new UserEntryExt(userEntry);
 					ext.setWebMasterEntry(entry);
-					ext.setBalance(balance);
+					ext.setBalance(balanceEntry);
 					list.add(ext);
 				} else {
 					if (sentMinBalAlertEmail.contains(entry.getUserId())) {
@@ -380,21 +415,25 @@ public class MISCounterThread implements Runnable  {
 		return list;
 	}
 
+	@Override
 	public void run() {
 		while (!isStop) {
 			try {
 				try {
-					Thread.sleep(5 * 60 * 1000); // 5 minute
+					System.out.println("start sleep miscounter");
+					Thread.sleep(2 * 60 * 1000);
 				} catch (InterruptedException e) {
 					logger.info("<-- MISCounterThread Interrupted --> ");
 					break;
 				}
+				System.out.println("exit sleep miscounter");
 				String date_time = null;
 				String date_month = null;
 				// String email = null;
 				String saved_value = "";
 				boolean proceed = true;
 				// **************** Reading MIS.txt Content **********************
+				System.out.println("reading file miscounter: " + fileName);
 				BufferedReader in = null;
 				File mis_text_file = new File(fileName);
 				if (!mis_text_file.exists()) {
@@ -568,7 +607,7 @@ public class MISCounterThread implements Runnable  {
 									if (!report.isEmpty()) {
 										String dlrfile = FileContentGenerator.createDlrXLSContent(report,
 												regUser.getSystemId());
-								
+
 										String from = IConstants.SUPPORT_EMAIL[0];
 										if (ProfessionRecord.containsKey(regUser.getSystemId())) {
 											from = ProfessionRecord.get(regUser.getSystemId());
@@ -599,7 +638,7 @@ public class MISCounterThread implements Runnable  {
 							// ******************* End ****************************************************
 							// ****** Start Code For Executives Reporting *******
 							logger.info("Start For Executives Reporting");
-							Collection<SalesEntry> sellerlist =  (Collection<SalesEntry>) list("seller");
+							Collection<SalesEntry> sellerlist = (Collection<SalesEntry>) list("seller");
 							logger.info("Total Executives :--> " + sellerlist.size());
 							for (SalesEntry seller : sellerlist) {
 								String sellerName = null;
@@ -1110,6 +1149,7 @@ public class MISCounterThread implements Runnable  {
 							// ********* End Smsc Performance Report **********
 						}
 					} catch (Exception Ex) {
+						Ex.printStackTrace();
 						logger.info("", Ex.fillInStackTrace());
 					}
 					logger.info("<-- Checking For Minimum balance Alert -->");
@@ -1242,7 +1282,7 @@ public class MISCounterThread implements Runnable  {
 					if (!morning_report) {
 						LocalTime parse_time = LocalTime.parse("06:00");
 						if (LocalTime.now().isAfter(parse_time)) {
-							 Map<Integer, SalesEntry> sellerlist = list("seller");
+							Map<Integer, SalesEntry> sellerlist = list("seller");
 							logger.info(
 									"Start For Executive Descriptive Morning Report. Executives: " + sellerlist.size());
 							morning_report = true;
@@ -1303,6 +1343,7 @@ public class MISCounterThread implements Runnable  {
 					}
 				}
 				// ------------------------ end --------------------------------
+
 				if (!GlobalVars.ActiveUsers.isEmpty()) {
 					logger.info("Active Users: " + GlobalVars.ActiveUsers);
 				}
@@ -1324,17 +1365,17 @@ public class MISCounterThread implements Runnable  {
 		}
 		return map;
 	}
-		public Map<Integer, SalesEntry> list(String role) {
-			Map<Integer, SalesEntry> map = new HashMap<Integer, SalesEntry>();
-			List<SalesEntry> list = list();
-			for (SalesEntry entry : list) {
-				if (entry.getRole().equalsIgnoreCase(role)) {
-					map.put(entry.getId(), entry);
-				}
+
+	public Map<Integer, SalesEntry> list(String role) {
+		Map<Integer, SalesEntry> map = new HashMap<Integer, SalesEntry>();
+		List<SalesEntry> list = list();
+		for (SalesEntry entry : list) {
+			if (entry.getRole().equalsIgnoreCase(role)) {
+				map.put(entry.getId(), entry);
 			}
-			return map;
 		}
-	
+		return map;
+	}
 
 	public Map<Integer, String> listNamesUnderManager(String mgrId) {
 		Map<Integer, String> map = new HashMap<Integer, String>();
@@ -1463,8 +1504,6 @@ public class MISCounterThread implements Runnable  {
 		}
 		return smsc_map;
 	}
-
-
 
 	public List<SalesEntry> list() {
 		List<SalesEntry> results = new ArrayList<>();
@@ -1800,8 +1839,8 @@ public class MISCounterThread implements Runnable  {
 				+ "<span style='color: #1F497D;'>Please note that you have Low Balance in your account. <b>"
 				+ userDTO.getUserEntry().getSystemId() + "</b></span>" + "<br><br>";
 		if (userDTO.getBalance().getWalletFlag().equalsIgnoreCase("no")) {
-			htmlString += "<span style='color: #1F497D;'>Current Credits:&nbsp;<b>"
-					+  userDTO.getBalance().getCredits() + "</b></span>";
+			htmlString += "<span style='color: #1F497D;'>Current Credits:&nbsp;<b>" + userDTO.getBalance().getCredits()
+					+ "</b></span>";
 		} else {
 			String currency = "&euro;";
 			if (userDTO.getUserEntry().getCurrency() != null
@@ -1830,24 +1869,11 @@ public class MISCounterThread implements Runnable  {
 		String to = email;
 		final String pass = IConstants.mailPassword;
 		final String mailAuthUser = IConstants.mailId;
-		// String messagetext = "";
-		// boolean sessionDebug = false;
 		Properties props = new Properties();
-		// props.put("mail.smtp.user", mailAuthUser);
 		props.put("mail.smtp.host", host);
 		props.put("mail.transport.protocol", "smtp");
 		props.put("mail.smtp.port", IConstants.smtpPort + "");
-		// props.put("mail.smtp.auth", "true");
-		// props.put("mail.smtp.debug", "true");
-		jakarta.mail.Session mailSession = 	jakarta.mail.Session.getDefaultInstance(props);
-		/*
-		 * Session mailSession = Session.getInstance(props, new Authenticator() {
-		 * 
-		 * @Override protected PasswordAuthentication getPasswordAuthentication() {
-		 * return new PasswordAuthentication(mailAuthUser, pass); } });
-		 * 
-		 * mailSession.setDebug(sessionDebug);
-		 */
+		jakarta.mail.Session mailSession = jakarta.mail.Session.getDefaultInstance(props);
 		Message message = new MimeMessage(mailSession);
 		message.setFrom(new InternetAddress(from, from));
 		InternetAddress[] address;
@@ -1889,7 +1915,8 @@ public class MISCounterThread implements Runnable  {
 					ByteArrayOutputStream out = new ByteArrayOutputStream();
 					Workbook workbook = (Workbook) attachment[i];
 					workbook.write(out);
-					DataSource source = new ByteArrayDataSource(out.toByteArray(), "application/octet-stream");
+					jakarta.activation.DataSource source = new ByteArrayDataSource(out.toByteArray(),
+							"application/octet-stream");
 					messageBodyPart.setDataHandler(new DataHandler(source));
 					messageBodyPart.setFileName("report.xlsx");
 					multipart.addBodyPart(messageBodyPart);
@@ -1899,7 +1926,7 @@ public class MISCounterThread implements Runnable  {
 			File fi = new File(IConstants.FORMAT_DIR + "images//header.jpg");
 			if (fi.exists()) {
 				messageBodyPart = new MimeBodyPart();
-				DataSource fds = new FileDataSource(fi);
+				jakarta.activation.DataSource fds = new FileDataSource(fi);
 				messageBodyPart.setDataHandler(new DataHandler(fds));
 				messageBodyPart.setHeader("Content-ID", "<headerimg>");
 				messageBodyPart.setDisposition(MimeBodyPart.INLINE);
@@ -1912,7 +1939,7 @@ public class MISCounterThread implements Runnable  {
 			fi = new File(IConstants.FORMAT_DIR + "images//footer.jpg");
 			if (fi.exists()) {
 				messageBodyPart = new MimeBodyPart();
-				DataSource fds = new FileDataSource(fi);
+				jakarta.activation.DataSource fds = new FileDataSource(fi);
 				messageBodyPart.setDataHandler(new DataHandler(fds));
 				messageBodyPart.setHeader("Content-ID", "<footerimg>");
 				messageBodyPart.setDisposition(MimeBodyPart.INLINE);
@@ -1924,7 +1951,7 @@ public class MISCounterThread implements Runnable  {
 			fi = new File(IConstants.FORMAT_DIR + "images//footer_2.png");
 			if (fi.exists()) {
 				messageBodyPart = new MimeBodyPart();
-				DataSource fds = new FileDataSource(fi);
+				jakarta.activation.DataSource fds = new FileDataSource(fi);
 				messageBodyPart.setDataHandler(new DataHandler(fds));
 				messageBodyPart.setHeader("Content-ID", "<footer2img>");
 				messageBodyPart.setDisposition(MimeBodyPart.INLINE);
@@ -1936,7 +1963,7 @@ public class MISCounterThread implements Runnable  {
 			fi = new File(IConstants.FORMAT_DIR + "images//lebanon.png");
 			if (fi.exists()) {
 				messageBodyPart = new MimeBodyPart();
-				DataSource fds = new FileDataSource(fi);
+				jakarta.activation.DataSource fds = new FileDataSource(fi);
 				messageBodyPart.setDataHandler(new DataHandler(fds));
 				messageBodyPart.setHeader("Content-ID", "<lebanonimg>");
 				messageBodyPart.setDisposition(MimeBodyPart.INLINE);
@@ -1948,7 +1975,7 @@ public class MISCounterThread implements Runnable  {
 			fi = new File(IConstants.FORMAT_DIR + "images//uae.png");
 			if (fi.exists()) {
 				messageBodyPart = new MimeBodyPart();
-				DataSource fds = new FileDataSource(fi);
+				jakarta.activation.DataSource fds = new FileDataSource(fi);
 				messageBodyPart.setDataHandler(new DataHandler(fds));
 				messageBodyPart.setHeader("Content-ID", "<uaeimg>");
 				messageBodyPart.setDisposition(MimeBodyPart.INLINE);
@@ -1960,7 +1987,7 @@ public class MISCounterThread implements Runnable  {
 			fi = new File(IConstants.FORMAT_DIR + "images//contact.jpg");
 			if (fi.exists()) {
 				messageBodyPart = new MimeBodyPart();
-				DataSource fds = new FileDataSource(fi);
+				jakarta.activation.DataSource fds = new FileDataSource(fi);
 				messageBodyPart.setDataHandler(new DataHandler(fds));
 				messageBodyPart.setHeader("Content-ID", "<contactimg>");
 				messageBodyPart.setDisposition(MimeBodyPart.INLINE);
@@ -2020,9 +2047,9 @@ public class MISCounterThread implements Runnable  {
 		XSSFCellStyle headerStyle = (XSSFCellStyle) workbook.createCellStyle();
 		headerStyle.setFont(headerFont);
 		headerStyle.setFillForegroundColor(new XSSFColor((IndexedColorMap) Color.GRAY));
-		headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND); 
+		headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
-		headerStyle.setAlignment(HorizontalAlignment.CENTER); 
+		headerStyle.setAlignment(HorizontalAlignment.CENTER);
 
 		headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 		headerStyle.setBorderBottom(BorderStyle.THIN);
@@ -2031,7 +2058,7 @@ public class MISCounterThread implements Runnable  {
 		headerStyle.setBottomBorderColor(new XSSFColor((IndexedColorMap) Color.WHITE));
 		headerStyle.setBorderTop(BorderStyle.THIN);
 		headerStyle.setBorderTop(BorderStyle.THIN);
-		XSSFColor whiteColor = new XSSFColor(new byte[]{(byte) 255, (byte) 255, (byte) 255}, null);
+		XSSFColor whiteColor = new XSSFColor(new byte[] { (byte) 255, (byte) 255, (byte) 255 }, null);
 		headerStyle.setTopBorderColor(whiteColor);
 		headerStyle.setBorderLeft(BorderStyle.THIN);
 		headerStyle.setBorderLeft(BorderStyle.THIN);
@@ -2045,10 +2072,12 @@ public class MISCounterThread implements Runnable  {
 		rowFont.setColor(whiteColor);
 		XSSFCellStyle rowStyle = (XSSFCellStyle) workbook.createCellStyle();
 		rowStyle.setFont(rowFont);
-		byte[] rgbLightGray = {(byte) Color.LIGHT_GRAY.getRed(), (byte) Color.LIGHT_GRAY.getGreen(), (byte) Color.LIGHT_GRAY.getBlue()};
-		XSSFColor lightGrayColor = new XSSFColor(rgbLightGray, null); 
+		byte[] rgbLightGray = { (byte) Color.LIGHT_GRAY.getRed(), (byte) Color.LIGHT_GRAY.getGreen(),
+				(byte) Color.LIGHT_GRAY.getBlue() };
+		XSSFColor lightGrayColor = new XSSFColor(rgbLightGray, null);
 
-		rowStyle.setFillForegroundColor(lightGrayColor.getIndex()); 		rowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		rowStyle.setFillForegroundColor(lightGrayColor.getIndex());
+		rowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 		rowStyle.setAlignment(HorizontalAlignment.LEFT);
 		rowStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 		rowStyle.setBorderBottom(BorderStyle.THIN);
@@ -2149,15 +2178,17 @@ public class MISCounterThread implements Runnable  {
 		headerFont.setColor(new XSSFColor((IndexedColorMap) Color.BLACK));
 		XSSFCellStyle headerStyle = (XSSFCellStyle) workbook.createCellStyle();
 		headerStyle.setFont(headerFont);
-		 XSSFWorkbook workbook1 = new XSSFWorkbook();
-	        XSSFCellStyle headerStyle1 = workbook1.createCellStyle();
-	        
-	        XSSFColor grayColor = new XSSFColor(Color.GRAY, workbook1.getStylesSource().getIndexedColors()); // Create the gray color
-	        
-	        headerStyle1.setFillForegroundColor(grayColor); // Set the fill foreground color
-	        headerStyle1.setFillPattern(FillPatternType.SOLID_FOREGROUND); // Set the fill pattern
-	        headerStyle1.setAlignment(HorizontalAlignment.CENTER); // Set horizontal alignment
-	        headerStyle1.setVerticalAlignment(VerticalAlignment.CENTER);
+		XSSFWorkbook workbook1 = new XSSFWorkbook();
+		XSSFCellStyle headerStyle1 = workbook1.createCellStyle();
+
+		XSSFColor grayColor = new XSSFColor(Color.GRAY, workbook1.getStylesSource().getIndexedColors()); // Create the
+																											// gray
+																											// color
+
+		headerStyle1.setFillForegroundColor(grayColor); // Set the fill foreground color
+		headerStyle1.setFillPattern(FillPatternType.SOLID_FOREGROUND); // Set the fill pattern
+		headerStyle1.setAlignment(HorizontalAlignment.CENTER); // Set horizontal alignment
+		headerStyle1.setVerticalAlignment(VerticalAlignment.CENTER);
 		headerStyle1.setBorderBottom(BorderStyle.THIN);
 		headerStyle1.setBorderBottom(BorderStyle.THIN);
 		headerStyle1.setBottomBorderColor(IndexedColors.WHITE.getIndex());
@@ -2176,13 +2207,18 @@ public class MISCounterThread implements Runnable  {
 		rowFont.setColor(IndexedColors.WHITE.getIndex());
 		XSSFCellStyle rowStyle = (XSSFCellStyle) workbook1.createCellStyle();
 		rowStyle.setFont(rowFont);
-		  Color awtColor = Color.LIGHT_GRAY;
-	        XSSFColor xssfColor = new XSSFColor(new byte[]{(byte) awtColor.getRed(), (byte) awtColor.getGreen(), (byte) awtColor.getBlue()}, null); // null for the default IndexedColorMap
+		Color awtColor = Color.LIGHT_GRAY;
+		XSSFColor xssfColor = new XSSFColor(
+				new byte[] { (byte) awtColor.getRed(), (byte) awtColor.getGreen(), (byte) awtColor.getBlue() }, null); // null
+																														// for
+																														// the
+																														// default
+																														// IndexedColorMap
 
-		  rowStyle.setFillForegroundColor(xssfColor.getIndex()); // Set foreground color
-	        rowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND); // Set fill pattern
-	        rowStyle.setAlignment(HorizontalAlignment.LEFT); // Set horizontal alignment
-	        rowStyle.setVerticalAlignment(VerticalAlignment.CENTER); 
+		rowStyle.setFillForegroundColor(xssfColor.getIndex()); // Set foreground color
+		rowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND); // Set fill pattern
+		rowStyle.setAlignment(HorizontalAlignment.LEFT); // Set horizontal alignment
+		rowStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 		rowStyle.setBorderBottom(BorderStyle.THIN);
 		rowStyle.setBorderBottom(BorderStyle.THIN);
 		rowStyle.setBottomBorderColor(new XSSFColor());
@@ -2296,9 +2332,9 @@ public class MISCounterThread implements Runnable  {
 		XSSFWorkbook workbook1 = new XSSFWorkbook();
 		XSSFColor xssfColor = new XSSFColor(new java.awt.Color(awtColor.getRGB()), null);
 		headerStyle.setFillForegroundColor(xssfColor);
-		headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND); 
-		headerStyle.setAlignment(HorizontalAlignment.CENTER); 
-		headerStyle.setVerticalAlignment(VerticalAlignment.CENTER); 
+		headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		headerStyle.setAlignment(HorizontalAlignment.CENTER);
+		headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 		headerStyle.setBorderBottom(BorderStyle.THIN);
 		headerStyle.setBorderBottom(BorderStyle.THIN);
 		headerStyle.setBottomBorderColor(IndexedColors.WHITE.getIndex());
@@ -2330,8 +2366,8 @@ public class MISCounterThread implements Runnable  {
 		// Now, apply the color to the cell style
 		rowStyle.setFillForegroundColor(xssfColor11);
 		rowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-		rowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND); 
-		rowStyle.setAlignment(HorizontalAlignment.LEFT); 
+		rowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		rowStyle.setAlignment(HorizontalAlignment.LEFT);
 		rowStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 		rowStyle.setBorderBottom(BorderStyle.THIN);
 		rowStyle.setBorderBottom(BorderStyle.THIN);
@@ -2361,10 +2397,10 @@ public class MISCounterThread implements Runnable  {
 		summaryRowStyle.setFont(summaryRowFont);
 		Color midnightBlue = Color.decode("#191970");
 
-		XSSFColor xssfMidnightBlue = new XSSFColor(midnightBlue, null); 
+		XSSFColor xssfMidnightBlue = new XSSFColor(midnightBlue, null);
 		summaryRowStyle.setFillForegroundColor(xssfMidnightBlue);
 		summaryRowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-		XSSFColor whiteColor = new XSSFColor(new byte[]{(byte) 255, (byte) 255, (byte) 255}, null);
+		XSSFColor whiteColor = new XSSFColor(new byte[] { (byte) 255, (byte) 255, (byte) 255 }, null);
 		summaryRowStyle.setAlignment(HorizontalAlignment.LEFT);
 		summaryRowStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 		summaryRowStyle.setBorderBottom(BorderStyle.THIN);

@@ -8,6 +8,7 @@ import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import com.hazelcast.transaction.impl.Transaction;
 
@@ -18,6 +19,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
+@Repository
 public class SalesDAO {
 	
 	private Logger logger = LoggerFactory.getLogger(SalesDAO.class);

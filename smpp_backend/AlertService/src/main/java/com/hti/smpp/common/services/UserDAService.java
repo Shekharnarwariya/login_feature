@@ -10,7 +10,8 @@ import com.hti.smpp.common.user.dto.RechargeEntry;
 import com.hti.smpp.common.user.dto.UserEntry;
 
 @Service
-public interface UserDAService  {
+public interface UserDAService   {
+	
 	// public int saveUserEntry(UserEntryExt entry);
 
 //	public int saveRechargeEntry(RechargeEntry entry);
@@ -48,6 +49,7 @@ public interface UserDAService  {
 //
 //	// public BalanceEntry getBalanceEntry(int userid);
 //	// public BalanceEntry getBalanceEntry(String systemId);
+	
 public UserEntry getInternUserEntry();
 //
 //	public WebMenuAccessEntry getWebMenuAccessEntry(int userId);
