@@ -66,6 +66,7 @@ import org.springframework.expression.ParseException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -160,14 +161,15 @@ public class MISCounterThread implements Runnable {
 	// private Map<String, String> CurrencySymbol = new HashMap<String, String>();
 	private Map<String, String> ProfessionRecord = new HashMap<String, String>();
 
-	public MISCounterThread() {
+	public void startMisThread() {
 		thread = new Thread(this, "MisCounterThread");
 		thread.start();
 		logger.info("****************MIS Counter Thread Started************************");
 	}
 
 	private Map<String, String> listDomainEmail() {
-		List<ProfessionEntry> entriesWithValidEmail = service.ProfessioData();
+		List<ProfessionEntry> entriesWithValidEmail = service.professionData();
+		System.out.println("this is call list domain email " + entriesWithValidEmail);
 		Map<String, String> emailMap = new HashMap<>();
 
 		for (ProfessionEntry entry : entriesWithValidEmail) {
@@ -180,7 +182,7 @@ public class MISCounterThread implements Runnable {
 				emailMap.put(userEntry.getSystemId(), entry.getDomainEmail());
 			}
 		}
-
+		System.out.println("return proper list domain email ");
 		return emailMap;
 	}
 
@@ -331,13 +333,12 @@ public class MISCounterThread implements Runnable {
 
 	private List<UserEntryExt> listDlrReportUsers() {
 		List<UserEntryExt> list = new ArrayList<UserEntryExt>();
-		EntryObject e = new PredicateBuilderImpl().getEntryObject();
-		Predicate<Integer, WebMasterEntry> p = e.is("dlrReport").and(e.get("dlrEmail").isNotNull());
-		for (WebMasterEntry entry : GlobalVars.WebmasterEntries.values(p)) {
+		Collection<WebMasterEntry> entries = service.findDlrReportUsersWithValidEmail();
+		for (WebMasterEntry entry : entries) {
 			if (entry.getDlrEmail().contains("@") && entry.getDlrEmail().contains(".")) {
-				UserEntry userEntry = GlobalVars.UserEntries.get(entry.getUserId());
-				if (userEntry != null) {
-					UserEntryExt ext = new UserEntryExt(userEntry);
+				Optional<UserEntry> userEntry = userRepository.findById(entry.getUserId());
+				if (userEntry.isPresent()) {
+					UserEntryExt ext = new UserEntryExt(userEntry.get());
 					ext.setWebMasterEntry(entry);
 					list.add(ext);
 				}
@@ -414,14 +415,13 @@ public class MISCounterThread implements Runnable {
 		}
 		return list;
 	}
-
 	@Override
 	public void run() {
 		while (!isStop) {
 			try {
 				try {
 					System.out.println("start sleep miscounter");
-					Thread.sleep(2 * 60 * 1000);
+					Thread.sleep(10 * 1000);
 				} catch (InterruptedException e) {
 					logger.info("<-- MISCounterThread Interrupted --> ");
 					break;
@@ -536,6 +536,7 @@ public class MISCounterThread implements Runnable {
 					try {
 						ProfessionRecord.clear();
 						ProfessionRecord = listDomainEmail();
+						System.out.println("successefully call list domail");
 						if (proceed) {
 							proceed = false;
 							morning_report = false;

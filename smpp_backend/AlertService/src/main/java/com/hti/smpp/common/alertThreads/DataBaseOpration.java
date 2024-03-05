@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -521,38 +522,62 @@ public class DataBaseOpration {
 	}
 
 	public List<WebMasterEntry> findWebMaster() {
-		try {
-			return masterEntryRepository.findByMinFlag(true);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
+		return masterEntryRepository.findByMinFlag(true).orElseGet(() -> {
+			logger.info("Web master is null; find min flag returned null.");
+			return Collections.emptyList();
+		});
 	}
 
 	public List<WebMasterEntry> findAllWebMaster() {
 		try {
-			return masterEntryRepository.findAll();
+			List<WebMasterEntry> webMasterEntries = masterEntryRepository.findAll();
+			if (webMasterEntries == null) {
+				logger.warn("findAllWebMaster: No web master entries found (result is null).");
+				return Collections.emptyList();
+			}
+			return webMasterEntries;
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Exception occurred in findAllWebMaster", e);
+			return Collections.emptyList();
 		}
-		return null;
 	}
 
-	public List<ProfessionEntry> ProfessioData() {
+	public List<ProfessionEntry> professionData() {
 		try {
-			return professionEntryRepository.findEntriesWithValidDomainEmail();
+			List<ProfessionEntry> entries = professionEntryRepository.findByDomainEmailIsNotNull();
+			System.out.println(entries);
+			if (entries == null) {
+				logger.warn("professionData: No ProfessionEntry found (result is null).");
+				return Collections.emptyList();
+			}
+			return entries;
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Exception occurred in professionData", e);
+			return Collections.emptyList();
 		}
-		return null;
 	}
 
 	public List<WebMasterEntry> findAllById(Set<Integer> sentMinBalAlertEmail) {
 		try {
-			return masterEntryRepository.findAllById(sentMinBalAlertEmail);
+			List<WebMasterEntry> entries = masterEntryRepository.findAllById(sentMinBalAlertEmail);
+			if (entries == null) {
+				logger.warn("findAllById: No WebMasterEntry found for provided IDs.");
+				return Collections.emptyList();
+			}
+			return entries;
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Exception occurred in findAllById", e);
+			return Collections.emptyList();
 		}
-		return null;
+	}
+
+	public List<WebMasterEntry> findDlrReportUsersWithValidEmail() {
+		try {
+			List<WebMasterEntry> entries = masterEntryRepository.findDlrReportUsersWithValidEmail();
+			return Optional.ofNullable(entries).orElseGet(Collections::emptyList);
+		} catch (Exception e) {
+			logger.error("Exception occurred in findDlrReportUsersWithValidEmail", e);
+			return Collections.emptyList();
+		}
 	}
 }

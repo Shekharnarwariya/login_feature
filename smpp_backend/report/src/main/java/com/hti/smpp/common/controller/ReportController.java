@@ -67,7 +67,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.HeaderParam;
 
 @RestController
 @RequestMapping("/reports")
@@ -625,25 +624,7 @@ public class ReportController {
 		return transactionReportService.executeTransaction(username);
 	}
 
-<<<<<<< HEAD
 
-
-    @GetMapping("/transactions")
-    public ResponseEntity<?> executeTransaction(@RequestHeader("username") String username) {
-        return transactionReportService.executeTransaction(username);
-    }
-
-    
-	@PostMapping(value="/send-attachment" ,consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	@Operation(summary="send email with file atttachement to the User",description = "This endPoint send a file attaced to the email")
-	public ResponseEntity<?>sentAttachmentWithEmail(
-			@RequestPart(value="file",required = false) MultipartFile attachment,
-			@Parameter(description = "attach file for sending to the email",content = @Content(schema = @Schema(implementation = SendAttachmentRequest.class))) @RequestParam(value = "sendAttachmentRequest", required = true) String sendAttachmentRequest
-			){
-			fileAttachmentSenderService.sendEmailWithAttachment(attachment, sendAttachmentRequest);
-			return new ResponseEntity<>("Email Sent Successfully",HttpStatus.OK);
-		}
-=======
 	@PostMapping(value = "/send-attachment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	@Operation(summary = "send email with file atttachement to the User", description = "This endPoint send a file attaced to the email")
 	public ResponseEntity<?> sentAttachmentWithEmail(@RequestHeader("username") String username,
@@ -652,6 +633,5 @@ public class ReportController {
 		fileAttachmentSenderService.sendEmailWithAttachment(username,attachment, sendAttachmentRequest);
 		return new ResponseEntity<>("Email Sent Successfully", HttpStatus.OK);
 	}
->>>>>>> 62b80b8 (add this)
 
 }

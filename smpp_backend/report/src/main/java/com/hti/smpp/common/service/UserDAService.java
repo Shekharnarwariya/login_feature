@@ -47,7 +47,7 @@ public interface UserDAService  {
 //
 //	// public BalanceEntry getBalanceEntry(int userid);
 //	// public BalanceEntry getBalanceEntry(String systemId);
-	public UserEntry getInternUserEntry();
+//	public UserEntry getInternUserEntry();
 //
 //	public WebMenuAccessEntry getWebMenuAccessEntry(int userId);
 //
@@ -78,13 +78,13 @@ public interface UserDAService  {
 //
 //
 //	// -------------- Recharge Entries -------------------
-//	public Map<Integer, RechargeEntry> listRecentRecharges(Integer[] userid);
-//
-//	public Map<Integer, List<RechargeEntry>> listTransactions(Integer[] userid, String txnType, String startTime,
-//			String endTime);
-//
-//	public Map<Integer, List<RechargeEntry>> listTransactions(Integer[] userid);
-//	
+	public Map<Integer, RechargeEntry> listRecentRecharges(Integer[] userid);
+
+	public Map<Integer, List<RechargeEntry>> listTransactions(Integer[] userid, String txnType, String startTime,
+			String endTime);
+
+	public Map<Integer, List<RechargeEntry>> listTransactions(Integer[] userid);
+	
 	
 	
 	
@@ -106,7 +106,7 @@ public interface UserDAService  {
 //
 //	public OTPEntry getOTPEntry(String systemId);
 
-	//public UserEntry getUserEntry(int userId);
+	public UserEntry getUserEntry(int userId);
 
 	// ------ user limit --------
 //	public UserLimitEntry getLimitEntry(int userId);

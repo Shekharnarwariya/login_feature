@@ -6,12 +6,8 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-<<<<<<< HEAD
 		<version>3.1.5</version>
-=======
-		<version>3.1.8</version>
->>>>>>> 16fcd37 (misCounter)
-		<relativePath /> <!-- lookup parent from repository -->
+		<relativePath />
 	</parent>
 	<groupId>com.hti.smpp.common</groupId>
 	<artifactId>AlertService</artifactId>

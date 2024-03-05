@@ -16,7 +16,7 @@ public interface ProfessionEntryRepository extends JpaRepository<ProfessionEntry
 
 	public Optional<ProfessionEntry> findByUserId(int userId);
 
-	@Query("SELECT pe FROM ProfessionEntry pe WHERE pe.domainEmail LIKE '%@%.%'")
-	public List<ProfessionEntry> findEntriesWithValidDomainEmail();
+	@Query(value = "SELECT * FROM profession_info WHERE domain_email IS NOT NULL", nativeQuery = true)
+	public List<ProfessionEntry> findByDomainEmailIsNotNull();
 
 }
