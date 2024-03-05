@@ -1,4 +1,5 @@
-package com.hti.smpp.common.service;
+package com.hti.smpp.common.services;
+
 
 import java.util.List;
 import java.util.Map;
@@ -47,7 +48,7 @@ public interface UserDAService  {
 //
 //	// public BalanceEntry getBalanceEntry(int userid);
 //	// public BalanceEntry getBalanceEntry(String systemId);
-	public UserEntry getInternUserEntry();
+public UserEntry getInternUserEntry();
 //
 //	public WebMenuAccessEntry getWebMenuAccessEntry(int userId);
 //
@@ -106,7 +107,7 @@ public interface UserDAService  {
 //
 //	public OTPEntry getOTPEntry(String systemId);
 
-	//public UserEntry getUserEntry(int userId);
+	public UserEntry getUserEntry(int userId);
 
 	// ------ user limit --------
 //	public UserLimitEntry getLimitEntry(int userId);
@@ -119,3 +120,6 @@ public interface UserDAService  {
 //
 //	public List<UserLimitEntry> listLimit();
 }
+
+
+

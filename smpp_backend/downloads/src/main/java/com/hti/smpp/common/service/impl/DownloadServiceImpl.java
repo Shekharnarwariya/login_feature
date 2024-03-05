@@ -9,10 +9,18 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+<<<<<<< HEAD
 import java.util.ArrayList;
+=======
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+>>>>>>> 16fcd37 (misCounter)
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +28,13 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.commons.fileupload.DefaultFileItemFactory;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUpload;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.RequestContext;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +43,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.impl.PredicateBuilderImpl;
@@ -38,6 +54,8 @@ import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.network.repository.NetworkEntryRepository;
+import com.hti.smpp.common.request.ConversionData;
+import com.hti.smpp.common.responce.ConverterResponse;
 import com.hti.smpp.common.route.dto.RouteEntry;
 import com.hti.smpp.common.route.dto.RouteEntryExt;
 import com.hti.smpp.common.route.repository.RouteEntryRepository;
@@ -51,6 +69,7 @@ import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Constants;
+import com.hti.smpp.common.util.Converters;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MessageResourceBundle;
@@ -65,6 +84,7 @@ import com.lowagie.text.Phrase;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jxl.Workbook;
 import jxl.format.Alignment;
 import jxl.format.Border;
@@ -78,57 +98,64 @@ import jxl.write.WritableWorkbook;
 import jxl.write.WriteException;
 
 @Service
-public class DownloadServiceImpl implements DownloadService{
-	
+public class DownloadServiceImpl implements DownloadService {
+
 	private static final Logger logger = LoggerFactory.getLogger(DownloadServiceImpl.class);
-	
+
 	@Autowired
 	private UserEntryRepository userRepository;
-	
+
 	@Autowired
 	private MessageResourceBundle messageResourceBundle;
-	
+
 	@Autowired
 	private WebMasterEntryRepository webMasterRepo;
-	
+
 	@Autowired
 	private SmscEntryRepository smscEntryRepo;
-	
+
 	@Autowired
 	private GroupEntryRepository groupEntryRepo;
-	
+
 	@Autowired
 	private RouteEntryRepository routeRepo;
-	
+
 	@Autowired
 	private NetworkEntryRepository networkRepo;
-	
-	
+
 	@Override
-	public ResponseEntity<?> downloadPricing(String format,String username) {
-		
+	public ResponseEntity<?> downloadPricing(String format, String username) {
+
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+<<<<<<< HEAD
 				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 		}
+=======
+				throw new UnauthorizedException(messageResourceBundle
+						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
+			}
+>>>>>>> 16fcd37 (misCounter)
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
+			throw new NotFoundException(
+					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
 		boolean proceedFurther = false;
 		String filename = null;
 		String userid = user.getSystemId();
-		logger.info("Coverage Report Request " + user.getSystemId() +" Format: "+format);
-		//check flag
+		logger.info("Coverage Report Request " + user.getSystemId() + " Format: " + format);
+		// check flag
 		proceedFurther = checkClientFlag(userid);
-		
-		if(proceedFurther) {
+
+		if (proceedFurther) {
 			try {
-				if(format != null && (format.equalsIgnoreCase("xls") || format.equalsIgnoreCase("pdf") || format.equalsIgnoreCase("csv"))) {
+				if (format != null && (format.equalsIgnoreCase("xls") || format.equalsIgnoreCase("pdf")
+						|| format.equalsIgnoreCase("csv"))) {
 					filename = getCoverageReport(user.getSystemId(), user.getId(), format, false);
-				}else {
+				} else {
 					throw new NotFoundException("Format must be in xls, pdf or doc");
 				}
 				if (filename != null) {
@@ -141,21 +168,21 @@ public class DownloadServiceImpl implements DownloadService{
 				e.printStackTrace();
 				proceedFurther = false;
 				throw new InternalServerException(e.getMessage());
-			} catch(NotFoundException e) {
+			} catch (NotFoundException e) {
 				proceedFurther = false;
 				throw new NotFoundException(e.getMessage());
-			}catch (Exception e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 				proceedFurther = false;
 				throw new InternalServerException("Requested Resource is Temporary Unavailable");
 			}
-			
-		}else {
+
+		} else {
 			throw new InternalServerException("Unable to proceed the request!");
 		}
-		
-		if(proceedFurther) {
-			//download
+
+		if (proceedFurther) {
+			// download
 			String newFilename = userid + "_coverage." + format;
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
@@ -168,11 +195,12 @@ public class DownloadServiceImpl implements DownloadService{
 				throw new InternalServerException(ex.getLocalizedMessage());
 			}
 			return ResponseEntity.ok().headers(headers).body(fileBytes);
-		}else {
+		} else {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to download file!");
 		}
 
 	}
+<<<<<<< HEAD
 	@Override
 	public ResponseEntity<List<Object>> downloadPricingInList(String username) {
         List<Object> resultList = new ArrayList<>();
@@ -241,6 +269,12 @@ public class DownloadServiceImpl implements DownloadService{
 	private boolean checkClientFlag(String userId){
 	    try {
 	    	String clientfileName = Constants.USER_FLAG_DIR + userId + ".txt";
+=======
+
+	private boolean checkClientFlag(String userId) {
+		try {
+			String clientfileName = Constants.USER_FLAG_DIR + userId + ".txt";
+>>>>>>> 16fcd37 (misCounter)
 			BufferedReader in;
 			in = new BufferedReader(new FileReader(clientfileName));
 			String flageValue = in.readLine();
@@ -248,13 +282,13 @@ public class DownloadServiceImpl implements DownloadService{
 			if (flageValue.indexOf("404") > -1) {
 				return false;
 			}
-	    } catch (IOException e) {
-	        throw new InternalServerException(e.getMessage());
-	    }
-	    
-	    return true;
+		} catch (IOException e) {
+			throw new InternalServerException(e.getMessage());
+		}
+
+		return true;
 	}
-	
+
 	public Map<Integer, String> listNames() {
 		Map<Integer, String> names = new HashMap<Integer, String>();
 		List<SmscEntry> allSmscEntries = null;
@@ -270,7 +304,7 @@ public class DownloadServiceImpl implements DownloadService{
 				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 		return names;
 	}
-	
+
 	public Map<Integer, String> listGroupNames() {
 		Map<Integer, String> names = new HashMap<Integer, String>();
 		names.put(0, "NONE");
@@ -282,8 +316,8 @@ public class DownloadServiceImpl implements DownloadService{
 				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 		return names;
 	}
-	
-	public Map<Integer, RouteEntryExt> listCoverage(int userId, boolean display, boolean cached){
+
+	public Map<Integer, RouteEntryExt> listCoverage(int userId, boolean display, boolean cached) {
 		Map<Integer, RouteEntryExt> list = new LinkedHashMap<Integer, RouteEntryExt>();
 		Map<Integer, String> smsc_name_mapping = null;
 		Map<Integer, String> group_name_mapping = null;
@@ -291,7 +325,7 @@ public class DownloadServiceImpl implements DownloadService{
 			smsc_name_mapping = listNames();
 			group_name_mapping = listGroupNames();
 		}
-		
+
 		if (cached) {
 			Predicate<Integer, RouteEntry> p = new PredicateBuilderImpl().getEntryObject().get("userId").equal(userId);
 			for (RouteEntry basic : GlobalVars.BasicRouteEntries.values(p)) {
@@ -327,56 +361,56 @@ public class DownloadServiceImpl implements DownloadService{
 				}
 				list.put(entry.getBasic().getNetworkId(), entry);
 			}
-		}else {
-			//database operation
+		} else {
+			// database operation
 			logger.info("listing RouteEntries From Database: " + userId);
 			List<RouteEntry> db_list = this.routeRepo.findByUserId(userId);
 			UserEntry user = null;
 			WebMasterEntry webMasterEntry = null;
 			NetworkEntry network = null;
-			
-			
+
 			for (RouteEntry basic : db_list) {
 				RouteEntryExt entry = new RouteEntryExt(basic);
 				if (display) {
-					
+
 					try {
 						Optional<UserEntry> userOptional = this.userRepository.findById(entry.getBasic().getUserId());
-						if(userOptional.isPresent()) {
+						if (userOptional.isPresent()) {
 							user = userOptional.get();
-						}else {
+						} else {
 							throw new NotFoundException("User not found!");
 						}
-					} catch(Exception e) {
+					} catch (Exception e) {
 						throw new NotFoundException(e.getMessage());
 					}
 					try {
 						webMasterEntry = this.webMasterRepo.findByUserId(entry.getBasic().getUserId());
-						if(webMasterEntry==null) {
+						if (webMasterEntry == null) {
 							throw new NotFoundException("Web master entry not found!");
 						}
-					}catch(Exception e) {
+					} catch (Exception e) {
 						throw new NotFoundException(e.getMessage());
 					}
 					try {
-						Optional<NetworkEntry> networkOptional = this.networkRepo.findById(entry.getBasic().getNetworkId());
-						if(networkOptional.isPresent()) {
+						Optional<NetworkEntry> networkOptional = this.networkRepo
+								.findById(entry.getBasic().getNetworkId());
+						if (networkOptional.isPresent()) {
 							network = networkOptional.get();
-						}else {
+						} else {
 							System.out.println("Network Entry Not Found!");
 						}
-					}catch(Exception e) {
+					} catch (Exception e) {
 						throw new NotFoundException(e.getMessage());
 					}
 					// ------ set user values -----------------
-					if (user!=null && webMasterEntry!=null) {
+					if (user != null && webMasterEntry != null) {
 						entry.setSystemId(user.getSystemId());
 						entry.setMasterId(user.getMasterId());
 						entry.setCurrency(user.getCurrency());
 						entry.setAccountType(webMasterEntry.getAccountType());
 					}
 					// ------ set network values -----------------
-					if (network!=null) {
+					if (network != null) {
 						entry.setCountry(network.getCountry());
 						entry.setOperator(network.getOperator());
 						entry.setMcc(network.getMcc());
@@ -399,7 +433,7 @@ public class DownloadServiceImpl implements DownloadService{
 		}
 		return list;
 	}
-	
+
 	private String getCoverageReportXLS(String username, Collection<RouteEntryExt> coverageList)
 			throws WriteException, IOException {
 		String filename = IConstants.WEBSMPP_EXT_DIR + "report//" + username + "_coverage.xls";
@@ -447,7 +481,7 @@ public class DownloadServiceImpl implements DownloadService{
 		workbook.close();
 		return filename;
 	}
-	
+
 	private String getCoverageReportPDF(String username, Collection<RouteEntryExt> coverageList)
 			throws DocumentException, FileNotFoundException, IOException {
 		String filename = IConstants.WEBSMPP_EXT_DIR + "report//" + username + "_coverage.pdf";
@@ -534,15 +568,17 @@ public class DownloadServiceImpl implements DownloadService{
 			datatable.addCell(new Phrase(entry.getBasic().getRemarks(), font_Content));
 			sno = sno + 1;
 		}
-		// --------------------------------------------------Adding Tables to Document-------------------
+		// --------------------------------------------------Adding Tables to
+		// Document-------------------
 		document.add(head_line);
 		document.add(Under_line);
 		document.add(datatable);
-		// --------------------------------------------------Adding Tables to Document-------------------
+		// --------------------------------------------------Adding Tables to
+		// Document-------------------
 		document.close();
 		return filename;
 	}
-	
+
 	private String getCoverageReportCSV(String username, Collection<RouteEntryExt> coverageList) throws IOException {
 		System.out.println("CoverageList Size: " + coverageList.size());
 		String filename = IConstants.WEBSMPP_EXT_DIR + "report//" + username + "_coverage.csv";
@@ -597,19 +633,21 @@ public class DownloadServiceImpl implements DownloadService{
 		}
 		return filename;
 	}
-	
-	private String getCoverageReport(String username, int userid, String format, boolean cached) throws WriteException, IOException, DocumentException {
+
+	private String getCoverageReport(String username, int userid, String format, boolean cached)
+			throws WriteException, IOException, DocumentException {
 		String filename = null;
 		Collection<RouteEntryExt> list = listCoverage(userid, true, cached).values();
 		if (format.equalsIgnoreCase("xls")) {
 			filename = getCoverageReportXLS(username, list);
 		} else if (format.equalsIgnoreCase("pdf")) {
 			filename = getCoverageReportPDF(username, list);
-		} else if(format.equalsIgnoreCase("csv")){
+		} else if (format.equalsIgnoreCase("csv")) {
 			filename = getCoverageReportCSV(username, list);
 		}
 		return filename;
 	}
+<<<<<<< HEAD
 	
 	
 	private Collection<RouteEntryExt>  getCoverageReportInList(String username, int userid, boolean cached) throws WriteException, IOException, DocumentException {
@@ -618,4 +656,6 @@ public class DownloadServiceImpl implements DownloadService{
 	}
 	
 
+=======
+>>>>>>> 16fcd37 (misCounter)
 }

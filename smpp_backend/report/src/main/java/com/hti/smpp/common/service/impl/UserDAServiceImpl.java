@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.hazelcast.query.Predicate;
+import com.hazelcast.query.impl.PredicateBuilderImpl;
 import com.hti.smpp.common.service.UserDAO;
 import com.hti.smpp.common.service.UserDAService;
 import com.hti.smpp.common.user.dto.BalanceEntry;
@@ -503,15 +505,15 @@ public class UserDAServiceImpl implements UserDAService {
 //		return userDAO.countUsersUnderSeller(sellerId);
 //	}
 //
-//	@Override
-//	public UserEntry getInternUserEntry() {
-//		logger.debug("Checking For User Internal User ");
-//		Predicate<Integer, UserEntry> p = new PredicateBuilderImpl().getEntryObject().get("role").equal("internal");
-//		for (UserEntry entry : GlobalVars.UserEntries.values(p)) {
-//			return entry;
-//		}
-//		return null;
-//	}
+	@Override
+	public UserEntry getInternUserEntry() {
+		logger.debug("Checking For User Internal User ");
+		Predicate<Integer, UserEntry> p = new PredicateBuilderImpl().getEntryObject().get("role").equal("internal");
+		for (UserEntry entry : GlobalVars.UserEntries.values(p)) {
+			return entry;
+		}
+		return null;
+	}
 //
 //	@Override
 //	public void saveOTPEntry(OTPEntry entry) {

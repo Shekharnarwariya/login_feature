@@ -1,19 +1,10 @@
-package com.hti.smpp.common.services.impl;
+package com.hti.smpp.common.services.Impl;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.hti.smpp.common.dto.MccMncDTO;
-import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.request.DBMessage;
 import com.hti.smpp.common.util.IConstants;
-import com.hti.smpp.common.util.MessageResourceBundle;
 
 import jxl.Workbook;
 import jxl.format.Alignment;
@@ -26,12 +17,9 @@ import jxl.write.WritableCellFormat;
 import jxl.write.WritableFont;
 import jxl.write.WritableSheet;
 import jxl.write.WritableWorkbook;
-import jxl.write.WriteException;
-
 
 public class FileContentGenerator {
-	
-	public static String createDlrXLSContent(List list, String username) {
+	public static String createDlrXLSContent(List<DBMessage> report, String username) {
 		String filename = IConstants.WEBAPP_DIR + "report//" + username + "_Delivery.xls";
 		WritableFont heading = new WritableFont(WritableFont.TAHOMA, 13, WritableFont.BOLD, false,
 				UnderlineStyle.NO_UNDERLINE, Colour.WHITE);
@@ -59,7 +47,7 @@ public class FileContentGenerator {
 			WritableSheet sheet = null;
 			// -------------------------------------------------------
 			int sheet_number = 0;
-			while (!list.isEmpty()) {
+			while (!report.isEmpty()) {
 				++sheet_number;
 				sheet = workbook.createSheet("Sheet-" + sheet_number, sheet_number);
 				// sheet.mergeCells(0, 0, 1, 0);
@@ -73,8 +61,8 @@ public class FileContentGenerator {
 				sheet.addCell(new Label(4, 2, "Status", courierformat));
 				int rowNum = 3;
 				int row_counter = 0;
-				while (!list.isEmpty()) {
-					DBMessage dBMessage = (DBMessage) list.remove(0);
+				while (!report.isEmpty()) {
+					DBMessage dBMessage = (DBMessage) report.remove(0);
 					sheet.addCell(new Label(0, rowNum, dBMessage.getSender(), timesformat));
 					sheet.addCell(new Label(1, rowNum, dBMessage.getDestination(), timesformat));
 					sheet.addCell(new Label(2, rowNum, dBMessage.getSub_Time(), timesformat));
@@ -93,4 +81,5 @@ public class FileContentGenerator {
 		}
 		return filename;
 	}
-}
+	}
+

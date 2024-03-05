@@ -910,10 +910,6 @@ public class ContentReportServiceImpl implements ContentReportService {
 	}
 
 	public String hexCodePointsToCharMsg(String msg) {
-		// logger.info("got request ");
-		// this mthd made decreasing codes, only.
-		//// This mthd will take msg who contain hex values of unicode, then it will
-		// convert this msg to Unicode from hex.
 		boolean reqNULL = false;
 		byte[] charsByt, var;
 		int x = 0;

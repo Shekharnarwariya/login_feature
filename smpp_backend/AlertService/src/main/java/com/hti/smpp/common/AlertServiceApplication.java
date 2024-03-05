@@ -7,14 +7,27 @@ import org.springframework.context.ApplicationContext;
 
 import com.hti.smpp.common.alertThreads.AlertThread;
 
+import com.hti.smpp.common.alertThreads.AlertThread;
+import org.springframework.context.ApplicationContext;
 @SpringBootApplication
 public class AlertServiceApplication {
     @Autowired
     private ApplicationContext applicationContext;
 
+<<<<<<< HEAD
     public static void main(String[] args) {
         ApplicationContext context = SpringApplication.run(AlertServiceApplication.class, args);
         AlertThread alert = context.getBean(AlertThread.class);
         alert.startThread();
     }
+=======
+	public static void main(String[] args) {
+		 ApplicationContext context = SpringApplication.run(AlertServiceApplication.class, args);
+		
+		  AlertThread alert = context.getBean(AlertThread.class);
+	        alert.startThread();
+		
+	}
+
+>>>>>>> 16fcd37 (misCounter)
 }
