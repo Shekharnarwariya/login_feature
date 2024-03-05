@@ -7,11 +7,7 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.1.5</version>
-<<<<<<< HEAD
 		<relativePath />
-=======
-		<relativePath /> <!-- lookup parent from repository -->
->>>>>>> 96401f1d1d1a31c5e1b73c83ac974f4359502342
 	</parent>
 	<groupId>com.hti.smpp.common</groupId>
 	<artifactId>AlertService</artifactId>

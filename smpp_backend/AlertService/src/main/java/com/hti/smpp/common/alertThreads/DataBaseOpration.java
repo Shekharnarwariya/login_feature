@@ -5,10 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-<<<<<<< HEAD
 import java.util.Collections;
-=======
->>>>>>> 96401f1d1d1a31c5e1b73c83ac974f4359502342
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -26,11 +23,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-<<<<<<< HEAD
-=======
-import com.hazelcast.query.Predicate;
-import com.hazelcast.query.impl.PredicateBuilderImpl;
->>>>>>> 96401f1d1d1a31c5e1b73c83ac974f4359502342
 import com.hti.smpp.common.contacts.dto.GroupEntry;
 import com.hti.smpp.common.contacts.repository.GroupEntryRepository;
 import com.hti.smpp.common.dto.Network;
@@ -529,7 +521,6 @@ public class DataBaseOpration {
 		return isUpdate;
 	}
 
-<<<<<<< HEAD
 	public List<WebMasterEntry> findWebMaster() {
 		return masterEntryRepository.findByMinFlag(true).orElseGet(() -> {
 			logger.info("Web master is null; find min flag returned null.");
@@ -589,6 +580,5 @@ public class DataBaseOpration {
 			return Collections.emptyList();
 		}
 	}
-=======
->>>>>>> 96401f1d1d1a31c5e1b73c83ac974f4359502342
+
 }

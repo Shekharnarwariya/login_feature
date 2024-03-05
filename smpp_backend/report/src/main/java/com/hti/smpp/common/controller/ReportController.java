@@ -618,14 +618,6 @@ public class ReportController {
 		return summaryReportService.SummaryReportdoc(username, customReportForm, response);
 
 	}
-<<<<<<< HEAD
-
-	@GetMapping("/transactions")
-	public ResponseEntity<?> executeTransaction(@RequestHeader("username") String username) {
-		return transactionReportService.executeTransaction(username);
-	}
-=======
->>>>>>> 96401f1d1d1a31c5e1b73c83ac974f4359502342
 
 	@GetMapping("/transactions")
 	public ResponseEntity<?> executeTransaction(@RequestHeader("username") String username) {
@@ -637,7 +629,7 @@ public class ReportController {
 	public ResponseEntity<?> sentAttachmentWithEmail(@RequestHeader("username") String username,
 			@RequestPart(value = "file", required = false) MultipartFile attachment,
 			@Parameter(description = "attach file for sending to the email", content = @Content(schema = @Schema(implementation = SendAttachmentRequest.class))) @RequestParam(value = "sendAttachmentRequest", required = true) String sendAttachmentRequest) {
-		fileAttachmentSenderService.sendEmailWithAttachment(username,attachment, sendAttachmentRequest);
+		fileAttachmentSenderService.sendEmailWithAttachment(username, attachment, sendAttachmentRequest);
 		return new ResponseEntity<>("Email Sent Successfully", HttpStatus.OK);
 	}
 
