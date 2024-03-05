@@ -26,7 +26,8 @@ public interface KeywordService {
     public ResponseEntity<StreamingResponseBody> generateXls(TwowayReportForm form, String locale, String username);
     public ResponseEntity<StreamingResponseBody> generatePdf(TwowayReportForm form, String locale, String username);
     public ResponseEntity<StreamingResponseBody> generateDoc(TwowayReportForm form, String locale, String username);
-    public ResponseEntity<?> view(TwowayReportForm form, int page, int size, String username);
+    public ResponseEntity<?> view(int[] userId,String shortCode,String keyword,String startTime,String endTime, String[] type, int page, int size, String username);
     public ResponseEntity<Collection<UserEntry>> setupTwowayReport(String username);
     public ResponseEntity<String> deleteAllKeyWordByID(List<Integer> id, String username);
+    //public ResponseEntity<?> view(TwowayReportForm form, int page, int size, String username);
 }

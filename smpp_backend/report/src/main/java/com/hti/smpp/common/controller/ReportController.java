@@ -632,6 +632,7 @@ public class ReportController {
         return transactionReportService.executeTransaction(username);
     }
 
+    
 	@PostMapping(value="/send-attachment" ,consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	@Operation(summary="send email with file atttachement to the User",description = "This endPoint send a file attaced to the email")
 	public ResponseEntity<?>sentAttachmentWithEmail(

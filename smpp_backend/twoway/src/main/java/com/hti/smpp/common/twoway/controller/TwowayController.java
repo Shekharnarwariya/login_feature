@@ -28,6 +28,7 @@ import com.hti.smpp.common.twoway.service.KeywordService;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterStyle;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -229,9 +230,17 @@ public class TwowayController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class)))
     })
+//    @GetMapping("/view/report")
+//    public ResponseEntity<?> viewReport(@Valid @RequestBody TwowayReportForm form, @RequestParam(name = "page", defaultValue = "1") int page, @RequestParam(name = "size", defaultValue = "10") int size,@RequestHeader(value="username", required = true) String username){
+//    	return this.keywordService.view(form, page, size, username);
+//    }
+    
+    
+    
     @GetMapping("/view/report")
-    public ResponseEntity<?> viewReport(@Valid @RequestBody TwowayReportForm form, @RequestParam(name = "page", defaultValue = "1") int page, @RequestParam(name = "size", defaultValue = "10") int size,@RequestHeader(value="username", required = true) String username){
-    	return this.keywordService.view(form, page, size, username);
+    public ResponseEntity<?> viewReport(@Valid @RequestParam(value="userId",required = false)@Parameter(schema = @Schema(type = "array"),style = ParameterStyle.MATRIX) int[] userId,@RequestParam(value="shortCode",required = false)String shortCode,@RequestParam(value="keyword" ,required = false)String keyword,@RequestParam(value="startTime",required = false) String startTime,@RequestParam(value="endTime",required = false) String endTime,@RequestParam(value="type",required = false)@Parameter(schema =  @Schema(type="array",implementation = String.class),style = ParameterStyle.MATRIX) String[] type, @RequestParam(name = "page", defaultValue = "1") int page, @RequestParam(name = "size", defaultValue = "10") int size,@RequestHeader(value="username", required = true) String username){
+    
+    	return this.keywordService.view(userId,shortCode,keyword,startTime,endTime,type, page, size, username);
     }
     
     //----------------------------------------------------------------------------------------------------------------------------

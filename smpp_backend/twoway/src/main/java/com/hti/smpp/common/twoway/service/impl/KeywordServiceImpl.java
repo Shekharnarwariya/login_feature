@@ -960,106 +960,225 @@ public class KeywordServiceImpl implements KeywordService {
 	 * Generates a report based on the provided TwowayReportForm parameters and
 	 * returns it.
 	 */
+//	@Override
+//	public ResponseEntity<?> view(TwowayReportForm reportForm, int page, int size, String username) {
+//		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+//		UserEntry user = null;
+//		if (userOptional.isPresent()) {
+//			user = userOptional.get();
+//			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+//				throw new UnauthorizedException(messageResourceBundle
+//						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
+//			}
+//		} else {
+//			throw new NotFoundException(
+//					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
+//		}
+//		String target = IConstants.SUCCESS_KEY;
+//		PaginationResponse pr = null;
+//		ArrayList<Object> response = new ArrayList<>();
+//		String sql = "select A.user_id,A.source,A.short_code,A.received_text,A.receivedOn,A.reply,A.reply_msg,A.msg_id,A.remarks,B.system_id,C.prefix,C.suffix"
+//				+ " from 2way_report A,usermaster B,2way_keyword C where A.user_id=B.id and A.keyword_id = C.id";
+//		String countQuery = "select count(*) from 2way_report A,usermaster B,2way_keyword C where A.user_id=B.id and A.keyword_id = C.id";
+//
+//		if (reportForm.getUserId() != null && reportForm.getUserId().length > 0) {
+//
+//			sql += " and A.user_id in("
+//					+ Arrays.stream(reportForm.getUserId()).mapToObj(String::valueOf).collect(Collectors.joining(","))
+//					+ ")";
+//			countQuery += " and A.user_id in("
+//					+ Arrays.stream(reportForm.getUserId()).mapToObj(String::valueOf).collect(Collectors.joining(","))
+//					+ ")";
+//		}
+//		if (reportForm.getType() != null && reportForm.getType().length > 0) {
+//			sql += " and C.type in('" + String.join("','", reportForm.getType()) + "')";
+//			countQuery += " and C.type in('" + String.join("','", reportForm.getType()) + "')";
+//		}
+//		if (reportForm.getKeyword() != null && reportForm.getKeyword().length() > 0) {
+//			sql += " and C.prefix in ('" + String.join("','", reportForm.getKeyword().split(",")) + "')";
+//			countQuery += " and C.prefix in ('" + String.join("','", reportForm.getKeyword().split(",")) + "')";
+//		}
+//		if (reportForm.getShortCode() != null && reportForm.getShortCode().length() > 0) {
+//			sql += " and A.short_code in ('" + String.join("','", reportForm.getShortCode().split(",")) + "')";
+//			countQuery += " and A.short_code in ('" + String.join("','", reportForm.getShortCode().split(",")) + "')";
+//		}
+//		if (reportForm.getStartTime() != null && reportForm.getEndTime() != null) {
+//			sql += " and A.receivedOn between '" + reportForm.getStartTime() + "' and '" + reportForm.getEndTime()
+//					+ "'";
+//			countQuery += " and A.receivedOn between '" + reportForm.getStartTime() + "' and '"
+//					+ reportForm.getEndTime() + "'";
+//		}
+//		int offset = (page - 1) * size;
+//		sql += " LIMIT " + size + " OFFSET " + offset;
+//		List<ReportEntry> list = new ArrayList<ReportEntry>();
+//
+//		try {
+//			this.jdbcTemplate.query(sql, (rs) -> {
+//				try {
+//					ReportEntry entry = new ReportEntry(rs.getString("A.source"), rs.getString("A.short_code"),
+//							rs.getString("A.received_text"), rs.getString("A.receivedOn"), rs.getBoolean("A.reply"),
+//							rs.getString("A.reply_msg"), rs.getString("A.msg_id"), rs.getString("A.remarks"));
+//
+//					String prefix = rs.getString("C.prefix");
+//					String suffix = rs.getString("C.suffix");
+//
+//					if (suffix != null) {
+//						entry.setKeyword(prefix + " " + suffix);
+//					} else {
+//						entry.setKeyword(prefix);
+//					}
+//
+//					entry.setSystemId(rs.getString("B.system_id"));
+//
+//					list.add(entry);
+//				} catch (SQLException e) {
+//					logger.error("SQL ERROR: " + e.toString());
+//					throw new InternalServerException("SQL ERROR: " + e.getLocalizedMessage());
+//				} catch (Exception e) {
+//					logger.error("ERROR: " + e.toString());
+//					throw new InternalServerException("ERROR: " + e.getLocalizedMessage());
+//				}
+//			});
+//			int totalCount = jdbcTemplate.queryForObject(countQuery, Integer.class);
+//			Page<ReportEntry> pageReport = new PageImpl<>(list, PageRequest.of(page - 1, size), totalCount);
+//			pr = new PaginationResponse(pageReport.getNumber(), pageReport.getSize(), pageReport.getTotalPages(),
+//					pageReport.getTotalElements(), pageReport.isLast(), pageReport.isFirst());
+//			response.add(pageReport.getContent());
+//			response.add(pr);
+//
+//			if (!response.isEmpty()) {
+//				return new ResponseEntity<>(response, HttpStatus.OK);
+//			} else {
+//				return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
+//			}
+//
+//		} catch (DataAccessException e) {
+//			logger.error("DataAccess ERROR: " + e.toString());
+//			throw new InternalServerException("SQL ERROR!");
+//		} catch (Exception e) {
+//			logger.error("ERROR: " + e.toString());
+//			throw new InternalServerException("ERROR: " + e.getLocalizedMessage());
+//		}
+//	}
+	
+	
+	
 	@Override
-	public ResponseEntity<?> view(TwowayReportForm reportForm, int page, int size, String username) {
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		UserEntry user = null;
-		if (userOptional.isPresent()) {
-			user = userOptional.get();
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle
-						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
-			}
-		} else {
-			throw new NotFoundException(
-					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
-		}
-		String target = IConstants.SUCCESS_KEY;
-		PaginationResponse pr = null;
-		ArrayList<Object> response = new ArrayList<>();
-		String sql = "select A.user_id,A.source,A.short_code,A.received_text,A.receivedOn,A.reply,A.reply_msg,A.msg_id,A.remarks,B.system_id,C.prefix,C.suffix"
-				+ " from 2way_report A,usermaster B,2way_keyword C where A.user_id=B.id and A.keyword_id = C.id";
-		String countQuery = "select count(*) from 2way_report A,usermaster B,2way_keyword C where A.user_id=B.id and A.keyword_id = C.id";
-
-		if (reportForm.getUserId() != null && reportForm.getUserId().length > 0) {
-
-			sql += " and A.user_id in("
-					+ Arrays.stream(reportForm.getUserId()).mapToObj(String::valueOf).collect(Collectors.joining(","))
-					+ ")";
-			countQuery += " and A.user_id in("
-					+ Arrays.stream(reportForm.getUserId()).mapToObj(String::valueOf).collect(Collectors.joining(","))
-					+ ")";
-		}
-		if (reportForm.getType() != null && reportForm.getType().length > 0) {
-			sql += " and C.type in('" + String.join("','", reportForm.getType()) + "')";
-			countQuery += " and C.type in('" + String.join("','", reportForm.getType()) + "')";
-		}
-		if (reportForm.getKeyword() != null && reportForm.getKeyword().length() > 0) {
-			sql += " and C.prefix in ('" + String.join("','", reportForm.getKeyword().split(",")) + "')";
-			countQuery += " and C.prefix in ('" + String.join("','", reportForm.getKeyword().split(",")) + "')";
-		}
-		if (reportForm.getShortCode() != null && reportForm.getShortCode().length() > 0) {
-			sql += " and A.short_code in ('" + String.join("','", reportForm.getShortCode().split(",")) + "')";
-			countQuery += " and A.short_code in ('" + String.join("','", reportForm.getShortCode().split(",")) + "')";
-		}
-		if (reportForm.getStartTime() != null && reportForm.getEndTime() != null) {
-			sql += " and A.receivedOn between '" + reportForm.getStartTime() + "' and '" + reportForm.getEndTime()
-					+ "'";
-			countQuery += " and A.receivedOn between '" + reportForm.getStartTime() + "' and '"
-					+ reportForm.getEndTime() + "'";
-		}
-		int offset = (page - 1) * size;
-		sql += " LIMIT " + size + " OFFSET " + offset;
-		List<ReportEntry> list = new ArrayList<ReportEntry>();
-
-		try {
-			this.jdbcTemplate.query(sql, (rs) -> {
-				try {
-					ReportEntry entry = new ReportEntry(rs.getString("A.source"), rs.getString("A.short_code"),
-							rs.getString("A.received_text"), rs.getString("A.receivedOn"), rs.getBoolean("A.reply"),
-							rs.getString("A.reply_msg"), rs.getString("A.msg_id"), rs.getString("A.remarks"));
-
-					String prefix = rs.getString("C.prefix");
-					String suffix = rs.getString("C.suffix");
-
-					if (suffix != null) {
-						entry.setKeyword(prefix + " " + suffix);
-					} else {
-						entry.setKeyword(prefix);
-					}
-
-					entry.setSystemId(rs.getString("B.system_id"));
-
-					list.add(entry);
-				} catch (SQLException e) {
-					logger.error("SQL ERROR: " + e.toString());
-					throw new InternalServerException("SQL ERROR: " + e.getLocalizedMessage());
-				} catch (Exception e) {
-					logger.error("ERROR: " + e.toString());
-					throw new InternalServerException("ERROR: " + e.getLocalizedMessage());
+		public ResponseEntity<?> view(int[] userId,String shortCode,String keyword,String startTime,String endTime, String[] type, int page, int size, String username) {
+			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+			UserEntry user = null;
+			if (userOptional.isPresent()) {
+				user = userOptional.get();
+				if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+					throw new UnauthorizedException(messageResourceBundle
+							.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 				}
-			});
-			int totalCount = jdbcTemplate.queryForObject(countQuery, Integer.class);
-			Page<ReportEntry> pageReport = new PageImpl<>(list, PageRequest.of(page - 1, size), totalCount);
-			pr = new PaginationResponse(pageReport.getNumber(), pageReport.getSize(), pageReport.getTotalPages(),
-					pageReport.getTotalElements(), pageReport.isLast(), pageReport.isFirst());
-			response.add(pageReport.getContent());
-			response.add(pr);
-
-			if (!response.isEmpty()) {
-				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else {
-				return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
+				throw new NotFoundException(
+						messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 			}
-
-		} catch (DataAccessException e) {
-			logger.error("DataAccess ERROR: " + e.toString());
-			throw new InternalServerException("SQL ERROR!");
-		} catch (Exception e) {
-			logger.error("ERROR: " + e.toString());
-			throw new InternalServerException("ERROR: " + e.getLocalizedMessage());
+			String target = IConstants.SUCCESS_KEY;
+			PaginationResponse pr = null;
+			ArrayList<Object> response = new ArrayList<>();
+			String sql = "select A.user_id,A.source,A.short_code,A.received_text,A.receivedOn,A.reply,A.reply_msg,A.msg_id,A.remarks,B.system_id,C.prefix,C.suffix"
+					+ " from 2way_report A,usermaster B,2way_keyword C where A.user_id=B.id and A.keyword_id = C.id";
+			String countQuery = "select count(*) from 2way_report A,usermaster B,2way_keyword C where A.user_id=B.id and A.keyword_id = C.id";
+	
+			int user_ID=user.getId();
+			if (userId != null && userId.length > 0) {
+				
+				sql += " and A.user_id in("
+						+ Arrays.stream(userId).mapToObj(String::valueOf).collect(Collectors.joining(","))
+						+ ")";
+				countQuery += " and A.user_id in("
+						+ Arrays.stream(userId).mapToObj(String::valueOf).collect(Collectors.joining(","))
+						+ ")";
+				//System.out.println(" inside the if condition"+userId[0]);
+			}else {
+				//System.out.println(" inside the else condition"+user_ID);
+					sql += " and A.user_id = '" + user_ID + "'";
+			        countQuery += " and A.user_id = '" + user_ID + "'";
+			}
+			
+			if (type != null && type.length > 0) {
+				
+				sql += " and C.type in('" + String.join("','", type) + "')";
+				countQuery += " and C.type in('" + String.join("','", type) + "')";
+			}
+			
+			if (keyword != null && keyword.length() > 0) {
+				
+				sql += " and C.prefix in ('" + String.join("','", keyword.split(",")) + "')";
+				countQuery += " and C.prefix in ('" + String.join("','", keyword.split(",")) + "')";
+			}
+			if (shortCode != null && shortCode.length() > 0) {
+			
+				sql += " and A.short_code in ('" + String.join("','", shortCode.split(",")) + "')";
+				countQuery += " and A.short_code in ('" + String.join("','", shortCode.split(",")) + "')";
+			}
+			if (startTime != null && startTime != null) {
+				
+				sql += " and A.receivedOn between '" + startTime + "' and '" + endTime
+						+ "'";
+				countQuery += " and A.receivedOn between '" + startTime + "' and '"
+						+ endTime + "'";
+			}
+			int offset = (page - 1) * size;
+			sql += " LIMIT " + size + " OFFSET " + offset;
+			//System.out.println("sql query"+sql);
+			//System.out.println("Countsql query"+countQuery);
+			List<ReportEntry> list = new ArrayList<ReportEntry>();
+	
+			try {
+				this.jdbcTemplate.query(sql, (rs) -> {
+					try {
+						//System.out.println(rs);
+						ReportEntry entry = new ReportEntry(rs.getString("A.source"), rs.getString("A.short_code"),
+								rs.getString("A.received_text"), rs.getString("A.receivedOn"), rs.getBoolean("A.reply"),
+								rs.getString("A.reply_msg"), rs.getString("A.msg_id"), rs.getString("A.remarks"));
+	
+						String prefix = rs.getString("C.prefix");
+						String suffix = rs.getString("C.suffix");
+	
+						if (suffix != null) {
+							entry.setKeyword(prefix + " " + suffix);
+						} else {
+							entry.setKeyword(prefix);
+						}
+	
+						entry.setSystemId(rs.getString("B.system_id"));
+						//System.out.println(entry);
+						list.add(entry);
+						
+					} catch (SQLException e) {
+						logger.error("SQL ERROR: " + e.toString());
+						throw new InternalServerException("SQL ERROR: " + e.getLocalizedMessage());
+					} catch (Exception e) {
+						logger.error("ERROR: " + e.toString());
+						throw new InternalServerException("ERROR: " + e.getLocalizedMessage());
+					}
+				});
+				int totalCount = jdbcTemplate.queryForObject(countQuery, Integer.class);
+				Page<ReportEntry> pageReport = new PageImpl<>(list, PageRequest.of(page - 1, size), totalCount);
+				pr = new PaginationResponse(pageReport.getNumber(), pageReport.getSize(), pageReport.getTotalPages(),
+						pageReport.getTotalElements(), pageReport.isLast(), pageReport.isFirst());
+				response.add(pageReport.getContent());
+				response.add(pr);
+	
+				if (!response.isEmpty()) {
+					return new ResponseEntity<>(response, HttpStatus.OK);
+				} else {
+					return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
+				}
+	
+			} catch (DataAccessException e) {
+				logger.error("DataAccess ERROR: " + e.toString());
+				throw new InternalServerException("SQL ERROR!");
+			} catch (Exception e) {
+				logger.error("ERROR: " + e.toString());
+				throw new InternalServerException("ERROR: " + e.getLocalizedMessage());
+			}
 		}
-	}
 
 //--------------------------------------------------------------------------------------------------------------------------------	
 
