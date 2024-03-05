@@ -618,12 +618,19 @@ public class ReportController {
 		return summaryReportService.SummaryReportdoc(username, customReportForm, response);
 
 	}
+<<<<<<< HEAD
 
 	@GetMapping("/transactions")
 	public ResponseEntity<?> executeTransaction(@RequestHeader("username") String username) {
 		return transactionReportService.executeTransaction(username);
 	}
+=======
+>>>>>>> 96401f1d1d1a31c5e1b73c83ac974f4359502342
 
+	@GetMapping("/transactions")
+	public ResponseEntity<?> executeTransaction(@RequestHeader("username") String username) {
+		return transactionReportService.executeTransaction(username);
+	}
 
 	@PostMapping(value = "/send-attachment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	@Operation(summary = "send email with file atttachement to the User", description = "This endPoint send a file attaced to the email")
