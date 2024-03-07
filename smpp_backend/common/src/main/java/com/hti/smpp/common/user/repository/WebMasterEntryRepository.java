@@ -1,10 +1,10 @@
 package com.hti.smpp.common.user.repository;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.hti.smpp.common.user.dto.WebMasterEntry;
@@ -21,8 +21,14 @@ public interface WebMasterEntryRepository extends JpaRepository<WebMasterEntry, 
 	@Query("SELECT COUNT(u) FROM WebMasterEntry u WHERE u.executiveId = :sellerId")
 	public long countUsersUnderSeller(int sellerId);
 
-	public Optional<List<WebMasterEntry>> findByMinFlag(boolean minFlag);
+	@Query("SELECT e FROM WebMasterEntry e WHERE e.minFlag = :minFlag")
+	public List<WebMasterEntry> findByMinFlag(@Param("minFlag") boolean minFlag);
 
-	@Query("SELECT e FROM WebMasterEntry e WHERE e.dlrReport = true AND e.dlrEmail IS NOT NULL AND e.dlrEmail LIKE '%@%.%'")
-	public List<WebMasterEntry> findDlrReportUsersWithValidEmail();
+	@Query("SELECT e FROM WebMasterEntry e WHERE e.email IS NOT NULL AND e.email LIKE '%@%' AND e.email LIKE '%.%' AND e.misReport = TRUE")
+	public List<WebMasterEntry> findValidEntries();
+
+	@Query("SELECT w FROM WebMasterEntry w WHERE w.coverageReport <> 'No' AND w.coverageEmail IS NOT NULL AND w.coverageEmail LIKE '%@%.%'")
+	public List<WebMasterEntry> findAllWithCoverageReportAndEmail();
+
+	public List<WebMasterEntry> findByExecutiveId(int executiveId);
 }

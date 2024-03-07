@@ -111,16 +111,7 @@ public UserEntry getInternUserEntry();
 
 	public UserEntry getUserEntry(int userId);
 
-	// ------ user limit --------
-//	public UserLimitEntry getLimitEntry(int userId);
-//
-//	public void saveLimit(UserLimitEntry entry) throws DuplicateEntryException;
-//
-//	public void updateLimit(UserLimitEntry entry);
-//
-//	public void deleteLimit(UserLimitEntry entry);
-//
-//	public List<UserLimitEntry> listLimit();
+
 }
 
 

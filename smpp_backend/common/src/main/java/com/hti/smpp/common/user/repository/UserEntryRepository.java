@@ -1,5 +1,6 @@
 package com.hti.smpp.common.user.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -9,7 +10,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.hti.smpp.common.user.dto.ProfessionEntry;
 import com.hti.smpp.common.user.dto.User;
 import com.hti.smpp.common.user.dto.UserEntry;
 
@@ -29,5 +29,8 @@ public interface UserEntryRepository extends JpaRepository<UserEntry, Integer> {
 	Set<Integer> getAllIds();
 
 	public List<UserEntry> getByRole(String string);
-	
+
+	@Query(value = "SELECT * FROM usermaster u WHERE STR_TO_DATE(u.expiryday, '%Y-%m-%d') < CURDATE()", nativeQuery = true)
+	public List<UserEntry> findByExpiryBefore();
+
 }

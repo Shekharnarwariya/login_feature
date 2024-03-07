@@ -43,7 +43,9 @@ import javax.sql.DataSource;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
@@ -55,7 +57,6 @@ import org.apache.poi.xssf.usermodel.IndexedColorMap;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -66,13 +67,9 @@ import org.springframework.expression.ParseException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.hazelcast.query.Predicate;
-import com.hazelcast.query.PredicateBuilder.EntryObject;
-import com.hazelcast.query.impl.PredicateBuilderImpl;
 import com.hti.smpp.common.dto.UserEntryExt;
 import com.hti.smpp.common.exception.DataAccessError;
 import com.hti.smpp.common.messages.dto.BulkSmsDTO;
@@ -93,6 +90,7 @@ import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.BalanceEntryRepository;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
+import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.ContextListener;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
@@ -131,10 +129,16 @@ public class MISCounterThread implements Runnable {
 	private UserEntryRepository userRepository;
 
 	@Autowired
+	private WebMasterEntryRepository masterEntryRepository;
+
+	@Autowired
 	private BalanceEntryRepository balanceEntryRepository;
 
 	@Autowired
 	private SalesDAO salesDAO;
+
+	@Autowired
+	private ReportService reportService;
 
 	@Autowired
 	private DataSource dataSource;
@@ -169,7 +173,6 @@ public class MISCounterThread implements Runnable {
 
 	private Map<String, String> listDomainEmail() {
 		List<ProfessionEntry> entriesWithValidEmail = service.professionData();
-		System.out.println("this is call list domain email " + entriesWithValidEmail);
 		Map<String, String> emailMap = new HashMap<>();
 
 		for (ProfessionEntry entry : entriesWithValidEmail) {
@@ -182,17 +185,16 @@ public class MISCounterThread implements Runnable {
 				emailMap.put(userEntry.getSystemId(), entry.getDomainEmail());
 			}
 		}
-		System.out.println("return proper list domain email ");
 		return emailMap;
 	}
 
 	private List<UserEntryExt> listMisUsers() {
 		List<UserEntryExt> list = new ArrayList<UserEntryExt>();
-		List<WebMasterEntry> webMasterOptional = service.findAllById(sentMinBalAlertEmail);
-		for (WebMasterEntry entry : webMasterOptional) {
+		List<WebMasterEntry> listWebMaster = service.findDlrReportUsersWithValidEmail();
+		for (WebMasterEntry entry : listWebMaster) {
 			if (entry.getEmail().contains("@") && entry.getEmail().contains(".")) {
-				UserEntry userEntry = GlobalVars.UserEntries.get(entry.getUserId());
-				BalanceEntry balance = GlobalVars.BalanceEntries.get(entry.getUserId());
+				UserEntry userEntry = userRepository.findById(entry.getUserId()).get();
+				BalanceEntry balance = balanceEntryRepository.findBySystemId(userEntry.getSystemId()).get();
 				if (userEntry != null && balance != null) {
 					UserEntryExt ext = new UserEntryExt(userEntry);
 					ext.setWebMasterEntry(entry);
@@ -205,26 +207,20 @@ public class MISCounterThread implements Runnable {
 	}
 
 	private Map<Integer, Set<UserEntry>> listExpiredAccounts() {
-		Map<Integer, Set<UserEntry>> expiredUsers = new HashMap<Integer, Set<UserEntry>>();
-		EntryObject e = new PredicateBuilderImpl().getEntryObject();
-		Predicate<Integer, UserEntry> p = e.get("expiry")
-				.lessThan(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-		if (GlobalVars.UserEntries.values(p).isEmpty()) {
+		Map<Integer, Set<UserEntry>> expiredUsers = new HashMap<>();
+		List<UserEntry> expiredEntries = userRepository.findByExpiryBefore();
+		if (expiredEntries.isEmpty()) {
 			logger.info("*** No Expired UserAccount Found ***");
 		} else {
-			for (UserEntry entry : GlobalVars.UserEntries.values(p)) {
-				// WebMasterEntry webEntry = GlobalVars.WebmasterEntries.get(entry.getId());
+			List<WebMasterEntry> webEntries = service.findAllWebMaster();
 
-				List<WebMasterEntry> webEntry = service.findAllWebMaster();
-				if (((WebMasterEntry) webEntry).getExecutiveId() > 0) {
-					Set<UserEntry> set = null;
-					if (expiredUsers.containsKey(((WebMasterEntry) webEntry).getExecutiveId())) {
-						set = expiredUsers.get(((WebMasterEntry) webEntry).getExecutiveId());
-					} else {
-						set = new HashSet<UserEntry>();
+			for (UserEntry entry : expiredEntries) {
+				for (WebMasterEntry webEntry : webEntries) {
+					if (webEntry.getExecutiveId() > 0) {
+						Set<UserEntry> set = expiredUsers.getOrDefault(webEntry.getExecutiveId(), new HashSet<>());
+						set.add(entry);
+						expiredUsers.put(webEntry.getExecutiveId(), set);
 					}
-					set.add(entry);
-					expiredUsers.put(((WebMasterEntry) webEntry).getExecutiveId(), set);
 				}
 			}
 			logger.info("Expired: " + expiredUsers);
@@ -232,95 +228,14 @@ public class MISCounterThread implements Runnable {
 		return expiredUsers;
 	}
 
-	private class LocalModel {
-		private String systemId;
-		private String masterId;
-		private String expiresOn;
-		private String domainEmail;
-		private String otpEmail;
-
-		public LocalModel() {
-		}
-
-		public LocalModel(String systemId, String masterId, String expiresOn, String domainEmail, String otpEmail) {
-		}
-
-		public String getSystemId() {
-			return systemId;
-		}
-
-		public void setSystemId(String systemId) {
-			this.systemId = systemId;
-		}
-
-		public String getMasterId() {
-			return masterId;
-		}
-
-		public void setMasterId(String masterId) {
-			this.masterId = masterId;
-		}
-
-		public String getDomainEmail() {
-			return domainEmail;
-		}
-
-		public void setDomainEmail(String domainEmail) {
-			this.domainEmail = domainEmail;
-		}
-
-		public String getExpiresOn() {
-			return expiresOn;
-		}
-
-		public void setExpiresOn(String expiresOn) {
-			this.expiresOn = expiresOn;
-		}
-
-		public String getOtpEmail() {
-			return otpEmail;
-		}
-
-		public void setOtpEmail(String otpEmail) {
-			this.otpEmail = otpEmail;
-		}
-	}
-
-	private void listExpiringPassword() {
-		Set<LocalModel> expiredUsers = new HashSet<LocalModel>();
-		java.util.Calendar calendar = java.util.Calendar.getInstance();
-		calendar.add(java.util.Calendar.DAY_OF_MONTH, +3);
-		calendar.add(java.util.Calendar.HOUR_OF_DAY, 23);
-		calendar.add(java.util.Calendar.MINUTE, 59);
-		calendar.add(java.util.Calendar.SECOND, 59);
-		Date enddate = calendar.getTime();
-		Date expirydate = null;
-		for (UserEntry entry : GlobalVars.UserEntries.values()) {
-			try {
-				expirydate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-						.parse(entry.getPasswordExpiresOn() + " 23:59:59");
-				if (expirydate.compareTo(new Date()) >= 0 && expirydate.compareTo(enddate) <= 0) {
-					logger.info(entry.getSystemId() + " expiring password on " + entry.getPasswordExpiresOn());
-					WebMasterEntry webEntry = GlobalVars.WebmasterEntries.get(entry.getId());
-					if (webEntry.getOtpEmail() != null) {
-						// expiredUsers.add(entry, webEntry.getOtpEmail());
-					}
-				}
-			} catch (Exception e) {
-				logger.error(entry.getSystemId(), e);
-			}
-		}
-		logger.info("Expired: " + expiredUsers);
-	}
-
 	private List<UserEntryExt> listCoverageReportUsers() {
-		List<UserEntryExt> list = new ArrayList<UserEntryExt>();
-		EntryObject e = new PredicateBuilderImpl().getEntryObject();
-		Predicate<Integer, WebMasterEntry> p = e.get("coverageReport").notEqual("No")
-				.and(e.get("coverageEmail").isNotNull());
-		for (WebMasterEntry entry : GlobalVars.WebmasterEntries.values(p)) {
+		List<UserEntryExt> list = new ArrayList<>();
+
+		List<WebMasterEntry> entries = masterEntryRepository.findAllWithCoverageReportAndEmail();
+
+		for (WebMasterEntry entry : entries) {
 			if (entry.getCoverageEmail().contains("@") && entry.getCoverageEmail().contains(".")) {
-				UserEntry userEntry = GlobalVars.UserEntries.get(entry.getUserId());
+				UserEntry userEntry = userRepository.findById(entry.getUserId()).get();
 				if (userEntry != null) {
 					UserEntryExt ext = new UserEntryExt(userEntry);
 					ext.setWebMasterEntry(entry);
@@ -349,12 +264,10 @@ public class MISCounterThread implements Runnable {
 
 	private List<UserEntryExt> listUsersUnderSeller(int executiveId) {
 		List<UserEntryExt> list = new ArrayList<UserEntryExt>();
-		Predicate<Integer, WebMasterEntry> p = new PredicateBuilderImpl().getEntryObject().get("executiveId")
-				.equal(executiveId);
-		for (WebMasterEntry entry : GlobalVars.WebmasterEntries.values(p)) {
-			UserEntry userEntry = GlobalVars.UserEntries.get(entry.getUserId());
+		for (WebMasterEntry entry : masterEntryRepository.findByExecutiveId(executiveId)) {
+			UserEntry userEntry = userRepository.findById(entry.getUserId()).get();
 			BalanceEntry balanceEntry = null;
-			Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findByUserId(userid[0]);
+			Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findByUserId(entry.getUserId());
 			if (balanceOptional.isPresent()) {
 				balanceEntry = balanceOptional.get();
 			}
@@ -415,13 +328,14 @@ public class MISCounterThread implements Runnable {
 		}
 		return list;
 	}
+
 	@Override
 	public void run() {
 		while (!isStop) {
 			try {
 				try {
 					System.out.println("start sleep miscounter");
-					Thread.sleep(10 * 1000);
+					Thread.sleep(30 * 1000);
 				} catch (InterruptedException e) {
 					logger.info("<-- MISCounterThread Interrupted --> ");
 					break;
@@ -471,11 +385,11 @@ public class MISCounterThread implements Runnable {
 					}
 					in = null;
 				}
-				// logger.info("Read Date :==> " + saved_value + " Proceed => " + proceed);
+				logger.info("Read Date :==> " + saved_value + " Proceed => " + proceed);
 				// *************************************************************************
 				if (proceed) {
 					if (saved_value != null && saved_value.length() > 0 && saved_value.contains("-")) {
-						// logger.info("<-- Valid Date Found --> ");
+						logger.info("<-- Valid Date Found --> ");
 						// ***************** Comparing Read Date With Current Date *************
 						try {
 							new SimpleDateFormat("yyyy-MM-dd").parse(saved_value.trim());
@@ -501,7 +415,7 @@ public class MISCounterThread implements Runnable {
 									logger.info("<- Current Time is before the configured Time -> ");
 								}
 							} else {
-								// logger.info("<- Configured Date is Equal to Current Date -> ");
+								logger.info("<- Configured Date is Equal to Current Date -> ");
 								proceed = false;
 							}
 						} catch (ParseException ex) {
@@ -536,7 +450,6 @@ public class MISCounterThread implements Runnable {
 					try {
 						ProfessionRecord.clear();
 						ProfessionRecord = listDomainEmail();
-						System.out.println("successefully call list domail");
 						if (proceed) {
 							proceed = false;
 							morning_report = false;
@@ -603,8 +516,7 @@ public class MISCounterThread implements Runnable {
 											new SimpleDateFormat("yyyy-MM-dd").format(calendar.getTime()));
 									logger.info(
 											"User: " + regUser.getSystemId() + " DLR Report Size: " + report.size());
-									// logger.info("User: " + regUser.getUserName() + " Report Size: " +
-									// report.size());
+									logger.info("User: " + regUser.getSystemId() + " Report Size: " + report.size());
 									if (!report.isEmpty()) {
 										String dlrfile = FileContentGenerator.createDlrXLSContent(report,
 												regUser.getSystemId());
@@ -639,7 +551,7 @@ public class MISCounterThread implements Runnable {
 							// ******************* End ****************************************************
 							// ****** Start Code For Executives Reporting *******
 							logger.info("Start For Executives Reporting");
-							Collection<SalesEntry> sellerlist = (Collection<SalesEntry>) list("seller");
+							Collection<SalesEntry> sellerlist = (Collection<SalesEntry>) list("seller").values();
 							logger.info("Total Executives :--> " + sellerlist.size());
 							for (SalesEntry seller : sellerlist) {
 								String sellerName = null;
@@ -685,7 +597,6 @@ public class MISCounterThread implements Runnable {
 														.format(start.getTime());
 												// logger.info("Start Date -> " + startdate);
 												Calendar end = Calendar.getInstance();
-												end.add(Calendar.DATE, -1);
 												String enddate = new SimpleDateFormat("yyyy-MM-dd")
 														.format(end.getTime());
 												// logger.info("End Date -> " + enddate);
@@ -748,7 +659,7 @@ public class MISCounterThread implements Runnable {
 													if (reportusers.length() > 0) {
 														reportusers = reportusers.substring(0,
 																reportusers.length() - 1);
-														String sql = "select count(msg_id) as msgCount,username from smsc_in_log where username in("
+														String sql = "select count(msg_id) as msgCount,username from host_brd_log.smsc_in_log where username in("
 																+ reportusers + ") and ";
 														if (isDaily) {
 															sql += "DATE(time) = '" + startdate + "'";
@@ -764,7 +675,7 @@ public class MISCounterThread implements Runnable {
 														Integer[] useridarr = user_id_mapping.keySet()
 																.toArray(new Integer[user_id_mapping.size()]);
 														Map<Integer, List<RechargeEntry>> recharge_map = userService
-																.listTransactions(useridarr, "cr%", startdate, enddate);
+																.listTransactions(useridarr, "cr", startdate, enddate);
 														// ---------- Start Creating mail Content ---------------
 														logger.info(sellerName + " Start Preparing Email Content");
 														String htmlString = "";
@@ -931,7 +842,7 @@ public class MISCounterThread implements Runnable {
 														// ---------- End Creating mail Content -----------------
 														logger.info("Sending Executive(" + sellerName + ") Report : "
 																+ seller.getEmail());
-														String reporthtml = IConstants.WEBAPP_DIR + "//mail//"
+														String reporthtml = IConstants.WEBSMPP_EXT_DIR + "mail//"
 																+ sellerName + "_report_"
 																+ new SimpleDateFormat("yyyy-MM-dd_HHmmss")
 																		.format(new Date())
@@ -998,7 +909,8 @@ public class MISCounterThread implements Runnable {
 												+ "</tr>";
 										// Iterator iter = userlist.iterator();
 										for (UserEntry userEntry : expiredEntry.getValue()) {
-											BalanceEntry balance = GlobalVars.BalanceEntries.get(userEntry.getId());
+											BalanceEntry balance = balanceEntryRepository
+													.findByUserId(userEntry.getId()).get();
 											htmlString += "<tr align='center'>" + "<td>" + userEntry.getSystemId()
 													+ "</td>" + "<td>" + userEntry.getMasterId() + "</td>";
 											if (balance.getWalletFlag().equalsIgnoreCase("no")) {
@@ -1019,7 +931,7 @@ public class MISCounterThread implements Runnable {
 										// ------ send Email to manager for this seller --------------
 										logger.info(manager_name + " Sending Expired Account alert under Executive("
 												+ seller.getUsername() + ") : " + manager.getEmail());
-										String reporthtml = IConstants.WEBAPP_DIR + "//mail//" + manager_name + "_"
+										String reporthtml = IConstants.WEBSMPP_EXT_DIR + "mail//" + manager_name + "_"
 												+ seller.getUsername() + "_expired_"
 												+ new SimpleDateFormat("yyMMdd_HHmmss").format(new Date()) + ".html";
 										MultiUtility.writeMailContent(reporthtml, htmlString);
@@ -1027,6 +939,7 @@ public class MISCounterThread implements Runnable {
 												+ seller.getUsername() + "_"
 												+ new SimpleDateFormat("dd-MMM-yyyy").format(new Date());
 										try {
+											System.out.println("call accopunt expired email");
 											MailUtility.send(manager.getEmail(), reporthtml, subject,
 													IConstants.SUPPORT_EMAIL[0], true);
 										} catch (Exception ex) {
@@ -1043,7 +956,6 @@ public class MISCounterThread implements Runnable {
 							// ****** Start Code For Coverage Reporting *******
 							List<UserEntryExt> coverageReportUsers = listCoverageReportUsers();
 							logger.info("Start For Coverage Report. Users: " + coverageReportUsers.size());
-							ReportService service = new ReportService();
 							for (UserEntryExt userEntryExt : coverageReportUsers) {
 								String userid = null;
 								try {
@@ -1068,7 +980,7 @@ public class MISCounterThread implements Runnable {
 										if (isReport) {
 											try {
 												String filename = null;
-												filename = service.getCoverageReportXLS(userid);
+												filename = reportService.getCoverageReportXLS(userid);
 												logger.info(filename);
 												String from = IConstants.ROUTE_EMAIL[0];
 												String master = userEntryExt.getUserEntry().getMasterId();
@@ -1354,6 +1266,196 @@ public class MISCounterThread implements Runnable {
 		} // while closed
 		logger.info("<-- MISCounterThread Stopped --> ");
 	} // run closed
+
+	private void setBorders(CellStyle style, short borderColorIndex) {
+		style.setBorderBottom(BorderStyle.THIN);
+		style.setBottomBorderColor(borderColorIndex);
+		style.setBorderTop(BorderStyle.THIN);
+		style.setTopBorderColor(borderColorIndex);
+		style.setBorderLeft(BorderStyle.THIN);
+		style.setLeftBorderColor(borderColorIndex);
+		style.setBorderRight(BorderStyle.THIN);
+		style.setRightBorderColor(borderColorIndex);
+	}
+
+	private Workbook getWorkBook(Map report_map, UserEntryExt userDTO) {
+		logger.info("<-- " + userDTO.getUserEntry().getSystemId() + " Creating MIS WorkBook --> ");
+		boolean walletFlag;
+		if (userDTO.getBalance().getWalletFlag() != null
+				&& !userDTO.getBalance().getWalletFlag().equalsIgnoreCase("no")) {
+			walletFlag = true;
+		} else {
+			walletFlag = false;
+		}
+		int sheet_number = 0;
+		Sheet sheet = null;
+		Row row = null;
+
+		SXSSFWorkbook workbook = new SXSSFWorkbook();
+
+		// Create header font
+		Font headerFont = workbook.createFont();
+		headerFont.setFontName("Arial");
+		headerFont.setFontHeightInPoints((short) 10);
+		headerFont.setColor(IndexedColors.WHITE.getIndex());
+
+		// Create header style
+		CellStyle headerStyle = workbook.createCellStyle();
+		headerStyle.setFont(headerFont);
+		headerStyle.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
+		headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		headerStyle.setAlignment(HorizontalAlignment.CENTER);
+		headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+		setBorders(headerStyle, IndexedColors.WHITE.getIndex());
+
+		// Create row font
+		Font rowFont = workbook.createFont();
+		rowFont.setFontName("Arial");
+		rowFont.setFontHeightInPoints((short) 9);
+		rowFont.setColor(IndexedColors.WHITE.getIndex());
+
+		// Create row style
+		CellStyle rowStyle = workbook.createCellStyle();
+		rowStyle.setFont(rowFont);
+		rowStyle.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
+		rowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		rowStyle.setAlignment(HorizontalAlignment.LEFT);
+		rowStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+		setBorders(rowStyle, IndexedColors.WHITE.getIndex());
+
+		// Create summary row font
+		Font summaryRowFont = workbook.createFont();
+		summaryRowFont.setFontName("Arial");
+		summaryRowFont.setFontHeightInPoints((short) 10);
+		summaryRowFont.setColor(IndexedColors.WHITE.getIndex());
+
+		// Create summary row style
+		CellStyle summaryRowStyle = workbook.createCellStyle();
+		summaryRowStyle.setFont(summaryRowFont);
+		summaryRowStyle.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
+		summaryRowStyle.setAlignment(HorizontalAlignment.LEFT);
+		summaryRowStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+		setBorders(summaryRowStyle, IndexedColors.WHITE.getIndex());
+
+		// ---------------------------------------------------
+		String[] headers;
+		if (walletFlag) {
+			headers = new String[] { "Date", "Country", "Operator", "MCC", "MNC", "Count", "Cost", "Total Cost" };
+		} else {
+			headers = new String[] { "Date", "Country", "Operator", "MCC", "MNC", "Count" };
+		}
+		// --------------------
+		int row_number = 0;
+		sheet = workbook.createSheet("Sheet(" + sheet_number + ")");
+		sheet.setDefaultColumnWidth(14);
+		logger.info("Creating Sheet: " + sheet_number);
+		if (row_number == 0) {
+			row = sheet.createRow(row_number);
+			int cell_number = 0;
+			for (String header : headers) {
+				Cell cell = row.createCell(cell_number);
+				cell.setCellValue(header);
+				cell.setCellStyle(headerStyle);
+				cell_number++;
+			}
+			row_number++;
+		}
+		Iterator timeItr = report_map.keySet().iterator();
+		// DecimalFormat df = new DecimalFormat("0.00000");
+		long total = 0;
+		double totalcost = 0;
+		while (timeItr.hasNext()) {
+			String repTime = (String) timeItr.next();
+			// logger.info("Report Time ==> " + repTime);
+			Map opr_map = (Map) report_map.get(repTime);
+			Iterator temp_itr = opr_map.keySet().iterator();
+			List report_list = new ArrayList();
+			while (temp_itr.hasNext()) {
+				String prefix = (String) temp_itr.next();
+				ReportDTO report = (ReportDTO) opr_map.get(prefix);
+				int network_id = 0;
+				try {
+					network_id = Integer.parseInt(prefix);
+				} catch (Exception ex) {
+				}
+				if (GlobalVars.NetworkEntries.containsKey(network_id)) {
+					NetworkEntry network = GlobalVars.NetworkEntries.get(network_id);
+					report.setCountry(network.getCountry());
+					report.setOperator(network.getOperator());
+					report.setMcc(network.getMcc());
+					report.setMnc(network.getMnc());
+				} else {
+					if (prefix == null || prefix.length() == 0) {
+						prefix = "-";
+					}
+					report.setCountry(prefix);
+					report.setOperator(prefix);
+					report.setMcc("-");
+					report.setMnc("-");
+				}
+				report_list.add(report);
+			}
+			report_list.sort(Comparator.comparing(ReportDTO::getCountry, CASE_INSENSITIVE_ORDER)
+					.thenComparing(ReportDTO::getOperator, CASE_INSENSITIVE_ORDER));
+			int i = 0;
+			// logger.info("Report List ==> " + report_list.size());
+			while (!report_list.isEmpty()) {
+				row = sheet.createRow(row_number);
+				ReportDTO report = (ReportDTO) report_list.remove(0);
+				total = total + report.getMsgCount();
+				totalcost = totalcost + report.getTotalcost();
+				if (i > 0) {
+					repTime = "-";
+				}
+				// logger.info("Row Number ===> " + row_number + " " + report.getCountry());
+				Cell cell = row.createCell(0);
+				cell.setCellValue(repTime);
+				cell.setCellStyle(rowStyle);
+				cell = row.createCell(1);
+				cell.setCellValue(report.getCountry());
+				cell.setCellStyle(rowStyle);
+				cell = row.createCell(2);
+				cell.setCellValue(report.getOperator());
+				cell.setCellStyle(rowStyle);
+				cell = row.createCell(3);
+				cell.setCellValue(report.getMcc());
+				cell.setCellStyle(rowStyle);
+				cell = row.createCell(4);
+				cell.setCellValue(report.getMnc());
+				cell.setCellStyle(rowStyle);
+				cell = row.createCell(5);
+				cell.setCellValue(report.getMsgCount());
+				cell.setCellStyle(rowStyle);
+				if (walletFlag) {
+					cell = row.createCell(6);
+					cell.setCellValue(report.getCost());
+					cell.setCellStyle(rowStyle);
+					cell = row.createCell(7);
+					cell.setCellValue(new DecimalFormat("0.00000").format(report.getTotalcost()));
+					cell.setCellStyle(rowStyle);
+				}
+				i++;
+				row_number++;
+			}
+		}
+		row = sheet.createRow(row_number);
+		Cell cell = row.createCell(4);
+		cell.setCellValue("Grand Total");
+		cell.setCellStyle(summaryRowStyle);
+		cell = row.createCell(5);
+		cell.setCellValue(total);
+		cell.setCellStyle(summaryRowStyle);
+		if (walletFlag) {
+			cell = row.createCell(6);
+			cell.setCellValue("");
+			cell.setCellStyle(summaryRowStyle);
+			cell = row.createCell(7);
+			cell.setCellValue(totalcost);
+			cell.setCellStyle(summaryRowStyle);
+		}
+		logger.info("<-- " + userDTO.getUserEntry().getSystemId() + " MIS WorkBook Created --> ");
+		return workbook;
+	}
 
 	public Map<Integer, SalesEntry> listSellerMappedManager() {
 		Map<Integer, SalesEntry> map = new HashMap<Integer, SalesEntry>();
@@ -1673,15 +1775,15 @@ public class MISCounterThread implements Runnable {
 		String query = "select date(time) as time,oprCountry ,count(*) as msgcount,cost,sum(cost)as total from smsc_in where time like '"
 				+ date + "%' and username='" + username + "' and msg_id not in(select msg_id from mis_" + username
 				+ ") group by date(time),oprCountry,cost order by date(time),oprCountry";
-		// logger.info("SQL(1) : " + query);
 		ReportDTO report = null;
-		Map countmap = new TreeMap(); // to automatically sort the keys (date)
+		Map countmap = new TreeMap();
 		Map oprMap = null;
 		try {
 			con = getConnection();
 			stmt = con.createStatement();
 			try {
 				rs = stmt.executeQuery(query);
+				logger.info("SQL(1) : " + query);
 				while (rs.next()) {
 					long msg_count = rs.getLong("msgcount");
 					String date_time = (rs.getString("time")).trim();
@@ -1725,9 +1827,10 @@ public class MISCounterThread implements Runnable {
 			query = "select date(submitted_time) as time,oprCountry ,count(*) as msgcount,cost,sum(cost)as total from mis_"
 					+ username + " where submitted_time like '" + date
 					+ "%' group by date(submitted_time),oprCountry,cost order by date(submitted_time),oprCountry";
-			// logger.info("SQL(2) : " + query);
+
 			try {
 				rs = stmt.executeQuery(query);
+				logger.info("SQL(2) : " + query);
 				while (rs.next()) {
 					long msg_count = rs.getLong("msgcount");
 					String date_time = (rs.getString("time")).trim();
@@ -1868,6 +1971,7 @@ public class MISCounterThread implements Runnable {
 			throws AddressException, MessagingException, Exception {
 		String host = IConstants.mailHost;
 		String to = email;
+		System.out.println(to + "this is to email..");
 		final String pass = IConstants.mailPassword;
 		final String mailAuthUser = IConstants.mailId;
 		Properties props = new Properties();
@@ -2102,50 +2206,56 @@ public class MISCounterThread implements Runnable {
 			sheet.setDefaultColumnWidth(14);
 			logger.info(executive + " Creating Sheet: " + sheet_number);
 			while (!list.isEmpty()) {
-				row = sheet.createRow(row_number);
-				if (row_number == 0) {
-					int cell_number = 0;
-					for (String header : headers) {
-						Cell cell = row.createCell(cell_number);
-						cell.setCellValue(header);
-						cell.setCellStyle(headerStyle);
-						cell_number++;
+
+				try {
+					row = sheet.createRow(row_number);
+					if (row_number == 0) {
+						int cell_number = 0;
+						for (String header : headers) {
+							Cell cell = row.createCell(cell_number);
+							cell.setCellValue(header);
+							cell.setCellStyle(headerStyle);
+							cell_number++;
+						}
+					} else {
+						ReportDTO reportDTO = list.remove(0);
+						Cell cell = row.createCell(0);
+						cell.setCellValue(reportDTO.getClientName());
+						cell.setCellStyle(rowStyle);
+						cell = row.createCell(1);
+						cell.setCellValue(reportDTO.getDate());
+						cell.setCellStyle(rowStyle);
+						cell = row.createCell(2);
+						cell.setCellValue(reportDTO.getCountry());
+						cell.setCellStyle(rowStyle);
+						cell = row.createCell(3);
+						cell.setCellValue(reportDTO.getOperator());
+						cell.setCellStyle(rowStyle);
+						cell = row.createCell(4);
+						cell.setCellValue(reportDTO.getMcc());
+						cell.setCellStyle(rowStyle);
+						cell = row.createCell(5);
+						cell.setCellValue(reportDTO.getMnc());
+						cell.setCellStyle(rowStyle);
+						cell = row.createCell(6);
+						cell.setCellValue(reportDTO.getCost());
+						cell.setCellStyle(rowStyle);
+						cell = row.createCell(7);
+						cell.setCellValue(reportDTO.getMsgCount());
+						cell.setCellStyle(rowStyle);
+						cell = row.createCell(8);
+						cell.setCellValue(reportDTO.getTotalcost());
+						cell.setCellStyle(rowStyle);
+						total += reportDTO.getMsgCount();
+						total_cost += reportDTO.getTotalcost();
 					}
-				} else {
-					ReportDTO reportDTO = list.remove(0);
-					Cell cell = row.createCell(0);
-					cell.setCellValue(reportDTO.getClientName());
-					cell.setCellStyle(rowStyle);
-					cell = row.createCell(1);
-					cell.setCellValue(reportDTO.getDate());
-					cell.setCellStyle(rowStyle);
-					cell = row.createCell(2);
-					cell.setCellValue(reportDTO.getCountry());
-					cell.setCellStyle(rowStyle);
-					cell = row.createCell(3);
-					cell.setCellValue(reportDTO.getOperator());
-					cell.setCellStyle(rowStyle);
-					cell = row.createCell(4);
-					cell.setCellValue(reportDTO.getMcc());
-					cell.setCellStyle(rowStyle);
-					cell = row.createCell(5);
-					cell.setCellValue(reportDTO.getMnc());
-					cell.setCellStyle(rowStyle);
-					cell = row.createCell(6);
-					cell.setCellValue(reportDTO.getCost());
-					cell.setCellStyle(rowStyle);
-					cell = row.createCell(7);
-					cell.setCellValue(reportDTO.getMsgCount());
-					cell.setCellStyle(rowStyle);
-					cell = row.createCell(8);
-					cell.setCellValue(reportDTO.getTotalcost());
-					cell.setCellStyle(rowStyle);
-					total += reportDTO.getMsgCount();
-					total_cost += reportDTO.getTotalcost();
-				}
-				if (++row_number > records_per_sheet) {
-					logger.info(executive + " Sheet Created: " + sheet_number);
-					break;
+					if (++row_number > records_per_sheet) {
+						logger.info(executive + " Sheet Created: " + sheet_number);
+						break;
+					}
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 			}
 			// ***** Summary For Current Sheet ************
@@ -2166,371 +2276,235 @@ public class MISCounterThread implements Runnable {
 		return workbook;
 	}
 
-	private Workbook getSmscWorkBook(List reportList) {
-		logger.info("<-- Creating Smsc Performance WorkBook --> ");
+	public Workbook getSmscWorkBook(List<ReportDTO> reportList) {
 		SXSSFWorkbook workbook = new SXSSFWorkbook();
-		int records_per_sheet = 500000;
-		int sheet_number = 0;
-		Sheet sheet = null;
-		Row row = null;
-		XSSFFont headerFont = (XSSFFont) workbook.createFont();
-		headerFont.setFontName("Arial");
-		headerFont.setFontHeightInPoints((short) 10);
-		headerFont.setColor(new XSSFColor((IndexedColorMap) Color.BLACK));
-		XSSFCellStyle headerStyle = (XSSFCellStyle) workbook.createCellStyle();
-		headerStyle.setFont(headerFont);
-		XSSFWorkbook workbook1 = new XSSFWorkbook();
-		XSSFCellStyle headerStyle1 = workbook1.createCellStyle();
+		workbook.setCompressTempFiles(true); // Reduce temp file size during write-out
 
-		XSSFColor grayColor = new XSSFColor(Color.GRAY, workbook1.getStylesSource().getIndexedColors()); // Create the
-																											// gray
-																											// color
+		CellStyle headerStyle = createHeaderStyle(workbook);
+		CellStyle rowStyle = createRowStyle(workbook);
 
-		headerStyle1.setFillForegroundColor(grayColor); // Set the fill foreground color
-		headerStyle1.setFillPattern(FillPatternType.SOLID_FOREGROUND); // Set the fill pattern
-		headerStyle1.setAlignment(HorizontalAlignment.CENTER); // Set horizontal alignment
-		headerStyle1.setVerticalAlignment(VerticalAlignment.CENTER);
-		headerStyle1.setBorderBottom(BorderStyle.THIN);
-		headerStyle1.setBorderBottom(BorderStyle.THIN);
-		headerStyle1.setBottomBorderColor(IndexedColors.WHITE.getIndex());
-		headerStyle1.setBorderTop(BorderStyle.THIN);
-		headerStyle1.setBorderTop(BorderStyle.THIN);
-		headerStyle1.setTopBorderColor(IndexedColors.WHITE.getIndex());
-		headerStyle1.setBorderLeft(BorderStyle.THIN);
-		headerStyle1.setBorderLeft(BorderStyle.THIN);
-		headerStyle1.setLeftBorderColor(IndexedColors.WHITE.getIndex());
-		headerStyle1.setBorderRight(BorderStyle.THIN);
-		headerStyle1.setBorderRight(BorderStyle.THIN);
-		headerStyle1.setRightBorderColor(IndexedColors.WHITE.getIndex());
-		XSSFFont rowFont = (XSSFFont) workbook1.createFont();
-		rowFont.setFontName("Arial");
-		rowFont.setFontHeightInPoints((short) 9);
-		rowFont.setColor(IndexedColors.WHITE.getIndex());
-		XSSFCellStyle rowStyle = (XSSFCellStyle) workbook1.createCellStyle();
-		rowStyle.setFont(rowFont);
-		Color awtColor = Color.LIGHT_GRAY;
-		XSSFColor xssfColor = new XSSFColor(
-				new byte[] { (byte) awtColor.getRed(), (byte) awtColor.getGreen(), (byte) awtColor.getBlue() }, null); // null
-																														// for
-																														// the
-																														// default
-																														// IndexedColorMap
+		int recordsPerSheet = 500000;
+		int sheetNumber = 0;
+		while (!reportList.isEmpty()) {
+			Sheet sheet = workbook.createSheet("Sheet" + sheetNumber++);
+			createHeaderRow(sheet, headerStyle);
 
-		rowStyle.setFillForegroundColor(xssfColor.getIndex()); // Set foreground color
-		rowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND); // Set fill pattern
-		rowStyle.setAlignment(HorizontalAlignment.LEFT); // Set horizontal alignment
-		rowStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-		rowStyle.setBorderBottom(BorderStyle.THIN);
-		rowStyle.setBorderBottom(BorderStyle.THIN);
-		rowStyle.setBottomBorderColor(new XSSFColor());
-		rowStyle.setBorderTop(BorderStyle.THIN);
-		rowStyle.setBorderTop(BorderStyle.THIN);
-		rowStyle.setTopBorderColor(IndexedColors.WHITE.getIndex());
-		rowStyle.setBorderLeft(BorderStyle.THIN);
-		rowStyle.setBorderLeft(BorderStyle.THIN);
-		rowStyle.setLeftBorderColor(IndexedColors.WHITE.getIndex());
-		rowStyle.setBorderRight(BorderStyle.THIN);
-		rowStyle.setBorderRight(BorderStyle.THIN);
-		rowStyle.setRightBorderColor(IndexedColors.WHITE.getIndex());
+			int rowNumber = 1; // Start from 1 to account for the header row
+			while (!reportList.isEmpty() && rowNumber <= recordsPerSheet) {
+				ReportDTO reportDTO = reportList.remove(0);
+				Row row = sheet.createRow(rowNumber++);
+
+				populateRowWithData(row, reportDTO, rowStyle);
+			}
+		}
+
+		return workbook;
+	}
+
+	private void createHeaderRow(Sheet sheet, CellStyle headerStyle) {
 		String[] headers = { "Route", "Country", "CountryCode", "Operator", "MCC", "MNC", "Total", "Delivered",
 				"Delivery(%)" };
-		while (!reportList.isEmpty()) {
-			int row_number = 0;
-			long total = 0, delivered = 0;
-			double delivery_percent = 0;
-			sheet = workbook1.createSheet("Sheet(" + sheet_number + ")");
-			sheet.setDefaultColumnWidth(14);
-			logger.info("Creating Sheet: " + sheet_number);
-			while (!reportList.isEmpty()) {
-				row = sheet.createRow(row_number);
-				if (row_number == 0) {
-					int cell_number = 0;
-					for (String header : headers) {
-						Cell cell = row.createCell(cell_number);
-						cell.setCellValue(header);
-						cell.setCellStyle(headerStyle1);
-						cell_number++;
-					}
-				} else {
-					ReportDTO reportDTO = (ReportDTO) reportList.remove(0);
-					total += reportDTO.getMsgCount();
-					delivered += reportDTO.getDelivered();
-					Cell cell = row.createCell(0);
-					cell.setCellValue(reportDTO.getSmsc());
-					cell.setCellStyle(rowStyle);
-					cell = row.createCell(1);
-					cell.setCellValue(reportDTO.getCountry());
-					cell.setCellStyle(rowStyle);
-					cell = row.createCell(2);
-					cell.setCellValue(reportDTO.getCc());
-					cell.setCellStyle(rowStyle);
-					cell = row.createCell(3);
-					cell.setCellValue(reportDTO.getOperator());
-					cell.setCellStyle(rowStyle);
-					cell = row.createCell(4);
-					cell.setCellValue(reportDTO.getMcc());
-					cell.setCellStyle(rowStyle);
-					cell = row.createCell(5);
-					cell.setCellValue(reportDTO.getMnc());
-					cell.setCellStyle(rowStyle);
-					cell = row.createCell(6);
-					cell.setCellValue(reportDTO.getMsgCount());
-					cell.setCellStyle(rowStyle);
-					cell = row.createCell(7);
-					cell.setCellValue(reportDTO.getDelivered());
-					cell.setCellStyle(rowStyle);
-					cell = row.createCell(8);
-					cell.setCellValue(reportDTO.getDlrpercent());
-					cell.setCellStyle(rowStyle);
-				}
-				if (++row_number > records_per_sheet) {
-					logger.info("Sheet Created: " + sheet_number);
-					break;
-				}
-			}
-			// ***** Summary For Current Sheet ************
-			delivery_percent = (delivered * 100) / total;
-			row = sheet.createRow(row_number);
-			Cell cell = row.createCell(5);
-			cell.setCellValue("Grand Total");
-			cell.setCellStyle(headerStyle1);
-			cell = row.createCell(6);
-			cell.setCellValue(total);
-			cell.setCellStyle(headerStyle1);
-			cell = row.createCell(7);
-			cell.setCellValue(delivered);
-			cell.setCellStyle(headerStyle1);
-			cell = row.createCell(8);
-			cell.setCellValue(delivery_percent);
-			cell.setCellStyle(headerStyle1);
-			// ***** End Summary For Current Sheet ************
-			sheet_number++;
+		Row headerRow = sheet.createRow(0);
+		for (int i = 0; i < headers.length; i++) {
+			Cell cell = headerRow.createCell(i);
+			cell.setCellValue(headers[i]);
+			cell.setCellStyle(headerStyle);
 		}
-		logger.info("<--- Workbook Created ----> ");
-		return workbook1;
 	}
 
-	private Workbook getWorkBook(Map report_map, UserEntryExt userDTO) {
-		logger.info("<-- " + userDTO.getUserEntry().getSystemId() + " Creating MIS WorkBook --> ");
-		boolean walletFlag;
-		if (userDTO.getBalance().getWalletFlag() != null
-				&& !userDTO.getBalance().getWalletFlag().equalsIgnoreCase("no")) {
-			walletFlag = true;
-		} else {
-			walletFlag = false;
-		}
-		SXSSFWorkbook workbook = new SXSSFWorkbook();
-		int sheet_number = 0;
-		Sheet sheet = null;
-		Row row = null;
-		XSSFFont headerFont = (XSSFFont) workbook.createFont();
-		headerFont.setFontName("Arial");
-		headerFont.setFontHeightInPoints((short) 10);
-		headerFont.setColor(IndexedColors.WHITE.getIndex());
-		XSSFCellStyle headerStyle = (XSSFCellStyle) workbook.createCellStyle();
-		headerStyle.setFont(headerFont);
-		Color awtColor = Color.decode("#191970");
-		XSSFWorkbook workbook1 = new XSSFWorkbook();
-		XSSFColor xssfColor = new XSSFColor(new java.awt.Color(awtColor.getRGB()), null);
-		headerStyle.setFillForegroundColor(xssfColor);
-		headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-		headerStyle.setAlignment(HorizontalAlignment.CENTER);
-		headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-		headerStyle.setBorderBottom(BorderStyle.THIN);
-		headerStyle.setBorderBottom(BorderStyle.THIN);
-		headerStyle.setBottomBorderColor(IndexedColors.WHITE.getIndex());
-		headerStyle.setBorderTop(BorderStyle.THIN);
-		headerStyle.setBorderTop(BorderStyle.THIN);
-		headerStyle.setTopBorderColor(IndexedColors.WHITE.getIndex());
-		headerStyle.setBorderLeft(BorderStyle.THIN);
-		headerStyle.setBorderLeft(BorderStyle.THIN);
-		headerStyle.setLeftBorderColor(IndexedColors.WHITE.getIndex());
-		headerStyle.setBorderRight(BorderStyle.THIN);
-		headerStyle.setBorderRight(BorderStyle.THIN);
-		// Directly using the index of the white color
-		headerStyle.setRightBorderColor(IndexedColors.WHITE.getIndex());
-
-		// ----------- Data Row Style ------------------------------
-		XSSFFont rowFont = (XSSFFont) workbook1.createFont();
-		rowFont.setFontName("Arial");
-		rowFont.setFontHeightInPoints((short) 9);
-		rowFont.setColor(IndexedColors.WHITE.getIndex());
-
-		XSSFCellStyle rowStyle = (XSSFCellStyle) workbook1.createCellStyle();
-		rowStyle.setFont(rowFont);
-		Color awtColor1 = Color.decode("#6495ED");
-		XSSFWorkbook workbook11 = new XSSFWorkbook(); // Example of creating a workbook if you don't already have one
-		XSSFColor xssfColor1 = new XSSFColor(awtColor1, workbook11.getStylesSource().getIndexedColors());
-
-		XSSFColor xssfColor11 = new XSSFColor(awtColor1, workbook11.getStylesSource().getIndexedColors());
-
-		// Now, apply the color to the cell style
-		rowStyle.setFillForegroundColor(xssfColor11);
-		rowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-		rowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-		rowStyle.setAlignment(HorizontalAlignment.LEFT);
-		rowStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-		rowStyle.setBorderBottom(BorderStyle.THIN);
-		rowStyle.setBorderBottom(BorderStyle.THIN);
-		rowStyle.setBottomBorderColor(IndexedColors.WHITE.getIndex());
-		rowStyle.setBorderTop(BorderStyle.THIN);
-		rowStyle.setBorderTop(BorderStyle.THIN);
-		headerStyle.setBorderBottom(BorderStyle.THIN); // Instead of using (short) 1
-
-		rowStyle.setBorderLeft(BorderStyle.THIN);
-		rowStyle.setBorderLeft(BorderStyle.THIN);
-		// Directly use IndexedColors for common colors like white
-		rowStyle.setLeftBorderColor(IndexedColors.WHITE.getIndex());
-
-		rowStyle.setBorderRight(BorderStyle.THIN);
-		rowStyle.setBorderRight(BorderStyle.THIN);
-		// Set the right border color using IndexedColors
-		rowStyle.setRightBorderColor(IndexedColors.WHITE.getIndex());
-
-		// ----------- Grand Total Row Style -----------------
-		XSSFFont summaryRowFont = (XSSFFont) workbook11.createFont();
-		summaryRowFont.setFontName("Arial");
-		summaryRowFont.setFontHeightInPoints((short) 10);
-		// Using IndexedColors to set the font color to white
-		summaryRowFont.setColor(IndexedColors.WHITE.getIndex());
-
-		XSSFCellStyle summaryRowStyle = (XSSFCellStyle) workbook11.createCellStyle();
-		summaryRowStyle.setFont(summaryRowFont);
-		Color midnightBlue = Color.decode("#191970");
-
-		XSSFColor xssfMidnightBlue = new XSSFColor(midnightBlue, null);
-		summaryRowStyle.setFillForegroundColor(xssfMidnightBlue);
-		summaryRowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-		XSSFColor whiteColor = new XSSFColor(new byte[] { (byte) 255, (byte) 255, (byte) 255 }, null);
-		summaryRowStyle.setAlignment(HorizontalAlignment.LEFT);
-		summaryRowStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-		summaryRowStyle.setBorderBottom(BorderStyle.THIN);
-		summaryRowStyle.setBorderTop(BorderStyle.THIN);
-		summaryRowStyle.setBorderLeft(BorderStyle.THIN);
-		summaryRowStyle.setBorderRight(BorderStyle.THIN);
-		summaryRowStyle.setBottomBorderColor(whiteColor);
-		summaryRowStyle.setTopBorderColor(whiteColor);
-		summaryRowStyle.setLeftBorderColor(whiteColor);
-		summaryRowStyle.setRightBorderColor(whiteColor);
-		// ---------------------------------------------------
-		String[] headers;
-		if (walletFlag) {
-			headers = new String[] { "Date", "Country", "Operator", "MCC", "MNC", "Count", "Cost", "Total Cost" };
-		} else {
-			headers = new String[] { "Date", "Country", "Operator", "MCC", "MNC", "Count" };
-		}
-		// --------------------
-		int row_number = 0;
-		sheet = workbook11.createSheet("Sheet(" + sheet_number + ")");
-		sheet.setDefaultColumnWidth(14);
-		logger.info("Creating Sheet: " + sheet_number);
-		if (row_number == 0) {
-			row = sheet.createRow(row_number);
-			int cell_number = 0;
-			for (String header : headers) {
-				Cell cell = row.createCell(cell_number);
-				cell.setCellValue(header);
-				cell.setCellStyle(headerStyle);
-				cell_number++;
-			}
-			row_number++;
-		}
-		Iterator timeItr = report_map.keySet().iterator();
-		// DecimalFormat df = new DecimalFormat("0.00000");
-		long total = 0;
-		double totalcost = 0;
-		while (timeItr.hasNext()) {
-			String repTime = (String) timeItr.next();
-			// logger.info("Report Time ==> " + repTime);
-			Map opr_map = (Map) report_map.get(repTime);
-			Iterator temp_itr = opr_map.keySet().iterator();
-			List report_list = new ArrayList();
-			while (temp_itr.hasNext()) {
-				String prefix = (String) temp_itr.next();
-				ReportDTO report = (ReportDTO) opr_map.get(prefix);
-				int network_id = 0;
-				try {
-					network_id = Integer.parseInt(prefix);
-				} catch (Exception ex) {
-				}
-				if (GlobalVars.NetworkEntries.containsKey(network_id)) {
-					NetworkEntry network = GlobalVars.NetworkEntries.get(network_id);
-					report.setCountry(network.getCountry());
-					report.setOperator(network.getOperator());
-					report.setMcc(network.getMcc());
-					report.setMnc(network.getMnc());
-				} else {
-					if (prefix == null || prefix.length() == 0) {
-						prefix = "-";
-					}
-					report.setCountry(prefix);
-					report.setOperator(prefix);
-					report.setMcc("-");
-					report.setMnc("-");
-				}
-				report_list.add(report);
-			}
-			report_list.sort(Comparator.comparing(ReportDTO::getCountry, CASE_INSENSITIVE_ORDER)
-					.thenComparing(ReportDTO::getOperator, CASE_INSENSITIVE_ORDER));
-			int i = 0;
-			// logger.info("Report List ==> " + report_list.size());
-			while (!report_list.isEmpty()) {
-				row = sheet.createRow(row_number);
-				ReportDTO report = (ReportDTO) report_list.remove(0);
-				total = total + report.getMsgCount();
-				totalcost = totalcost + report.getTotalcost();
-				if (i > 0) {
-					repTime = "-";
-				}
-				// logger.info("Row Number ===> " + row_number + " " + report.getCountry());
-				Cell cell = row.createCell(0);
-				cell.setCellValue(repTime);
-				cell.setCellStyle(rowStyle);
-				cell = row.createCell(1);
-				cell.setCellValue(report.getCountry());
-				cell.setCellStyle(rowStyle);
-				cell = row.createCell(2);
-				cell.setCellValue(report.getOperator());
-				cell.setCellStyle(rowStyle);
-				cell = row.createCell(3);
-				cell.setCellValue(report.getMcc());
-				cell.setCellStyle(rowStyle);
-				cell = row.createCell(4);
-				cell.setCellValue(report.getMnc());
-				cell.setCellStyle(rowStyle);
-				cell = row.createCell(5);
-				cell.setCellValue(report.getMsgCount());
-				cell.setCellStyle(rowStyle);
-				if (walletFlag) {
-					cell = row.createCell(6);
-					cell.setCellValue(report.getCost());
-					cell.setCellStyle(rowStyle);
-					cell = row.createCell(7);
-					cell.setCellValue(new DecimalFormat("0.00000").format(report.getTotalcost()));
-					cell.setCellStyle(rowStyle);
-				}
-				i++;
-				row_number++;
-			}
-		}
-		row = sheet.createRow(row_number);
-		Cell cell = row.createCell(4);
-		cell.setCellValue("Grand Total");
-		cell.setCellStyle(summaryRowStyle);
-		cell = row.createCell(5);
-		cell.setCellValue(total);
-		cell.setCellStyle(summaryRowStyle);
-		if (walletFlag) {
-			cell = row.createCell(6);
-			cell.setCellValue("");
-			cell.setCellStyle(summaryRowStyle);
-			cell = row.createCell(7);
-			cell.setCellValue(totalcost);
-			cell.setCellStyle(summaryRowStyle);
-		}
-		logger.info("<-- " + userDTO.getUserEntry().getSystemId() + " MIS WorkBook Created --> ");
-		return workbook11;
+	private CellStyle createHeaderStyle(Workbook workbook) {
+		CellStyle style = workbook.createCellStyle();
+		Font font = workbook.createFont();
+		font.setFontName("Arial");
+		font.setFontHeightInPoints((short) 10);
+		font.setBold(true);
+		font.setColor(IndexedColors.WHITE.getIndex());
+		style.setFont(font);
+		style.setFillForegroundColor(IndexedColors.GREY_50_PERCENT.getIndex());
+		style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		style.setAlignment(HorizontalAlignment.CENTER);
+		style.setVerticalAlignment(VerticalAlignment.CENTER);
+		setBorders(style);
+		return style;
 	}
+
+	private CellStyle createRowStyle(Workbook workbook) {
+		CellStyle style = workbook.createCellStyle();
+		Font font = workbook.createFont();
+		font.setFontName("Arial");
+		font.setFontHeightInPoints((short) 9);
+		font.setColor(IndexedColors.BLACK.getIndex());
+		style.setFont(font);
+		style.setAlignment(HorizontalAlignment.LEFT);
+		style.setVerticalAlignment(VerticalAlignment.CENTER);
+		setBorders(style);
+		return style;
+	}
+
+	private void setBorders(CellStyle style) {
+		style.setBorderBottom(BorderStyle.THIN);
+		style.setBottomBorderColor(IndexedColors.BLACK.getIndex());
+		style.setBorderTop(BorderStyle.THIN);
+		style.setTopBorderColor(IndexedColors.BLACK.getIndex());
+		style.setBorderLeft(BorderStyle.THIN);
+		style.setLeftBorderColor(IndexedColors.BLACK.getIndex());
+		style.setBorderRight(BorderStyle.THIN);
+		style.setRightBorderColor(IndexedColors.BLACK.getIndex());
+	}
+
+	private void populateRowWithData(Row row, ReportDTO reportDTO, CellStyle rowStyle) {
+		// Populate cells in the row with data from reportDTO and apply rowStyle
+		createCell(row, 0, reportDTO.getSmsc(), rowStyle);
+		createCell(row, 1, reportDTO.getCountry(), rowStyle);
+		createCell(row, 2, reportDTO.getCc(), rowStyle);
+		createCell(row, 3, reportDTO.getOperator(), rowStyle);
+		createCell(row, 4, reportDTO.getMcc(), rowStyle);
+		createCell(row, 5, reportDTO.getMnc(), rowStyle);
+		createCell(row, 6, String.valueOf(reportDTO.getMsgCount()), rowStyle);
+		createCell(row, 7, String.valueOf(reportDTO.getDelivered()), rowStyle);
+		createCell(row, 8, String.format("%.2f", reportDTO.getDlrpercent()) + "%", rowStyle);
+	}
+
+	private void createCell(Row row, int column, String value, CellStyle style) {
+		Cell cell = row.createCell(column);
+		cell.setCellValue(value);
+		cell.setCellStyle(style);
+	}
+
+//	private Workbook getSmscWorkBook(List reportList) {
+//		logger.info("<-- Creating Smsc Performance WorkBook --> ");
+//		SXSSFWorkbook workbook = new SXSSFWorkbook();
+//		int records_per_sheet = 500000;
+//		int sheet_number = 0;
+//		Sheet sheet = null;
+//		Row row = null;
+//		XSSFFont headerFont = (XSSFFont) workbook.createFont();
+//		headerFont.setFontName("Arial");
+//		headerFont.setFontHeightInPoints((short) 10);
+//		headerFont.setColor(new XSSFColor((IndexedColorMap) Color.BLACK));
+//		XSSFCellStyle headerStyle = (XSSFCellStyle) workbook.createCellStyle();
+//		headerStyle.setFont(headerFont);
+//		XSSFWorkbook workbook1 = new XSSFWorkbook();
+//		XSSFCellStyle headerStyle1 = workbook1.createCellStyle();
+//		XSSFColor grayColor = new XSSFColor(Color.GRAY, workbook1.getStylesSource().getIndexedColors()); 	
+//		headerStyle1.setFillForegroundColor(grayColor); 
+//		headerStyle1.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+//		headerStyle1.setAlignment(HorizontalAlignment.CENTER); 
+//		headerStyle1.setVerticalAlignment(VerticalAlignment.CENTER);
+//		headerStyle1.setBorderBottom(BorderStyle.THIN);
+//		headerStyle1.setBorderBottom(BorderStyle.THIN);
+//		headerStyle1.setBottomBorderColor(IndexedColors.WHITE.getIndex());
+//		headerStyle1.setBorderTop(BorderStyle.THIN);
+//		headerStyle1.setBorderTop(BorderStyle.THIN);
+//		headerStyle1.setTopBorderColor(IndexedColors.WHITE.getIndex());
+//		headerStyle1.setBorderLeft(BorderStyle.THIN);
+//		headerStyle1.setBorderLeft(BorderStyle.THIN);
+//		headerStyle1.setLeftBorderColor(IndexedColors.WHITE.getIndex());
+//		headerStyle1.setBorderRight(BorderStyle.THIN);
+//		headerStyle1.setBorderRight(BorderStyle.THIN);
+//		headerStyle1.setRightBorderColor(IndexedColors.WHITE.getIndex());
+//		XSSFFont rowFont = (XSSFFont) workbook1.createFont();
+//		rowFont.setFontName("Arial");
+//		rowFont.setFontHeightInPoints((short) 9);
+//		rowFont.setColor(IndexedColors.WHITE.getIndex());
+//		XSSFCellStyle rowStyle = (XSSFCellStyle) workbook1.createCellStyle();
+//		rowStyle.setFont(rowFont);
+//		Color awtColor = Color.LIGHT_GRAY;
+//		XSSFColor xssfColor = new XSSFColor(
+//				new byte[] { (byte) awtColor.getRed(), (byte) awtColor.getGreen(), (byte) awtColor.getBlue() }, null);
+//		rowStyle.setFillForegroundColor(xssfColor.getIndex()); 
+//		rowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND); 
+//		rowStyle.setAlignment(HorizontalAlignment.LEFT);
+//		rowStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+//		rowStyle.setBorderBottom(BorderStyle.THIN);
+//		rowStyle.setBorderBottom(BorderStyle.THIN);
+//		rowStyle.setBottomBorderColor(new XSSFColor());
+//		rowStyle.setBorderTop(BorderStyle.THIN);
+//		rowStyle.setBorderTop(BorderStyle.THIN);
+//		rowStyle.setTopBorderColor(IndexedColors.WHITE.getIndex());
+//		rowStyle.setBorderLeft(BorderStyle.THIN);
+//		rowStyle.setBorderLeft(BorderStyle.THIN);
+//		rowStyle.setLeftBorderColor(IndexedColors.WHITE.getIndex());
+//		rowStyle.setBorderRight(BorderStyle.THIN);
+//		rowStyle.setBorderRight(BorderStyle.THIN);
+//		rowStyle.setRightBorderColor(IndexedColors.WHITE.getIndex());
+//		String[] headers = { "Route", "Country", "CountryCode", "Operator", "MCC", "MNC", "Total", "Delivered",
+//				"Delivery(%)" };
+//		while (!reportList.isEmpty()) {
+//			int row_number = 0;
+//			long total = 0, delivered = 0;
+//			double delivery_percent = 0;
+//			sheet = workbook1.createSheet("Sheet(" + sheet_number + ")");
+//			sheet.setDefaultColumnWidth(14);
+//			logger.info("Creating Sheet: " + sheet_number);
+//			while (!reportList.isEmpty()) {
+//				row = sheet.createRow(row_number);
+//				if (row_number == 0) {
+//					int cell_number = 0;
+//					for (String header : headers) {
+//						Cell cell = row.createCell(cell_number);
+//						cell.setCellValue(header);
+//						cell.setCellStyle(headerStyle1);
+//						cell_number++;
+//					}
+//				} else {
+//					ReportDTO reportDTO = (ReportDTO) reportList.remove(0);
+//					total += reportDTO.getMsgCount();
+//					delivered += reportDTO.getDelivered();
+//					Cell cell = row.createCell(0);
+//					cell.setCellValue(reportDTO.getSmsc());
+//					cell.setCellStyle(rowStyle);
+//					cell = row.createCell(1);
+//					cell.setCellValue(reportDTO.getCountry());
+//					cell.setCellStyle(rowStyle);
+//					cell = row.createCell(2);
+//					cell.setCellValue(reportDTO.getCc());
+//					cell.setCellStyle(rowStyle);
+//					cell = row.createCell(3);
+//					cell.setCellValue(reportDTO.getOperator());
+//					cell.setCellStyle(rowStyle);
+//					cell = row.createCell(4);
+//					cell.setCellValue(reportDTO.getMcc());
+//					cell.setCellStyle(rowStyle);
+//					cell = row.createCell(5);
+//					cell.setCellValue(reportDTO.getMnc());
+//					cell.setCellStyle(rowStyle);
+//					cell = row.createCell(6);
+//					cell.setCellValue(reportDTO.getMsgCount());
+//					cell.setCellStyle(rowStyle);
+//					cell = row.createCell(7);
+//					cell.setCellValue(reportDTO.getDelivered());
+//					cell.setCellStyle(rowStyle);
+//					cell = row.createCell(8);
+//					cell.setCellValue(reportDTO.getDlrpercent());
+//					cell.setCellStyle(rowStyle);
+//				}
+//				if (++row_number > records_per_sheet) {
+//					logger.info("Sheet Created: " + sheet_number);
+//					break;
+//				}
+//			}
+//			// ***** Summary For Current Sheet ************
+//			delivery_percent = (delivered * 100) / total;
+//			row = sheet.createRow(row_number);
+//			Cell cell = row.createCell(5);
+//			cell.setCellValue("Grand Total");
+//			cell.setCellStyle(headerStyle1);
+//			cell = row.createCell(6);
+//			cell.setCellValue(total);
+//			cell.setCellStyle(headerStyle1);
+//			cell = row.createCell(7);
+//			cell.setCellValue(delivered);
+//			cell.setCellStyle(headerStyle1);
+//			cell = row.createCell(8);
+//			cell.setCellValue(delivery_percent);
+//			cell.setCellStyle(headerStyle1);
+//			// ***** End Summary For Current Sheet ************
+//			sheet_number++;
+//		}
+//		logger.info("<--- Workbook Created ----> ");
+//		return workbook1;
+//	}
 
 	private List sortList(List list) {
 		Comparator<ReportDTO> comparator = Comparator.comparing(ReportDTO::getSmsc).thenComparing(ReportDTO::getCountry)

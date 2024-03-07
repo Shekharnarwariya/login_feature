@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.hibernate.Session;
@@ -29,14 +30,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.hazelcast.query.Predicate;
-import com.hazelcast.query.impl.PredicateBuilderImpl;
 import com.hti.smpp.common.contacts.dto.GroupEntry;
+import com.hti.smpp.common.contacts.repository.GroupEntryRepository;
 import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.request.DBMessage;
 import com.hti.smpp.common.route.dto.RouteEntry;
 import com.hti.smpp.common.route.dto.RouteEntryExt;
+import com.hti.smpp.common.route.repository.RouteEntryRepository;
 import com.hti.smpp.common.smsc.dto.SmscEntry;
+import com.hti.smpp.common.smsc.repository.SmscEntryRepository;
+import com.hti.smpp.common.user.dto.UserEntry;
+import com.hti.smpp.common.user.dto.WebMasterEntry;
+import com.hti.smpp.common.user.repository.UserEntryRepository;
+import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.lowagie.text.Document;
@@ -66,15 +72,30 @@ import jxl.write.WritableWorkbook;
 import jxl.write.WriteException;
 
 @Service
-public class ReportService  {
-	//IDatabaseService dbService = HtiSmsDB.getInstance();
-	// private static Map network_map = null;
-	// private static Map mccmnc_map = null;
-	// private RouteDAService routeService = new RouteDAServiceImpl();
-	
-	 private static final Logger logger = LoggerFactory.getLogger(ReportService.class);
-	  @Autowired
-	    private SessionFactory sessionFactory;
+public class ReportService {
+
+	private static final Logger logger = LoggerFactory.getLogger(ReportService.class);
+	@Autowired
+	private SessionFactory sessionFactory;
+
+	@Autowired
+	private UserEntryRepository userEntryRepository;
+
+	@Autowired
+	private RouteEntryRepository routeEntryRepository;
+
+	@Autowired
+	private WebMasterEntryRepository masterEntryRepository;
+
+	@Autowired
+	private GroupEntryRepository groupEntryRepository;
+
+	private final SmscEntryRepository smscEntryRepository;
+
+	@Autowired
+	public ReportService(SmscEntryRepository smscEntryRepository) {
+		this.smscEntryRepository = smscEntryRepository;
+	}
 
 	public String getCustomizedReport(String username, String role, Collection list_collection)
 			throws WriteException, IOException {
@@ -137,7 +158,8 @@ public class ReportService  {
 		return filename;
 	}
 
-	// *******************************End Amit_vish on date 22-March-11*******************
+	// *******************************End Amit_vish on date
+	// 22-March-11*******************
 	public Collection getMessageStatusCodes() {
 		return null;
 	}
@@ -184,182 +206,34 @@ public class ReportService  {
 		return filename;
 	}
 
-		public Map<Integer, RouteEntryExt> listCoverage(String systemId, boolean display, boolean cached) {
-		int userId = GlobalVars.UserMapping.get(systemId);
-		return listCoverage(userId, display, cached);
-	}
+	public List<RouteEntry> listRoute(int userId) {
+		logger.debug("Listing Users Routing");
+		Transaction transaction = null;
+		List<RouteEntry> results = new ArrayList<>();
 
-	public Map<Integer, RouteEntryExt> listCoverage(int userId, boolean display, boolean cached) {
-		Map<Integer, RouteEntryExt> list = new LinkedHashMap<Integer, RouteEntryExt>();
-		Map<Integer, String> smsc_name_mapping = null;
-		Map<Integer, String> group_name_mapping = null;
-		if (display) {
-			smsc_name_mapping = listNames();
-			group_name_mapping = listGroupNames();
-		}
-		if (cached) {
-			Predicate<Integer, RouteEntry> p = new PredicateBuilderImpl().getEntryObject().get("userId").equal(userId);
-			for (RouteEntry basic : GlobalVars.BasicRouteEntries.values(p)) {
-				RouteEntryExt entry = new RouteEntryExt(basic);
-				if (display) {
-					// ------ set user values -----------------
-					if (GlobalVars.UserEntries.containsKey(basic.getUserId())) {
-						entry.setSystemId(GlobalVars.UserEntries.get(basic.getUserId()).getSystemId());
-						entry.setMasterId(GlobalVars.UserEntries.get(basic.getUserId()).getMasterId());
-						entry.setCurrency(GlobalVars.UserEntries.get(basic.getUserId()).getCurrency());
-						entry.setAccountType(GlobalVars.WebmasterEntries.get(basic.getUserId()).getAccountType());
-					}
-					// ------ set network values -----------------
-					// NetworkEntry network = CacheService.getNetworkEntry(entry.getNetworkId());
-					if (GlobalVars.NetworkEntries.containsKey(entry.getBasic().getNetworkId())) {
-						NetworkEntry network = GlobalVars.NetworkEntries.get(entry.getBasic().getNetworkId());
-						entry.setCountry(network.getCountry());
-						entry.setOperator(network.getOperator());
-						entry.setMcc(network.getMcc());
-						entry.setMnc(network.getMnc());
-					}
-					// ------ set Smsc values -----------------
-					if (entry.getBasic().getSmscId() == 0) {
-						entry.setSmsc("Down");
-					} else {
-						if (smsc_name_mapping.containsKey(entry.getBasic().getSmscId())) {
-							entry.setSmsc(smsc_name_mapping.get(entry.getBasic().getSmscId()));
-						}
-					}
-					if (group_name_mapping.containsKey(entry.getBasic().getGroupId())) {
-						entry.setGroup(group_name_mapping.get(entry.getBasic().getGroupId()));
-					}
-				}
-				list.put(entry.getBasic().getNetworkId(), entry);
+		try (Session session = sessionFactory.openSession()) {
+			transaction = session.beginTransaction();
+
+			CriteriaBuilder builder = session.getCriteriaBuilder();
+			CriteriaQuery<RouteEntry> query = builder.createQuery(RouteEntry.class);
+			Root<RouteEntry> root = query.from(RouteEntry.class);
+			if (userId > 0) { // Assuming userId > 0 is considered valid
+				query.where(builder.equal(root.get("userId"), userId));
 			}
-		} else {
-			logger.info("listing RouteEntries From Database: " + userId);
-			List<RouteEntry> db_list = listRoute(userId);
-			for (RouteEntry basic : db_list) {
-				RouteEntryExt entry = new RouteEntryExt(basic);
-				if (display) {
-					// ------ set user values -----------------
-					if (GlobalVars.UserEntries.containsKey(entry.getBasic().getUserId())) {
-						entry.setSystemId(GlobalVars.UserEntries.get(basic.getUserId()).getSystemId());
-						entry.setMasterId(GlobalVars.UserEntries.get(basic.getUserId()).getMasterId());
-						entry.setCurrency(GlobalVars.UserEntries.get(basic.getUserId()).getCurrency());
-						entry.setAccountType(GlobalVars.WebmasterEntries.get(basic.getUserId()).getAccountType());
-					}
-					// ------ set network values -----------------
-					// NetworkEntry network = CacheService.getNetworkEntry(entry.getNetworkId());
-					if (GlobalVars.NetworkEntries.containsKey(entry.getBasic().getNetworkId())) {
-						NetworkEntry network = GlobalVars.NetworkEntries.get(entry.getBasic().getNetworkId());
-						entry.setCountry(network.getCountry());
-						entry.setOperator(network.getOperator());
-						entry.setMcc(network.getMcc());
-						entry.setMnc(network.getMnc());
-					}
-					// ------ set Smsc values -----------------
-					if (entry.getBasic().getSmscId() == 0) {
-						entry.setSmsc("Down");
-					} else {
-						if (smsc_name_mapping.containsKey(entry.getBasic().getSmscId())) {
-							entry.setSmsc(smsc_name_mapping.get(entry.getBasic().getSmscId()));
-						}
-					}
-					if (group_name_mapping.containsKey(entry.getBasic().getGroupId())) {
-						entry.setGroup(group_name_mapping.get(entry.getBasic().getGroupId()));
-					}
-				}
-				list.put(entry.getBasic().getNetworkId(), entry);
+
+			results = session.createQuery(query).getResultList();
+			transaction.commit();
+
+			logger.info("Routes fetched: {}", results.size());
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
 			}
+			logger.error("Error retrieving routes: {}", e.getMessage());
+			return Collections.emptyList();
 		}
-		return list;
+		return results;
 	}
-
-
-public Map<Integer, String> listNames() {
-		Map<Integer, String> names = new HashMap<Integer, String>();
-		for (SmscEntry entry : GlobalVars.SmscEntries.values()) {
-			names.put(entry.getId(), entry.getName());
-		}
-		names = names.entrySet().stream().sorted(Entry.comparingByValue())
-				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-		return names;
-	}
-
-
-	public Map<Integer, String> listGroupNames() {
-		Map<Integer, String> names = new HashMap<Integer, String>();
-		names.put(0, "NONE");
-		List<GroupEntry> groups = listGroup();
-		for (GroupEntry entry : groups) {
-			names.put(entry.getId(), entry.getName());
-		}
-		names = names.entrySet().stream().sorted(Entry.comparingByValue())
-				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-		return names;
-	}
-
-
-	public List<GroupEntry> listGroup() {
-	    List<GroupEntry> results = new ArrayList<>();
-	    Session session = null;
-	    Transaction transaction = null;
-
-	    logger.info("Listing Group Entries");
-	    try {
-	        session = sessionFactory.openSession();
-	        transaction = session.beginTransaction();
-
-	        CriteriaBuilder builder = session.getCriteriaBuilder();
-	        CriteriaQuery<GroupEntry> query = builder.createQuery(GroupEntry.class);
-	        Root<GroupEntry> root = query.from(GroupEntry.class);
-	        query.select(root).where(builder.gt(root.get("id"), 0)); // Assuming 'id' is of a numeric type
-
-	        results = session.createQuery(query).getResultList();
-
-	        transaction.commit();
-	        logger.info("GroupEntry list: {}", results.size());
-	    } catch (RuntimeException e) {
-	        if (transaction != null) {
-	            transaction.rollback();
-	        }
-	        logger.error("Error retrieving group entries: {}", e.getMessage());
-	    } finally {
-	        if (session != null && session.isOpen()) {
-	            session.close();
-	        }
-	    }
-	    return results;
-	}
-
-
-public List<RouteEntry> listRoute(int userId) {
-    logger.debug("Listing Users Routing");
-    Transaction transaction = null;
-    List<RouteEntry> results = new ArrayList<>();
-    
-    try (Session session = sessionFactory.openSession()) {
-        transaction = session.beginTransaction();
-
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<RouteEntry> query = builder.createQuery(RouteEntry.class);
-        Root<RouteEntry> root = query.from(RouteEntry.class);
-
-        // Since userId is an int, it can't be null or have a length. We just check if it's a valid ID.
-        if (userId > 0) { // Assuming userId > 0 is considered valid
-            query.where(builder.equal(root.get("userId"), userId));
-        }
-
-        results = session.createQuery(query).getResultList();
-        transaction.commit();
-
-        logger.info("Routes fetched: {}", results.size());
-    } catch (Exception e) {
-        if (transaction != null) {
-            transaction.rollback();
-        }
-        logger.error("Error retrieving routes: {}", e.getMessage());
-        return Collections.emptyList();
-    }
-    return results;
-}
 
 	private String getCoverageReportPDF(String username, Collection<RouteEntryExt> coverageList)
 			throws DocumentException, FileNotFoundException, IOException {
@@ -447,11 +321,13 @@ public List<RouteEntry> listRoute(int userId) {
 			datatable.addCell(new Phrase(entry.getBasic().getRemarks(), font_Content));
 			sno = sno + 1;
 		}
-		// --------------------------------------------------Adding Tables to Document-------------------
+		// --------------------------------------------------Adding Tables to
+		// Document-------------------
 		document.add(head_line);
 		document.add(Under_line);
 		document.add(datatable);
-		// --------------------------------------------------Adding Tables to Document-------------------
+		// --------------------------------------------------Adding Tables to
+		// Document-------------------
 		document.close();
 		return filename;
 	}
@@ -505,9 +381,10 @@ public List<RouteEntry> listRoute(int userId) {
 	}
 
 	public String getCoverageReportXLS(String username) throws WriteException, IOException {
+		System.out.println("username in coverage report " + username);
 		Collection<RouteEntryExt> list = listCoverage(username, true, true).values();
 		System.out.println(username + " CoverageList Size: " + list.size());
-		String filename = IConstants.WEBAPP_DIR + "report//" + username + "_coverage.xls";
+		String filename = IConstants.WEBSMPP_EXT_DIR + "report//" + username + "_coverage.xls";
 		WritableFont courier = new WritableFont(WritableFont.createFont("Calibri"), 11, WritableFont.BOLD);
 		WritableFont times = new WritableFont(WritableFont.createFont("Calibri"), 11);
 		WritableCellFormat courierformat = new WritableCellFormat(courier);
@@ -612,5 +489,78 @@ public List<RouteEntry> listRoute(int userId) {
 		}
 		return filename;
 	}
-}
 
+	public Map<Integer, RouteEntryExt> listCoverage(String systemId, boolean display, boolean cached) {
+		System.out.println("userId :" + systemId + "display: " + display + "cached: " + cached);
+		Map<Integer, RouteEntryExt> list = new LinkedHashMap<Integer, RouteEntryExt>();
+		Map<Integer, String> smsc_name_mapping = null;
+		Map<Integer, String> group_name_mapping = null;
+		if (display) {
+			smsc_name_mapping = listNames();
+			group_name_mapping = listGroupNames();
+		}
+		logger.info("listing RouteEntries From Database: " + systemId);
+		Optional<UserEntry> userOptional1 = userEntryRepository.findBySystemId(systemId);
+		UserEntry userEntry = null;
+		if (userOptional1.isPresent()) {
+			userEntry = userOptional1.get();
+		}
+		List<RouteEntry> db_list = routeEntryRepository.findByUserId(userEntry.getId());
+		WebMasterEntry web = masterEntryRepository.findByUserId(userEntry.getId());
+		for (RouteEntry basic : db_list) {
+			RouteEntryExt entry = new RouteEntryExt(basic);
+			if (display) {
+				entry.setSystemId(userEntry.getSystemId());
+				entry.setMasterId(userEntry.getMasterId());
+				entry.setCurrency(userEntry.getCurrency());
+				entry.setAccountType(web.getAccountType());
+				// ------ set network values -----------------
+				// NetworkEntry network = CacheService.getNetworkEntry(entry.getNetworkId());
+				if (GlobalVars.NetworkEntries.containsKey(entry.getBasic().getNetworkId())) {
+					NetworkEntry network = GlobalVars.NetworkEntries.get(entry.getBasic().getNetworkId());
+					entry.setCountry(network.getCountry());
+					entry.setOperator(network.getOperator());
+					entry.setMcc(network.getMcc());
+					entry.setMnc(network.getMnc());
+				}
+				// ------ set Smsc values -----------------
+				if (entry.getBasic().getSmscId() == 0) {
+					entry.setSmsc("Down");
+				} else {
+					if (smsc_name_mapping.containsKey(entry.getBasic().getSmscId())) {
+						entry.setSmsc(smsc_name_mapping.get(entry.getBasic().getSmscId()));
+					}
+				}
+				if (group_name_mapping.containsKey(entry.getBasic().getGroupId())) {
+					entry.setGroup(group_name_mapping.get(entry.getBasic().getGroupId()));
+				}
+			}
+			list.put(entry.getBasic().getNetworkId(), entry);
+		}
+		return list;
+	}
+
+	public Map<Integer, String> listGroupNames() {
+		Map<Integer, String> names = new HashMap<Integer, String>();
+		names.put(0, "NONE");
+		List<GroupEntry> groups = groupEntryRepository.findAll();
+		for (GroupEntry entry : groups) {
+			names.put(entry.getId(), entry.getName());
+		}
+		names = names.entrySet().stream().sorted(Entry.comparingByValue())
+				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+		return names;
+	}
+
+	public Map<Integer, String> listNames() {
+		Map<Integer, String> names = new HashMap<Integer, String>();
+
+		List<SmscEntry> smscEntry = smscEntryRepository.findAll();
+		for (SmscEntry entry : smscEntry) {
+			names.put(entry.getId(), entry.getName());
+		}
+		names = names.entrySet().stream().sorted(Entry.comparingByValue())
+				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+		return names;
+	}
+}
