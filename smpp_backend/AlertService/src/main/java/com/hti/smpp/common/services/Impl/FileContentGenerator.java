@@ -20,7 +20,7 @@ import jxl.write.WritableWorkbook;
 
 public class FileContentGenerator {
 	public static String createDlrXLSContent(List<DBMessage> report, String username) {
-		String filename = IConstants.WEBAPP_DIR + "report//" + username + "_Delivery.xls";
+		String filename = IConstants.WEBSMPP_EXT_DIR + "report//" + username + "_Delivery.xls";
 		WritableFont heading = new WritableFont(WritableFont.TAHOMA, 13, WritableFont.BOLD, false,
 				UnderlineStyle.NO_UNDERLINE, Colour.WHITE);
 		WritableFont courier = new WritableFont(WritableFont.COURIER, 12, WritableFont.BOLD);

@@ -338,7 +338,7 @@ public class ReportController {
 		return customizedReportService.CustomizedReportView(username, customReportForm);
 	}
 
-	@GetMapping("/sms/report")
+	@PostMapping("/sms/report")
 	public ResponseEntity<?> getSmsReport(@RequestHeader String username,
 			@RequestBody SmsReportRequest smsReportRequest) {
 		return customizedReportService.SmsReport(username, smsReportRequest);

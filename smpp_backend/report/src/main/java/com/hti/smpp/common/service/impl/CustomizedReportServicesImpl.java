@@ -136,8 +136,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 
-
-
 			List<DeliveryDTO> reportList = getCustomizedReportList(customReportForm, username);
 			if (customReportForm.getReportType().equalsIgnoreCase("Summary")) {
 				isSummary = true;
@@ -178,7 +176,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
 				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
-
 
 		List<DeliveryDTO> print = null;
 		List<DeliveryDTO> report = null;
@@ -1574,7 +1571,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					rs.close();
 				}
 				if (con != null) {
-				
+
 					con.close();
 				}
 			} catch (SQLException sqle) {
@@ -2244,7 +2241,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			sms.setMsgid(dto.getMsgid());
 			sms.setContent(dto.getContent());
 			sms.setCost(dto.getCost());
-			sms.setTime(dto.getDate() + dto.getTime());
+			sms.setTime(dto.getDate() + " " + dto.getTime());
 			sms.setDestination(dto.getDestination());
 			sms.setSender(dto.getSender());
 			sms.setStatus(dto.getStatus());

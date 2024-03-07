@@ -22,49 +22,49 @@ import jakarta.validation.Configuration;
 
 @Service
 public class UserDAO {
-	
-	  private static final Logger logger = LoggerFactory.getLogger(UserDAO.class);
-	  @Autowired
-	    private SessionFactory sessionFactory;
 
-	   public List<RechargeEntry> listTransactions(Integer[] userId, String txnType, String startTime, String endTime) {
-	        Transaction transaction = null;
-	        List<RechargeEntry> results = new ArrayList<>();
+	private static final Logger logger = LoggerFactory.getLogger(UserDAO.class);
 
-	        try (Session session = sessionFactory.openSession()) {
-	            transaction = session.beginTransaction();
+	@Autowired
+	private SessionFactory sessionFactory;
 
-	            CriteriaBuilder builder = session.getCriteriaBuilder();
-	            CriteriaQuery<RechargeEntry> query = builder.createQuery(RechargeEntry.class);
-	            Root<RechargeEntry> root = query.from(RechargeEntry.class);
-	            
+	public List<RechargeEntry> listTransactions(Integer[] userId, String txnType, String startTime, String endTime) {
+		Transaction transaction = null;
+		List<RechargeEntry> results = new ArrayList<>();
+
+		try (Session session = sessionFactory.openSession()) {
+			transaction = session.beginTransaction();
+
+			CriteriaBuilder builder = session.getCriteriaBuilder();
+			CriteriaQuery<RechargeEntry> query = builder.createQuery(RechargeEntry.class);
+			Root<RechargeEntry> root = query.from(RechargeEntry.class);
+
 //	            Configuration configuration = new Configuration().configure(); // Loads hibernate.cfg.xml
 //	            StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder()
 //	                .applySettings(configuration.getProperties());
 //	            SessionFactory sessionFactory = configuration.buildSessionFactory(builder.build());
-	            
-	            if (userId != null && userId.length > 0) {
-	            	query.where(root.get("userId").in((Object[]) userId));
-	            }
-	            if (txnType != null) {
-	            	query.where(builder.like(root.get("txnType"), "%" + txnType + "%"));
-	            }
-	            if (startTime != null && endTime != null) {
-	            	query.where(builder.between(root.get("time"), startTime, endTime));
-	            }
-	            results = session.createQuery(query).getResultList();
-	            transaction.commit();
 
-	            logger.info("Transactions fetched: {}", results.size());
-	        } catch (Exception e) {
-	            if (transaction != null) {
-	                transaction.rollback();
-	            }
-	            logger.error("Error retrieving transactions: {}", e.getMessage());
-	            return Collections.emptyList();
-	        }
-	        return results;
-	    }
-			
+			if (userId != null && userId.length > 0) {
+				query.where(root.get("userId").in((Object[]) userId));
+			}
+			if (txnType != null) {
+				query.where(builder.like(root.get("txnType"), "%" + txnType + "%"));
+			}
+			if (startTime != null && endTime != null) {
+				query.where(builder.between(root.get("time"), startTime, endTime));
+			}
+			results = session.createQuery(query).getResultList();
+			transaction.commit();
+
+			logger.info("Transactions fetched: {}", results.size());
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			logger.error("Error retrieving transactions: {}", e.getMessage());
+			return Collections.emptyList();
+		}
+		return results;
+	}
 
 }

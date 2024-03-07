@@ -332,12 +332,14 @@ public class DataBaseOpration {
 	}
 
 	public Map<Integer, RouteEntryExt> listCoverage(String systemId, boolean display, boolean cached) {
+		System.out.println("username" + systemId);
 		User user = userEntryRepository.getUsers(systemId).get();
 		int userId = user.getUserId();
-		return listCoverage(userId, display, cached);
+		return listCoverage1(userId, display, cached);
 	}
 
-	public Map<Integer, RouteEntryExt> listCoverage(int userId, boolean display, boolean cached) {
+	public Map<Integer, RouteEntryExt> listCoverage1(int systemId, boolean display, boolean cached) {
+		System.out.println("userId :" + systemId + "display: " + display + "cached: " + cached);
 		Map<Integer, RouteEntryExt> list = new LinkedHashMap<Integer, RouteEntryExt>();
 		Map<Integer, String> smsc_name_mapping = null;
 		Map<Integer, String> group_name_mapping = null;
@@ -345,77 +347,43 @@ public class DataBaseOpration {
 			smsc_name_mapping = listNames();
 			group_name_mapping = listGroupNames();
 		}
-		if (cached) {
-			for (RouteEntry basic : routeEntryRepository.findAll()) {
-				RouteEntryExt entry = new RouteEntryExt(basic);
-				if (display) {
-					Optional<UserEntry> userOptional = userEntryRepository.findById(basic.getUserId());
-					// ------ set user values -----------------
-					if (userOptional.isPresent()) {
-						entry.setSystemId(userOptional.get().getSystemId());
-						entry.setMasterId(userOptional.get().getMasterId());
-						entry.setCurrency(userOptional.get().getCurrency());
-						entry.setAccountType(masterEntryRepository.findByUserId(basic.getUserId()).getAccountType());
-					}
-					// ------ set network values -----------------
-					// NetworkEntry network = CacheService.getNetworkEntry(entry.getNetworkId());
-					if (GlobalVars.NetworkEntries.containsKey(entry.getBasic().getNetworkId())) {
-						NetworkEntry network = GlobalVars.NetworkEntries.get(entry.getBasic().getNetworkId());
-						entry.setCountry(network.getCountry());
-						entry.setOperator(network.getOperator());
-						entry.setMcc(network.getMcc());
-						entry.setMnc(network.getMnc());
-					}
-					// ------ set Smsc values -----------------
-					if (entry.getBasic().getSmscId() == 0) {
-						entry.setSmsc("Down");
-					} else {
-						if (smsc_name_mapping.containsKey(entry.getBasic().getSmscId())) {
-							entry.setSmsc(smsc_name_mapping.get(entry.getBasic().getSmscId()));
-						}
-					}
-					if (group_name_mapping.containsKey(entry.getBasic().getGroupId())) {
-						entry.setGroup(group_name_mapping.get(entry.getBasic().getGroupId()));
+		logger.info("listing RouteEntries From Database: " + systemId);
+		Optional<UserEntry> userOptional1 = userEntryRepository.findById(systemId);
+		UserEntry userEntry = null;
+		if (userOptional1.isPresent()) {
+			userEntry = userOptional1.get();
+		}
+		List<RouteEntry> db_list = routeEntryRepository.findByUserId(userEntry.getId());
+		WebMasterEntry web = masterEntryRepository.findByUserId(userEntry.getId());
+		for (RouteEntry basic : db_list) {
+			RouteEntryExt entry = new RouteEntryExt(basic);
+			if (display) {
+				entry.setSystemId(userEntry.getSystemId());
+				entry.setMasterId(userEntry.getMasterId());
+				entry.setCurrency(userEntry.getCurrency());
+				entry.setAccountType(web.getAccountType());
+				// ------ set network values -----------------
+				// NetworkEntry network = CacheService.getNetworkEntry(entry.getNetworkId());
+				if (GlobalVars.NetworkEntries.containsKey(entry.getBasic().getNetworkId())) {
+					NetworkEntry network = GlobalVars.NetworkEntries.get(entry.getBasic().getNetworkId());
+					entry.setCountry(network.getCountry());
+					entry.setOperator(network.getOperator());
+					entry.setMcc(network.getMcc());
+					entry.setMnc(network.getMnc());
+				}
+				// ------ set Smsc values -----------------
+				if (entry.getBasic().getSmscId() == 0) {
+					entry.setSmsc("Down");
+				} else {
+					if (smsc_name_mapping.containsKey(entry.getBasic().getSmscId())) {
+						entry.setSmsc(smsc_name_mapping.get(entry.getBasic().getSmscId()));
 					}
 				}
-				list.put(entry.getBasic().getNetworkId(), entry);
-			}
-		} else {
-			logger.info("listing RouteEntries From Database: " + userId);
-			List<RouteEntry> db_list = routeEntryRepository.findByUserId(userId);
-			for (RouteEntry basic : db_list) {
-				RouteEntryExt entry = new RouteEntryExt(basic);
-				if (display) {
-					// ------ set user values -----------------
-					if (GlobalVars.UserEntries.containsKey(entry.getBasic().getUserId())) {
-						entry.setSystemId(GlobalVars.UserEntries.get(basic.getUserId()).getSystemId());
-						entry.setMasterId(GlobalVars.UserEntries.get(basic.getUserId()).getMasterId());
-						entry.setCurrency(GlobalVars.UserEntries.get(basic.getUserId()).getCurrency());
-						entry.setAccountType(GlobalVars.WebmasterEntries.get(basic.getUserId()).getAccountType());
-					}
-					// ------ set network values -----------------
-					// NetworkEntry network = CacheService.getNetworkEntry(entry.getNetworkId());
-					if (GlobalVars.NetworkEntries.containsKey(entry.getBasic().getNetworkId())) {
-						NetworkEntry network = GlobalVars.NetworkEntries.get(entry.getBasic().getNetworkId());
-						entry.setCountry(network.getCountry());
-						entry.setOperator(network.getOperator());
-						entry.setMcc(network.getMcc());
-						entry.setMnc(network.getMnc());
-					}
-					// ------ set Smsc values -----------------
-					if (entry.getBasic().getSmscId() == 0) {
-						entry.setSmsc("Down");
-					} else {
-						if (smsc_name_mapping.containsKey(entry.getBasic().getSmscId())) {
-							entry.setSmsc(smsc_name_mapping.get(entry.getBasic().getSmscId()));
-						}
-					}
-					if (group_name_mapping.containsKey(entry.getBasic().getGroupId())) {
-						entry.setGroup(group_name_mapping.get(entry.getBasic().getGroupId()));
-					}
+				if (group_name_mapping.containsKey(entry.getBasic().getGroupId())) {
+					entry.setGroup(group_name_mapping.get(entry.getBasic().getGroupId()));
 				}
-				list.put(entry.getBasic().getNetworkId(), entry);
 			}
+			list.put(entry.getBasic().getNetworkId(), entry);
 		}
 		return list;
 	}
@@ -522,10 +490,11 @@ public class DataBaseOpration {
 	}
 
 	public List<WebMasterEntry> findWebMaster() {
-		return masterEntryRepository.findByMinFlag(true).orElseGet(() -> {
-			logger.info("Web master is null; find min flag returned null.");
-			return Collections.emptyList();
-		});
+		List<WebMasterEntry> webMasters = masterEntryRepository.findByMinFlag(true);
+		if (webMasters.isEmpty()) {
+			logger.info("Web master is null; find min flag returned no results.");
+		}
+		return webMasters;
 	}
 
 	public List<WebMasterEntry> findAllWebMaster() {
@@ -545,7 +514,6 @@ public class DataBaseOpration {
 	public List<ProfessionEntry> professionData() {
 		try {
 			List<ProfessionEntry> entries = professionEntryRepository.findByDomainEmailIsNotNull();
-			System.out.println(entries);
 			if (entries == null) {
 				logger.warn("professionData: No ProfessionEntry found (result is null).");
 				return Collections.emptyList();
@@ -573,7 +541,7 @@ public class DataBaseOpration {
 
 	public List<WebMasterEntry> findDlrReportUsersWithValidEmail() {
 		try {
-			List<WebMasterEntry> entries = masterEntryRepository.findDlrReportUsersWithValidEmail();
+			List<WebMasterEntry> entries = masterEntryRepository.findValidEntries();
 			return Optional.ofNullable(entries).orElseGet(Collections::emptyList);
 		} catch (Exception e) {
 			logger.error("Exception occurred in findDlrReportUsersWithValidEmail", e);
