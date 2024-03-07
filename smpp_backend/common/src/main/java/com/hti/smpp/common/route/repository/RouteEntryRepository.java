@@ -64,4 +64,13 @@ public interface RouteEntryRepository extends JpaRepository<RouteEntry, Integer>
 			+ "WHERE A.id IN (?1) AND A.user_id = D.id AND A.smsc_id = C.id AND A.network_id = B.id AND A.group_id = F.id AND A.user_id = E.user_id", nativeQuery = true)
 	public List<RouteEntryExt> findAllByCustomQuery(String criterianEntries);
 
+	
+ @Query(value = "SELECT DISTINCT rm.id, rm.user_id, rm.network_id, rm.smsc_id, rm.group_id, rm.cost, rm.smsc_type, rm.editby, rm.edit_on, rm.remarks " +
+    "FROM routemaster rm " +
+    "WHERE rm.user_id IN (" +
+    "    SELECT rmu.user_id " +
+    "    FROM routemaster_updates rmu " +
+    "    WHERE rmu.user_id=?1 AND rmu.affected_date BETWEEN ?2 AND ?3)",
+nativeQuery = true)
+List<RouteEntry> findUserByAffectedDateBetween(int user_id,String fromDate, String toDate);
 }

@@ -27,8 +27,9 @@ public class DownloadController {
 	}
 
 	@GetMapping("/pricing-list")
-	public ResponseEntity<List<Object>> downloadPricingInList(@RequestHeader("username") String username){
-		return this.downloadService.downloadPricingInList(username);
+	public ResponseEntity<List<Object>> downloadPricingInList(@RequestHeader("username") String username,@RequestParam("startDate") String startDate,
+			@RequestParam("endDate") String endDate){
+		return this.downloadService.downloadPricingInList(username,startDate,endDate);
 	}
 
 }
