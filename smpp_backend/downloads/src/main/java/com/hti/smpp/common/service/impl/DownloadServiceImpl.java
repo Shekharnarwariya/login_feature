@@ -140,23 +140,14 @@ public class DownloadServiceImpl implements DownloadService {
 					throw new InternalServerException("Routing Error For " + userid);
 				}
 			} catch (WriteException | IOException | DocumentException e) {
-				//e.printStackTrace();
+				// e.printStackTrace();
 				proceedFurther = false;
-<<<<<<< HEAD
-				throw new InternalServerException(e.getMessage());
+				throw new InternalServerException("Routing error for the user ");
 			} catch (NotFoundException e) {
 				proceedFurther = false;
-				throw new NotFoundException(e.getMessage());
-			} catch (Exception e) {
-				e.printStackTrace();
-=======
-				throw new InternalServerException("Routing error for the user ");
-			} catch(NotFoundException e) {
-				proceedFurther = false;
 				throw new NotFoundException("Resource Not Found !!");
-			}catch (Exception e) {
-				//e.printStackTrace();
->>>>>>> 1988ffb30569a5c5f1d506d7a349c33bd5320bdd
+			} catch (Exception e) {
+				// e.printStackTrace();
 				proceedFurther = false;
 				throw new InternalServerException("Requested Resource is Temporary Unavailable");
 			}
@@ -186,13 +177,8 @@ public class DownloadServiceImpl implements DownloadService {
 	}
 
 	@Override
-<<<<<<< HEAD
-	public ResponseEntity<List<Object>> downloadPricingInList(String username) {
+	public ResponseEntity<List<Object>> downloadPricingInList(String username, String startDate, String endDate) {
 		List<Object> resultList = new ArrayList<>();
-=======
-	public ResponseEntity<List<Object>> downloadPricingInList(String username,String startDate,String endDate) {
-        List<Object> resultList = new ArrayList<>();
->>>>>>> 1988ffb30569a5c5f1d506d7a349c33bd5320bdd
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
@@ -214,10 +200,10 @@ public class DownloadServiceImpl implements DownloadService {
 
 		// proceedFurther = checkClientFlag(userid);
 
-<<<<<<< HEAD
 		if (proceedFurther) {
 			try {
-				Collection<RouteEntryExt> result = getCoverageReportInList(user.getSystemId(), user.getId(), false);
+				Collection<RouteEntryExt> result = getCoverageReportInList(user.getSystemId(), user.getId(), false,
+						startDate, endDate);
 
 				if (!result.isEmpty()) {
 					for (RouteEntryExt entry : result) {
@@ -237,14 +223,14 @@ public class DownloadServiceImpl implements DownloadService {
 					throw new InternalServerException("Routing Error For " + userid);
 				}
 			} catch (WriteException | IOException | DocumentException e) {
-				e.printStackTrace();
+				// e.printStackTrace();
 				proceedFurther = false;
 				throw new InternalServerException(e.getMessage());
 			} catch (NotFoundException e) {
 				proceedFurther = false;
 				throw new NotFoundException(e.getMessage());
 			} catch (Exception e) {
-				e.printStackTrace();
+				// e.printStackTrace();
 				proceedFurther = false;
 				throw new InternalServerException("Requested Resource is Temporary Unavailable");
 			}
@@ -258,52 +244,6 @@ public class DownloadServiceImpl implements DownloadService {
 	private boolean checkClientFlag(String userId) {
 		try {
 			String clientfileName = Constants.USER_FLAG_DIR + userId + ".txt";
-=======
-        if (proceedFurther) {
-            try {
-            	Collection<RouteEntryExt> result = getCoverageReportInList(user.getSystemId(), user.getId(), false,startDate,endDate);
-                
-                if (!result.isEmpty()) {
-                	for (RouteEntryExt entry : result) {
-                        Map<String, Object> entryMap = new HashMap<>();
-                        entryMap.put("username",entry.getSystemId());
-                        entryMap.put("country", entry.getCountry());
-                        entryMap.put("operator", entry.getOperator());
-                        entryMap.put("mcc", entry.getMcc());
-                        entryMap.put("mnc", entry.getMnc());
-                        entryMap.put("cost", entry.getBasic().getCost());
-                        entryMap.put("currency", entry.getCurrency());
-                        entryMap.put("remarks", entry.getRemarks());
-                        resultList.add(entryMap);
-                    }
-                } else {
-                    System.out.println("Routing Error For " + userid);
-                    throw new InternalServerException("Routing Error For " + userid);
-                }
-            } catch (WriteException | IOException | DocumentException e) {
-               // e.printStackTrace();
-                proceedFurther = false;
-                throw new InternalServerException(e.getMessage());
-            } catch (NotFoundException e) {
-                proceedFurther = false;
-                throw new NotFoundException(e.getMessage());
-            } catch (Exception e) {
-               // e.printStackTrace();
-                proceedFurther = false;
-                throw new InternalServerException("Requested Resource is Temporary Unavailable");
-            }
-
-        } else {
-            throw new InternalServerException("Unable to proceed the request!");
-        }
-        return ResponseEntity.ok(resultList);
-    }
-	
-	
-	private boolean checkClientFlag(String userId){
-	    try {
-	    	String clientfileName = Constants.USER_FLAG_DIR + userId + ".txt";
->>>>>>> 1988ffb30569a5c5f1d506d7a349c33bd5320bdd
 			BufferedReader in;
 			in = new BufferedReader(new FileReader(clientfileName));
 			String flageValue = in.readLine();
@@ -462,12 +402,9 @@ public class DownloadServiceImpl implements DownloadService {
 		}
 		return list;
 	}
-<<<<<<< HEAD
 
-=======
-	
-	
-	public Map<Integer, RouteEntryExt> listCoverageByDate(int userId, boolean display, boolean cached,String startDate,String endDate){
+	public Map<Integer, RouteEntryExt> listCoverageByDate(int userId, boolean display, boolean cached, String startDate,
+			String endDate) {
 		Map<Integer, RouteEntryExt> list = new LinkedHashMap<Integer, RouteEntryExt>();
 		Map<Integer, String> smsc_name_mapping = null;
 		Map<Integer, String> group_name_mapping = null;
@@ -475,7 +412,7 @@ public class DownloadServiceImpl implements DownloadService {
 			smsc_name_mapping = listNames();
 			group_name_mapping = listGroupNames();
 		}
-		
+
 		if (cached) {
 			Predicate<Integer, RouteEntry> p = new PredicateBuilderImpl().getEntryObject().get("userId").equal(userId);
 			for (RouteEntry basic : GlobalVars.BasicRouteEntries.values(p)) {
@@ -511,56 +448,56 @@ public class DownloadServiceImpl implements DownloadService {
 				}
 				list.put(entry.getBasic().getNetworkId(), entry);
 			}
-		}else {
-			//database operation
+		} else {
+			// database operation
 			logger.info("listing RouteEntries From Database: " + userId);
-			List<RouteEntry> db_list = this.routeRepo.findUserByAffectedDateBetween(userId,startDate,endDate);
+			List<RouteEntry> db_list = this.routeRepo.findUserByAffectedDateBetween(userId, startDate, endDate);
 			UserEntry user = null;
 			WebMasterEntry webMasterEntry = null;
 			NetworkEntry network = null;
-			
-			
+
 			for (RouteEntry basic : db_list) {
 				RouteEntryExt entry = new RouteEntryExt(basic);
 				if (display) {
-					
+
 					try {
 						Optional<UserEntry> userOptional = this.userRepository.findById(entry.getBasic().getUserId());
-						if(userOptional.isPresent()) {
+						if (userOptional.isPresent()) {
 							user = userOptional.get();
-						}else {
+						} else {
 							throw new NotFoundException("User not found!");
 						}
-					} catch(Exception e) {
+					} catch (Exception e) {
 						throw new NotFoundException(e.getMessage());
 					}
 					try {
 						webMasterEntry = this.webMasterRepo.findByUserId(entry.getBasic().getUserId());
-						if(webMasterEntry==null) {
+						if (webMasterEntry == null) {
 							throw new NotFoundException("Web master entry not found!");
 						}
-					}catch(Exception e) {
+					} catch (Exception e) {
 						throw new NotFoundException(e.getMessage());
 					}
 					try {
-						Optional<NetworkEntry> networkOptional = this.networkRepo.findById(entry.getBasic().getNetworkId());
-						if(networkOptional.isPresent()) {
+						Optional<NetworkEntry> networkOptional = this.networkRepo
+								.findById(entry.getBasic().getNetworkId());
+						if (networkOptional.isPresent()) {
 							network = networkOptional.get();
-						}else {
+						} else {
 							System.out.println("Network Entry Not Found!");
 						}
-					}catch(Exception e) {
+					} catch (Exception e) {
 						throw new NotFoundException(e.getMessage());
 					}
 					// ------ set user values -----------------
-					if (user!=null && webMasterEntry!=null) {
+					if (user != null && webMasterEntry != null) {
 						entry.setSystemId(user.getSystemId());
 						entry.setMasterId(user.getMasterId());
 						entry.setCurrency(user.getCurrency());
 						entry.setAccountType(webMasterEntry.getAccountType());
 					}
 					// ------ set network values -----------------
-					if (network!=null) {
+					if (network != null) {
 						entry.setCountry(network.getCountry());
 						entry.setOperator(network.getOperator());
 						entry.setMcc(network.getMcc());
@@ -583,15 +520,10 @@ public class DownloadServiceImpl implements DownloadService {
 		}
 		return list;
 	}
-	
-	
-	
-	
-	
->>>>>>> 1988ffb30569a5c5f1d506d7a349c33bd5320bdd
+
 	private String getCoverageReportXLS(String username, Collection<RouteEntryExt> coverageList)
 			throws WriteException, IOException {
-		String filename = IConstants.WEBSMPP_EXT_DIR + "report//" + username + "_coverage.xls";
+		String filename = IConstants.WEBAPP_DIR + "report//" + username + "_coverage.xls";
 		WritableFont courier = new WritableFont(WritableFont.createFont("Calibri"), 11, WritableFont.BOLD);
 		WritableFont times = new WritableFont(WritableFont.createFont("Calibri"), 11);
 		WritableCellFormat courierformat = new WritableCellFormat(courier);
@@ -639,7 +571,7 @@ public class DownloadServiceImpl implements DownloadService {
 
 	private String getCoverageReportPDF(String username, Collection<RouteEntryExt> coverageList)
 			throws DocumentException, FileNotFoundException, IOException {
-		String filename = IConstants.WEBSMPP_EXT_DIR + "report//" + username + "_coverage.pdf";
+		String filename = IConstants.WEBAPP_DIR + "report//" + username + "_coverage.pdf";
 		Document document = new Document(PageSize.A4, 5, 5, 35, 35);
 		PdfWriter.getInstance(document, new FileOutputStream(filename));
 		// ---Font Definitions------------------------
@@ -649,7 +581,7 @@ public class DownloadServiceImpl implements DownloadService {
 		Font font_ConHead = new Font(Font.COURIER, 11, 1, Color.red);
 		Font font_Content = new Font(Font.TIMES_ROMAN, 10, 1, Color.BLACK);
 		// ---Font Definitions------------------------
-		Image logo = Image.getInstance(IConstants.WEBSMPP_EXT_DIR + "//images//logo.jpg");
+		Image logo = Image.getInstance(IConstants.WEBAPP_DIR + "//images//logo.jpg");
 		logo.setAlignment(Image.MIDDLE);
 		logo.scaleToFit(30, 24);
 		String report_Heading = "Current Pricing List";
@@ -736,7 +668,7 @@ public class DownloadServiceImpl implements DownloadService {
 
 	private String getCoverageReportCSV(String username, Collection<RouteEntryExt> coverageList) throws IOException {
 		System.out.println("CoverageList Size: " + coverageList.size());
-		String filename = IConstants.WEBSMPP_EXT_DIR + "report//" + username + "_coverage.csv";
+		String filename = IConstants.WEBAPP_DIR + "report//" + username + "_coverage.csv";
 		try {
 			FileWriter writer = new FileWriter(filename);
 			StringBuffer strbuff = new StringBuffer();
@@ -802,17 +734,10 @@ public class DownloadServiceImpl implements DownloadService {
 		}
 		return filename;
 	}
-<<<<<<< HEAD
 
-	private Collection<RouteEntryExt> getCoverageReportInList(String username, int userid, boolean cached)
-			throws WriteException, IOException, DocumentException {
-		Collection<RouteEntryExt> list = listCoverage(userid, true, cached).values();
-=======
-	
-	
-	private Collection<RouteEntryExt>  getCoverageReportInList(String username, int userid, boolean cached ,String startDate,String endDate) throws WriteException, IOException, DocumentException {
-		Collection<RouteEntryExt> list = listCoverageByDate(userid, true, cached,startDate,endDate).values();
->>>>>>> 1988ffb30569a5c5f1d506d7a349c33bd5320bdd
+	private Collection<RouteEntryExt> getCoverageReportInList(String username, int userid, boolean cached,
+			String startDate, String endDate) throws WriteException, IOException, DocumentException {
+		Collection<RouteEntryExt> list = listCoverageByDate(userid, true, cached, startDate, endDate).values();
 		return list;
 	}
 
