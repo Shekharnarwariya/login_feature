@@ -15,21 +15,21 @@ import com.hti.smpp.common.service.DownloadService;
 @RestController
 @RequestMapping("/download")
 public class DownloadController {
-	
+
 	@Autowired
 	private DownloadService downloadService;
-	
 
-	
 	@GetMapping("/pricing")
-	public ResponseEntity<?> downloadPricingFormat(@RequestParam("format") String format, @RequestHeader("username") String username){
+	public ResponseEntity<?> downloadPricingFormat(@RequestParam("format") String format,
+			@RequestHeader("username") String username) {
 		return this.downloadService.downloadPricing(format, username);
 	}
 
 	@GetMapping("/pricing-list")
-	public ResponseEntity<List<Object>> downloadPricingInList(@RequestHeader("username") String username,@RequestParam("startDate") String startDate,
-			@RequestParam("endDate") String endDate){
-		return this.downloadService.downloadPricingInList(username,startDate,endDate);
+	public ResponseEntity<List<Object>> downloadPricingInList(@RequestHeader("username") String username,
+			@RequestParam(name = "startDate", required = false) String startDate,
+			@RequestParam(name = "endDate", required = false) String endDate) {
+		return this.downloadService.downloadPricingInList(username, startDate, endDate);
 	}
 
 }
