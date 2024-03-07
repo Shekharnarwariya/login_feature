@@ -3,6 +3,7 @@ package com.hti.smpp.common.service.impl;
 import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -22,6 +23,9 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -110,11 +114,64 @@ public class DownloadServiceImpl implements DownloadService {
 				throw new UnauthorizedException(messageResourceBundle
 						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
-					new Object[] { username }));
 		} else {
 			throw new NotFoundException(
 					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
+		}
+		boolean proceedFurther = false;
+		String filename = null;
+		String userid = user.getSystemId();
+		logger.info("Coverage Report Request " + user.getSystemId() + " Format: " + format);
+		// check flag
+		proceedFurther = checkClientFlag(userid);
+
+		if (proceedFurther) {
+			try {
+				if (format != null && (format.equalsIgnoreCase("xls") || format.equalsIgnoreCase("pdf")
+						|| format.equalsIgnoreCase("csv"))) {
+					filename = getCoverageReport(user.getSystemId(), user.getId(), format, false);
+				} else {
+					throw new NotFoundException("Format must be in xls, pdf or doc");
+				}
+				if (filename != null) {
+					System.out.println(filename);
+				} else {
+					System.out.println("Routing Error For " + userid);
+					throw new InternalServerException("Routing Error For " + userid);
+				}
+			} catch (WriteException | IOException | DocumentException e) {
+				e.printStackTrace();
+				proceedFurther = false;
+				throw new InternalServerException(e.getMessage());
+			} catch (NotFoundException e) {
+				proceedFurther = false;
+				throw new NotFoundException(e.getMessage());
+			} catch (Exception e) {
+				e.printStackTrace();
+				proceedFurther = false;
+				throw new InternalServerException("Requested Resource is Temporary Unavailable");
+			}
+
+		} else {
+			throw new InternalServerException("Unable to proceed the request!");
+		}
+
+		if (proceedFurther) {
+			// download
+			String newFilename = userid + "_coverage." + format;
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+			headers.setContentDispositionFormData("attachment", newFilename);
+			byte[] fileBytes;
+			try (FileInputStream fis = new FileInputStream(filename)) {
+				fileBytes = fis.readAllBytes();
+			} catch (IOException ex) {
+				logger.error(ex.toString());
+				throw new InternalServerException(ex.getLocalizedMessage());
+			}
+			return ResponseEntity.ok().headers(headers).body(fileBytes);
+		} else {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to download file!");
 		}
 
 	}
