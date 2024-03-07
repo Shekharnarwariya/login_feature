@@ -77,7 +77,8 @@ public class TwowayController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))), })
 	@GetMapping("/list-keyword")
 	public ResponseEntity<?> listKeyword(@RequestParam(name = "search", required = false) String search,
-			@RequestParam(name = "start", required = false) String start, @RequestParam(name = "end") String end,
+			@RequestParam(name = "start", required = false) String start,
+			@RequestParam(name = "end", required = false) String end,
 			@RequestParam(name = "type", required = false) String type,
 			@RequestParam(name = "page", defaultValue = "0") int page,
 			@RequestParam(name = "size", defaultValue = "10") int size,
