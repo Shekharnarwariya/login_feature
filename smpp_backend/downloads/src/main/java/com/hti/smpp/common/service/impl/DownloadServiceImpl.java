@@ -138,14 +138,14 @@ public class DownloadServiceImpl implements DownloadService{
 					throw new InternalServerException("Routing Error For " + userid);
 				}
 			} catch (WriteException | IOException | DocumentException e) {
-				e.printStackTrace();
+				//e.printStackTrace();
 				proceedFurther = false;
-				throw new InternalServerException(e.getMessage());
+				throw new InternalServerException("Routing error for the user ");
 			} catch(NotFoundException e) {
 				proceedFurther = false;
-				throw new NotFoundException(e.getMessage());
+				throw new NotFoundException("Resource Not Found !!");
 			}catch (Exception e) {
-				e.printStackTrace();
+				//e.printStackTrace();
 				proceedFurther = false;
 				throw new InternalServerException("Requested Resource is Temporary Unavailable");
 			}
@@ -174,7 +174,7 @@ public class DownloadServiceImpl implements DownloadService{
 
 	}
 	@Override
-	public ResponseEntity<List<Object>> downloadPricingInList(String username) {
+	public ResponseEntity<List<Object>> downloadPricingInList(String username,String startDate,String endDate) {
         List<Object> resultList = new ArrayList<>();
 
         Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
@@ -197,7 +197,7 @@ public class DownloadServiceImpl implements DownloadService{
 
         if (proceedFurther) {
             try {
-            	Collection<RouteEntryExt> result = getCoverageReportInList(user.getSystemId(), user.getId(), false);
+            	Collection<RouteEntryExt> result = getCoverageReportInList(user.getSystemId(), user.getId(), false,startDate,endDate);
                 
                 if (!result.isEmpty()) {
                 	for (RouteEntryExt entry : result) {
@@ -217,14 +217,14 @@ public class DownloadServiceImpl implements DownloadService{
                     throw new InternalServerException("Routing Error For " + userid);
                 }
             } catch (WriteException | IOException | DocumentException e) {
-                e.printStackTrace();
+               // e.printStackTrace();
                 proceedFurther = false;
                 throw new InternalServerException(e.getMessage());
             } catch (NotFoundException e) {
                 proceedFurther = false;
                 throw new NotFoundException(e.getMessage());
             } catch (Exception e) {
-                e.printStackTrace();
+               // e.printStackTrace();
                 proceedFurther = false;
                 throw new InternalServerException("Requested Resource is Temporary Unavailable");
             }
@@ -234,8 +234,6 @@ public class DownloadServiceImpl implements DownloadService{
         }
         return ResponseEntity.ok(resultList);
     }
-	
-	
 	
 	
 	private boolean checkClientFlag(String userId){
@@ -399,6 +397,128 @@ public class DownloadServiceImpl implements DownloadService{
 		}
 		return list;
 	}
+	
+	
+	public Map<Integer, RouteEntryExt> listCoverageByDate(int userId, boolean display, boolean cached,String startDate,String endDate){
+		Map<Integer, RouteEntryExt> list = new LinkedHashMap<Integer, RouteEntryExt>();
+		Map<Integer, String> smsc_name_mapping = null;
+		Map<Integer, String> group_name_mapping = null;
+		if (display) {
+			smsc_name_mapping = listNames();
+			group_name_mapping = listGroupNames();
+		}
+		
+		if (cached) {
+			Predicate<Integer, RouteEntry> p = new PredicateBuilderImpl().getEntryObject().get("userId").equal(userId);
+			for (RouteEntry basic : GlobalVars.BasicRouteEntries.values(p)) {
+				RouteEntryExt entry = new RouteEntryExt(basic);
+				if (display) {
+					// ------ set user values -----------------
+					if (GlobalVars.UserEntries.containsKey(basic.getUserId())) {
+						entry.setSystemId(GlobalVars.UserEntries.get(basic.getUserId()).getSystemId());
+						entry.setMasterId(GlobalVars.UserEntries.get(basic.getUserId()).getMasterId());
+						entry.setCurrency(GlobalVars.UserEntries.get(basic.getUserId()).getCurrency());
+						entry.setAccountType(GlobalVars.WebmasterEntries.get(basic.getUserId()).getAccountType());
+					}
+					// ------ set network values -----------------
+					// NetworkEntry network = CacheService.getNetworkEntry(entry.getNetworkId());
+					if (GlobalVars.NetworkEntries.containsKey(entry.getBasic().getNetworkId())) {
+						NetworkEntry network = GlobalVars.NetworkEntries.get(entry.getBasic().getNetworkId());
+						entry.setCountry(network.getCountry());
+						entry.setOperator(network.getOperator());
+						entry.setMcc(network.getMcc());
+						entry.setMnc(network.getMnc());
+					}
+					// ------ set Smsc values -----------------
+					if (entry.getBasic().getSmscId() == 0) {
+						entry.setSmsc("Down");
+					} else {
+						if (smsc_name_mapping.containsKey(entry.getBasic().getSmscId())) {
+							entry.setSmsc(smsc_name_mapping.get(entry.getBasic().getSmscId()));
+						}
+					}
+					if (group_name_mapping.containsKey(entry.getBasic().getGroupId())) {
+						entry.setGroup(group_name_mapping.get(entry.getBasic().getGroupId()));
+					}
+				}
+				list.put(entry.getBasic().getNetworkId(), entry);
+			}
+		}else {
+			//database operation
+			logger.info("listing RouteEntries From Database: " + userId);
+			List<RouteEntry> db_list = this.routeRepo.findUserByAffectedDateBetween(userId,startDate,endDate);
+			UserEntry user = null;
+			WebMasterEntry webMasterEntry = null;
+			NetworkEntry network = null;
+			
+			
+			for (RouteEntry basic : db_list) {
+				RouteEntryExt entry = new RouteEntryExt(basic);
+				if (display) {
+					
+					try {
+						Optional<UserEntry> userOptional = this.userRepository.findById(entry.getBasic().getUserId());
+						if(userOptional.isPresent()) {
+							user = userOptional.get();
+						}else {
+							throw new NotFoundException("User not found!");
+						}
+					} catch(Exception e) {
+						throw new NotFoundException(e.getMessage());
+					}
+					try {
+						webMasterEntry = this.webMasterRepo.findByUserId(entry.getBasic().getUserId());
+						if(webMasterEntry==null) {
+							throw new NotFoundException("Web master entry not found!");
+						}
+					}catch(Exception e) {
+						throw new NotFoundException(e.getMessage());
+					}
+					try {
+						Optional<NetworkEntry> networkOptional = this.networkRepo.findById(entry.getBasic().getNetworkId());
+						if(networkOptional.isPresent()) {
+							network = networkOptional.get();
+						}else {
+							System.out.println("Network Entry Not Found!");
+						}
+					}catch(Exception e) {
+						throw new NotFoundException(e.getMessage());
+					}
+					// ------ set user values -----------------
+					if (user!=null && webMasterEntry!=null) {
+						entry.setSystemId(user.getSystemId());
+						entry.setMasterId(user.getMasterId());
+						entry.setCurrency(user.getCurrency());
+						entry.setAccountType(webMasterEntry.getAccountType());
+					}
+					// ------ set network values -----------------
+					if (network!=null) {
+						entry.setCountry(network.getCountry());
+						entry.setOperator(network.getOperator());
+						entry.setMcc(network.getMcc());
+						entry.setMnc(network.getMnc());
+					}
+					// ------ set Smsc values -----------------
+					if (entry.getBasic().getSmscId() == 0) {
+						entry.setSmsc("Down");
+					} else {
+						if (smsc_name_mapping.containsKey(entry.getBasic().getSmscId())) {
+							entry.setSmsc(smsc_name_mapping.get(entry.getBasic().getSmscId()));
+						}
+					}
+					if (group_name_mapping.containsKey(entry.getBasic().getGroupId())) {
+						entry.setGroup(group_name_mapping.get(entry.getBasic().getGroupId()));
+					}
+				}
+				list.put(entry.getBasic().getNetworkId(), entry);
+			}
+		}
+		return list;
+	}
+	
+	
+	
+	
 	
 	private String getCoverageReportXLS(String username, Collection<RouteEntryExt> coverageList)
 			throws WriteException, IOException {
@@ -612,8 +732,8 @@ public class DownloadServiceImpl implements DownloadService{
 	}
 	
 	
-	private Collection<RouteEntryExt>  getCoverageReportInList(String username, int userid, boolean cached) throws WriteException, IOException, DocumentException {
-		Collection<RouteEntryExt> list = listCoverage(userid, true, cached).values();
+	private Collection<RouteEntryExt>  getCoverageReportInList(String username, int userid, boolean cached ,String startDate,String endDate) throws WriteException, IOException, DocumentException {
+		Collection<RouteEntryExt> list = listCoverageByDate(userid, true, cached,startDate,endDate).values();
 		return list;
 	}
 	

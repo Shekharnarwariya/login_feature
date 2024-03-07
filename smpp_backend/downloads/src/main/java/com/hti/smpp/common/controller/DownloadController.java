@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.hti.smpp.common.service.DownloadService;
 
-import jakarta.servlet.http.HttpServletResponse;
-
 @RestController
 @RequestMapping("/download")
 public class DownloadController {
@@ -26,7 +24,8 @@ public class DownloadController {
 		return this.downloadService.downloadPricing(format, username);
 	}
 	@GetMapping("/pricing-list")
-	public ResponseEntity<List<Object>> downloadPricingInList(@RequestHeader("username") String username){
-		return this.downloadService.downloadPricingInList(username);
+	public ResponseEntity<List<Object>> downloadPricingInList(@RequestHeader("username") String username,@RequestParam("startDate") String startDate,
+			@RequestParam("endDate") String endDate){
+		return this.downloadService.downloadPricingInList(username,startDate,endDate);
 	}
 }
