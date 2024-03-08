@@ -279,10 +279,13 @@ public class DataBase {
 				if (summary) {
 					query = "select count(msg_id) as count,SUM(cost) as cost_sum from mis_" + report_user;
 				} else {
-					query = "select count(msg_id) as count,DATE(submitted_time) as time,oprcountry,SUM(cost) as cost_sum from mis_"
+//					query ="SELECT COUNT(msg_id) AS count, submitted_time AS time, oprcountry, SUM(cost) AS cost_sum FROM mis_testUser1 WHERE msg_id NOT IN (SELECT msg_id FROM smsc_in) AND msg_id NOT IN (SELECT msg_id FROM unprocessed) AND msg_id BETWEEN 2001060000000000000 AND 2402080000000000000 GROUP BY time, oprcountry;\r\n"
+//							+ report_user;
+					query = "select count(msg_id) as count,TIME(submitted_time) AS time,DATE(submitted_time) AS date,oprcountry,SUM(cost) as cost_sum from mis_"
 							+ report_user;
+
+					query += " where msg_id not in(select msg_id from smsc_in) and msg_id not in(select msg_id from unprocessed) and ";
 				}
-				query += " where msg_id not in(select msg_id from smsc_in) and msg_id not in(select msg_id from unprocessed) and ";
 				if (to_gmt != null) {
 					SimpleDateFormat client_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 					client_formatter.setTimeZone(TimeZone.getTimeZone(webMasterEntry.getGmt()));
@@ -305,6 +308,10 @@ public class DataBase {
 					} catch (Exception e) {
 						query += "submitted_time between CONVERT_TZ('" + startDate + "','" + to_gmt + "','" + from_gmt
 								+ "') and CONVERT_TZ('" + endDate + "','" + to_gmt + "','" + from_gmt + "')";
+
+						// query += "time between CONVERT_TZ('" + startDate + "','" + to_gmt + "','" +
+						// from_gmt + "') and CONVERT_TZ('" + endDate + "','" + to_gmt + "','" +
+						// from_gmt + "')";
 					}
 				} else {
 					if (startDate.equalsIgnoreCase(endDate)) {
@@ -360,7 +367,7 @@ public class DataBase {
 					list = getConsumptionSummaryReport(query, report_user);
 					System.out.println("343");
 				} else {
-					query += " group by time,oprcountry";
+					query += " group by time,date,oprcountry";
 					logger.info(user.getSystemId() + " ReportSQL:" + query);
 					list = getConsumptionReport(query, report_user);
 				}
@@ -462,7 +469,7 @@ public class DataBase {
 				first = getConsumptionReport(unproc_query.replaceFirst("table_name", "smsc_in"));
 				second = getConsumptionReport(unproc_query.replaceFirst("table_name", "unprocessed"));
 			}
-			
+
 			///////////////////
 //			int limit = pageable.getPageSize();
 //			int offset = pageable.getPageNumber() * pageable.getPageSize();
@@ -563,6 +570,7 @@ public class DataBase {
 				entry.setSubmitted(rs.getInt("count"));
 				entry.setCost(rs.getDouble("cost_sum"));
 				entry.setTime(rs.getString("time"));
+				entry.setDate(rs.getString("date"));
 
 				String oprCountry = rs.getString("oprCountry");
 				int network_id = 0;
@@ -592,29 +600,28 @@ public class DataBase {
 	}
 
 	public Map<String, List<DeliveryDTO>> getConsumptionSummaryReport(String query) {
-	    Map<String, List<DeliveryDTO>> map = new HashMap<>();
-	    try (Connection con = getConnection();
-	         PreparedStatement pStmt = con.prepareStatement(query);
-	         ResultSet rs = pStmt.executeQuery()) {
+		Map<String, List<DeliveryDTO>> map = new HashMap<>();
+		try (Connection con = getConnection();
+				PreparedStatement pStmt = con.prepareStatement(query);
+				ResultSet rs = pStmt.executeQuery()) {
 
-	        while (rs.next()) {
-	            DeliveryDTO entry = new DeliveryDTO();
-	            String username = rs.getString("username");
-	            List<DeliveryDTO> list = map.computeIfAbsent(username, k -> new ArrayList<>());
+			while (rs.next()) {
+				DeliveryDTO entry = new DeliveryDTO();
+				String username = rs.getString("username");
+				List<DeliveryDTO> list = map.computeIfAbsent(username, k -> new ArrayList<>());
 
-	            entry.setSubmitted(rs.getInt("count"));
-	            entry.setUsername(username);
-	            entry.setCost(rs.getDouble("cost_sum"));
+				entry.setSubmitted(rs.getInt("count"));
+				entry.setUsername(username);
+				entry.setCost(rs.getDouble("cost_sum"));
 
-	            list.add(entry);
-	        }
-	    } catch (SQLException sqle) {
-	        logger.error("", sqle);
-	    }
-	    // No need for a finally block to close resources when using try-with-resources
-	    return map;
+				list.add(entry);
+			}
+		} catch (SQLException sqle) {
+			logger.error("", sqle);
+		}
+		// No need for a finally block to close resources when using try-with-resources
+		return map;
 	}
-
 
 	public Map<String, List<DeliveryDTO>> getConsumptionReport(String query) {
 		Map<String, List<DeliveryDTO>> map = new HashMap<>();
@@ -1015,8 +1022,6 @@ public class DataBase {
 		return sortedlist;
 	}
 
-	
-
 	public String hexCodePointsToCharMsg(String msg) {
 		// logger.info("got request ");
 		// this mthd made decreasing codes, only.
@@ -1060,7 +1065,6 @@ public class DataBase {
 		return msg;
 	}
 
-	
 	private <K, V extends Comparable<? super V>> Map<K, V> sortMapByDscValue(Map<K, V> map, int limit) {
 		Map<K, V> result = new LinkedHashMap<>();
 		Stream<Map.Entry<K, V>> st = map.entrySet().stream();
@@ -1674,7 +1678,8 @@ public class DataBase {
 		return workbook;
 	}
 
-	public List<DeliveryDTO> getCustomizedReportList(CustomizedReportRequest customReportForm, String username) throws Exception {
+	public List<DeliveryDTO> getCustomizedReportList(CustomizedReportRequest customReportForm, String username)
+			throws Exception {
 		String target = IConstants.FAILURE_KEY;
 		String groupby = "country";
 		String reportUser = null;
@@ -2390,7 +2395,7 @@ public class DataBase {
 				}
 			}
 			if (con != null) {
-			con.close();
+				con.close();
 			}
 		}
 		return userSet;
@@ -2634,7 +2639,7 @@ public class DataBase {
 					rs.close();
 				}
 				if (con != null) {
-				con.close();
+					con.close();
 				}
 			} catch (SQLException sqle) {
 			}
@@ -2721,7 +2726,7 @@ public class DataBase {
 					rs.close();
 				}
 				if (con != null) {
-				con.close();
+					con.close();
 				}
 			} catch (SQLException sqle) {
 			}
@@ -2788,7 +2793,7 @@ public class DataBase {
 					rs.close();
 				}
 				if (con != null) {
-		con.close();
+					con.close();
 				}
 			} catch (SQLException sqle) {
 			}
@@ -2937,7 +2942,7 @@ public class DataBase {
 					rs.close();
 				}
 				if (con != null) {
-				con.close();
+					con.close();
 				}
 			} catch (SQLException sqle) {
 			}
@@ -2945,14 +2950,13 @@ public class DataBase {
 		return report;
 	}
 
-	public JasperPrint getSummaryJasperPrint(List reportList, boolean paging, String username)
-			throws JRException {
+	public JasperPrint getSummaryJasperPrint(List reportList, boolean paging, String username) throws JRException {
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
 		UserEntry user = userOptional
 				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
-	
+
 		JasperPrint print = null;
 		JasperReport report = null;
 		JasperDesign design = null;
@@ -3130,7 +3134,8 @@ public class DataBase {
 		return sortedlist;
 	}
 
-	public JasperPrint getCustomizedJasperPrint(List<DeliveryDTO> reportList, boolean paging, String username) throws Exception {
+	public JasperPrint getCustomizedJasperPrint(List<DeliveryDTO> reportList, boolean paging, String username)
+			throws Exception {
 		final String template_file = IConstants.FORMAT_DIR + "report//dlrReport.jrxml";
 		String template_sender_file = IConstants.FORMAT_DIR + "report//dlrReportSender.jrxml";
 		String template_content_file = IConstants.FORMAT_DIR + "report//dlrContentReport.jrxml";
@@ -3601,7 +3606,7 @@ public class DataBase {
 					rs.close();
 				}
 				if (con != null) {
-				con.close();
+					con.close();
 				}
 			} catch (SQLException sqle) {
 			}
