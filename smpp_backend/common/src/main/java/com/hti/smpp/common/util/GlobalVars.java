@@ -12,6 +12,7 @@ import com.hazelcast.map.IMap;
 import com.hazelcast.multimap.MultiMap;
 import com.hti.smpp.common.contacts.dto.GroupEntry;
 import com.hti.smpp.common.contacts.dto.GroupMemberEntry;
+import com.hti.smpp.common.flag.FlagDTO;
 import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.route.dto.HlrRouteEntry;
 import com.hti.smpp.common.route.dto.OptionalRouteEntry;
@@ -34,13 +35,14 @@ public class GlobalVars {
 	public static HazelcastInstance hazelInstance;
 
 	// HazelcastInstance representing the distributed Hazelcast cluster.
-
+	public static IMap<Integer, FlagDTO> flag_write_Cache;
 	public static boolean MASTER_CLIENT = true;
 	public static boolean DB_CLUSTER = false;
 	public static IMap<Integer, BatchObject> BatchQueue;
 	public static IMap<Integer, BatchObject> HlrBatchQueue;
 	public static IMap<Integer, GroupEntry> SmscGroupEntries;
 	public static IMap<String, String> HttpDlrParam;
+	public static IMap<String, String> user_flag_status;
 //	public static Map<String, Set<Integer>> ScheduledBatches = new ConcurrentHashMap<String, Set<Integer>>();
 //	public static Set<Integer> RepeatedSchedules = Collections.synchronizedSet(new HashSet<Integer>());
 	public static Map<String, String> ActiveUsers = Collections.synchronizedMap(new HashMap<String, String>());

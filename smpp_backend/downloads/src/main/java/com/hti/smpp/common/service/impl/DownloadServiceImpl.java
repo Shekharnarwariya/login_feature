@@ -1,12 +1,10 @@
 package com.hti.smpp.common.service.impl;
 
 import java.awt.Color;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,12 +21,14 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.hazelcast.map.IMap;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.impl.PredicateBuilderImpl;
 import com.hti.smpp.common.contacts.dto.GroupEntry;
@@ -50,7 +50,6 @@ import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.user.repository.WebMasterEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.ConstantMessages;
-import com.hti.smpp.common.util.Constants;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MessageResourceBundle;
@@ -140,7 +139,7 @@ public class DownloadServiceImpl implements DownloadService {
 					throw new InternalServerException("Routing Error For " + userid);
 				}
 			} catch (WriteException | IOException | DocumentException e) {
-				 e.printStackTrace();
+				e.printStackTrace();
 				proceedFurther = false;
 				throw new InternalServerException("Routing error for the user ");
 			} catch (NotFoundException e) {
@@ -242,19 +241,12 @@ public class DownloadServiceImpl implements DownloadService {
 	}
 
 	private boolean checkClientFlag(String userId) {
-		try {
-			String clientfileName = Constants.USER_FLAG_DIR + userId + ".txt";
-			BufferedReader in;
-			in = new BufferedReader(new FileReader(clientfileName));
-			String flageValue = in.readLine();
-			in.close();
-			if (flageValue.indexOf("404") > -1) {
-				return false;
-			}
-		} catch (IOException e) {
-			throw new InternalServerException(e.getMessage());
+		IMap<String, String> user_flag_status = GlobalVars.user_flag_status;
+		String flagValue = user_flag_status.get(userId);
+		if (flagValue != null && flagValue.contains("404")) {
+			return false;
 		}
-
+		logger.info("user flag this:{} ", flagValue);
 		return true;
 	}
 
@@ -546,7 +538,10 @@ public class DownloadServiceImpl implements DownloadService {
 		Font font_ConHead = new Font(Font.COURIER, 11, 1, Color.red);
 		Font font_Content = new Font(Font.TIMES_ROMAN, 10, 1, Color.BLACK);
 		// ---Font Definitions------------------------
-		Image logo = Image.getInstance(IConstants.WEBSMPP_EXT_DIR + "//images//logo.jpg");
+		String imagePath = "/logo.jpg";
+		ClassPathResource imgFile = new ClassPathResource(imagePath);
+		Image logo = Image.getInstance(imgFile.getURL());// Image.getInstance(IConstants.WEBSMPP_EXT_DIR +
+															// "//images//logo.jpg");
 		logo.setAlignment(Image.MIDDLE);
 		logo.scaleToFit(30, 24);
 		String report_Heading = "Current Pricing List";
