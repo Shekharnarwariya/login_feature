@@ -520,6 +520,7 @@ public class LoginServiceImpl implements LoginService {
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
+			e.printStackTrace();
 			// Handle exceptions, log or return appropriate error response
 			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 		}
@@ -1541,8 +1542,6 @@ public class LoginServiceImpl implements LoginService {
 //
 //	}
 
-	
-	
 	@Override
 	public ResponseEntity<?> validateUserIpAccess(LoginRequest loginRequest, String language) {
 
@@ -2005,7 +2004,7 @@ public class LoginServiceImpl implements LoginService {
 											// TODO ask Vinod Sir about this line
 //											request.getSession().setAttribute("loginEntry", loginDTO);
 										}
-
+												
 									}
 									if (otplogin) {
 
@@ -2096,10 +2095,6 @@ public class LoginServiceImpl implements LoginService {
 
 														otp = new Random().nextInt(999999 - 100000) + 100000;
 														Calendar calendar = Calendar.getInstance();
-//														int duration = 5;
-//														if (IConstants.LOGIN_OTP_VALIDITY > 0) {
-//															duration = IConstants.LOGIN_OTP_VALIDITY;
-//														}
 
 														int duration = (IConstants.LOGIN_OTP_VALIDITY > 0)
 																? IConstants.LOGIN_OTP_VALIDITY
@@ -2165,38 +2160,26 @@ public class LoginServiceImpl implements LoginService {
 																	.convertToEntityAttribute(driverInfo.getDriver()));
 															smsDTO.setMessage(content);
 															smsDTO.setDestinationList(list);
-
-//															System.out.println(webEntry.getOtpSender() + "******1305");
-//															System.out.println("new content" +content );
-//															System.out.println(webEntry);
-
 															if (webEntry.getOtpSender() != null
 																	&& webEntry.getOtpSender().length() > 1) {
 																smsDTO.setSenderId(webEntry.getOtpSender());
 															} else {
 																smsDTO.setSenderId(IConstants.OTP_SENDER_ID);
 															}
-
 															ResponseEntity<?> response;
 															try {
 																System.out.println(
 																		"working fine till line *************1319");
-
-																final String url = "https://122.168.122.77:8083/sms/send/alert";
-																System.out.println("1");
+																final String url = "http://127.0.0.1:8083//sms/send/alert";
 																HttpHeaders headers = new HttpHeaders();
-																System.out.println("2");
+																;
 																headers.set("username", userEntry.getSystemId());
-																System.out.println("3");
 																HttpEntity<BulkSmsDTO> requestEntity = new HttpEntity<>(
 																		smsDTO, headers);
-																System.out.println("4");
-																
 																response = restTemplate.postForEntity(url,
 																		requestEntity, String.class);
 																System.out.println(response + "------------1326");
 															} catch (RestClientException e) {
-																// TODO Auto-generated catch block
 																e.printStackTrace();
 															}
 //															logger.info("<OTP SMS: " + response.getBody().toString()
@@ -2298,9 +2281,9 @@ public class LoginServiceImpl implements LoginService {
 									return ResponseEntity.ok(loginResponse);
 
 								} else if (webEntry.isEmailOnLogin()) {
-
+										
 									System.out.println(webEntry.isEmailOnLogin());
-
+													
 									// if not otp login send email to user of login alert
 									// send email for login
 									String to = IConstants.TO_EMAIl;

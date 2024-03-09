@@ -274,7 +274,7 @@ public class ReportController {
 	}
 
 	@Operation(summary = " Download User Delivery Report View")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Successfully downloaded DOC file"),
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Successfully downloaded report file"),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
 	@PostMapping("/userDelivery-report-view")
 	public ResponseEntity<?> userDeliveryReportView(@Valid @RequestHeader String username,
