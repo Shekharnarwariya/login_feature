@@ -219,7 +219,7 @@ public class DownloadServiceImpl implements DownloadService {
 					}
 				} else {
 					System.out.println("Routing Error For " + userid);
-					throw new InternalServerException("Routing Error For " + userid);
+					throw new NotFoundException("Routing not found For " + userid);
 				}
 			} catch (WriteException | IOException | DocumentException e) {
 				// e.printStackTrace();
