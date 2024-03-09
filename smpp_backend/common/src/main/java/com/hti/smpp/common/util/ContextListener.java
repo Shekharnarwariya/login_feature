@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.cluster.Member;
-
 /**
  * Application context listener responsible for initializing properties and
  * connecting to Hazelcast Cluster.
@@ -66,11 +65,12 @@ public class ContextListener {
 			GlobalVars.SmscGroupEntries = GlobalVars.hazelInstance.getMap("smsc_group");
 			GlobalVars.HttpDlrParam = GlobalVars.hazelInstance.getMap("http_dlr_param");
 			GlobalVars.NetworkEntries = GlobalVars.hazelInstance.getMap("network_entries");
+			GlobalVars.flag_write_Cache = GlobalVars.hazelInstance.getMap("flag_write_cache");
+			GlobalVars.user_flag_status = GlobalVars.hazelInstance.getMap("user_flag_status");
 
-			GlobalVars.SmscEntries =  GlobalVars.hazelInstance.getMap("smsc_entries");
+			GlobalVars.SmscEntries = GlobalVars.hazelInstance.getMap("smsc_entries");
 
 			logClusterMembers();
-
 
 		} catch (Exception e) {
 			logger.error("Error connecting to Hazelcast Cluster", e);

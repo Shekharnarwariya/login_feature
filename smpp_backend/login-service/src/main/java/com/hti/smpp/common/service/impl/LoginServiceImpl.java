@@ -38,6 +38,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.hazelcast.map.IMap;
 import com.hti.smpp.common.email.EmailSender;
 import com.hti.smpp.common.exception.AuthenticationExceptionFailed;
 import com.hti.smpp.common.exception.InternalServerException;
@@ -653,6 +654,7 @@ public class LoginServiceImpl implements LoginService {
 		return proEntry;
 	}
 
+<<<<<<< HEAD
 //	@Override
 //	public ResponseEntity<?> validateUserIpAccess(LoginRequest loginRequest, String language) {
 //
@@ -1542,6 +1544,8 @@ public class LoginServiceImpl implements LoginService {
 //
 //	}
 
+=======
+>>>>>>> c358654fe20522bec3e8ae5751efb6af387a58b5
 	@Override
 	public ResponseEntity<?> validateUserIpAccess(LoginRequest loginRequest, String language) {
 
@@ -1601,8 +1605,8 @@ public class LoginServiceImpl implements LoginService {
 						throw new InternalServerException(messageResourceBundle.getExMessage(
 								ConstantMessages.PASSWORD_EXPIRED, new Object[] { userEntry.getSystemId() }));
 					} else {
-						String fileName = Constants.USER_FLAG_DIR + userEntry.getSystemId() + ".txt";
-						String flagValue = MultiUtility.readFlag(fileName);
+						IMap<String, String> user_flag_status = GlobalVars.user_flag_status;
+						String flagValue = user_flag_status.get(userEntry.getSystemId());
 						if (flagValue != null) {
 							if (flagValue.contains("404")) {
 								webAccess = false;
@@ -1675,14 +1679,12 @@ public class LoginServiceImpl implements LoginService {
 											IPs = IConstants.GLOBAl_ACCESS_IP.split(",");
 											for (String allowedip : IPs) {
 												if (allowedip.indexOf("/") > 0 && isInRange(allowedip, ipaddress)) {
-//													if (isInRange(allowedip, ipaddress)) {
 													logger.info(
 															messageResourceBundle
 																	.getLogMessage("user.range.matched.info"),
 															userEntry.getSystemId(), allowedip, ipaddress);
 													matched = true;
 													break;
-//													}
 												} else {
 													if (ipaddress.equalsIgnoreCase(allowedip)) {
 														logger.info(
@@ -2176,6 +2178,11 @@ public class LoginServiceImpl implements LoginService {
 																headers.set("username", userEntry.getSystemId());
 																HttpEntity<BulkSmsDTO> requestEntity = new HttpEntity<>(
 																		smsDTO, headers);
+<<<<<<< HEAD
+=======
+																System.out.println("4");
+
+>>>>>>> c358654fe20522bec3e8ae5751efb6af387a58b5
 																response = restTemplate.postForEntity(url,
 																		requestEntity, String.class);
 																System.out.println(response + "------------1326");
