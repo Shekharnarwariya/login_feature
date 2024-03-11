@@ -265,7 +265,8 @@ public class SmsServiceImpl implements SmsService {
 		BulkListInfo listInfo = new BulkListInfo();
 
 		if (bulkSmsDTO.isSchedule()) {
-			logger.info(messageResourceBundle.getLogMessage("single.schedule.request"), bulkSmsDTO.getDestinationNumber());
+			logger.info(messageResourceBundle.getLogMessage("single.schedule.request"),
+					bulkSmsDTO.getDestinationNumber());
 		} else {
 			logger.info(messageResourceBundle.getLogMessage("single.sms.request"), bulkSmsDTO.getDestinationNumber());
 		}
@@ -303,7 +304,8 @@ public class SmsServiceImpl implements SmsService {
 			}
 			String client_time = null;
 			String server_date = null;
-			logger.info(messageResourceBundle.getLogMessage("bulk.sms.message.info"), bulkSmsDTO.getMessageType(), no_of_msg);
+			logger.info(messageResourceBundle.getLogMessage("bulk.sms.message.info"), bulkSmsDTO.getMessageType(),
+					no_of_msg);
 			if (bulkSmsDTO.isSchedule()) {
 				boolean valid_sch_time = false;
 				client_time = bulkSmsDTO.getTime();
@@ -332,10 +334,12 @@ public class SmsServiceImpl implements SmsService {
 					System.out.println("this is server time " + bulkSmsDTO.getTime());
 
 				} catch (ScheduledTimeException e) {
-					logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId, e.getMessage());
+					logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId,
+							e.getMessage());
 					throw new ScheduledTimeException(e.getMessage());
 				} catch (Exception e) {
-					logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"), bulkSessionId, e);
+					logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"),
+							bulkSessionId, e);
 					throw new InternalServerException(e.getMessage());
 				}
 			}
@@ -379,7 +383,8 @@ public class SmsServiceImpl implements SmsService {
 							destinationList.add(numToken);
 						}
 					} catch (Exception ex) {
-						logger.error(messageResourceBundle.getLogMessage("error.invalid.destination"), bulkSessionId, numToken);
+						logger.error(messageResourceBundle.getLogMessage("error.invalid.destination"), bulkSessionId,
+								numToken);
 						throw new InternalServerException(
 								bulkSessionId + " Invalid Destination Found => " + numToken + ex.getMessage());
 					}
@@ -412,13 +417,15 @@ public class SmsServiceImpl implements SmsService {
 								amount = true;
 
 							} else {
-								logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"), bulkSessionId);
+								logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"),
+										bulkSessionId);
 								throw new InsufficientBalanceException(messageResourceBundle
 										.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION) + bulkSessionId);
 							}
 						} else {
 							// Insufficient Admin balance
-							logger.error(messageResourceBundle.getLogMessage("error.insufficient.admin.balance"), userEntry.getMasterId(), bulkSessionId);
+							logger.error(messageResourceBundle.getLogMessage("error.insufficient.admin.balance"),
+									userEntry.getMasterId(), bulkSessionId);
 
 							throw new InsufficientBalanceException(messageResourceBundle
 									.getExMessage(ConstantMessages.INSUFFICIENT_ADMIN_BALANCE_EXCEPTION) + bulkSessionId
@@ -430,7 +437,8 @@ public class SmsServiceImpl implements SmsService {
 							amount = true;
 						} else {
 							// Insufficient balance
-							logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"), bulkSessionId);
+							logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"),
+									bulkSessionId);
 							throw new InsufficientBalanceException(
 									messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION)
 											+ bulkSessionId);
@@ -519,7 +527,8 @@ public class SmsServiceImpl implements SmsService {
 							smsResponse.setBulkListInfo(listInfo);
 							smsResponse.setCredits(new DecimalFormat("0.00000").format(wallet));
 							smsResponse.setDeductcredits(new DecimalFormat("0.00000").format(totalcost));
-							logger.info(messageResourceBundle.getLogMessage("sms.processed"), bulkSessionId, wallet, totalcost);
+							logger.info(messageResourceBundle.getLogMessage("sms.processed"), bulkSessionId, wallet,
+									totalcost);
 						} else {
 							logger.info(messageResourceBundle.getLogMessage("process.failed"), bulkSessionId);
 						}
@@ -556,7 +565,8 @@ public class SmsServiceImpl implements SmsService {
 										.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION) + bulkSessionId);
 							}
 						} else {
-							logger.error(messageResourceBundle.getLogMessage("error.insufficientAdminCredits"), userEntry.getMasterId());
+							logger.error(messageResourceBundle.getLogMessage("error.insufficientAdminCredits"),
+									userEntry.getMasterId());
 
 							throw new InsufficientBalanceException(messageResourceBundle
 									.getExMessage(ConstantMessages.INSUFFICIENT_ADMIN_CREDITS_EXCEPTION) + bulkSessionId
@@ -654,7 +664,8 @@ public class SmsServiceImpl implements SmsService {
 							smsResponse.setCredits(Long.toString(credits));
 							smsResponse.setDeductcredits(deductCredits + "");
 
-							logger.info(messageResourceBundle.getLogMessage("message.processed.credits"), credits, deductCredits);
+							logger.info(messageResourceBundle.getLogMessage("message.processed.credits"), credits,
+									deductCredits);
 						} else {
 							logger.error(messageResourceBundle.getLogMessage("error.process.failed"), bulkSessionId);
 							throw new InternalServerException(bulkSessionId + "<-- Process Failed --> ");
@@ -703,7 +714,8 @@ public class SmsServiceImpl implements SmsService {
 	}
 
 	public String sendSingleMsg(BulkSmsDTO bulkSmsDTO) {
-		logger.info(messageResourceBundle.getLogMessage("send.single.message"), bulkSmsDTO.getSystemId(), bulkSmsDTO.getSenderId());
+		logger.info(messageResourceBundle.getLogMessage("send.single.message"), bulkSmsDTO.getSystemId(),
+				bulkSmsDTO.getSenderId());
 		UserSession userSession = null;
 		String ret = "";
 		String user = bulkSmsDTO.getSystemId();
@@ -831,12 +843,13 @@ public class SmsServiceImpl implements SmsService {
 								}
 							}
 							SubmitSMResp submitResponse = null;
-						
+
 							System.out.println(SmsConverter.hexCodePointsToCharMsg(backupExt.getOrigMessage()));
 							try {
 								submitResponse = session.submit(msg);
 							} catch (Exception e) {
-								logger.error(messageResourceBundle.getLogMessage("submit.exception.error"), destination_no, e.getMessage());
+								logger.error(messageResourceBundle.getLogMessage("submit.exception.error"),
+										destination_no, e.getMessage());
 								throw new InternalServerException(
 										user + " Exception on Submit[" + destination_no + "] : " + e.getMessage());
 							}
@@ -848,30 +861,39 @@ public class SmsServiceImpl implements SmsService {
 											+ submitResponse.getCommandStatus() + " < " + destination_no);
 								} else {
 									if (submitResponse.getCommandStatus() == 1035) {
-										logger.error(messageResourceBundle.getLogMessage("submit.failed.insufficient.balance"), destination_no);
+										logger.error(messageResourceBundle
+												.getLogMessage("submit.failed.insufficient.balance"), destination_no);
 										ret += "SubmitError: Insufficient balance\n";
 										userSession.setCommandStatus(submitResponse.getCommandStatus());
 									} else if (submitResponse.getCommandStatus() == Data.ESME_RINVMSGLEN) {
-										logger.error(messageResourceBundle.getLogMessage("submit.failed.invalid.message.length"), destination_no);
+										logger.error(messageResourceBundle
+												.getLogMessage("submit.failed.invalid.message.length"), destination_no);
 										ret += "SubmitError: Invalid Message Length\n";
 									} else if (submitResponse.getCommandStatus() == Data.ESME_RINVDSTADR) {
-										logger.error(messageResourceBundle.getLogMessage("submit.failed.invalid.destination"), destination_no);
+										logger.error(messageResourceBundle
+												.getLogMessage("submit.failed.invalid.destination"), destination_no);
 										ret += "SubmitError: Invalid Destination[" + destination_no + "]\n";
 									} else if (submitResponse.getCommandStatus() == Data.ESME_RINVSRCADR) {
-										logger.error(messageResourceBundle.getLogMessage("submit.failed.invalid.source.address"), sender);
+										logger.error(messageResourceBundle
+												.getLogMessage("submit.failed.invalid.source.address"), sender);
 										ret += "SubmitError: Invalid SourceAddress\n";
 									} else if (submitResponse.getCommandStatus() == Data.ESME_RINVEXPIRY) {
-										logger.error(messageResourceBundle.getLogMessage("submit.failed.account.expired"), destination_no);
+										logger.error(
+												messageResourceBundle.getLogMessage("submit.failed.account.expired"),
+												destination_no);
 										ret += "SubmitError: Account Expired\n";
 										userSession.setCommandStatus(submitResponse.getCommandStatus());
 									} else {
 										ret += "SubmitError: " + submitResponse.getCommandStatus() + "\n";
-										logger.error(messageResourceBundle.getLogMessage("submit.failed.command.status"), submitResponse.getCommandStatus(), destination_no);
+										logger.error(
+												messageResourceBundle.getLogMessage("submit.failed.command.status"),
+												submitResponse.getCommandStatus(), destination_no);
 									}
 								}
 							} else {
 								ret += "Submit Failed\n";
-								logger.error(messageResourceBundle.getLogMessage("submit.failed.no.response"), destination_no);
+								logger.error(messageResourceBundle.getLogMessage("submit.failed.no.response"),
+										destination_no);
 							}
 						} else {
 							if (commandid == 1035) {
@@ -1032,7 +1054,8 @@ public class SmsServiceImpl implements SmsService {
 			}
 		} catch (Exception e) {
 			ret += "Processing Error\n";
-			logger.error(messageResourceBundle.getLogMessage("error.fillInStackTrace"), userSession.getUsername(), e.fillInStackTrace());
+			logger.error(messageResourceBundle.getLogMessage("error.fillInStackTrace"), userSession.getUsername(),
+					e.fillInStackTrace());
 		}
 		return ret;
 	}
@@ -1235,9 +1258,11 @@ public class SmsServiceImpl implements SmsService {
 			try {
 
 				if (bulkSmsDTO.isSchedule()) {
-					logger.info(messageResourceBundle.getLogMessage("bulk.schedule.request"), bulkSessionId, destinationNumberFile.size());
+					logger.info(messageResourceBundle.getLogMessage("bulk.schedule.request"), bulkSessionId,
+							destinationNumberFile.size());
 				} else {
-					logger.info(messageResourceBundle.getLogMessage("bulk.upload.request"), bulkSessionId, destinationNumberFile.size());
+					logger.info(messageResourceBundle.getLogMessage("bulk.upload.request"), bulkSessionId,
+							destinationNumberFile.size());
 				}
 				// ------ merge uploaded files into a list ---------------
 				Map<String, Integer> errors = new HashMap<String, Integer>();
@@ -1255,7 +1280,8 @@ public class SmsServiceImpl implements SmsService {
 					} else if (fileName.endsWith(".xls") || fileName.endsWith(".xlsx")) {
 						fileMode = "xls";
 					} else {
-						logger.warn(messageResourceBundle.getLogMessage("invalid.file.uploaded"), bulkSessionId, fileName);
+						logger.warn(messageResourceBundle.getLogMessage("invalid.file.uploaded"), bulkSessionId,
+								fileName);
 						throw new InvalidPropertyException(bulkSessionId + " Invalid File Uploaded: " + fileName);
 					}
 
@@ -1278,7 +1304,8 @@ public class SmsServiceImpl implements SmsService {
 									long num = Long.parseLong(next);
 									excludeSet.add(String.valueOf(num));
 								} catch (NumberFormatException ne) {
-									logger.info(messageResourceBundle.getLogMessage("invalid.exclude.number.found"), next);
+									logger.info(messageResourceBundle.getLogMessage("invalid.exclude.number.found"),
+											next);
 								}
 							}
 						}
@@ -1337,7 +1364,8 @@ public class SmsServiceImpl implements SmsService {
 											counter = errors.get("Invalid Destination");
 										}
 										errors.put("Invalid Destination", ++counter);
-										logger.info(messageResourceBundle.getLogMessage("invalid.destination.number"), destinationNumber);
+										logger.info(messageResourceBundle.getLogMessage("invalid.destination.number"),
+												destinationNumber);
 										invalidCount++;
 									}
 								} else {
@@ -1363,7 +1391,8 @@ public class SmsServiceImpl implements SmsService {
 								for (int i = 0; i < numberOfSheets; i++) {
 									Sheet firstSheet = workbook.getSheetAt(i);
 									int total_rows = firstSheet.getPhysicalNumberOfRows();
-									logger.info(messageResourceBundle.getLogMessage("total.rows"), i, uploaded_file.getName());
+									logger.info(messageResourceBundle.getLogMessage("total.rows"), i,
+											uploaded_file.getName());
 									if (total_rows == 0) {
 										continue;
 									}
@@ -1378,7 +1407,8 @@ public class SmsServiceImpl implements SmsService {
 										while (cellIterator.hasNext()) {
 											Cell cell = cellIterator.next();
 											if (cell_number > 0) {
-												logger.info(messageResourceBundle.getLogMessage("info.invalidColumn"), nextRow.getRowNum() + 1);
+												logger.info(messageResourceBundle.getLogMessage("info.invalidColumn"),
+														nextRow.getRowNum() + 1);
 												break;
 											}
 											total++;
@@ -1397,7 +1427,9 @@ public class SmsServiceImpl implements SmsService {
 													if (!excludeSet.contains(String.valueOf(num))) {
 														temp_number_list.add(String.valueOf(num));
 													} else {
-														logger.info(messageResourceBundle.getLogMessage("excluded.numbers"), num);
+														logger.info(
+																messageResourceBundle.getLogMessage("excluded.numbers"),
+																num);
 													}
 												} catch (NumberFormatException nfe) {
 													int counter = 0;
@@ -1405,7 +1437,8 @@ public class SmsServiceImpl implements SmsService {
 														counter = (Integer) errors.get("Invalid Destination");
 													}
 													errors.put("Invalid Destination", ++counter);
-													logger.info(messageResourceBundle.getLogMessage("invalid.destination.number"), destination);
+													logger.info(messageResourceBundle
+															.getLogMessage("invalid.destination.number"), destination);
 													invalidCount++;
 												}
 											} else {
@@ -1419,19 +1452,23 @@ public class SmsServiceImpl implements SmsService {
 											cell_number++;
 										}
 									}
-									logger.info(messageResourceBundle.getLogMessage("sheet.processed"), uploaded_file.getName(), i);
+									logger.info(messageResourceBundle.getLogMessage("sheet.processed"),
+											uploaded_file.getName(), i);
 								}
 								// *********************************************************
 							} catch (Exception ex) {
-								logger.error(messageResourceBundle.getLogMessage("file.parsing.error"), uploaded_file.getName(), ex.getLocalizedMessage());
+								logger.error(messageResourceBundle.getLogMessage("file.parsing.error"),
+										uploaded_file.getName(), ex.getLocalizedMessage());
 								throw new InternalServerException(
 										"Parsing File: " + uploaded_file.getName() + ex.getMessage());
 							}
 						}
-						logger.info(messageResourceBundle.getLogMessage("file.number.counter"), uploaded_file.getName(), file_total_counter);
+						logger.info(messageResourceBundle.getLogMessage("file.number.counter"), uploaded_file.getName(),
+								file_total_counter);
 					}
 				}
-				logger.info(messageResourceBundle.getLogMessage("uploaded.files.processed"), bulkSessionId, temp_number_list.size());
+				logger.info(messageResourceBundle.getLogMessage("uploaded.files.processed"), bulkSessionId,
+						temp_number_list.size());
 				Set<String> hashSet = new HashSet<String>(temp_number_list);
 				if (bulkRequest.isAllowDuplicate()) {
 					destinationList = new ArrayList<String>(temp_number_list);
@@ -1448,7 +1485,9 @@ public class SmsServiceImpl implements SmsService {
 				listInfo.setDuplicate(dup);
 				bulkSmsDTO.setDestinationList(destinationList);
 				// -------------------------------------------------------
-				logger.info(messageResourceBundle.getLogMessage("list.info.summary"), bulkSessionId, listInfo.getTotal(), listInfo.getValidCount(), listInfo.getInvalidCount(), listInfo.getDuplicate(), bulkSmsDTO.isAllowDuplicate());
+				logger.info(messageResourceBundle.getLogMessage("list.info.summary"), bulkSessionId,
+						listInfo.getTotal(), listInfo.getValidCount(), listInfo.getInvalidCount(),
+						listInfo.getDuplicate(), bulkSmsDTO.isAllowDuplicate());
 				Optional<BalanceEntry> masterBalanceOptional = balanceEntryRepository
 						.findBySystemId(userEntry.getMasterId());
 				Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findBySystemId(userEntry.getSystemId());
@@ -1479,7 +1518,8 @@ public class SmsServiceImpl implements SmsService {
 					bulkSmsDTO.setMessageType("SpecialChar");
 					bulkSmsDTO.setOrigMessage(UTF16(bulkRequest.getMessage()));
 				}
-				logger.info(messageResourceBundle.getLogMessage("message.type.parts.info"), bulkSessionId, bulkSmsDTO.getMessageType(), no_of_msg);
+				logger.info(messageResourceBundle.getLogMessage("message.type.parts.info"), bulkSessionId,
+						bulkSmsDTO.getMessageType(), no_of_msg);
 				String client_time = null;
 				if (bulkSmsDTO.isSchedule()) {
 					boolean valid_sch_time = false;
@@ -1492,12 +1532,14 @@ public class SmsServiceImpl implements SmsService {
 
 					try {
 						schedule_time = local_formatter.format(client_formatter.parse(client_time));
-						logger.info(messageResourceBundle.getLogMessage("client.server.time.info"), client_gmt, client_time, schedule_time);
+						logger.info(messageResourceBundle.getLogMessage("client.server.time.info"), client_gmt,
+								client_time, schedule_time);
 
 						if (new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").parse(schedule_time).after(new Date())) {
 							valid_sch_time = true;
 						} else {
-							logger.error(messageResourceBundle.getLogMessage("scheduled.time.before.current.error"), bulkSessionId);
+							logger.error(messageResourceBundle.getLogMessage("scheduled.time.before.current.error"),
+									bulkSessionId);
 						}
 						String server_date = schedule_time.split(" ")[0];
 						String server_time = schedule_time.split(" ")[1];
@@ -1505,7 +1547,8 @@ public class SmsServiceImpl implements SmsService {
 								+ server_date.split("-")[0]);
 						bulkSmsDTO.setTime(server_time.split(":")[0] + "" + server_time.split(":")[1]);
 					} catch (Exception e) {
-						logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId, e.getMessage());
+						logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId,
+								e.getMessage());
 						throw new InternalServerException("Error: getting error in parssing time with bulkSesssionId"
 								+ bulkSessionId + e.getMessage());
 					}
@@ -1536,7 +1579,8 @@ public class SmsServiceImpl implements SmsService {
 							}
 							adminCost = routeService.calculateRoutingCost(masterOptional.get().getId(), destinationList,
 									no_of_msg);
-							logger.info(messageResourceBundle.getLogMessage("admin.balance.calculated.cost"), userEntry.getMasterId(), adminWallet, adminCost);
+							logger.info(messageResourceBundle.getLogMessage("admin.balance.calculated.cost"),
+									userEntry.getMasterId(), adminWallet, adminCost);
 
 							if ((adminWallet >= adminCost)) {
 								if (wallet >= totalcost) {
@@ -1544,13 +1588,15 @@ public class SmsServiceImpl implements SmsService {
 									wallet = wallet - totalcost;
 									amount = true;
 								} else {
-									logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"), bulkSessionId);
+									logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"),
+											bulkSessionId);
 									throw new InsufficientBalanceException(messageResourceBundle.getExMessage(
 											ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION) + bulkSessionId);
 								}
 							} else {
 								// Insufficient Admin balance
-								logger.error(messageResourceBundle.getLogMessage("insufficient.admin.balance"), userEntry.getMasterId());
+								logger.error(messageResourceBundle.getLogMessage("insufficient.admin.balance"),
+										userEntry.getMasterId());
 								throw new InsufficientBalanceException(messageResourceBundle
 										.getExMessage(ConstantMessages.INSUFFICIENT_ADMIN_BALANCE_EXCEPTION)
 										+ bulkSessionId + userEntry.getMasterId());
@@ -1561,7 +1607,8 @@ public class SmsServiceImpl implements SmsService {
 								amount = true;
 							} else {
 								// Insufficient balance
-								logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"), bulkSessionId);
+								logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"),
+										bulkSessionId);
 								throw new InsufficientBalanceException(messageResourceBundle
 										.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION) + bulkSessionId);
 
@@ -1629,7 +1676,8 @@ public class SmsServiceImpl implements SmsService {
 										userEntry.getId());
 								if (!value.contains("Error")) {
 									target = IConstants.SUCCESS_KEY;
-									logger.info(messageResourceBundle.getLogMessage("bulk.sms.sent.successfully"), value);
+									logger.info(messageResourceBundle.getLogMessage("bulk.sms.sent.successfully"),
+											value);
 								} else {
 									// Submission Error
 									logger.error(messageResourceBundle.getLogMessage("error.sending.bulk.sms"), value);
@@ -1643,7 +1691,8 @@ public class SmsServiceImpl implements SmsService {
 								bulkResponse.setCredits(new DecimalFormat("0.00000").format(wallet));
 								bulkResponse.setDeductcredits(new DecimalFormat("0.00000").format(totalcost));
 								bulkResponse.setBulkSessionId(bulkSessionId);
-								logger.info(messageResourceBundle.getLogMessage("processed.balance.cost"), wallet, totalcost);
+								logger.info(messageResourceBundle.getLogMessage("processed.balance.cost"), wallet,
+										totalcost);
 							} else {
 								logger.info(messageResourceBundle.getLogMessage("process.failed"), bulkSessionId);
 								throw new InternalServerException(bulkSessionId + "<-- Process Failed --> ");
@@ -1768,7 +1817,8 @@ public class SmsServiceImpl implements SmsService {
 								bulkResponse.setCredits(Long.toString(credits));
 								bulkResponse.setDeductcredits(deductCredits + "");
 								bulkResponse.setBulkSessionId(bulkSessionId);
-								logger.info(messageResourceBundle.getLogMessage("info.processed.credits"), bulkSessionId, credits, deductCredits);
+								logger.info(messageResourceBundle.getLogMessage("info.processed.credits"),
+										bulkSessionId, credits, deductCredits);
 							} else {
 								// Process Failed
 								String errorMessage = bulkSessionId + " Error: The process failed.";
@@ -1794,22 +1844,28 @@ public class SmsServiceImpl implements SmsService {
 
 				}
 			} catch (InvalidPropertyException e) {
-				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId, e.getMessage());
+				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId,
+						e.getMessage());
 				throw new InvalidPropertyException(e.getMessage());
 			} catch (NotFoundException e) {
-				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId, e.getMessage());
+				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId,
+						e.getMessage());
 				throw new NotFoundException(e.getMessage());
 			} catch (InsufficientBalanceException e) {
-				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId, e.getMessage());
+				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId,
+						e.getMessage());
 				throw new InsufficientBalanceException(e.getMessage());
 			} catch (InternalServerException e) {
-				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId, e.getMessage());
+				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId,
+						e.getMessage());
 				throw new InternalServerException(e.getMessage());
 			} catch (ScheduledTimeException e) {
-				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId, e.getMessage());
+				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId,
+						e.getMessage());
 				throw new ScheduledTimeException(e.getMessage());
 			} catch (Exception e) {
-				logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"), bulkSessionId, e);
+				logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"), bulkSessionId,
+						e);
 				throw new InternalServerException(e.getMessage());
 			}
 			bulkResponse.setStatus(target);
@@ -1933,7 +1989,8 @@ public class SmsServiceImpl implements SmsService {
 										counter = errors.get("Invalid Destination");
 									}
 									errors.put("Invalid Destination", ++counter);
-									logger.info(messageResourceBundle.getLogMessage("invalid.destination.number"), destinationNumber);
+									logger.info(messageResourceBundle.getLogMessage("invalid.destination.number"),
+											destinationNumber);
 									invalidCount++;
 								}
 							} else {
@@ -1959,7 +2016,8 @@ public class SmsServiceImpl implements SmsService {
 							for (int i = 0; i < numberOfSheets; i++) {
 								Sheet firstSheet = workbook.getSheetAt(i);
 								int total_rows = firstSheet.getPhysicalNumberOfRows();
-								logger.info(messageResourceBundle.getLogMessage("total.rows"), i, uploaded_file.getName());
+								logger.info(messageResourceBundle.getLogMessage("total.rows"), i,
+										uploaded_file.getName());
 								if (total_rows == 0) {
 									continue;
 								}
@@ -1974,7 +2032,8 @@ public class SmsServiceImpl implements SmsService {
 									while (cellIterator.hasNext()) {
 										Cell cell = cellIterator.next();
 										if (cell_number > 0) {
-											logger.info(messageResourceBundle.getLogMessage("invalid.column.found"), nextRow.getRowNum() + 1);
+											logger.info(messageResourceBundle.getLogMessage("invalid.column.found"),
+													nextRow.getRowNum() + 1);
 											break;
 										}
 										total++;
@@ -1993,7 +2052,8 @@ public class SmsServiceImpl implements SmsService {
 												if (!excludeSet.contains(String.valueOf(num))) {
 													temp_number_list.add(String.valueOf(num));
 												} else {
-													logger.info(messageResourceBundle.getLogMessage("excluded.numbers"), num);
+													logger.info(messageResourceBundle.getLogMessage("excluded.numbers"),
+															num);
 												}
 											} catch (NumberFormatException nfe) {
 												int counter = 0;
@@ -2001,7 +2061,8 @@ public class SmsServiceImpl implements SmsService {
 													counter = (Integer) errors.get("Invalid Destination");
 												}
 												errors.put("Invalid Destination", ++counter);
-												logger.info(messageResourceBundle.getLogMessage("invalid.destination.number"), destination);
+												logger.info(messageResourceBundle
+														.getLogMessage("invalid.destination.number"), destination);
 												invalidCount++;
 											}
 										} else {
@@ -2015,16 +2076,19 @@ public class SmsServiceImpl implements SmsService {
 										cell_number++;
 									}
 								}
-								logger.info(messageResourceBundle.getLogMessage("sheet.processed"), uploaded_file.getName(), i);
+								logger.info(messageResourceBundle.getLogMessage("sheet.processed"),
+										uploaded_file.getName(), i);
 							}
 							// *********************************************************
 						} catch (Exception ex) {
-							logger.error(messageResourceBundle.getLogMessage("file.parsing.error"), uploaded_file.getName(), ex.getLocalizedMessage());
+							logger.error(messageResourceBundle.getLogMessage("file.parsing.error"),
+									uploaded_file.getName(), ex.getLocalizedMessage());
 							throw new InternalServerException(
 									"Parsing File: " + uploaded_file.getName() + ex.getMessage());
 						}
 					}
-					logger.info(messageResourceBundle.getLogMessage("file.number.counter"), uploaded_file.getName(), file_total_counter);
+					logger.info(messageResourceBundle.getLogMessage("file.number.counter"), uploaded_file.getName(),
+							file_total_counter);
 				}
 			}
 			Set<String> hashSet = new HashSet<String>(temp_number_list);
@@ -2032,7 +2096,8 @@ public class SmsServiceImpl implements SmsService {
 				destinationList = new ArrayList<String>();
 				for (String number : hashSet) {
 					if (number.length() < webEntry.getNumberLength()) {
-						logger.info(messageResourceBundle.getLogMessage("number.length.less"), number, webEntry.getNumberLength());
+						logger.info(messageResourceBundle.getLogMessage("number.length.less"), number,
+								webEntry.getNumberLength());
 						number = webEntry.getPrefixToApply() + number;
 					}
 					destinationList.add(number);
@@ -2048,7 +2113,9 @@ public class SmsServiceImpl implements SmsService {
 			listInfo.setErrors(errors);
 			int dup = temp_number_list.size() - hashSet.size();
 			listInfo.setDuplicate(dup);
-			logger.info(messageResourceBundle.getLogMessage("list.info.summary"), bulkSessionId, listInfo.getTotal(), listInfo.getValidCount(), listInfo.getInvalidCount(), listInfo.getDuplicate(), bulkSmsDTO.isAllowDuplicate());
+			logger.info(messageResourceBundle.getLogMessage("list.info.summary"), bulkSessionId, listInfo.getTotal(),
+					listInfo.getValidCount(), listInfo.getInvalidCount(), listInfo.getDuplicate(),
+					bulkSmsDTO.isAllowDuplicate());
 			// ------------------------End merge-------------------------------
 			Optional<BalanceEntry> masterBalanceOptional = balanceEntryRepository
 					.findBySystemId(userEntry.getMasterId());
@@ -2078,7 +2145,8 @@ public class SmsServiceImpl implements SmsService {
 				bulkSmsDTO.setMessageType("SpecialChar");
 				bulkSmsDTO.setOrigMessage(UTF16(bulkRequest.getMessage()));
 			}
-			logger.info(messageResourceBundle.getLogMessage("message.type.parts.info"), bulkSessionId, bulkSmsDTO.getMessageType(), no_of_msg);
+			logger.info(messageResourceBundle.getLogMessage("message.type.parts.info"), bulkSessionId,
+					bulkSmsDTO.getMessageType(), no_of_msg);
 			if (bulkSmsDTO.isSchedule()) {
 				boolean valid_sch_time = false;
 				String client_time = bulkSmsDTO.getTimestart();
@@ -2089,11 +2157,13 @@ public class SmsServiceImpl implements SmsService {
 				String schedule_time = null;
 				try {
 					schedule_time = local_formatter.format(client_formatter.parse(client_time));
-					logger.info(messageResourceBundle.getLogMessage("client.time.gmt.info"), client_gmt, client_time, schedule_time);
+					logger.info(messageResourceBundle.getLogMessage("client.time.gmt.info"), client_gmt, client_time,
+							schedule_time);
 					if (new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").parse(schedule_time).after(new Date())) {
 						valid_sch_time = true;
 					} else {
-						logger.error(messageResourceBundle.getLogMessage("scheduled.time.before.current.error"), bulkSessionId);
+						logger.error(messageResourceBundle.getLogMessage("scheduled.time.before.current.error"),
+								bulkSessionId);
 					}
 					String server_date = schedule_time.split(" ")[0];
 					String server_time = schedule_time.split(" ")[1];
@@ -2101,7 +2171,8 @@ public class SmsServiceImpl implements SmsService {
 							+ server_date.split("-")[0]);
 					bulkSmsDTO.setTime(server_time.split(":")[0] + "" + server_time.split(":")[1]);
 				} catch (Exception e) {
-					logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"), bulkSessionId, e);
+					logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"),
+							bulkSessionId, e);
 				}
 				if (!valid_sch_time) {
 					throw new ScheduledTimeException(
@@ -2201,7 +2272,8 @@ public class SmsServiceImpl implements SmsService {
 					// boolean inherit = false;
 					if (userEntry.isAdminDepend()) {
 						adminCost = routeService.calculateRoutingCost(masterOptional.get().getId(), msgLengthTable);
-						logger.info(messageResourceBundle.getLogMessage("admin.balance.calculatedcost"), masterOptional.get().getId(), adminWallet, adminCost);
+						logger.info(messageResourceBundle.getLogMessage("admin.balance.calculatedcost"),
+								masterOptional.get().getId(), adminWallet, adminCost);
 						if ((adminWallet >= adminCost)) {
 							if (wallet >= totalcost) {
 								adminWallet = adminWallet - adminCost;
@@ -2209,13 +2281,15 @@ public class SmsServiceImpl implements SmsService {
 								amount = true;
 
 							} else {
-								logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"), bulkSessionId);
+								logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"),
+										bulkSessionId);
 								throw new InsufficientBalanceException(messageResourceBundle
 										.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION) + bulkSessionId);
 							}
 						} else {
 							// Insufficient Admin balance
-							logger.error(messageResourceBundle.getLogMessage("insufficient.admin.balance"), masterOptional.get().getId());
+							logger.error(messageResourceBundle.getLogMessage("insufficient.admin.balance"),
+									masterOptional.get().getId());
 							throw new InsufficientBalanceException(messageResourceBundle
 									.getExMessage(ConstantMessages.INSUFFICIENT_ADMIN_BALANCE_EXCEPTION) + bulkSessionId
 									+ masterOptional.get().getId());
@@ -2307,7 +2381,8 @@ public class SmsServiceImpl implements SmsService {
 							bulkResponse.setCredits(new DecimalFormat("0.00000").format(wallet));
 							bulkResponse.setDeductcredits(new DecimalFormat("0.00000").format(totalcost));
 							bulkResponse.setBulkSessionId(bulkSessionId);
-							logger.info(messageResourceBundle.getLogMessage("sms.processed"), bulkSessionId, wallet, totalcost);
+							logger.info(messageResourceBundle.getLogMessage("sms.processed"), bulkSessionId, wallet,
+									totalcost);
 						} else {
 							logger.info(messageResourceBundle.getLogMessage("process.failed"), bulkSessionId);
 							throw new InternalServerException(bulkSessionId + "<-- Process Failed --> ");
@@ -2315,7 +2390,8 @@ public class SmsServiceImpl implements SmsService {
 					} else {
 						// insufficient balance
 						String insufficientBalanceMessage = "Error: Insufficient funds in the wallet.";
-						logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"), insufficientBalanceMessage);
+						logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"),
+								insufficientBalanceMessage);
 						throw new InsufficientBalanceException(insufficientBalanceMessage);
 					}
 				} else {
@@ -2344,7 +2420,8 @@ public class SmsServiceImpl implements SmsService {
 										.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION) + bulkSessionId);
 							}
 						} else {
-							logger.error(messageResourceBundle.getLogMessage("error.insufficient.admin.credits"), masterOptional.get().getSystemId());
+							logger.error(messageResourceBundle.getLogMessage("error.insufficient.admin.credits"),
+									masterOptional.get().getSystemId());
 							throw new InsufficientBalanceException(
 									messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION)
 											+ bulkSessionId + masterOptional.get().getSystemId());
@@ -2435,7 +2512,8 @@ public class SmsServiceImpl implements SmsService {
 							bulkResponse.setCredits(Long.toString(credits));
 							bulkResponse.setDeductcredits(totalMsg + "");
 							bulkResponse.setBulkSessionId(bulkSessionId);
-							logger.info(messageResourceBundle.getLogMessage("message.bulkSMSProcessed"), credits, totalMsg);
+							logger.info(messageResourceBundle.getLogMessage("message.bulkSMSProcessed"), credits,
+									totalMsg);
 						} else {
 							logger.error(messageResourceBundle.getLogMessage("error.process.failed"), bulkSessionId);
 							throw new InternalServerException(bulkSessionId + "<-- Process Failed --> ");
@@ -2493,14 +2571,16 @@ public class SmsServiceImpl implements SmsService {
 			setProgressEvent(progressEvent);
 			response = sendBulkMsg(bulkSmsDTO, waitForApprove, System_Id);
 		} catch (Exception e) {
-			logger.error(messageResourceBundle.getLogMessage("error.fillInStackTrace"), bulkSmsDTO.getSystemId(), e.fillInStackTrace());
+			logger.error(messageResourceBundle.getLogMessage("error.fillInStackTrace"), bulkSmsDTO.getSystemId(),
+					e.fillInStackTrace());
 		}
 		return response;
 	}
 
 	public String sendBulkMsg(BulkSmsDTO bulkSmsDTO, boolean waitForApprove, int System_Id) {
 
-		logger.info(messageResourceBundle.getLogMessage("info.reqTypeAlert"), bulkSmsDTO.getSystemId(), bulkSmsDTO.getReqType(), bulkSmsDTO.isAlert(), bulkSmsDTO.getDestinationNumber());
+		logger.info(messageResourceBundle.getLogMessage("info.reqTypeAlert"), bulkSmsDTO.getSystemId(),
+				bulkSmsDTO.getReqType(), bulkSmsDTO.isAlert(), bulkSmsDTO.getDestinationNumber());
 		String user = bulkSmsDTO.getSystemId();
 		// QueueBackup backupObject = null;
 		BulkEntry entry = null;
@@ -2563,7 +2643,8 @@ public class SmsServiceImpl implements SmsService {
 					entry.setAlertNumbers(String.join(",", alertNumbers));
 					entry.setAlert(true);
 				} else {
-					logger.info(messageResourceBundle.getLogMessage("info.invalidAlertNumbers"), bulkSmsDTO.getDestinationNumber());
+					logger.info(messageResourceBundle.getLogMessage("info.invalidAlertNumbers"),
+							bulkSmsDTO.getDestinationNumber());
 					entry.setAlert(false);
 				}
 			}
@@ -2716,7 +2797,8 @@ public class SmsServiceImpl implements SmsService {
 						logger.error(messageResourceBundle.getLogMessage("error.summaryReport"), user, ex);
 					}
 					GlobalVars.BatchQueue.put(batch_id, new BatchObject(batch_id, user, IConstants.SERVER_ID, true));
-					logger.info(messageResourceBundle.getLogMessage("info.batchAddedToProcessing"), user, entry.getId());
+					logger.info(messageResourceBundle.getLogMessage("info.batchAddedToProcessing"), user,
+							entry.getId());
 				} else {
 					logger.info(messageResourceBundle.getLogMessage("info.entryNotAdded"), user, entry.toString());
 				}
@@ -2944,9 +3026,11 @@ public class SmsServiceImpl implements SmsService {
 			System.out.println(bulkSessionId + " " + ex);
 		}
 		if (bulkSmsDTO.isSchedule()) {
-			logger.info(messageResourceBundle.getLogMessage("info.customScheduleRequest"), bulkRequest.isTracking(), destinationNumberFile.getName());
+			logger.info(messageResourceBundle.getLogMessage("info.customScheduleRequest"), bulkRequest.isTracking(),
+					destinationNumberFile.getName());
 		} else {
-			logger.info(messageResourceBundle.getLogMessage("info.customUploadRequest"), bulkRequest.isTracking(), destinationNumberFile.getName());
+			logger.info(messageResourceBundle.getLogMessage("info.customUploadRequest"), bulkRequest.isTracking(),
+					destinationNumberFile.getName());
 		}
 		BulkListInfo listInfo = new BulkListInfo();
 		if (bulkRequest.getMessageType().equalsIgnoreCase("Unicode")) {
@@ -3041,7 +3125,8 @@ public class SmsServiceImpl implements SmsService {
 					if (new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").parse(schedule_time).after(new Date())) {
 						valid_sch_time = true;
 					} else {
-						logger.error(messageResourceBundle.getLogMessage("scheduled.time.before.current.error"), bulkSessionId);
+						logger.error(messageResourceBundle.getLogMessage("scheduled.time.before.current.error"),
+								bulkSessionId);
 						throw new ScheduledTimeException(messageResourceBundle.getExMessage(
 								ConstantMessages.SCHEDULED_TIME_BEFORE_CURRENT_TIME_EXCEPTION) + bulkSessionId);
 					}
@@ -3051,7 +3136,8 @@ public class SmsServiceImpl implements SmsService {
 							+ server_date.split("-")[0]);
 					bulkSmsDTO.setTime(server_time.split(":")[0] + "" + server_time.split(":")[1]);
 				} catch (Exception e) {
-					logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"), bulkSessionId, e);
+					logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"),
+							bulkSessionId, e);
 				}
 				if (!valid_sch_time) {
 					logger.error(messageResourceBundle.getLogMessage("error.schedule.time"));
@@ -3115,7 +3201,8 @@ public class SmsServiceImpl implements SmsService {
 										invalid_count++;
 										int counter = (Integer) errors.get("Invalid Seperator");
 										errors.put("Invalid Separator", ++counter);
-										logger.info(messageResourceBundle.getLogMessage("info.invalidSeparator"), row, content);
+										logger.info(messageResourceBundle.getLogMessage("info.invalidSeparator"), row,
+												content);
 									}
 								}
 							}
@@ -3130,7 +3217,8 @@ public class SmsServiceImpl implements SmsService {
 						int numberOfSheets = workbook.getNumberOfSheets();
 						for (int i = 0; i < numberOfSheets; i++) {
 							Sheet firstSheet = workbook.getSheetAt(i);
-							logger.info(messageResourceBundle.getLogMessage("info.sheetTotalRows"), i, firstSheet.getPhysicalNumberOfRows());
+							logger.info(messageResourceBundle.getLogMessage("info.sheetTotalRows"), i,
+									firstSheet.getPhysicalNumberOfRows());
 							for (Row nextRow : firstSheet) {
 								if (nextRow.getRowNum() == 0) {
 									column_count = nextRow.getPhysicalNumberOfCells();
@@ -3152,7 +3240,8 @@ public class SmsServiceImpl implements SmsService {
 										if (cell.getColumnIndex() < column_count) {
 											params[cell.getColumnIndex()] = cell_value;
 										} else {
-											logger.info(messageResourceBundle.getLogMessage("info.invalidColumn"), cell.getColumnIndex(), cell_value);
+											logger.info(messageResourceBundle.getLogMessage("info.invalidColumn"),
+													cell.getColumnIndex(), cell_value);
 										}
 										cell_number++;
 									}
@@ -3204,7 +3293,8 @@ public class SmsServiceImpl implements SmsService {
 					// ---- check number -------------
 					String destNumber = entries[0];
 					if (destNumber == null || destNumber.length() == 0) {
-						logger.error(messageResourceBundle.getLogMessage("error.invalidDestination"), row_number, destNumber);
+						logger.error(messageResourceBundle.getLogMessage("error.invalidDestination"), row_number,
+								destNumber);
 						continue;
 					}
 					if (destNumber.startsWith("+")) {
@@ -3418,7 +3508,8 @@ public class SmsServiceImpl implements SmsService {
 					}
 				}
 				// logger.info(bulkSessionId + " mapping: " + mapTable);
-				logger.info(messageResourceBundle.getLogMessage("info.numbersCount"), bulkSessionId, msgLengthTable.keySet().size());
+				logger.info(messageResourceBundle.getLogMessage("info.numbersCount"), bulkSessionId,
+						msgLengthTable.keySet().size());
 				if (!msgLengthTable.isEmpty()) {
 					destinationList = new ArrayList(msgLengthTable.keySet());
 					listInfo.setTotal(total_numbers);
@@ -3451,7 +3542,8 @@ public class SmsServiceImpl implements SmsService {
 										messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 							}
 							adminCost = routeService.calculateRoutingCost(masterOptional.get().getId(), msgLengthTable);
-							logger.info(messageResourceBundle.getLogMessage("info.adminBalance"), masterOptional.get().getId(), adminWallet, adminCost);
+							logger.info(messageResourceBundle.getLogMessage("info.adminBalance"),
+									masterOptional.get().getId(), adminWallet, adminCost);
 							if ((adminWallet >= adminCost)) {
 								if (wallet >= totalcost) {
 									adminWallet = adminWallet - adminCost;
@@ -3459,13 +3551,15 @@ public class SmsServiceImpl implements SmsService {
 									amount = true;
 
 								} else {
-									logger.error(messageResourceBundle.getLogMessage("error.insufficientBalance"), bulkSessionId, wallet);
+									logger.error(messageResourceBundle.getLogMessage("error.insufficientBalance"),
+											bulkSessionId, wallet);
 									throw new InsufficientBalanceException(bulkSessionId + messageResourceBundle
 											.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION) + wallet);
 								}
 							} else {
 								// Insufficient Admin balance
-								logger.error(messageResourceBundle.getLogMessage("error.insufficientAdminBalance"), Integer.parseInt(user.getMasterId()), bulkSessionId, adminWallet);
+								logger.error(messageResourceBundle.getLogMessage("error.insufficientAdminBalance"),
+										Integer.parseInt(user.getMasterId()), bulkSessionId, adminWallet);
 								throw new InsufficientBalanceException(bulkSessionId
 										+ messageResourceBundle
 												.getExMessage(ConstantMessages.INSUFFICIENT_ADMIN_BALANCE_EXCEPTION)
@@ -3477,7 +3571,8 @@ public class SmsServiceImpl implements SmsService {
 								amount = true;
 							} else {
 								// Insufficient balance
-								logger.error(messageResourceBundle.getLogMessage("error.insufficientBalance"), bulkSessionId, wallet);
+								logger.error(messageResourceBundle.getLogMessage("error.insufficientBalance"),
+										bulkSessionId, wallet);
 								throw new InsufficientBalanceException(bulkSessionId + messageResourceBundle
 										.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION) + wallet);
 							}
@@ -3541,10 +3636,12 @@ public class SmsServiceImpl implements SmsService {
 										user.getId());
 								if (!value.contains("Error")) {
 									target = IConstants.SUCCESS_KEY;
-									logger.info(messageResourceBundle.getLogMessage("info.batchProcessingCompleted"), value);
+									logger.info(messageResourceBundle.getLogMessage("info.batchProcessingCompleted"),
+											value);
 								} else {
 									// Submission Error
-									logger.error(messageResourceBundle.getLogMessage("error.batchSubmissionProcessing"), value);
+									logger.error(messageResourceBundle.getLogMessage("error.batchSubmissionProcessing"),
+											value);
 									throw new InternalServerException(messageResourceBundle
 											.getExMessage(ConstantMessages.BATCH_SUBMISSION_ERROR_EXCEPTION) + value);
 
@@ -3556,9 +3653,11 @@ public class SmsServiceImpl implements SmsService {
 								bulkResponse.setDeductcredits(new DecimalFormat("0.00000").format(totalcost));
 								bulkResponse.setBulkSessionId(bulkSessionId);
 
-								logger.info(messageResourceBundle.getLogMessage("info.processedBalanceCost"), bulkSessionId, wallet, totalcost);
+								logger.info(messageResourceBundle.getLogMessage("info.processedBalanceCost"),
+										bulkSessionId, wallet, totalcost);
 							} else {
-								logger.error(messageResourceBundle.getLogMessage("error.process.failed"), bulkSessionId);
+								logger.error(messageResourceBundle.getLogMessage("error.process.failed"),
+										bulkSessionId);
 								throw new InternalServerException(bulkSessionId + "<-- Process Failed --> ");
 							}
 						} else {
@@ -3670,7 +3769,8 @@ public class SmsServiceImpl implements SmsService {
 									logger.info(messageResourceBundle.getLogMessage("info.batchProcessingCompleted"));
 								} else {
 									// Submission Error
-									logger.error(messageResourceBundle.getLogMessage("error.batchSubmissionProcessing"));
+									logger.error(
+											messageResourceBundle.getLogMessage("error.batchSubmissionProcessing"));
 									throw new InternalServerException(messageResourceBundle
 											.getExMessage(ConstantMessages.BATCH_SUBMISSION_ERROR_EXCEPTION));
 
@@ -3683,7 +3783,8 @@ public class SmsServiceImpl implements SmsService {
 								bulkResponse.setCredits(Long.toString(credits));
 								bulkResponse.setDeductcredits(deductCredits + "");
 								bulkResponse.setBulkSessionId(bulkSessionId);
-								logger.info(messageResourceBundle.getLogMessage("info.processedCreditsDeducted"), bulkSessionId, credits, deductCredits);
+								logger.info(messageResourceBundle.getLogMessage("info.processedCreditsDeducted"),
+										bulkSessionId, credits, deductCredits);
 							} else {
 								logger.info(messageResourceBundle.getLogMessage("process.failed"), bulkSessionId);
 								throw new InternalServerException(bulkSessionId + "<-- Process Failed --> ");
@@ -3815,7 +3916,8 @@ public class SmsServiceImpl implements SmsService {
 
 				BulkListInfo listInfo = new BulkListInfo();
 				List<String> destinationList = bulkSmsDTO.getDestinationList2(listInfo);
-				logger.info(messageResourceBundle.getLogMessage("info.listSummary"), bulkSessionId, listInfo.getTotal(), listInfo.getValidCount(), listInfo.getInvalidCount(), listInfo.getDuplicate());
+				logger.info(messageResourceBundle.getLogMessage("info.listSummary"), bulkSessionId, listInfo.getTotal(),
+						listInfo.getValidCount(), listInfo.getInvalidCount(), listInfo.getDuplicate());
 
 				Optional<BalanceEntry> masterBalanceOptional = balanceEntryRepository
 						.findBySystemId((user.getMasterId()));
@@ -3847,7 +3949,8 @@ public class SmsServiceImpl implements SmsService {
 					bulkSmsDTO.setMessageType("SpecialChar");
 					bulkSmsDTO.setOrigMessage(UTF16(bulkContactRequest.getMessage()));
 				}
-				logger.info(messageResourceBundle.getLogMessage("message.type.parts.info"), bulkSessionId, bulkSmsDTO.getMessageType(), no_of_msg);
+				logger.info(messageResourceBundle.getLogMessage("message.type.parts.info"), bulkSessionId,
+						bulkSmsDTO.getMessageType(), no_of_msg);
 				if (bulkSmsDTO.isSchedule()) {
 					boolean valid_sch_time = false;
 					String client_time = bulkSmsDTO.getTimestart();
@@ -3863,7 +3966,8 @@ public class SmsServiceImpl implements SmsService {
 						if (new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").parse(schedule_time).after(new Date())) {
 							valid_sch_time = true;
 						} else {
-							logger.error(messageResourceBundle.getLogMessage("scheduled.time.before.current.error"), bulkSessionId);
+							logger.error(messageResourceBundle.getLogMessage("scheduled.time.before.current.error"),
+									bulkSessionId);
 						}
 						String server_date = schedule_time.split(" ")[0];
 						String server_time = schedule_time.split(" ")[1];
@@ -3871,7 +3975,8 @@ public class SmsServiceImpl implements SmsService {
 								+ server_date.split("-")[0]);
 						bulkSmsDTO.setTime(server_time.split(":")[0] + "" + server_time.split(":")[1]);
 					} catch (Exception e) {
-						logger.error(messageResourceBundle.getLogMessage("error.sessionIdWithErrorMessage"), bulkSessionId, e.getMessage(), e);
+						logger.error(messageResourceBundle.getLogMessage("error.sessionIdWithErrorMessage"),
+								bulkSessionId, e.getMessage(), e);
 						throw new ScheduledTimeException(
 								messageResourceBundle.getExMessage(ConstantMessages.SINGLE_SCHEDULE_ERROR_EXCEPTION)
 										+ e.getMessage());
@@ -3942,12 +4047,15 @@ public class SmsServiceImpl implements SmsService {
 											GlobalVarsSms.RepeatedSchedules.add(generated_id);
 										}
 										target = IConstants.SUCCESS_KEY;
-										logger.info(messageResourceBundle.getLogMessage("info.taskScheduledSuccessfully"), target);
+										logger.info(
+												messageResourceBundle.getLogMessage("info.taskScheduledSuccessfully"),
+												target);
 
 									} else {
 										// Scheduling Error
 										String message = ("Error: Unable to schedule the task. An error occurred during the scheduling process.");
-										logger.error(messageResourceBundle.getLogMessage("error.genericMessage"), message);
+										logger.error(messageResourceBundle.getLogMessage("error.genericMessage"),
+												message);
 										throw new ScheduledTimeException(message);
 									}
 								} else {
@@ -3975,14 +4083,16 @@ public class SmsServiceImpl implements SmsService {
 								bulkResponse.setCredits(new DecimalFormat("0.00000").format(wallet));
 								bulkResponse.setDeductcredits(new DecimalFormat("0.00000").format(totalcost) + "");
 								bulkResponse.setBulkSessionId(bulkSessionId);
-								logger.info(messageResourceBundle.getLogMessage("info.processedBalanceCost"), bulkSessionId, wallet, totalcost);
+								logger.info(messageResourceBundle.getLogMessage("info.processedBalanceCost"),
+										bulkSessionId, wallet, totalcost);
 							} else {
 								logger.info(messageResourceBundle.getLogMessage("process.failed"), bulkSessionId);
 								throw new InternalServerException(bulkSessionId + "<-- Process Failed --> ");
 							}
 						} else {
 							// insufficient balance
-							logger.error(messageResourceBundle.getLogMessage("error.insufficientBalance"), bulkSessionId, wallet);
+							logger.error(messageResourceBundle.getLogMessage("error.insufficientBalance"),
+									bulkSessionId, wallet);
 							throw new InsufficientBalanceException(bulkSessionId + messageResourceBundle
 									.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION) + wallet);
 						}
@@ -4053,7 +4163,8 @@ public class SmsServiceImpl implements SmsService {
 											GlobalVarsSms.RepeatedSchedules.add(generated_id);
 										}
 										target = IConstants.SUCCESS_KEY;
-										logger.info(messageResourceBundle.getLogMessage("info.taskScheduledSuccessfully"));
+										logger.info(
+												messageResourceBundle.getLogMessage("info.taskScheduledSuccessfully"));
 									} else {
 										throw new ScheduledTimeException(messageResourceBundle
 												.getExMessage(ConstantMessages.SINGLE_SCHEDULE_ERROR_EXCEPTION));
@@ -4070,11 +4181,13 @@ public class SmsServiceImpl implements SmsService {
 								if (!value.contains("Error")) {
 									target = IConstants.SUCCESS_KEY;
 									// Batch Success
-									logger.info(messageResourceBundle.getLogMessage("info.batchProcessingCompletedSuccessfully"), value);
+									logger.info(messageResourceBundle
+											.getLogMessage("info.batchProcessingCompletedSuccessfully"), value);
 
 								} else {
 									// Submission Error
-									logger.error(messageResourceBundle.getLogMessage("error.batchSubmissionProcessing"));
+									logger.error(
+											messageResourceBundle.getLogMessage("error.batchSubmissionProcessing"));
 
 									throw new InternalServerException(messageResourceBundle
 											.getExMessage(ConstantMessages.BATCH_SUBMISSION_ERROR_EXCEPTION));
@@ -4087,14 +4200,16 @@ public class SmsServiceImpl implements SmsService {
 								bulkResponse.setDeductcredits(deductCredits + "");
 								bulkResponse.setBulkSessionId(bulkSessionId);
 
-								logger.info(messageResourceBundle.getLogMessage("info.processedCreditsDeducted"), bulkSessionId, credits, deductCredits);
+								logger.info(messageResourceBundle.getLogMessage("info.processedCreditsDeducted"),
+										bulkSessionId, credits, deductCredits);
 							} else {
 								logger.info(messageResourceBundle.getLogMessage("process.failed"), bulkSessionId);
 								throw new InternalServerException(bulkSessionId + "<-- Process Failed --> ");
 							}
 						} else {
 							// insufficient Credits
-							logger.error(messageResourceBundle.getLogMessage("error.insufficientCredits"), bulkSessionId, credits);
+							logger.error(messageResourceBundle.getLogMessage("error.insufficientCredits"),
+									bulkSessionId, credits);
 							throw new InsufficientBalanceException(bulkSessionId + messageResourceBundle
 									.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION) + credits);
 
@@ -4112,22 +4227,28 @@ public class SmsServiceImpl implements SmsService {
 							messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION));
 				}
 			} catch (InvalidPropertyException e) {
-				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId, e.getMessage());
+				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId,
+						e.getMessage());
 				throw new InvalidPropertyException(e.getMessage());
 			} catch (NotFoundException e) {
-				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId, e.getMessage());
+				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId,
+						e.getMessage());
 				throw new NotFoundException(e.getMessage());
 			} catch (InsufficientBalanceException e) {
-				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId, e.getMessage());
+				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId,
+						e.getMessage());
 				throw new InsufficientBalanceException(e.getMessage());
 			} catch (InternalServerException e) {
-				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId, e.getMessage());
+				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId,
+						e.getMessage());
 				throw new InternalServerException(e.getMessage());
 			} catch (ScheduledTimeException e) {
-				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId, e.getMessage());
+				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId,
+						e.getMessage());
 				throw new ScheduledTimeException(e.getMessage());
 			} catch (Exception e) {
-				logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"), bulkSessionId, e);
+				logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"), bulkSessionId,
+						e);
 				throw new InternalServerException(e.getMessage());
 			}
 			bulkResponse.setStatus(target);
@@ -4183,7 +4304,8 @@ public class SmsServiceImpl implements SmsService {
 			} else {
 				destinationList = bulkSmsDTO.getDestinationList2(listInfo);
 			}
-			logger.info(messageResourceBundle.getLogMessage("info.listInfoSummary"), listInfo.getTotal(), listInfo.getValidCount(), listInfo.getInvalidCount(), listInfo.getDuplicate());
+			logger.info(messageResourceBundle.getLogMessage("info.listInfoSummary"), listInfo.getTotal(),
+					listInfo.getValidCount(), listInfo.getInvalidCount(), listInfo.getDuplicate());
 
 			if (bulkSmsDTO.getMessageType().equalsIgnoreCase("Unicode")) {
 				bulkSmsDTO.setMessage(UTF16(bulkSmsDTO.getMessage()));
@@ -4198,7 +4320,8 @@ public class SmsServiceImpl implements SmsService {
 				bulkSmsDTO.setOrigMessage(UTF16(bulkSmsDTO.getMessage()));
 			}
 
-			logger.info(messageResourceBundle.getLogMessage("message.type.parts.info"), bulkSessionId, bulkSmsDTO.getMessageType(), no_of_msg);
+			logger.info(messageResourceBundle.getLogMessage("message.type.parts.info"), bulkSessionId,
+					bulkSmsDTO.getMessageType(), no_of_msg);
 			if (bulkSmsDTO.isSchedule()) {
 				boolean valid_sch_time = false;
 				String client_time = bulkSmsDTO.getTimestart();
@@ -4214,7 +4337,8 @@ public class SmsServiceImpl implements SmsService {
 					if (new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").parse(schedule_time).after(new Date())) {
 						valid_sch_time = true;
 					} else {
-						logger.error(messageResourceBundle.getLogMessage("scheduled.time.before.current.error"), bulkSessionId);
+						logger.error(messageResourceBundle.getLogMessage("scheduled.time.before.current.error"),
+								bulkSessionId);
 					}
 					String server_date = schedule_time.split(" ")[0];
 					String server_time = schedule_time.split(" ")[1];
@@ -4222,7 +4346,8 @@ public class SmsServiceImpl implements SmsService {
 							+ server_date.split("-")[0]);
 					bulkSmsDTO.setTime(server_time.split(":")[0] + "" + server_time.split(":")[1]);
 				} catch (Exception e) {
-					logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"), bulkSessionId, e);
+					logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"),
+							bulkSessionId, e);
 				}
 				if (!valid_sch_time) {
 					String errorMessage = "Invalid schedule time provided. Please make sure to provide a valid time.";
@@ -4328,7 +4453,8 @@ public class SmsServiceImpl implements SmsService {
 									messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 						}
 						adminCost = routeService.calculateRoutingCost(masterOptional.get().getId(), msgLengthTable);
-						logger.info(messageResourceBundle.getLogMessage("info.adminBalanceAndCost"), masterOptional.get().getId(), adminWallet, adminCost);
+						logger.info(messageResourceBundle.getLogMessage("info.adminBalanceAndCost"),
+								masterOptional.get().getId(), adminWallet, adminCost);
 						if ((adminWallet >= adminCost)) {
 							if (wallet >= totalcost) {
 								adminWallet = adminWallet - adminCost;
@@ -4336,14 +4462,16 @@ public class SmsServiceImpl implements SmsService {
 								amount = true;
 
 							} else {
-								logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"), bulkSessionId);
+								logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"),
+										bulkSessionId);
 								throw new InsufficientBalanceException(messageResourceBundle
 										.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION) + bulkSessionId);
 
 							}
 						} else {
 							// Insufficient Admin balance
-							logger.error(messageResourceBundle.getLogMessage("error.insufficientAdminBalance"), masterOptional.get().getId());
+							logger.error(messageResourceBundle.getLogMessage("error.insufficientAdminBalance"),
+									masterOptional.get().getId());
 							throw new InsufficientBalanceException(bulkSessionId + " "
 									+ messageResourceBundle
 											.getExMessage(ConstantMessages.INSUFFICIENT_ADMIN_BALANCE_EXCEPTION)
@@ -4356,7 +4484,8 @@ public class SmsServiceImpl implements SmsService {
 
 						} else {
 							// Insufficient balance
-							logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"), bulkSessionId);
+							logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"),
+									bulkSessionId);
 							throw new InsufficientBalanceException(
 									messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION)
 											+ bulkSessionId);
@@ -4431,7 +4560,8 @@ public class SmsServiceImpl implements SmsService {
 							bulkResponse.setBulkSessionId(bulkSessionId);
 							bulkResponse.setCredits(new DecimalFormat("0.00000").format(wallet));
 							bulkResponse.setDeductcredits(new DecimalFormat("0.00000").format(totalcost));
-							logger.info(messageResourceBundle.getLogMessage("sms.processed"), bulkSessionId, wallet, totalcost);
+							logger.info(messageResourceBundle.getLogMessage("sms.processed"), bulkSessionId, wallet,
+									totalcost);
 						} else {
 							logger.info(messageResourceBundle.getLogMessage("process.failed"), bulkSessionId);
 							throw new InternalServerException(bulkSessionId + "<-- Process Failed --> ");
@@ -4470,7 +4600,8 @@ public class SmsServiceImpl implements SmsService {
 										.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION) + bulkSessionId);
 							}
 						} else {
-							logger.error(messageResourceBundle.getLogMessage("error.insufficientAdminCredits"), masterOptional.get().getId());
+							logger.error(messageResourceBundle.getLogMessage("error.insufficientAdminCredits"),
+									masterOptional.get().getId());
 							throw new InsufficientBalanceException(bulkSessionId
 									+ messageResourceBundle
 											.getExMessage(ConstantMessages.INSUFFICIENT_ADMIN_CREDITS_EXCEPTION)
@@ -4530,7 +4661,8 @@ public class SmsServiceImpl implements SmsService {
 									}
 									target = IConstants.SUCCESS_KEY;
 									String successMessage = "Scheduled successfully. Your task is now in the queue.";
-									logger.info(messageResourceBundle.getLogMessage("info.successMessage"), successMessage);
+									logger.info(messageResourceBundle.getLogMessage("info.successMessage"),
+											successMessage);
 								} else {
 									String duplicateScheduleMessage = "Error: Duplicate schedule. A similar task is already scheduled.";
 									logger.error(messageResourceBundle.getLogMessage("error.duplicateSchedule"));
@@ -4561,7 +4693,8 @@ public class SmsServiceImpl implements SmsService {
 							bulkResponse.setDeductcredits(totalMsg + "");
 							bulkResponse.setBulkSessionId(bulkSessionId);
 
-							logger.info(messageResourceBundle.getLogMessage("message.bulkSMSProcessed"), credits, totalMsg);
+							logger.info(messageResourceBundle.getLogMessage("message.bulkSMSProcessed"), credits,
+									totalMsg);
 						} else {
 							logger.error(messageResourceBundle.getLogMessage("error.process.failed"), bulkSessionId);
 							throw new InternalServerException(bulkSessionId + "<-- Process Failed --> ");
@@ -4680,9 +4813,11 @@ public class SmsServiceImpl implements SmsService {
 		bulkSmsDTO.setReqType("GroupData");
 		String bulkSessionId = systemId + "_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
 		if (bulkSmsDTO.isSchedule()) {
-			logger.info(messageResourceBundle.getLogMessage("info.groupDataScheduleRequest"), bulkContactRequest.isTracking());
+			logger.info(messageResourceBundle.getLogMessage("info.groupDataScheduleRequest"),
+					bulkContactRequest.isTracking());
 		} else {
-			logger.info(messageResourceBundle.getLogMessage("info.groupDataBulkUploadRequest"), bulkContactRequest.isTracking());
+			logger.info(messageResourceBundle.getLogMessage("info.groupDataBulkUploadRequest"),
+					bulkContactRequest.isTracking());
 		}
 		try {
 
@@ -4754,7 +4889,8 @@ public class SmsServiceImpl implements SmsService {
 					if (new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").parse(schedule_time).after(new Date())) {
 						valid_sch_time = true;
 					} else {
-						logger.error(messageResourceBundle.getLogMessage("scheduled.time.before.current.error"), bulkSessionId);
+						logger.error(messageResourceBundle.getLogMessage("scheduled.time.before.current.error"),
+								bulkSessionId);
 					}
 					String server_date = schedule_time.split(" ")[0];
 					String server_time = schedule_time.split(" ")[1];
@@ -4762,7 +4898,8 @@ public class SmsServiceImpl implements SmsService {
 							+ server_date.split("-")[0]);
 					bulkSmsDTO.setTime(server_time.split(":")[0] + "" + server_time.split(":")[1]);
 				} catch (Exception e) {
-					logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"), bulkSessionId, e);
+					logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"),
+							bulkSessionId, e);
 				}
 				if (!valid_sch_time) {
 					throw new ScheduledTimeException(
@@ -5078,7 +5215,8 @@ public class SmsServiceImpl implements SmsService {
 						}
 					} else {
 						// insufficient Credits
-						logger.error(messageResourceBundle.getLogMessage("error.insufficientBalance"), bulkSessionId, wallet);
+						logger.error(messageResourceBundle.getLogMessage("error.insufficientBalance"), bulkSessionId,
+								wallet);
 						throw new InsufficientBalanceException(bulkSessionId
 								+ messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION)
 								+ wallet);
@@ -5294,7 +5432,8 @@ public class SmsServiceImpl implements SmsService {
 						Long.parseLong(alertNumber);
 						alertNumbers.add(alertNumber);
 					} catch (Exception ex) {
-						logger.error(messageResourceBundle.getLogMessage("error.invalidBatchFinishAlertNumber"), systemId, alertNumber);
+						logger.error(messageResourceBundle.getLogMessage("error.invalidBatchFinishAlertNumber"),
+								systemId, alertNumber);
 					}
 				}
 				if (bulkSmsDTO.isAlert()) {
@@ -5303,7 +5442,8 @@ public class SmsServiceImpl implements SmsService {
 							Long.parseLong(alertNumber);
 							alertNumbers.add(alertNumber);
 						} catch (Exception ex) {
-							logger.error(messageResourceBundle.getLogMessage("error.invalidAlertNumber"), systemId, alertNumber);
+							logger.error(messageResourceBundle.getLogMessage("error.invalidAlertNumber"), systemId,
+									alertNumber);
 							throw new InternalServerException(systemId
 									+ messageResourceBundle
 											.getExMessage(ConstantMessages.INVALID_BATCH_FINISH_ALERT_NUMBER_MESSAGE)
@@ -5319,9 +5459,11 @@ public class SmsServiceImpl implements SmsService {
 			// String fileName = IConstants.WEBAPP_DIR + "upload" + "//" + bulkSessionId;
 			// bulkSmsDTO.writeToFile(fileName);
 			if (bulkSmsDTO.isSchedule()) {
-				logger.info(messageResourceBundle.getLogMessage("info.mmsScheduleRequest"), bulkSessionId, destinationNumberFile.size());
+				logger.info(messageResourceBundle.getLogMessage("info.mmsScheduleRequest"), bulkSessionId,
+						destinationNumberFile.size());
 			} else {
-				logger.info(messageResourceBundle.getLogMessage("info.mmsUploadRequest"), bulkSessionId, destinationNumberFile.size());
+				logger.info(messageResourceBundle.getLogMessage("info.mmsUploadRequest"), bulkSessionId,
+						destinationNumberFile.size());
 			}
 			// ------ merge uploaded files into a list ---------------
 			List<String> destinationList = null;
@@ -5333,7 +5475,8 @@ public class SmsServiceImpl implements SmsService {
 			for (MultipartFile uploaded_file : destinationNumberFile) {
 				if (uploaded_file != null) {
 					String file_mode = null;
-					logger.info(messageResourceBundle.getLogMessage("info.processingFile"), bulkSessionId, uploaded_file.getOriginalFilename());
+					logger.info(messageResourceBundle.getLogMessage("info.processingFile"), bulkSessionId,
+							uploaded_file.getOriginalFilename());
 					if (uploaded_file.getOriginalFilename().lastIndexOf(".txt") > -1) {
 						file_mode = "txt";
 					} else if (uploaded_file.getOriginalFilename().lastIndexOf(".csv") > -1) {
@@ -5363,7 +5506,8 @@ public class SmsServiceImpl implements SmsService {
 									long num = Long.parseLong(next);
 									excludeSet.add(String.valueOf(num));
 								} catch (NumberFormatException ne) {
-									logger.error(messageResourceBundle.getLogMessage("error.invalidExcludeNumber"), next);
+									logger.error(messageResourceBundle.getLogMessage("error.invalidExcludeNumber"),
+											next);
 								}
 							}
 						}
@@ -5421,7 +5565,8 @@ public class SmsServiceImpl implements SmsService {
 											counter = errors.get("Invalid Destination");
 										}
 										errors.put("Invalid Destination", ++counter);
-										logger.info(messageResourceBundle.getLogMessage("invalid.destination.number"), destinationNumber);
+										logger.info(messageResourceBundle.getLogMessage("invalid.destination.number"),
+												destinationNumber);
 										invalidCount++;
 									}
 								} else {
@@ -5461,7 +5606,8 @@ public class SmsServiceImpl implements SmsService {
 										while (cellIterator.hasNext()) {
 											Cell cell = cellIterator.next();
 											if (cell_number > 0) {
-												logger.info(messageResourceBundle.getLogMessage("info.invalidColumn"), nextRow.getRowNum() + 1);
+												logger.info(messageResourceBundle.getLogMessage("info.invalidColumn"),
+														nextRow.getRowNum() + 1);
 												break;
 											}
 											total++;
@@ -5478,7 +5624,9 @@ public class SmsServiceImpl implements SmsService {
 													if (!excludeSet.contains(String.valueOf(num))) {
 														temp_number_list.add(String.valueOf(num));
 													} else {
-														logger.info(messageResourceBundle.getLogMessage("excluded.numbers"), num);
+														logger.info(
+																messageResourceBundle.getLogMessage("excluded.numbers"),
+																num);
 													}
 												} catch (NumberFormatException nfe) {
 													int counter = 0;
@@ -5486,7 +5634,8 @@ public class SmsServiceImpl implements SmsService {
 														counter = (Integer) errors.get("Invalid Destination");
 													}
 													errors.put("Invalid Destination", ++counter);
-													logger.info(messageResourceBundle.getLogMessage("invalid.destination.number"), destination);
+													logger.info(messageResourceBundle
+															.getLogMessage("invalid.destination.number"), destination);
 													invalidCount++;
 												}
 											} else {
@@ -5500,18 +5649,21 @@ public class SmsServiceImpl implements SmsService {
 											cell_number++;
 										}
 									}
-									logger.info(messageResourceBundle.getLogMessage("info.sheetProcessed"), uploaded_file.getOriginalFilename(), i);
+									logger.info(messageResourceBundle.getLogMessage("info.sheetProcessed"),
+											uploaded_file.getOriginalFilename(), i);
 								}
 								// *********************************************************
 							} catch (Exception ex) {
-								logger.error(messageResourceBundle.getLogMessage("error.fileParsing"), uploaded_file, ex);
+								logger.error(messageResourceBundle.getLogMessage("error.fileParsing"), uploaded_file,
+										ex);
 							}
 						}
 						logger.info(messageResourceBundle.getLogMessage("info.numberCounter"), file_total_counter);
 					}
 				}
 			}
-			logger.info(messageResourceBundle.getLogMessage("uploaded.files.processed"), bulkSessionId, temp_number_list.size());
+			logger.info(messageResourceBundle.getLogMessage("uploaded.files.processed"), bulkSessionId,
+					temp_number_list.size());
 			Set<String> hashSet = new HashSet<String>(temp_number_list);
 			if (uploadForm.isAllowDuplicate()) {
 				destinationList = new ArrayList<String>(temp_number_list);
@@ -5528,7 +5680,9 @@ public class SmsServiceImpl implements SmsService {
 			listInfo.setDuplicate(dup);
 			bulkSmsDTO.setDestinationList(destinationList);
 			// -------------------------------------------------------
-			logger.info(messageResourceBundle.getLogMessage("info.listInfoSummary"), listInfo.getTotal(), listInfo.getValidCount(), listInfo.getInvalidCount(), listInfo.getDuplicate(), bulkSmsDTO.isAllowDuplicate());
+			logger.info(messageResourceBundle.getLogMessage("info.listInfoSummary"), listInfo.getTotal(),
+					listInfo.getValidCount(), listInfo.getInvalidCount(), listInfo.getDuplicate(),
+					bulkSmsDTO.isAllowDuplicate());
 			Optional<BalanceEntry> masterBalanceOptional = balanceEntryRepository.findBySystemId((user.getMasterId()));
 			Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findBySystemId(user.getSystemId());
 			String wallet_flag = null;
@@ -5550,7 +5704,8 @@ public class SmsServiceImpl implements SmsService {
 			} else {
 				bulkSmsDTO.setMessageType("SpecialChar");
 			}
-			logger.info(messageResourceBundle.getLogMessage("message.type.parts.info"), bulkSessionId, bulkSmsDTO.getMessageType(), no_of_msg);
+			logger.info(messageResourceBundle.getLogMessage("message.type.parts.info"), bulkSessionId,
+					bulkSmsDTO.getMessageType(), no_of_msg);
 			if (bulkSmsDTO.isSchedule()) {
 				boolean valid_sch_time = false;
 				String client_time = bulkSmsDTO.getTimestart();
@@ -5561,11 +5716,13 @@ public class SmsServiceImpl implements SmsService {
 				String schedule_time = null;
 				try {
 					schedule_time = local_formatter.format(client_formatter.parse(client_time));
-					logger.info(messageResourceBundle.getLogMessage("info.clientTime"), client_gmt, client_time, schedule_time);
+					logger.info(messageResourceBundle.getLogMessage("info.clientTime"), client_gmt, client_time,
+							schedule_time);
 					if (new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").parse(schedule_time).after(new Date())) {
 						valid_sch_time = true;
 					} else {
-						logger.error(messageResourceBundle.getLogMessage("scheduled.time.before.current.error"), bulkSessionId);
+						logger.error(messageResourceBundle.getLogMessage("scheduled.time.before.current.error"),
+								bulkSessionId);
 						throw new ScheduledTimeException(bulkSessionId + messageResourceBundle
 								.getExMessage(ConstantMessages.SCHEDULED_TIME_BEFORE_CURRENT_TIME_EXCEPTION));
 					}
@@ -5575,7 +5732,8 @@ public class SmsServiceImpl implements SmsService {
 							+ server_date.split("-")[0]);
 					bulkSmsDTO.setTime(server_time.split(":")[0] + "" + server_time.split(":")[1]);
 				} catch (Exception e) {
-					logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId, e.getMessage());
+					logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId,
+							e.getMessage());
 					throw new ScheduledTimeException(bulkSessionId + e.getMessage());
 				}
 				if (!valid_sch_time) {
@@ -5593,7 +5751,8 @@ public class SmsServiceImpl implements SmsService {
 					// boolean inherit = false;
 					if (user.isAdminDepend()) {
 						adminCost = routeService.calculateMmsRoutingCost(master.getId(), destinationList, no_of_msg);
-						logger.info(messageResourceBundle.getLogMessage("admin.balance.calculated"), master.getId(), adminWallet, adminCost);
+						logger.info(messageResourceBundle.getLogMessage("admin.balance.calculated"), master.getId(),
+								adminWallet, adminCost);
 						if ((adminWallet >= adminCost)) {
 							if (wallet >= totalcost) {
 								adminWallet = adminWallet - adminCost;
@@ -5601,13 +5760,15 @@ public class SmsServiceImpl implements SmsService {
 								amount = true;
 
 							} else {
-								logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"), bulkSessionId);
+								logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"),
+										bulkSessionId);
 								throw new InsufficientBalanceException(messageResourceBundle
 										.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION) + bulkSessionId);
 							}
 						} else {
 							// Insufficient Admin balance
-							logger.error(messageResourceBundle.getLogMessage("insufficient.admin.balance"), master.getId());
+							logger.error(messageResourceBundle.getLogMessage("insufficient.admin.balance"),
+									master.getId());
 							throw new InsufficientBalanceException(
 									bulkSessionId
 											+ messageResourceBundle
@@ -5622,7 +5783,8 @@ public class SmsServiceImpl implements SmsService {
 
 						} else {
 							// Insufficient balance
-							logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"), bulkSessionId);
+							logger.error(messageResourceBundle.getLogMessage("error.insufficient.balance"),
+									bulkSessionId);
 							throw new InsufficientBalanceException(
 									messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION)
 											+ bulkSessionId);
@@ -5700,7 +5862,8 @@ public class SmsServiceImpl implements SmsService {
 							bulkResponse.setCredits(new DecimalFormat("0.00000").format(wallet));
 							bulkResponse.setDeductcredits(new DecimalFormat("0.00000").format(totalcost));
 							bulkResponse.setBulkSessionId(bulkSessionId);
-							logger.info(messageResourceBundle.getLogMessage("sms.processed"), bulkSessionId, wallet, totalcost);
+							logger.info(messageResourceBundle.getLogMessage("sms.processed"), bulkSessionId, wallet,
+									totalcost);
 						} else {
 							logger.info(messageResourceBundle.getLogMessage("process.failed"), bulkSessionId);
 							throw new InternalServerException(bulkSessionId + "<-- Process Failed --> ");
@@ -5739,7 +5902,8 @@ public class SmsServiceImpl implements SmsService {
 										.getExMessage(ConstantMessages.INSUFFICIENT_CREDITS_EXCEPTION) + bulkSessionId);
 							}
 						} else {
-							logger.error(messageResourceBundle.getLogMessage("error.insufficientAdminCredits"), master.getId());
+							logger.error(messageResourceBundle.getLogMessage("error.insufficientAdminCredits"),
+									master.getId());
 							throw new InsufficientBalanceException(
 									bulkSessionId
 											+ messageResourceBundle
@@ -5825,7 +5989,8 @@ public class SmsServiceImpl implements SmsService {
 							bulkResponse.setDeductcredits(deductCredits + "");
 							bulkResponse.setBulkSessionId(bulkSessionId);
 							bulkResponse.setBulkListInfo(listInfo);
-							logger.info(messageResourceBundle.getLogMessage("info.processedCreditsDeducted"), credits, deductCredits);
+							logger.info(messageResourceBundle.getLogMessage("info.processedCreditsDeducted"), credits,
+									deductCredits);
 						} else {
 							logger.error(messageResourceBundle.getLogMessage("error.process.failed"), bulkSessionId);
 							throw new InternalServerException(bulkSessionId + "<-- Process Failed --> ");
@@ -5920,7 +6085,8 @@ public class SmsServiceImpl implements SmsService {
 					workbook = new HSSFWorkbook(inputStream);
 				}
 				Sheet firstSheet = workbook.getSheetAt(0);
-				logger.info(messageResourceBundle.getLogMessage("info.totalRows"), bulkSessionId, firstSheet.getPhysicalNumberOfRows());
+				logger.info(messageResourceBundle.getLogMessage("info.totalRows"), bulkSessionId,
+						firstSheet.getPhysicalNumberOfRows());
 				Iterator<org.apache.poi.ss.usermodel.Row> iterator = firstSheet.iterator();
 				int column_count = 0;
 				while (iterator.hasNext()) {
@@ -5942,7 +6108,8 @@ public class SmsServiceImpl implements SmsService {
 							if (cell.getColumnIndex() < column_count) {
 								params[cell.getColumnIndex()] = cell_value;
 							} else {
-								logger.info(messageResourceBundle.getLogMessage("info.invalidColumn"), cell.getColumnIndex(), cell_value);
+								logger.info(messageResourceBundle.getLogMessage("info.invalidColumn"),
+										cell.getColumnIndex(), cell_value);
 							}
 						}
 						param_list.add(params);
@@ -5989,7 +6156,8 @@ public class SmsServiceImpl implements SmsService {
 												try {
 													Long.parseLong(number);
 												} catch (NumberFormatException nfe) {
-													logger.info(messageResourceBundle.getLogMessage("info.invalidMobileEntry"), number, entry_number);
+													logger.info(messageResourceBundle.getLogMessage(
+															"info.invalidMobileEntry"), number, entry_number);
 													continue;
 												}
 												String YYYY = entry[1];
@@ -6021,7 +6189,10 @@ public class SmsServiceImpl implements SmsService {
 													System.out
 															.println(bulkSessionId + " server_time: " + schedule_time);
 													if (local_formatter.parse(schedule_time).before(new Date())) {
-														logger.info(messageResourceBundle.getLogMessage("info.scheduledTimeBeforeCurrentTime"), entry_number, schedule_time);
+														logger.info(
+																messageResourceBundle.getLogMessage(
+																		"info.scheduledTimeBeforeCurrentTime"),
+																entry_number, schedule_time);
 														continue;
 
 													}
@@ -6033,7 +6204,10 @@ public class SmsServiceImpl implements SmsService {
 													bulkSmsDTO.setTime(
 															server_time.split(":")[0] + "" + server_time.split(":")[1]);
 												} catch (Exception e) {
-													logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"), bulkSessionId, e);
+													logger.error(
+															messageResourceBundle.getLogMessage(
+																	"error.with.session.id.and.exception"),
+															bulkSessionId, e);
 													continue;
 												}
 												bulkSmsDTO.setTimestart(client_time);
@@ -6176,43 +6350,52 @@ public class SmsServiceImpl implements SmsService {
 														}
 													} else {
 														// Scheduling Error
-														logger.error(messageResourceBundle.getLogMessage("error.schedulingError"), entry_number);
+														logger.error(messageResourceBundle
+																.getLogMessage("error.schedulingError"), entry_number);
 														throw new ScheduledTimeException(
 																entry_number + "<--  Scheduling Error --> ");
 													}
 												} else {
-													logger.error(messageResourceBundle.getLogMessage("error.schedulingFileCreationError"), entry_number);
+													logger.error(messageResourceBundle.getLogMessage(
+															"error.schedulingFileCreationError"), entry_number);
 													throw new ScheduledTimeException(
 															entry_number + "<--  Scheduling File Creation Error --> ");
 												}
 												// -------- end create schedule ----------------------------
 											} else {
-												logger.error(messageResourceBundle.getLogMessage("error.invalidMobileEntry"), bulkSessionId, entry[5], entry_number);
+												logger.error(
+														messageResourceBundle.getLogMessage("error.invalidMobileEntry"),
+														bulkSessionId, entry[5], entry_number);
 												throw new InternalServerException(bulkSessionId + " Invalid Mobile["
 														+ entry[5] + "] Entry: " + entry_number);
 											}
 										} else {
-											logger.error(messageResourceBundle.getLogMessage("error.invalidTimeEntry"), bulkSessionId, entry[4], entry_number);
+											logger.error(messageResourceBundle.getLogMessage("error.invalidTimeEntry"),
+													bulkSessionId, entry[4], entry_number);
 											throw new InternalServerException(bulkSessionId + " Invalid Time["
 													+ entry[4] + "] Entry: " + entry_number);
 										}
 									} else {
-										logger.error(messageResourceBundle.getLogMessage("error.invalidDayEntry"), bulkSessionId, entry[3], entry_number);
+										logger.error(messageResourceBundle.getLogMessage("error.invalidDayEntry"),
+												bulkSessionId, entry[3], entry_number);
 										throw new InternalServerException(bulkSessionId + " Invalid Day[" + entry[3]
 												+ "] Entry: " + entry_number);
 									}
 								} else {
-									logger.error(messageResourceBundle.getLogMessage("error.invalidMonthEntry"), bulkSessionId, entry[2], entry_number);
+									logger.error(messageResourceBundle.getLogMessage("error.invalidMonthEntry"),
+											bulkSessionId, entry[2], entry_number);
 									throw new InternalServerException(
 											bulkSessionId + " Invalid Month[" + entry[2] + "] Entry: " + entry_number);
 								}
 							} else {
-								logger.error(messageResourceBundle.getLogMessage("error.invalidYearEntry"), bulkSessionId, entry[2], entry_number);
+								logger.error(messageResourceBundle.getLogMessage("error.invalidYearEntry"),
+										bulkSessionId, entry[2], entry_number);
 								throw new InternalServerException(
 										bulkSessionId + " Invalid Year[" + entry[1] + "] Entry: " + entry_number);
 							}
 						} else {
-							logger.error(messageResourceBundle.getLogMessage("error.invalidGmtEntry"), bulkSessionId, entry[2], entry_number);
+							logger.error(messageResourceBundle.getLogMessage("error.invalidGmtEntry"), bulkSessionId,
+									entry[2], entry_number);
 							throw new InternalServerException(
 									bulkSessionId + " Invalid Gmt[" + entry[0] + "] Entry: " + entry_number);
 						}
@@ -6220,17 +6403,20 @@ public class SmsServiceImpl implements SmsService {
 					}
 					if (!scheduleList.isEmpty()) {
 						target = IConstants.SUCCESS_KEY;
-						logger.info(messageResourceBundle.getLogMessage("info.totalScheduleCreated"), bulkSessionId, scheduleList.size());
+						logger.info(messageResourceBundle.getLogMessage("info.totalScheduleCreated"), bulkSessionId,
+								scheduleList.size());
 
 					} else {
 						logger.info(messageResourceBundle.getLogMessage("info.noValidEntryFound"), bulkSessionId);
 						throw new InternalServerException(bulkSessionId + "<-- No Valid Entry Found --> ");
 					}
 				} catch (ScheduledTimeException e) {
-					logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"), bulkSessionId, e);
+					logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"),
+							bulkSessionId, e);
 					throw new ScheduledTimeException(e.getMessage());
 				} catch (Exception e) {
-					logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"), bulkSessionId, e);
+					logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"),
+							bulkSessionId, e);
 					throw new InternalServerException(e.getMessage());
 				}
 			} else {
@@ -6249,14 +6435,16 @@ public class SmsServiceImpl implements SmsService {
 			setProgressEvent(progressEvent);
 			response = sendBulkMms(bulkSmsDTO, mmsType, caption, webEntry);
 		} catch (Exception e) {
-			logger.error(messageResourceBundle.getLogMessage("error.fillInStackTrace"), bulkSmsDTO.getSystemId(), e.fillInStackTrace());
+			logger.error(messageResourceBundle.getLogMessage("error.fillInStackTrace"), bulkSmsDTO.getSystemId(),
+					e.fillInStackTrace());
 		}
 
 		return response;
 	}
 
 	public String sendBulkMms(BulkSmsDTO bulkSmsDTO, String mmsType, String caption, WebMasterEntry webEntry) {
-		logger.info(messageResourceBundle.getLogMessage("info.bulkSmsRequest"), bulkSmsDTO.getSystemId(), bulkSmsDTO.getReqType(), bulkSmsDTO.isAlert(), bulkSmsDTO.getDestinationNumber());
+		logger.info(messageResourceBundle.getLogMessage("info.bulkSmsRequest"), bulkSmsDTO.getSystemId(),
+				bulkSmsDTO.getReqType(), bulkSmsDTO.isAlert(), bulkSmsDTO.getDestinationNumber());
 		String user = bulkSmsDTO.getSystemId();
 		// QueueBackup backupObject = null;
 		BulkEntry entry = null;
@@ -6320,7 +6508,8 @@ public class SmsServiceImpl implements SmsService {
 					entry.setAlertNumbers(String.join(",", alertNumbers));
 					entry.setAlert(true);
 				} else {
-					logger.info(messageResourceBundle.getLogMessage("info.invalidAlertNumbers"), bulkSmsDTO.getDestinationNumber());
+					logger.info(messageResourceBundle.getLogMessage("info.invalidAlertNumbers"),
+							bulkSmsDTO.getDestinationNumber());
 					entry.setAlert(false);
 				}
 			}
@@ -6427,7 +6616,8 @@ public class SmsServiceImpl implements SmsService {
 			List<GroupDataEntry> groupDataEntries = null;
 
 			if (searchCriteria.getNumber() != null && searchCriteria.getNumber().length > 0) {
-				logger.info(messageResourceBundle.getLogMessage("info.criteriaForNumbers"), searchCriteria.getNumber().length);
+				logger.info(messageResourceBundle.getLogMessage("info.criteriaForNumbers"),
+						searchCriteria.getNumber().length);
 				groupDataEntries = groupDataEntryRepository.findByNumberInAndGroupId(
 						ArrayUtils.toObject(searchCriteria.getNumber()), searchCriteria.getGroupId());
 			}
@@ -6635,7 +6825,8 @@ public class SmsServiceImpl implements SmsService {
 			BulkSmsDTO bulkSmsDTO = service.readScheduleFile(file);
 			int user_id = userEntryRepository.getUsers(bulkSmsDTO.getSystemId()).get().getUserId();
 			String mode = bulkSmsDTO.getUserMode();
-			logger.info(messageResourceBundle.getLogMessage("info.fileMode"), bulkSmsDTO.getSystemId(), bulkSmsDTO.getPassword(), mode);
+			logger.info(messageResourceBundle.getLogMessage("info.fileMode"), bulkSmsDTO.getSystemId(),
+					bulkSmsDTO.getPassword(), mode);
 			long credits = 0;
 			double walletAmt = 0.0;
 			double totalWalletCost = bulkSmsDTO.getTotalWalletCost();
@@ -6649,21 +6840,25 @@ public class SmsServiceImpl implements SmsService {
 			long list = (long) bulkSmsDTO.getDestinationList().size();
 			if (mode.equalsIgnoreCase("credit")) {
 				if (list <= credits) {
-					logger.info(messageResourceBundle.getLogMessage("info.sufficientCredits"), bulkSmsDTO.getSystemId(), credits);
+					logger.info(messageResourceBundle.getLogMessage("info.sufficientCredits"), bulkSmsDTO.getSystemId(),
+							credits);
 					String response = sendBulkMsg(bulkSmsDTO, webEntry.isBulkOnApprove(), user_id);
 					toReturn = "Scheduled Successfully" + response;
 				} else {
 					toReturn = "InSufficient Credits";
-					logger.error(messageResourceBundle.getLogMessage("error.insufficientCredits"), bulkSmsDTO.getSystemId(), credits);
+					logger.error(messageResourceBundle.getLogMessage("error.insufficientCredits"),
+							bulkSmsDTO.getSystemId(), credits);
 				}
 			} else if (mode.equalsIgnoreCase("wallet")) {
 				if (totalWalletCost <= walletAmt) {
-					logger.info(messageResourceBundle.getLogMessage("info.sufficientBalance"), bulkSmsDTO.getSystemId(), walletAmt, totalWalletCost);
+					logger.info(messageResourceBundle.getLogMessage("info.sufficientBalance"), bulkSmsDTO.getSystemId(),
+							walletAmt, totalWalletCost);
 					String response = sendBulkMsg(bulkSmsDTO, webEntry.isBulkOnApprove(), user_id);
 					toReturn = "Scheduled Successfully" + response;
 				} else {
 					toReturn = "InSufficient Wallet";
-					logger.error(messageResourceBundle.getLogMessage("error.insufficientBalance"), bulkSmsDTO.getSystemId(), walletAmt, totalWalletCost);
+					logger.error(messageResourceBundle.getLogMessage("error.insufficientBalance"),
+							bulkSmsDTO.getSystemId(), walletAmt, totalWalletCost);
 				}
 			}
 		} catch (Exception e) {
@@ -6943,7 +7138,8 @@ public class SmsServiceImpl implements SmsService {
 		int id = bulkUpdateRequest.getId();
 		try {
 			BulkEntry queueBackup = bulkEntryRepository.findById(id).get();
-			logger.info(messageResourceBundle.getLogMessage("info.fileIdModified"), id, bulkUpdateRequest.getExpiryHour(), bulkUpdateRequest.getDelay());
+			logger.info(messageResourceBundle.getLogMessage("info.fileIdModified"), id,
+					bulkUpdateRequest.getExpiryHour(), bulkUpdateRequest.getDelay());
 			queueBackup.setDelay(bulkUpdateRequest.getDelay());
 			int ston = 5;
 			int snpi = 0;
@@ -7055,7 +7251,8 @@ public class SmsServiceImpl implements SmsService {
 			// Collection statusList = dbService.getUploadedStatusbulk(clientId, role, opt);
 			if (list.isEmpty()) {
 				target = IConstants.FAILURE_KEY;
-				logger.error(messageResourceBundle.getLogMessage("error.failedToRetrieveBatchList"), username, user.getRole());
+				logger.error(messageResourceBundle.getLogMessage("error.failedToRetrieveBatchList"), username,
+						user.getRole());
 				throw new NotFoundException(
 						messageResourceBundle.getExMessage(ConstantMessages.NO_BATCHES_AVAILABLE_FOR_PROCESSING));
 
@@ -7065,12 +7262,24 @@ public class SmsServiceImpl implements SmsService {
 				BulkEntry entry = null;
 				long count = 0;
 				for (BatchObject batch : list) {
-					entry = bulkEntryRepository.findById(batch.getId()).get();
-					count = rowCount(batch.getId());
-					long processed = entry.getTotal() - count;
-					entry.setProcessed(processed);
-					entry.setActive(batch.isActive());
-					reportList.add(entry);
+					if (batch != null) {
+						Optional<BulkEntry> optionalEntry = bulkEntryRepository.findById(batch.getId());
+						if (optionalEntry.isPresent()) {
+							entry = optionalEntry.get();
+							count = rowCount(batch.getId());
+							long processed = entry.getTotal() - count;
+							entry.setProcessed(processed);
+							if (entry.getTotal() < 0) {
+								entry.setProcessed(0);
+							}
+							entry.setActive(batch.isActive());
+							reportList.add(entry);
+						} else {
+							logger.error("bull proccess table data not fount with id:{}", batch.getId());
+						}
+					} else {
+						logger.error("batch id is null...." + batch);
+					}
 				}
 				target = IConstants.SUCCESS_KEY;
 
@@ -7171,15 +7380,18 @@ public class SmsServiceImpl implements SmsService {
 									+ filename);
 				}
 			} catch (NotFoundException ex) {
-				logger.error(messageResourceBundle.getLogMessage("error.failedToRetrieveBatchList"), username, user.getRole(), ex.getCause());
+				logger.error(messageResourceBundle.getLogMessage("error.failedToRetrieveBatchList"), username,
+						user.getRole(), ex.getCause());
 				throw new NotFoundException(username + "[" + user.getRole() + "] " + ex.getLocalizedMessage());
 			} catch (Exception ex) {
-				logger.error(messageResourceBundle.getLogMessage("error.failedToRetrieveBatchList"), username, user.getRole(), ex.getCause());
+				logger.error(messageResourceBundle.getLogMessage("error.failedToRetrieveBatchList"), username,
+						user.getRole(), ex.getCause());
 				throw new InternalServerException(username + "[" + user.getRole() + "] " + ex.getLocalizedMessage());
 			}
 			logger.info(messageResourceBundle.getLogMessage("info.scheduleList"), scheduleList);
 		} else {
-			logger.error(messageResourceBundle.getLogMessage("error.invalidRequest"), user.getSystemId() + "[" + user.getRole() + "]");
+			logger.error(messageResourceBundle.getLogMessage("error.invalidRequest"),
+					user.getSystemId() + "[" + user.getRole() + "]");
 			target = "invalidRequest";
 			throw new InternalServerException(
 					user.getSystemId() + "[" + user.getRole() + "]" + " <- Invalid Request ->");
@@ -7229,7 +7441,8 @@ public class SmsServiceImpl implements SmsService {
 				if (!schedule.getUsername().equalsIgnoreCase(master)) {
 					target = "invalidRequest";
 					proceed = false;
-					logger.error(messageResourceBundle.getLogMessage("error.unauthorizedAbortSchedule"), master, role, schedule.getUsername());
+					logger.error(messageResourceBundle.getLogMessage("error.unauthorizedAbortSchedule"), master, role,
+							schedule.getUsername());
 				}
 			}
 			if (proceed) {
@@ -7306,7 +7519,8 @@ public class SmsServiceImpl implements SmsService {
 					File sch_file = new File(IConstants.WEBSMPP_EXT_DIR + "schedule//" + filename);
 					// System.out.println("Edit File Exist: " + sch_file.exists());
 					if (sch_file.exists()) {
-						logger.info(messageResourceBundle.getLogMessage("info.scheduleFileFound"), clientId, schedule_Id, filename);
+						logger.info(messageResourceBundle.getLogMessage("info.scheduleFileFound"), clientId,
+								schedule_Id, filename);
 						ObjectInputStream ois = null;
 						try {
 							ois = new ObjectInputStream(new FileInputStream(sch_file));
@@ -7367,7 +7581,8 @@ public class SmsServiceImpl implements SmsService {
 
 						target = IConstants.SUCCESS_KEY;
 					} else {
-						logger.error(messageResourceBundle.getLogMessage("error.fileNotFound"), filename = "your_file_name.txt");
+						logger.error(messageResourceBundle.getLogMessage("error.fileNotFound"),
+								filename = "your_file_name.txt");
 						throw new NotFoundException("File not found: {filename}" + filename + "=.txt");
 					}
 				} else {
@@ -7377,7 +7592,8 @@ public class SmsServiceImpl implements SmsService {
 
 				}
 			} else {
-				logger.error(messageResourceBundle.getLogMessage("error.fileNotFound"), filename = "your_file_name.txt");
+				logger.error(messageResourceBundle.getLogMessage("error.fileNotFound"),
+						filename = "your_file_name.txt");
 				throw new NotFoundException("File not found: {filename}" + filename + "=.txt");
 			}
 		} catch (NotFoundException ex) {
@@ -7578,7 +7794,9 @@ public class SmsServiceImpl implements SmsService {
 										}
 									}
 								} catch (Exception ex) {
-									logger.error(messageResourceBundle.getLogMessage("error.deleteScheduleFileException"), path);
+									logger.error(
+											messageResourceBundle.getLogMessage("error.deleteScheduleFileException"),
+											path);
 									throw new InternalServerException(messageResourceBundle
 											.getExMessage(ConstantMessages.DELETE_SCHEDULE_FILE_EXCEPTION) + path);
 								}
@@ -7664,7 +7882,9 @@ public class SmsServiceImpl implements SmsService {
 										}
 									}
 								} catch (Exception ex) {
-									logger.error(messageResourceBundle.getLogMessage("error.deleteScheduleFileException"), path);
+									logger.error(
+											messageResourceBundle.getLogMessage("error.deleteScheduleFileException"),
+											path);
 									throw new InternalServerException(messageResourceBundle
 											.getExMessage(ConstantMessages.DELETE_SCHEDULE_FILE_EXCEPTION) + path);
 								}
@@ -7725,13 +7945,16 @@ public class SmsServiceImpl implements SmsService {
 							messageResourceBundle.getExMessage(ConstantMessages.INSUFFICIENT_BALANCE_EXCEPTION));
 				}
 			} catch (NotFoundException e) {
-				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId, e.getMessage());
+				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId,
+						e.getMessage());
 				throw new NotFoundException(e.getMessage());
 			} catch (InsufficientBalanceException e) {
-				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId, e.getMessage());
+				logger.error(messageResourceBundle.getLogMessage("error.with.session.id"), bulkSessionId,
+						e.getMessage());
 				throw new InsufficientBalanceException(e.getMessage());
 			} catch (Exception e) {
-				logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"), bulkSessionId, e);
+				logger.error(messageResourceBundle.getLogMessage("error.with.session.id.and.exception"), bulkSessionId,
+						e);
 				throw new InternalServerException(e.getMessage());
 			}
 		} else {
@@ -8383,9 +8606,12 @@ public class SmsServiceImpl implements SmsService {
 				if (webMasterEntry.getSenderRestrictTo().equalsIgnoreCase("ALL")
 						|| webMasterEntry.getSenderRestrictTo().equalsIgnoreCase("WEB")) {
 					senders = new HashSet<String>(Arrays.asList(webMasterEntry.getSenderId().split(",")));
-					logger.info(username + " " + messageResourceBundle.getLogMessage("info.configuredSenders"), senders);
+					logger.info(username + " " + messageResourceBundle.getLogMessage("info.configuredSenders"),
+							senders);
 				} else {
-					logger.info(username + " " + messageResourceBundle.getLogMessage("info.configuredSendersRestrictedTo"), webMasterEntry.getSenderRestrictTo());
+					logger.info(
+							username + " " + messageResourceBundle.getLogMessage("info.configuredSendersRestrictedTo"),
+							webMasterEntry.getSenderRestrictTo());
 				}
 			} else {
 				logger.info(messageResourceBundle.getLogMessage("info.noSendersConfigured"), username);
@@ -8399,7 +8625,8 @@ public class SmsServiceImpl implements SmsService {
 
 	@Override
 	public ResponseEntity<?> sendAlert(String username, BulkSmsDTO bulkSmsDTO) {
-		logger.info(messageResourceBundle.getLogMessage("info.sendAlert"), bulkSmsDTO.getSystemId(), bulkSmsDTO.getSenderId(), bulkSmsDTO.getDestinationList());
+		logger.info(messageResourceBundle.getLogMessage("info.sendAlert"), bulkSmsDTO.getSystemId(),
+				bulkSmsDTO.getSenderId(), bulkSmsDTO.getDestinationList());
 		String ret = "";
 		String user = bulkSmsDTO.getSystemId();
 		String pwd = bulkSmsDTO.getPassword();
@@ -8429,7 +8656,8 @@ public class SmsServiceImpl implements SmsService {
 					try {
 						submitResponse = session.submit(msg);
 					} catch (Exception e) {
-						logger.error(messageResourceBundle.getLogMessage("error.submitException"), user, destination_no, e);
+						logger.error(messageResourceBundle.getLogMessage("error.submitException"), user, destination_no,
+								e);
 					}
 					if (submitResponse != null) {
 						// ret += submitResponse.getMessageId() + "\n";
@@ -8439,30 +8667,37 @@ public class SmsServiceImpl implements SmsService {
 									+ " < " + destination_no);
 						} else {
 							if (submitResponse.getCommandStatus() == 1035) {
-								logger.error(messageResourceBundle.getLogMessage("error.insufficientBalance"), user, destination_no);
+								logger.error(messageResourceBundle.getLogMessage("error.insufficientBalance"), user,
+										destination_no);
 								ret += "SubmitError: Insufficient balance\n";
 								userSession.setCommandStatus(submitResponse.getCommandStatus());
 							} else if (submitResponse.getCommandStatus() == Data.ESME_RINVMSGLEN) {
-								logger.error(messageResourceBundle.getLogMessage("error.invalidMessageLength"), user, destination_no);
+								logger.error(messageResourceBundle.getLogMessage("error.invalidMessageLength"), user,
+										destination_no);
 								ret += "SubmitError: Invalid Message Length\n";
 							} else if (submitResponse.getCommandStatus() == Data.ESME_RINVDSTADR) {
-								logger.error(messageResourceBundle.getLogMessage("error.invalidDestination"), user, destination_no);
+								logger.error(messageResourceBundle.getLogMessage("error.invalidDestination"), user,
+										destination_no);
 								ret += "SubmitError: Invalid Destination[" + destination_no + "]\n";
 							} else if (submitResponse.getCommandStatus() == Data.ESME_RINVSRCADR) {
-								logger.error(messageResourceBundle.getLogMessage("error.invalidSourceAddress"), user, sender);
+								logger.error(messageResourceBundle.getLogMessage("error.invalidSourceAddress"), user,
+										sender);
 								ret += "SubmitError: Invalid SourceAddress\n";
 							} else if (submitResponse.getCommandStatus() == Data.ESME_RINVEXPIRY) {
-								logger.error(messageResourceBundle.getLogMessage("error.accountExpired"), user, destination_no);
+								logger.error(messageResourceBundle.getLogMessage("error.accountExpired"), user,
+										destination_no);
 								ret += "SubmitError: Account Expired\n";
 								userSession.setCommandStatus(submitResponse.getCommandStatus());
 							} else {
 								ret += "SubmitError: " + submitResponse.getCommandStatus() + "\n";
-								logger.error(messageResourceBundle.getLogMessage("error.submitFailed"), submitResponse.getCommandStatus(), destination_no);
+								logger.error(messageResourceBundle.getLogMessage("error.submitFailed"),
+										submitResponse.getCommandStatus(), destination_no);
 							}
 						}
 					} else {
 						ret += "Submit Failed\n";
-						logger.error(messageResourceBundle.getLogMessage("error.submitFailedNoResponse"), destination_no);
+						logger.error(messageResourceBundle.getLogMessage("error.submitFailedNoResponse"),
+								destination_no);
 					}
 				} else {
 					if (commandid == 1035) {
