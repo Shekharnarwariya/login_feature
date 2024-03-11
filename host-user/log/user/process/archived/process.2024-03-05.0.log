@@ -1,0 +1,91 @@
+2024-03-05 18:14:13 [main] ERROR com.hti.thread.StartUserServer - Configuration File Read Error: Cannot parse null string
+2024-03-05 18:15:45 [main] ERROR com.hti.thread.StartUserServer - Configuration File Read Error: config\HlrConfiguration.file (The system cannot find the file specified)
+2024-03-05 18:16:32 [main] INFO  com.hti.database.ConnectionPool - Initializing Connection Pool[1]
+2024-03-05 18:16:32 [main] INFO  com.hti.database.ConnectionPool - Total Database Connections Created[1] : 5
+2024-03-05 18:16:32 [main] INFO  com.hti.database.ConnectionPool - Initializing Connection Pool[2]
+2024-03-05 18:16:33 [main] INFO  com.hti.database.ConnectionPool - Total Database Connections Created[2] : 5
+2024-03-05 18:16:33 [main] INFO  com.hti.database.LogDBConnection - Log Database Connection Count: 10
+2024-03-05 18:17:24 [main] INFO  com.hti.database.ConnectionPool - Initializing Connection Pool[1]
+2024-03-05 18:17:25 [main] INFO  com.hti.database.ConnectionPool - Total Database Connections Created[1] : 5
+2024-03-05 18:17:25 [main] INFO  com.hti.database.ConnectionPool - Initializing Connection Pool[2]
+2024-03-05 18:17:25 [main] INFO  com.hti.database.ConnectionPool - Total Database Connections Created[2] : 5
+2024-03-05 18:17:25 [main] INFO  com.hti.database.LogDBConnection - Log Database Connection Count: 10
+2024-03-05 18:17:26 [main] INFO  com.hti.thread.StartUserServer - ******* Marked As Master Client ********
+2024-03-05 18:17:26 [main] INFO  com.hti.dao.impl.SmscDAServiceImpl - Smsc Entries: 11
+2024-03-05 18:17:26 [main] INFO  com.hti.dao.impl.SmscDAServiceImpl - SmscGroupMember: []
+2024-03-05 18:17:26 [main] INFO  c.hti.dao.impl.NetworkDAServiceImpl - Network Entries: 1392
+2024-03-05 18:17:26 [main] INFO  com.hti.dao.impl.UserDAServiceImpl - User Entries: 12
+2024-03-05 18:17:26 [main] INFO  com.hti.thread.StartUserServer -  Cleaning temporary Queue folder
+2024-03-05 18:17:26 [main] INFO  com.hti.thread.StartUserServer - <-------- Starting Processing Threads -----> 
+2024-03-05 18:17:26 [main] INFO  com.hti.thread.ReportLog - ReportLog Thread Starting
+2024-03-05 18:17:26 [main] INFO  com.hti.thread.ProfitLog - ProfitLog Thread Starting
+2024-03-05 18:17:26 [main] INFO  c.h.t.BackupResponseInsertThread - BackupResponseInsert Thread Starting 
+2024-03-05 18:17:26 [main] INFO  c.hti.thread.BackupResponseLogThread - BackupResponseLog Thread Starting 
+2024-03-05 18:17:26 [main] INFO  com.hti.thread.CheckCpuCycle - CheckCpuCycle Starting
+2024-03-05 18:17:26 [main] INFO  com.hti.thread.SpamReport - SpamReport Thread Starting
+2024-03-05 18:17:26 [main] INFO  com.hti.thread.StartUserServer - <-------- Started Processing Threads ----->
+2024-03-05 18:17:27 [main] INFO  com.hti.thread.BearerBox - BearerBox Starting
+2024-03-05 18:17:27 [main] INFO  c.hti.dao.impl.NetworkDAServiceImpl - Start Loading Network Configuration
+2024-03-05 18:17:28 [main] INFO  c.hti.dao.impl.NetworkDAServiceImpl - PrefixMapping: 149169
+2024-03-05 18:17:28 [main] INFO  c.hti.dao.impl.NetworkDAServiceImpl - NncMapping: 1370
+2024-03-05 18:17:28 [main] INFO  c.hti.dao.impl.NetworkDAServiceImpl - IdPrefixMapping: 1391
+2024-03-05 18:17:28 [main] INFO  c.hti.dao.impl.NetworkDAServiceImpl - End Loading Network Configuration
+2024-03-05 18:17:28 [main] INFO  com.hti.dao.impl.SmscDAServiceImpl - Loading Smsc Configuration
+2024-03-05 18:17:28 [main] INFO  com.hti.dao.impl.SmscDAServiceImpl - GW1 SkipHlrSenders:[alkhajehtxn, ascentia, flischool, iscs nas, kangaroo, luluexch, mgd global, big ticket , osn, ascr, jac, ad-matalan, hakkini, fis, skyex, sivvi, tpgs auh, ad-bhmcaptl, lensy, alliedmed, oc home, ugp, bnksms, almuroojsch, kitchensq, lifco app, bbm, ascs nas, s.enjaz, pi systems, tigergrp, alsultansh, 2xl home, ghantootcar, rpm cars, reserveout , ascs mal, ziamedical, aaess-sms, omeir trvls, acotp, juvelaundry, jokoka, adib, gccexchange, bm school, noon, mumzworld, ais school, ultramc, netways, gipa, tiger pro, masakenwaha, dhl, khas.sch, barq.ae, spiceaffair, fanar re, midisglobal, aaas, gtsharjah, beam, al mawashi, aster alert, bunatoam, easchoolshj, alshayaclub , modanisa, ahlisanuae, skin iii, bmw, alsultanh, airbnb, catalyst ae, madarschool, aliaschool, almadallah, iamc, adis, mlnmhosp, barqae, imperialhci, home 2 home, autorent, adm, gothamcr, ads, alkhajetxn, arabian oud, ias-dubai, bhm capital, mini adm, nwps, tiger proosn, vfs, arabianoud, kac, sultanmc, belresheed, colossemgym, daaschool, iscs muw, gmdc, uasg, lumi, dmes, mobox, gear-up.me, united med, fanajeen, tasleeh, dubaigov, mumzworld , al aan tv, abboushi st, ad-hmre, jollychic, hungry town, al madallah, reserveout, mbzuh, ames, bisb, splash, alnoorclnic, fia, saudia]
+2024-03-05 18:17:28 [main] INFO  com.hti.dao.impl.SmscDAServiceImpl - LongBrokenExpireRoute: []
+2024-03-05 18:17:28 [main] INFO  com.hti.dao.impl.SmscDAServiceImpl - SmscBasedReplacement: {}
+2024-03-05 18:17:28 [main] INFO  com.hti.dao.impl.UserDAServiceImpl - Checking For Lookup Submit Pendings
+2024-03-05 18:17:28 [main] INFO  com.hti.dao.impl.UserDAServiceImpl - Lookup Submit Pendings Users:0
+2024-03-05 18:17:28 [main] INFO  com.hti.dao.impl.UserDAServiceImpl - Checking For Lookup Response Pendings
+2024-03-05 18:17:28 [main] INFO  com.hti.dao.impl.UserDAServiceImpl - Lookup Response Waiting Users: 0
+2024-03-05 18:17:28 [main] INFO  com.hti.dao.impl.UserDAServiceImpl - User Based Bsfm Users: []
+2024-03-05 18:17:28 [main] INFO  c.hti.dao.impl.NetworkDAServiceImpl - Network Based Bsfm: {}
+2024-03-05 18:17:28 [main] INFO  com.hti.thread.DeliverProcess - DeliverProcess Thread Started
+2024-03-05 18:17:28 [main] INFO  com.hti.thread.DLRLoader - DLRLoader Thread Starting[100]
+2024-03-05 18:17:28 [main] INFO  com.hti.thread.BearerBox - Memory Usage[1]:---> 111 MB
+2024-03-05 18:17:28 [main] INFO  com.hti.thread.BearerBox - Memory Usage[2]:---> 112 MB
+2024-03-05 18:17:28 [main] INFO  c.hti.util.DistributionGroupManager - ****** Checking For Distribution ***** 
+2024-03-05 18:17:28 [DLRLoader] INFO  com.hti.thread.DLRLoader - DLRLoader Thread Stopped[100]
+2024-03-05 18:17:28 [main] WARN  c.hti.util.DistributionGroupManager - ***** No Smsc Grouping Configured ***** 
+2024-03-05 18:17:28 [main] INFO  com.hti.thread.BearerBox - **** Distribution is Disabled ****
+2024-03-05 18:17:28 [main] INFO  com.hti.bsfm.SpamFilter - ***** Bsfm cache Cleared *****
+2024-03-05 18:17:28 [main] INFO  com.hti.bsfm.SpamFilter - Bsfm Active Profile:0
+2024-03-05 18:17:28 [main] INFO  com.hti.bsfm.SpamFilter - Bsfm Active Priorities:[]
+2024-03-05 18:17:28 [main] INFO  com.hti.thread.BearerBox - initializing submit_limit
+2024-03-05 18:17:28 [main] INFO  com.hti.thread.BearerBox - SubmitLimitEntries: []
+2024-03-05 18:17:28 [main] INFO  com.hti.thread.BearerBox - initializing optout entries
+2024-03-05 18:17:28 [main] INFO  com.hti.thread.BearerBox - OptOutEntries: 0
+2024-03-05 18:17:28 [main] INFO  com.hti.dlt.DltFilter - Dlt Active Senders:0
+2024-03-05 18:17:28 [main] INFO  com.hti.bsfm.LinkFilter - Cached Web Links: 0
+2024-03-05 18:17:28 [main] INFO  com.hti.thread.BearerBox - UnicodeEncoding: {}
+2024-03-05 18:17:28 [main] INFO  com.hti.thread.BearerBox - Memory Usage[3]:---> 114 MB
+2024-03-05 18:17:31 [main] INFO  com.hti.thread.StartUserServer - <--- Checking SMPP Server Status ---->  
+2024-03-05 18:17:31 [main] ERROR com.hti.thread.StartUserServer - <-- RemoteException While Connecting to SMPP Server -->
+2024-03-05 18:17:31 [StartUserServer] INFO  com.hti.thread.StartUserServer - <--- Trying to Connect OMQ Server To Receive DLRs -->
+2024-03-05 18:17:31 [main] INFO  com.hti.thread.StartUserServer - User Listener[1] Starting[0.0.0.0: 8899
+2024-03-05 18:17:31 [main] INFO  com.hti.thread.StartUserServer - User Listener[1] Started[0.0.0.0: 8899
+2024-03-05 18:17:31 [StartUserServer] INFO  com.hti.thread.QueueListener -  DLR Receiving Queue[1] Listener Started 
+2024-03-05 18:17:31 [StartUserServer] INFO  com.hti.thread.QueueListener -  DLR Receiving Queue[2] Listener Started 
+2024-03-05 18:17:31 [StartUserServer] INFO  com.hti.thread.QueueListener -  DLR Receiving Queue[3] Listener Started 
+2024-03-05 18:17:31 [StartUserServer] INFO  com.hti.thread.StartUserServer - <--- OMQ Server Connected To Receive DLRs -->
+2024-03-05 18:17:31 [StartUserServer] ERROR com.hti.thread.StartUserServer - <-- Error While Communicating SMPP Server --> 
+2024-03-05 18:17:36 [main] INFO  com.hti.thread.StartUserServer - User Listener[2] Starting[0.0.0.0: 8898
+2024-03-05 18:17:36 [main] INFO  com.hti.thread.StartUserServer - User Listener[2] Started[0.0.0.0: 8898
+2024-03-05 18:17:41 [main] INFO  com.hti.thread.StartUserServer - User Listener[3] Starting[0.0.0.0: 8897
+2024-03-05 18:17:41 [main] INFO  com.hti.thread.StartUserServer - User Listener[3] Started[0.0.0.0: 8897
+2024-03-05 18:17:41 [StartUserServer] ERROR com.hti.thread.StartUserServer - <-- Error While Communicating SMPP Server --> 
+2024-03-05 18:17:46 [main] INFO  com.hti.thread.StartUserServer - RMI User Service Starting on Port:1080
+2024-03-05 18:17:46 [main] INFO  com.hti.thread.StartUserServer - RMI User Service Started on Port:1080
+2024-03-05 18:17:46 [main] INFO  com.hti.thread.BindAlert - BindAlert Starting
+2024-03-05 18:17:51 [StartUserServer] ERROR com.hti.thread.StartUserServer - <-- Error While Communicating SMPP Server --> 
+2024-03-05 18:18:01 [StartUserServer] ERROR com.hti.thread.StartUserServer - <-- Error While Communicating SMPP Server --> 
+2024-03-05 18:18:11 [StartUserServer] ERROR com.hti.thread.StartUserServer - <-- Error While Communicating SMPP Server --> 
+2024-03-05 18:18:21 [StartUserServer] ERROR com.hti.thread.StartUserServer - <-- Error While Communicating SMPP Server --> 
+2024-03-05 18:18:26 [CheckCpuCycle] INFO  com.hti.thread.CheckCpuCycle - Memory Used:---> 60 MB. Max Available: 6068 MB
+2024-03-05 18:18:31 [StartUserServer] ERROR com.hti.thread.StartUserServer - <-- Error While Communicating SMPP Server --> 
+2024-03-05 18:18:41 [StartUserServer] ERROR com.hti.thread.StartUserServer - <-- Error While Communicating SMPP Server --> 
+2024-03-05 18:18:46 [BindAlert] INFO  com.hti.thread.BindAlert - BindAlert Started
+2024-03-05 18:18:46 [BindAlert] INFO  com.hti.thread.BindAlert -  No User For Disconnection Alert 
+2024-03-05 18:18:51 [BindAlert] INFO  com.hti.thread.BindAlert -  No User For Disconnection Alert 
+2024-03-05 18:18:51 [StartUserServer] ERROR com.hti.thread.StartUserServer - <-- Error While Communicating SMPP Server --> 
+2024-03-05 18:18:56 [BindAlert] INFO  com.hti.thread.BindAlert -  No User For Disconnection Alert 

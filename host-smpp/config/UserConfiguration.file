@@ -1,0 +1,48 @@
+#--- comma seperated local ip:port to listen
+SMPP-IP-PORT = 0.0.0.0:8899,0.0.0.0:8898,0.0.0.0:8897
+SERVER-ID = 1
+SERVER_NAME=GW1
+#------ database ------------
+JDBC-DRIVER = com.mysql.cj.jdbc.Driver
+CONNECTION-URL = jdbc:mysql://localhost:12001/host_brd?autoReconnect=true&useSSL=false
+LOG-CONNECTION-URL = jdbc:mysql://localhost:12001/host_brd_log?autoReconnect=true&useSSL=false
+MAX_CONNECTIONS = 10
+DB_USER = smppuser
+DB_PASSWORD = smpp
+DB_ALTER_USER = smppmain
+DB_ALTER_PASSWORD = smpp(145)brd
+#------- hlr ----------------
+HLR_SERVER_IP=localhost
+HLR_SERVER_PORT = 2885
+HLR_SESSION_LIMIT = 11
+// ROUTED SMSC IF DESTINATION NUMBER IS absent/unknown
+HLR_DOWN_SMSC_1= GW_HLR
+HLR_DOWN_SMSC_2= GW_HLR
+// Waiting Time (in SECONDS) For HLR Result
+HLR_WAIT_DURATION = 90
+# ------ ehcache ------------
+//routing
+route.heap.size = 10
+route.disk.size = 1000
+route.expired.time = 0
+#-------- other -------------
+INIT_PARAM=INIT_DONE
+// MINIMUM LENGTH OF DESTINATION NUMBER
+MIN_DEST_LENGTH=9
+// ROUTED SMSC IF DESTINATION NUMBER IS LESS THAN MIN_DEST_LENGTH
+INVALID_DEST_SMSC=GW_INVDST
+// ROUTED SMSC TO BE REJECTD
+REJECT_SMSC=GW997
+// ROUTED SMSC TO BE UNDELIV
+UNDELIV_SMSC=GW998
+// ROUTED SMSC TO BE DELIVRD
+DELIVRD_SMSC=GW999
+// LONG SMS WAIT TIME TO REBUILD (Seconds)
+FIX_LONG_WAIT_TIME = 5
+#------- email --------------
+EMAIL_CC = rabih@broadnetme.com
+EMAIL_FROM = routes@broadnetme.com
+EMAIL_USER = gw1@broadnetme.com
+EMAIL_PASSWORD = gw1rz0373a
+SMTP_HOST_NAME = mail.broadnetme.com
+SMTP_PORT = 587

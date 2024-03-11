@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	<property name="DEV_HOME" value="log/user" />
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<layout class="ch.qos.logback.classic.PatternLayout">
+		<charset>UTF-8</charset>
+			<Pattern>
+				 %-5level - %msg%n
+			</Pattern>
+		</layout>
+	</appender>
+
+
+	<appender name="PROC"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/process/process.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+		<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %class{36} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/process/archived/process.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>50MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>7</maxHistory>
+		</rollingPolicy>
+	</appender>
+
+	<appender name="REST"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/process/rest.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+		<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/process/archived/rest.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>10MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>7</maxHistory>
+		</rollingPolicy>
+	</appender>
+
+	<appender name="DB-PROC"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/process/db.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+		<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss:SSS} %class{36} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/process/archived/db.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>25MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>7</maxHistory>
+		</rollingPolicy>
+	</appender>
+
+	<appender name="OMQ-PROC"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/process/omq.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+		<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss:SSS} %class{36} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/process/archived/omq.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>25MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>7</maxHistory>
+		</rollingPolicy>
+	</appender>
+
+		<appender name="USER-PROC"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/process/userprocess.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+		<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss:SSS} %class{36} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/process/archived/userprocess.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>50MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>7</maxHistory>
+		</rollingPolicy>
+
+	</appender>
+
+	<appender name="USER-PDU-PROC"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/process/pdu.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+		<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss:SSS} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/process/archived/pdu.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>50MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>7</maxHistory>
+		</rollingPolicy>
+
+	</appender>
+
+	<appender name="USER-SUBMIT-PROC"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/process/submit.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+		<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss:SSS} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/process/archived/submit.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>50MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>7</maxHistory>
+		</rollingPolicy>
+	</appender>
+
+	<appender name="USER-DLR-PROC"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/process/dlr.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+		<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss:SSS} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/process/archived/dlr.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>50MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>7</maxHistory>
+		</rollingPolicy>
+	</appender>
+
+	<appender name="WEB-DLR-PROC"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/process/webdlr.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+		<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss:SSS} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/process/archived/webdlr.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>50MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>7</maxHistory>
+		</rollingPolicy>
+	</appender>
+
+	<appender name="HLR-PROC"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/hlr/process.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+		<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss:SSS} %class{36} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/hlr/archived/process.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>50MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>7</maxHistory>
+		</rollingPolicy>
+
+	</appender>
+
+	<appender name="HLR-PDU-PROC"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/hlr/pduprocess.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+		<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss:SSS} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/hlr/archived/pduprocess.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>50MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>7</maxHistory>
+		</rollingPolicy>
+
+	</appender>
+
+	<appender name="HLR-DLR-PROC"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/hlr/dlrprocess.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+		<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss:SSS} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/hlr/archived/dlrprocess.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>50MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>7</maxHistory>
+		</rollingPolicy>
+	</appender>
+
+	<appender name="FILE-TRACK"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/process/track.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+		<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss:SSS} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/process/archived/track.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>50MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>3</maxHistory>
+		</rollingPolicy>
+	</appender>
+
+	<logger name="ProcLogger" level="INFO" additivity="false">
+    	<appender-ref ref="STDOUT" />
+        <appender-ref ref="PROC"/>
+    </logger>
+
+	<logger name="userLogger" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="USER-PROC"/>
+    </logger>
+
+    <logger name="pduLogger" level="INFO" additivity="false">
+        <appender-ref ref="USER-PDU-PROC"/>
+    </logger>
+
+	<logger name="omqLogger" level="INFO" additivity="false">
+        <appender-ref ref="OMQ-PROC"/>
+    </logger>
+
+	<logger name="dbLogger" level="INFO" additivity="false">
+        <appender-ref ref="DB-PROC"/>
+		<appender-ref ref="STDOUT" />
+    </logger>
+
+	<logger name="submitLogger" level="INFO" additivity="false">
+        <appender-ref ref="USER-SUBMIT-PROC"/>
+    </logger>
+
+	<logger name="dlrLogger" level="INFO" additivity="false">
+        <appender-ref ref="USER-DLR-PROC"/>
+    </logger>
+
+	<logger name="userDlrLogger" level="INFO" additivity="false">
+        <appender-ref ref="WEB-DLR-PROC"/>
+    </logger>
+
+
+	<logger name="hlrLogger" level="INFO" additivity="false">
+	    <appender-ref ref="STDOUT" />
+        <appender-ref ref="HLR-PROC"/>
+    </logger>
+
+    <logger name="hlrPduLogger" level="INFO" additivity="false">
+        <appender-ref ref="HLR-PDU-PROC"/>
+    </logger>
+
+	<logger name="hlrDlrLogger" level="INFO" additivity="false">
+        <appender-ref ref="HLR-DLR-PROC"/>
+    </logger>
+
+	<logger name="trackLogger" level="DEBUG" additivity="false">
+        <appender-ref ref="FILE-TRACK"/>
+    </logger>
+
+	<root level="info">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="REST"/>
+	</root>
+
+</configuration>
