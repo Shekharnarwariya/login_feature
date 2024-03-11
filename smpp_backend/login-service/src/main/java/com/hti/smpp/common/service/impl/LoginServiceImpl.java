@@ -653,6 +653,7 @@ public class LoginServiceImpl implements LoginService {
 		return proEntry;
 	}
 
+
 	@Override
 	public ResponseEntity<?> validateUserIpAccess(LoginRequest loginRequest, String language) {
 
@@ -1017,7 +1018,6 @@ public class LoginServiceImpl implements LoginService {
 											messageResourceBundle.getLogMessage("user.access.ip.not.configured.info"),
 											userEntry.getSystemId());
 
-									System.out.println("1040 -- " + userEntry.getAccessCountry());
 
 									if (userEntry.getAccessCountry() != null
 											&& userEntry.getAccessCountry().length() > 0) {
@@ -1072,8 +1072,6 @@ public class LoginServiceImpl implements LoginService {
 
 									} else {
 
-										System.out.println("user.access.countries.not.configured.info");
-
 										logger.info(
 												messageResourceBundle
 														.getLogMessage("user.access.countries.not.configured.info"),
@@ -1082,18 +1080,15 @@ public class LoginServiceImpl implements LoginService {
 												ConstantMessages.ACCESS_COUNTRY_NOTCONFIGURED,
 												new Object[] { userEntry.getSystemId() }));
 									}
-									System.out.println("123");
 								}
 
 							}
 							if (webAccess) {
-								System.out.println(webEntry.isOtpLogin());
 
 								if (webEntry.isOtpLogin()) {
 
 									boolean otplogin = true;
 
-									System.out.println(webEntry.isMultiUserAccess());
 									if (webEntry.isMultiUserAccess()) {
 										logger.info(
 												messageResourceBundle
@@ -1120,8 +1115,6 @@ public class LoginServiceImpl implements LoginService {
 										if (webEntry.getOtpNumber() != null && webEntry.getOtpNumber().length() > 0) {
 											String valid_otp_numbers = "";
 
-											System.out.println(webEntry.getOtpNumber() + "-----1151");
-
 											for (String number : webEntry.getOtpNumber().split(",")) {
 												logger.info(messageResourceBundle.getLogMessage("user.otp.number.info"),
 														userEntry.getSystemId(), number);
@@ -1135,8 +1128,6 @@ public class LoginServiceImpl implements LoginService {
 																	.getLogMessage("user.invalid.otp.number.error"),
 															userEntry.getSystemId(), number);
 												}
-
-												System.out.println(valid_otp_numbers);
 
 												if (valid_otp_numbers.length() > 0) {
 
@@ -1152,16 +1143,12 @@ public class LoginServiceImpl implements LoginService {
 															.findBySystemId(userEntry.getSystemId());
 													OTPEntry otpEntry = null;
 
-													System.out.println(optionalOtp + "------1184");
-
 													if (optionalOtp.isPresent()) {
 														otpEntry = optionalOtp.get();
 													} else {
 														logger.info(messageResourceBundle
 																.getLogMessage("user.no.otp.entry.found.info"));
 													}
-
-													System.out.println(otpEntry + "*****************1195");
 
 													boolean generate_otp = true;
 													if (otpEntry != null) {
@@ -1196,11 +1183,9 @@ public class LoginServiceImpl implements LoginService {
 
 													}
 
-													System.out.println("generate_otp" + generate_otp);
 
 													if (generate_otp) {
 
-														System.out.println("Entered in Generate Otp ------1235");
 
 														otp = new Random().nextInt(999999 - 100000) + 100000;
 														Calendar calendar = Calendar.getInstance();
@@ -1217,17 +1202,13 @@ public class LoginServiceImpl implements LoginService {
 														String validity = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 																.format(calendar.getTime());
 
-														System.out.println(otpEntry + "**********1248");
 
 														if (otpEntry != null) {
-
-															System.out.println("Entered In line 1252********");
 
 															otpEntry.setExpiresOn(validity);
 															otpEntry.setOneTimePass(otp);
 															// updateOTPEntry in database
 															this.otpEntryRepository.save(otpEntry);
-															System.out.println("updateOTPEntry in database*****1258");
 														} else {
 															// save otp entry
 															this.otpEntryRepository.save(new OTPEntry(
@@ -1256,8 +1237,6 @@ public class LoginServiceImpl implements LoginService {
 																content = "Hello [system_id], [otp_pass] is your One-Time Password (OTP) on [url] valid for next [duration] minutes";
 															}
 
-//															System.out.println("content" +content );
-
 															content = content.replace("[system_id]",
 																	userEntry.getSystemId());
 															content = content.replace("[otp_pass]",
@@ -1274,9 +1253,6 @@ public class LoginServiceImpl implements LoginService {
 															smsDTO.setMessage(content);
 															smsDTO.setDestinationList(list);
 
-//															System.out.println(webEntry.getOtpSender() + "******1305");
-//															System.out.println("new content" +content );
-//															System.out.println(webEntry);
 
 															if (webEntry.getOtpSender() != null
 																	&& webEntry.getOtpSender().length() > 1) {
@@ -1287,22 +1263,24 @@ public class LoginServiceImpl implements LoginService {
 
 															ResponseEntity<?> response;
 															try {
-																System.out.println(
-																		"working fine till line *************1319");
 
 																final String url = "https://122.168.122.77:8083/sms/send/alert";
-																System.out.println("1");
+
 																HttpHeaders headers = new HttpHeaders();
-																System.out.println("2");
+
 																headers.set("username", userEntry.getSystemId());
-																System.out.println("3");
+
 																HttpEntity<BulkSmsDTO> requestEntity = new HttpEntity<>(
 																		smsDTO, headers);
-																System.out.println("4");
+
+																
+//																response = restTemplate.postForEntity(url,
+//																		requestEntity, String.class);
+//																System.out.println(response + "------------1326");
 
 																response = restTemplate.postForEntity(url,
 																		requestEntity, String.class);
-																System.out.println(response + "------------1326");
+
 															} catch (RestClientException e) {
 																// TODO Auto-generated catch block
 																e.printStackTrace();
@@ -1311,7 +1289,7 @@ public class LoginServiceImpl implements LoginService {
 //																	+ ">" + userEntry.getSystemId() + "<"
 //																	+ valid_otp_numbers + ">");
 
-//															System.out.println(webEntry.getOtpEmail()+"-----------1310");
+
 
 															if (webEntry.getOtpEmail() != null
 																	&& webEntry.getOtpEmail().length() > 0
@@ -1319,7 +1297,7 @@ public class LoginServiceImpl implements LoginService {
 																String from = IConstants.SUPPORT_EMAIL[0];
 																ProfessionEntry proEntry = getProfessionEntry(
 																		userEntry.getId());
-//																System.out.println("om"+isValidEmail(webEntry.getOtpEmail()));
+//																
 																if (proEntry.getDomainEmail() != null
 																		&& isValidEmail(proEntry.getDomainEmail())) {
 																	from = proEntry.getDomainEmail();
@@ -1348,7 +1326,6 @@ public class LoginServiceImpl implements LoginService {
 																			userEntry.getSystemId(), from,
 																			webEntry.getOtpEmail());
 																}
-																System.out.println("888888------------------");
 																emailSender.sendEmail(webEntry.getOtpEmail(),
 																		Constant.OTP_SUBJECT,
 																		Constant.GENERAL_TEMPLATE_PATH,
@@ -1396,13 +1373,9 @@ public class LoginServiceImpl implements LoginService {
 									}
 
 									// otp sent successfully
-									ResponseEntity<?> userLogin = login(loginRequest);
-									JwtResponse jwtResp = (JwtResponse) userLogin.getBody();
+
 									LoginResponse loginResponse = new LoginResponse();
-									loginResponse.setJwtResponse(jwtResp);
-									loginResponse.setOtpLogin(true);
 									loginResponse.setStatus("Otp sent successfully!");
-									System.out.println("Otp sent successfully!-----1368");
 									return ResponseEntity.ok(loginResponse);
 
 								} else if (webEntry.isEmailOnLogin()) {
@@ -1415,7 +1388,6 @@ public class LoginServiceImpl implements LoginService {
 									String from = IConstants.SUPPORT_EMAIL[0];
 									ProfessionEntry proEntry = getProfessionEntry(userEntry.getId());
 
-//									System.out.println(proEntry.getDomainEmail());
 
 									if (isValidEmail(proEntry.getDomainEmail())) {
 
@@ -1503,6 +1475,78 @@ public class LoginServiceImpl implements LoginService {
 			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.INVALID_CREDENTIALS));
 		}
 
+	}
+	
+	@Override
+	public ResponseEntity<?> userIpOtpValidate(LoginRequest loginRequest, int otp){
+		
+		
+		int userId = 0;
+		String systemId = loginRequest.getUsername();
+		String password = encoder.encode(loginRequest.getPassword());
+		UserEntry userEntry = getUser(loginRequest.getUsername());
+		if (userEntry.getPassword().equals(password)) {
+			userId = userEntry.getId();
+		} else {
+			logger.error(messageResourceBundle.getLogMessage("auth.failed.password"), systemId);
+			userId = 0;
+		}
+		
+		int otp1 = 0;
+		Optional<OTPEntry> optionalOtp = this.otpEntryRepository
+				.findBySystemId(userEntry.getSystemId());
+		OTPEntry otpEntry = null;
+		
+		if (optionalOtp.isPresent()) {
+			otpEntry = optionalOtp.get();
+		} else {
+			logger.info(messageResourceBundle
+					.getLogMessage("user.no.otp.entry.found.info"));
+		}
+	
+		if (otpEntry.getExpiresOn() != null) {
+			
+			try {
+
+				System.out.println(new Date().after(
+						new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+								.parse(otpEntry.getExpiresOn())));
+
+				if (new Date().after(
+						new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+								.parse(otpEntry.getExpiresOn()))) {
+
+					logger.info(
+							messageResourceBundle.getLogMessage(
+									"user.otp.expired.on.info"),
+							userEntry.getSystemId(),
+							otpEntry.getExpiresOn());
+				} else {
+					otp1 = otpEntry.getOneTimePass();
+				}
+			} catch (ParseException e) {
+				logger.error(e.getLocalizedMessage());
+				throw new InternalServerException(
+						messageResourceBundle.getExMessage(
+								ConstantMessages.OTPEXPIRYDATE_PARSE_ERROR));
+			}
+		}
+		
+		LoginResponse loginResponse = new LoginResponse();
+		if(otp==otp1) {
+			
+			ResponseEntity<?> userLogin = login(loginRequest);
+			JwtResponse jwtResp = (JwtResponse) userLogin.getBody();	
+			loginResponse.setJwtResponse(jwtResp);
+			loginResponse.setOtpLogin(true);
+			loginResponse.setStatus("Otp Matched successfully!");
+			return ResponseEntity.ok(loginResponse);
+		}
+		else {
+			loginResponse.setStatus("OTP Expired Or Invalid OTP Entered!");
+			return ResponseEntity.ok(loginResponse);
+		}
+		
 	}
 
 	private boolean isValidEmail(String email) {
