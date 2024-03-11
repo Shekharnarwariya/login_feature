@@ -1017,7 +1017,6 @@ public class LoginServiceImpl implements LoginService {
 											messageResourceBundle.getLogMessage("user.access.ip.not.configured.info"),
 											userEntry.getSystemId());
 
-
 									if (userEntry.getAccessCountry() != null
 											&& userEntry.getAccessCountry().length() > 0) {
 										boolean matched = false;
@@ -1182,9 +1181,7 @@ public class LoginServiceImpl implements LoginService {
 
 													}
 
-
 													if (generate_otp) {
-
 
 														otp = new Random().nextInt(999999 - 100000) + 100000;
 														Calendar calendar = Calendar.getInstance();
@@ -1196,7 +1193,6 @@ public class LoginServiceImpl implements LoginService {
 														calendar.add(Calendar.MINUTE, duration);
 														String validity = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 																.format(calendar.getTime());
-
 
 														if (otpEntry != null) {
 
@@ -1255,7 +1251,7 @@ public class LoginServiceImpl implements LoginService {
 															}
 															ResponseEntity<?> response = null;
 															try {
-															System.out.println(
+																System.out.println(
 																		"working fine till line *************1319");
 																final String url = "http://127.0.0.1:8083//sms/send/alert";
 																HttpHeaders headers = new HttpHeaders();
@@ -1369,7 +1365,6 @@ public class LoginServiceImpl implements LoginService {
 									String from = IConstants.SUPPORT_EMAIL[0];
 									ProfessionEntry proEntry = getProfessionEntry(userEntry.getId());
 
-
 									if (isValidEmail(proEntry.getDomainEmail())) {
 
 										from = proEntry.getDomainEmail();
@@ -1457,11 +1452,9 @@ public class LoginServiceImpl implements LoginService {
 		}
 
 	}
-	
+
 	@Override
-	public ResponseEntity<?> userIpOtpValidate(LoginRequest loginRequest, int otp){
-		
-		
+	public ResponseEntity<?> userIpOtpValidate(LoginRequest loginRequest, int otp) {
 		int userId = 0;
 		String systemId = loginRequest.getUsername();
 		String password = encoder.encode(loginRequest.getPassword());
@@ -1472,62 +1465,52 @@ public class LoginServiceImpl implements LoginService {
 			logger.error(messageResourceBundle.getLogMessage("auth.failed.password"), systemId);
 			userId = 0;
 		}
-		
+
 		int otp1 = 0;
-		Optional<OTPEntry> optionalOtp = this.otpEntryRepository
-				.findBySystemId(userEntry.getSystemId());
+		Optional<OTPEntry> optionalOtp = this.otpEntryRepository.findBySystemId(userEntry.getSystemId());
 		OTPEntry otpEntry = null;
-		
+
 		if (optionalOtp.isPresent()) {
 			otpEntry = optionalOtp.get();
 		} else {
-			logger.info(messageResourceBundle
-					.getLogMessage("user.no.otp.entry.found.info"));
+			logger.info(messageResourceBundle.getLogMessage("user.no.otp.entry.found.info"));
 		}
-	
+
 		if (otpEntry.getExpiresOn() != null) {
-			
+
 			try {
 
-				System.out.println(new Date().after(
-						new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-								.parse(otpEntry.getExpiresOn())));
+				System.out.println(
+						new Date().after(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(otpEntry.getExpiresOn())));
 
-				if (new Date().after(
-						new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-								.parse(otpEntry.getExpiresOn()))) {
+				if (new Date().after(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(otpEntry.getExpiresOn()))) {
 
-					logger.info(
-							messageResourceBundle.getLogMessage(
-									"user.otp.expired.on.info"),
-							userEntry.getSystemId(),
-							otpEntry.getExpiresOn());
+					logger.info(messageResourceBundle.getLogMessage("user.otp.expired.on.info"),
+							userEntry.getSystemId(), otpEntry.getExpiresOn());
 				} else {
 					otp1 = otpEntry.getOneTimePass();
 				}
 			} catch (ParseException e) {
 				logger.error(e.getLocalizedMessage());
 				throw new InternalServerException(
-						messageResourceBundle.getExMessage(
-								ConstantMessages.OTPEXPIRYDATE_PARSE_ERROR));
+						messageResourceBundle.getExMessage(ConstantMessages.OTPEXPIRYDATE_PARSE_ERROR));
 			}
 		}
-		
+
 		LoginResponse loginResponse = new LoginResponse();
-		if(otp==otp1) {
-			
+		if (otp == otp1) {
+
 			ResponseEntity<?> userLogin = login(loginRequest);
-			JwtResponse jwtResp = (JwtResponse) userLogin.getBody();	
+			JwtResponse jwtResp = (JwtResponse) userLogin.getBody();
 			loginResponse.setJwtResponse(jwtResp);
 			loginResponse.setOtpLogin(true);
 			loginResponse.setStatus("Otp Matched successfully!");
 			return ResponseEntity.ok(loginResponse);
-		}
-		else {
+		} else {
 			loginResponse.setStatus("OTP Expired Or Invalid OTP Entered!");
 			return ResponseEntity.ok(loginResponse);
 		}
-		
+
 	}
 
 	private boolean isValidEmail(String email) {
