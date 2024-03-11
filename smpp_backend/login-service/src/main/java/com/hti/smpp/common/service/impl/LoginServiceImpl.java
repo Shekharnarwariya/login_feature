@@ -82,7 +82,6 @@ import com.hti.smpp.common.user.repository.WebMenuAccessEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.Constant;
 import com.hti.smpp.common.util.ConstantMessages;
-import com.hti.smpp.common.util.Constants;
 import com.hti.smpp.common.util.EmailValidator;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
@@ -654,7 +653,6 @@ public class LoginServiceImpl implements LoginService {
 		return proEntry;
 	}
 
-<<<<<<< HEAD
 //	@Override
 //	public ResponseEntity<?> validateUserIpAccess(LoginRequest loginRequest, String language) {
 //
@@ -1544,8 +1542,6 @@ public class LoginServiceImpl implements LoginService {
 //
 //	}
 
-=======
->>>>>>> c358654fe20522bec3e8ae5751efb6af387a58b5
 	@Override
 	public ResponseEntity<?> validateUserIpAccess(LoginRequest loginRequest, String language) {
 
@@ -2006,7 +2002,7 @@ public class LoginServiceImpl implements LoginService {
 											// TODO ask Vinod Sir about this line
 //											request.getSession().setAttribute("loginEntry", loginDTO);
 										}
-												
+
 									}
 									if (otplogin) {
 
@@ -2178,11 +2174,6 @@ public class LoginServiceImpl implements LoginService {
 																headers.set("username", userEntry.getSystemId());
 																HttpEntity<BulkSmsDTO> requestEntity = new HttpEntity<>(
 																		smsDTO, headers);
-<<<<<<< HEAD
-=======
-																System.out.println("4");
-
->>>>>>> c358654fe20522bec3e8ae5751efb6af387a58b5
 																response = restTemplate.postForEntity(url,
 																		requestEntity, String.class);
 																System.out.println(response + "------------1326");
@@ -2288,9 +2279,9 @@ public class LoginServiceImpl implements LoginService {
 									return ResponseEntity.ok(loginResponse);
 
 								} else if (webEntry.isEmailOnLogin()) {
-										
+
 									System.out.println(webEntry.isEmailOnLogin());
-													
+
 									// if not otp login send email to user of login alert
 									// send email for login
 									String to = IConstants.TO_EMAIl;
