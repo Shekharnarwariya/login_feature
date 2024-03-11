@@ -21,6 +21,8 @@ public class ProfileResponse {
 	private String contactNo;
 
 	private String currency;
+	
+	private String profilePath;
 
 	public String getCurrency() {
 		return currency;
@@ -109,5 +111,11 @@ public class ProfileResponse {
 	public ProfileResponse() {
 		super();
 	}
-
+	public String getProfilePath() {
+		return profilePath;
+	}
+	public void setProfilePath(String profilePath) {
+		this.profilePath = profilePath;
+	}
+	
 }

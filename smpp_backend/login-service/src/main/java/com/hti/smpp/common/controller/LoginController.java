@@ -2,6 +2,7 @@ package com.hti.smpp.common.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.hti.smpp.common.exception.ExceptionResponse;
 import com.hti.smpp.common.request.LoginRequest;
@@ -209,7 +212,7 @@ public class LoginController {
 	 * @param profileUpdateRequest
 	 * @return
 	 */
-	@PutMapping("/updateProfile")
+	@PutMapping(value="/updateProfile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	@Operation(summary = "Update User Profile", description = "Endpoint to update the profile information for a user.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "204", description = "User profile updated successfully. No content returned."),
@@ -217,8 +220,11 @@ public class LoginController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized. User profile update failed.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "500", description = "Internal server error during user profile update process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
 	public ResponseEntity<?> updateUserProfile(@RequestHeader(value = "username", required = true) String username,
-			@RequestBody @Valid ProfileUpdateRequest profileUpdateRequest) {
-		return loginService.updateUserProfile(username, profileUpdateRequest);
+		@RequestParam(value="email",required = false)String email,@RequestParam(value="firstName",required = false)String firstName,
+		@RequestParam(value="lastName",required = false)String lastName,@RequestParam(value="contact",required = false)String contact,
+		@RequestParam(value="image",required = false) MultipartFile image) {
+		//System.out.println(ServletUriComponentsBuilder.fromCurrentContextPath().path("/images/").path(image.getOriginalFilename()).toUriString());
+		return loginService.updateUserProfile(username,email,firstName,lastName,contact,image);
 	}
 	
 	@PostMapping("/validate/user-ip")
