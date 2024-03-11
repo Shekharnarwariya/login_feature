@@ -1,8 +1,15 @@
 package com.hti.smpp.common.service.impl;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Types;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -11,6 +18,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -18,11 +26,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.UUID;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +48,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.hazelcast.map.IMap;
 import com.hti.smpp.common.email.EmailSender;
@@ -238,8 +250,8 @@ public class LoginServiceImpl implements LoginService {
 			profileResponse.setRoles(userEntry.getRole());
 			profileResponse.setContactNo(professionEntry.getMobile());
 			profileResponse.setCurrency(userEntry.getCurrency());
-
-			return ResponseEntity.ok(profileResponse);
+			profileResponse.setProfilePath(professionEntry.getImageFilePath());
+		return ResponseEntity.ok(profileResponse);
 		} else {
 			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 		}
@@ -572,14 +584,14 @@ public class LoginServiceImpl implements LoginService {
 	 * Updates the user profile information for the specified username.
 	 */
 	@Override
-	public ResponseEntity<?> updateUserProfile(String username, ProfileUpdateRequest profileUpdateRequest) {
+	public ResponseEntity<?> updateUserProfile(String username,String email,String firstName,String lastName,String contact,MultipartFile profileImageFile) {
 		Optional<UserEntry> optionalUser = userEntryRepository.findBySystemId(username);
 		if (optionalUser.isPresent()) {
 			UserEntry user = optionalUser.get();
 			ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
 					.orElseThrow(() -> new NotFoundException(
 							messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
-			updateUserData(user, profileUpdateRequest, professionEntry);
+			updateUserData(user, email,firstName,lastName,contact,professionEntry,profileImageFile);
 			user.setEditOn(LocalDateTime.now() + "");
 			user.setEditBy(username);
 			userEntryRepository.save(user);
@@ -599,20 +611,41 @@ public class LoginServiceImpl implements LoginService {
 	 * @param profileUpdateRequest
 	 * @param professionEntry
 	 */
-	private void updateUserData(UserEntry user, ProfileUpdateRequest profileUpdateRequest,
-			ProfessionEntry professionEntry) {
-		// Use null checks to update only non-null fields
-		if (profileUpdateRequest.getEmail() != null) {
-			professionEntry.setDomainEmail(profileUpdateRequest.getEmail());
+	private void updateUserData(UserEntry user, String email, String firstName, String lastName, String contact,
+            ProfessionEntry professionEntry, MultipartFile profileImageFile) {
+		if (email != null) {
+				professionEntry.setDomainEmail(email);
 		}
-		if (profileUpdateRequest.getFirstName() != null) {
-			professionEntry.setFirstName(profileUpdateRequest.getFirstName());
+		if (firstName != null) {
+			professionEntry.setFirstName(firstName);
 		}
-		if (profileUpdateRequest.getLastName() != null) {
-			professionEntry.setLastName(profileUpdateRequest.getLastName());
+		if (lastName != null) {
+			professionEntry.setLastName(lastName);
 		}
-		if (profileUpdateRequest.getContact() != null) {
-			professionEntry.setMobile(profileUpdateRequest.getContact());
+		if (contact != null) {
+			professionEntry.setMobile(contact);
+		}
+
+		if (profileImageFile != null && !profileImageFile.isEmpty()) {
+		    try {
+		       byte[] fileContent=profileImageFile.getBytes();
+	       	   String originalFileName=profileImageFile.getOriginalFilename();
+		       String filePath=IConstants.PROFILE_DIR+"profile//";
+		       
+		       File directory = new File(filePath);
+               if (!directory.exists()) {
+                   directory.mkdirs(); 
+               }
+               String originalImagePath = filePath + originalFileName;
+               File originalFile = new File(originalImagePath);
+               FileOutputStream fos = new FileOutputStream(originalFile);
+               fos.write(fileContent);
+               fos.close();
+		      professionEntry.setImageFilePath(originalFileName);	       
+		    } catch (IOException e) {
+		        e.printStackTrace();
+		        throw new InternalServerException("Error while parsing the image");
+		    }
 		}
 	}
 

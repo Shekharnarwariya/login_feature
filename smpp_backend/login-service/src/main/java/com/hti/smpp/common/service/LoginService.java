@@ -2,6 +2,7 @@ package com.hti.smpp.common.service;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.hti.smpp.common.request.LoginRequest;
 import com.hti.smpp.common.request.PasswordUpdateRequest;
@@ -27,7 +28,7 @@ public interface LoginService {
 	
 	public ResponseEntity<?> updatePassword(PasswordUpdateRequest passwordUpdateRequest,String username);
 	
-	public ResponseEntity<?> updateUserProfile(String username,ProfileUpdateRequest profileUpdateRequest);
+	public ResponseEntity<?> updateUserProfile(String username,String email,String firstName,String lastName,String contact,MultipartFile profileImageFile);
 	
 	public ResponseEntity<?> validateUserIpAccess(LoginRequest loginRequest, String language);
 	
