@@ -1,0 +1,4 @@
+#Key and value types
+#Mon Mar 11 16:23:28 IST 2024
+valueType=com.hti.objects.LogPDU
+keyType=java.lang.String

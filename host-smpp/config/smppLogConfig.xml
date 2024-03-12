@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	<property name="DEV_HOME" value="log/process" />
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<layout class="ch.qos.logback.classic.PatternLayout">
+<charset>UTF-8</charset>
+			<Pattern>
+				 %-5level - %msg%n
+			</Pattern>
+		</layout>
+	</appender>
+
+	<appender name="FILE-DEBUG"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/debug.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/archived/debug.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>10MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>7</maxHistory>
+		</rollingPolicy>
+
+	</appender>
+
+	<appender name="FILE-PROC"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/process.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+		<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %class{36} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/archived/process.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>5MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>7</maxHistory>
+		</rollingPolicy>
+	</appender>
+
+    <appender name="SMSC-SUBMIT-PROC"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/submit.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+		<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss:SSS} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/archived/submit.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>50MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>7</maxHistory>
+		</rollingPolicy>
+	</appender>
+
+	 <appender name="SMSC-SUBMIT-ERROR"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/SubmitError.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+		<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss:SSS} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/archived/SubmitError.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>10MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>7</maxHistory>
+		</rollingPolicy>
+	</appender>
+
+	 <appender name="SMSC-PDU-PROC"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/pdu.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+		<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss:SSS} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/archived/pdu.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>50MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>7</maxHistory>
+		</rollingPolicy>
+	</appender>
+
+	<appender name="SMSC-DLR-PROC"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/dlr.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+		<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss:SSS} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/archived/dlr.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>50MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>7</maxHistory>
+		</rollingPolicy>
+	</appender>
+
+	<appender name="FILE-TRACK"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/track.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+		<charset>UTF-8</charset>
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss:SSS} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/archived/track.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>50MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+			<!-- keep 7 day's worth of history -->
+			<maxHistory>3</maxHistory>
+		</rollingPolicy>
+	</appender>
+
+	<logger name="submitLogger" level="INFO" additivity="false">
+        <appender-ref ref="SMSC-SUBMIT-PROC"/>
+    </logger>
+
+	<logger name="submitErrLogger" level="INFO" additivity="false">
+        <appender-ref ref="SMSC-SUBMIT-ERROR"/>
+		<appender-ref ref="STDOUT" />
+    </logger>
+
+	<logger name="pduLogger" level="INFO" additivity="false">
+        <appender-ref ref="SMSC-PDU-PROC"/>
+    </logger>
+
+	<logger name="dlrLogger" level="INFO" additivity="false">
+        <appender-ref ref="SMSC-DLR-PROC"/>
+    </logger>
+
+	<logger name="ProcLogger" level="INFO" additivity="false">
+    	<appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE-PROC"/>
+    </logger>
+
+	<logger name="trackLogger" level="DEBUG" additivity="false">
+        <appender-ref ref="FILE-TRACK"/>
+    </logger>
+
+	<root level="INFO">
+		<appender-ref ref="FILE-DEBUG"/>
+		<appender-ref ref="STDOUT" />
+	</root>
+
+</configuration>

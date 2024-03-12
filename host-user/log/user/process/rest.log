@@ -1,0 +1,642 @@
+2024-03-11 13:41:11 [restartedMain] INFO  c.h.c.i.spi.ClientInvocationService - hz.client_1 [dev] [5.0.1] Running with 2 response threads, dynamic=true
+2024-03-11 13:41:11 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is STARTING
+2024-03-11 13:41:11 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is STARTED
+2024-03-11 13:41:11 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.0.1] Trying to connect to cluster: dev
+2024-03-11 13:41:11 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.0.1] Trying to connect to [127.0.0.1]:5701
+2024-03-11 13:41:11 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is CLIENT_CONNECTED
+2024-03-11 13:41:11 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.0.1] Authenticated with server [127.0.0.1]:5701:3b9b9a97-dc51-4a5b-97af-7a577ec2167c, server version: 5.3.6, local address: /127.0.0.1:58763
+2024-03-11 13:41:11 [restartedMain] INFO  c.h.internal.diagnostics.Diagnostics - hz.client_1 [dev] [5.0.1] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-11 13:41:11 [hz.client_1.event-5] INFO  c.h.c.impl.spi.ClientClusterService - hz.client_1 [dev] [5.0.1] 
+
+Members [1] {
+	Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+}
+
+2024-03-11 13:41:11 [restartedMain] INFO  c.h.c.i.s.ClientStatisticsService - Client statistics is enabled with period 5 seconds.
+2024-03-11 13:41:29 [RMI TCP Connection(2)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:41:45 [restartedMain] INFO  c.h.c.i.spi.ClientInvocationService - hz.client_1 [dev] [5.0.1] Running with 2 response threads, dynamic=true
+2024-03-11 13:41:45 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is STARTING
+2024-03-11 13:41:45 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is STARTED
+2024-03-11 13:41:45 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.0.1] Trying to connect to cluster: dev
+2024-03-11 13:41:45 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.0.1] Trying to connect to [127.0.0.1]:5701
+2024-03-11 13:41:45 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is CLIENT_CONNECTED
+2024-03-11 13:41:45 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.0.1] Authenticated with server [127.0.0.1]:5701:3b9b9a97-dc51-4a5b-97af-7a577ec2167c, server version: 5.3.6, local address: /127.0.0.1:58816
+2024-03-11 13:41:45 [restartedMain] INFO  c.h.internal.diagnostics.Diagnostics - hz.client_1 [dev] [5.0.1] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-11 13:41:45 [hz.client_1.event-2] INFO  c.h.c.impl.spi.ClientClusterService - hz.client_1 [dev] [5.0.1] 
+
+Members [1] {
+	Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+}
+
+2024-03-11 13:41:45 [restartedMain] INFO  c.h.c.i.s.ClientStatisticsService - Client statistics is enabled with period 5 seconds.
+2024-03-11 13:41:45 [RMI TCP Connection(2)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:43:54 [restartedMain] INFO  c.h.c.i.spi.ClientInvocationService - hz.client_1 [dev] [5.0.1] Running with 2 response threads, dynamic=true
+2024-03-11 13:43:54 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is STARTING
+2024-03-11 13:43:54 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is STARTED
+2024-03-11 13:43:54 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.0.1] Trying to connect to cluster: dev
+2024-03-11 13:43:54 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.0.1] Trying to connect to [127.0.0.1]:5701
+2024-03-11 13:43:54 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is CLIENT_CONNECTED
+2024-03-11 13:43:54 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.0.1] Authenticated with server [127.0.0.1]:5701:3b9b9a97-dc51-4a5b-97af-7a577ec2167c, server version: 5.3.6, local address: /127.0.0.1:58963
+2024-03-11 13:43:54 [restartedMain] INFO  c.h.internal.diagnostics.Diagnostics - hz.client_1 [dev] [5.0.1] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-11 13:43:54 [hz.client_1.event-1] INFO  c.h.c.impl.spi.ClientClusterService - hz.client_1 [dev] [5.0.1] 
+
+Members [1] {
+	Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+}
+
+2024-03-11 13:43:54 [restartedMain] INFO  c.h.c.i.s.ClientStatisticsService - Client statistics is enabled with period 5 seconds.
+2024-03-11 13:43:58 [RMI TCP Connection(2)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:45:20 [restartedMain] INFO  c.h.c.i.spi.ClientInvocationService - hz.client_1 [dev] [5.0.1] Running with 2 response threads, dynamic=true
+2024-03-11 13:45:21 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is STARTING
+2024-03-11 13:45:21 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is STARTED
+2024-03-11 13:45:21 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.0.1] Trying to connect to cluster: dev
+2024-03-11 13:45:21 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.0.1] Trying to connect to [127.0.0.1]:5701
+2024-03-11 13:45:21 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is CLIENT_CONNECTED
+2024-03-11 13:45:21 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.0.1] Authenticated with server [127.0.0.1]:5701:3b9b9a97-dc51-4a5b-97af-7a577ec2167c, server version: 5.3.6, local address: /127.0.0.1:59052
+2024-03-11 13:45:21 [restartedMain] INFO  c.h.internal.diagnostics.Diagnostics - hz.client_1 [dev] [5.0.1] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-11 13:45:21 [hz.client_1.event-1] INFO  c.h.c.impl.spi.ClientClusterService - hz.client_1 [dev] [5.0.1] 
+
+Members [1] {
+	Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+}
+
+2024-03-11 13:45:21 [restartedMain] INFO  c.h.c.i.s.ClientStatisticsService - Client statistics is enabled with period 5 seconds.
+2024-03-11 13:46:58 [restartedMain] INFO  c.h.c.i.spi.ClientInvocationService - hz.client_1 [dev] [5.0.1] Running with 2 response threads, dynamic=true
+2024-03-11 13:46:58 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is STARTING
+2024-03-11 13:46:58 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is STARTED
+2024-03-11 13:46:58 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.0.1] Trying to connect to cluster: dev
+2024-03-11 13:46:58 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.0.1] Trying to connect to [127.0.0.1]:5701
+2024-03-11 13:46:58 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is CLIENT_CONNECTED
+2024-03-11 13:46:58 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.0.1] Authenticated with server [127.0.0.1]:5701:3b9b9a97-dc51-4a5b-97af-7a577ec2167c, server version: 5.3.6, local address: /127.0.0.1:59177
+2024-03-11 13:46:58 [restartedMain] INFO  c.h.internal.diagnostics.Diagnostics - hz.client_1 [dev] [5.0.1] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-11 13:46:58 [hz.client_1.event-4] INFO  c.h.c.impl.spi.ClientClusterService - hz.client_1 [dev] [5.0.1] 
+
+Members [1] {
+	Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+}
+
+2024-03-11 13:46:58 [restartedMain] INFO  c.h.c.i.s.ClientStatisticsService - Client statistics is enabled with period 5 seconds.
+2024-03-11 13:47:57 [File Watcher] INFO  o.s.b.d.a.LocalDevToolsAutoConfiguration$RestartingClassPathChangeChangedEventListener - Restarting due to 4 class path changes (4 additions, 0 deletions, 0 modifications)
+2024-03-11 13:47:57 [Thread-5] INFO  o.a.catalina.core.StandardService - Stopping service [Tomcat]
+2024-03-11 13:48:07 [restartedMain] INFO  c.h.c.i.spi.ClientInvocationService - hz.client_2 [dev] [5.0.1] Running with 2 response threads, dynamic=true
+2024-03-11 13:48:07 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_2 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is STARTING
+2024-03-11 13:48:07 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_2 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is STARTED
+2024-03-11 13:48:07 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_2 [dev] [5.0.1] Trying to connect to cluster: dev
+2024-03-11 13:48:07 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_2 [dev] [5.0.1] Trying to connect to [127.0.0.1]:5701
+2024-03-11 13:48:07 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_2 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is CLIENT_CONNECTED
+2024-03-11 13:48:07 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_2 [dev] [5.0.1] Authenticated with server [127.0.0.1]:5701:3b9b9a97-dc51-4a5b-97af-7a577ec2167c, server version: 5.3.6, local address: /127.0.0.1:59263
+2024-03-11 13:48:07 [restartedMain] INFO  c.h.internal.diagnostics.Diagnostics - hz.client_2 [dev] [5.0.1] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-11 13:48:07 [hz.client_2.event-10] INFO  c.h.c.impl.spi.ClientClusterService - hz.client_2 [dev] [5.0.1] 
+
+Members [1] {
+	Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+}
+
+2024-03-11 13:48:07 [restartedMain] INFO  c.h.c.i.s.ClientStatisticsService - Client statistics is enabled with period 5 seconds.
+2024-03-11 13:48:09 [File Watcher] INFO  o.s.b.d.a.LocalDevToolsAutoConfiguration$RestartingClassPathChangeChangedEventListener - Restarting due to 218 class path changes (0 additions, 0 deletions, 218 modifications)
+2024-03-11 13:48:09 [Thread-13] INFO  o.a.catalina.core.StandardService - Stopping service [Tomcat]
+2024-03-11 13:48:20 [restartedMain] INFO  c.h.c.i.spi.ClientInvocationService - hz.client_3 [dev] [5.0.1] Running with 2 response threads, dynamic=true
+2024-03-11 13:48:20 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_3 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is STARTING
+2024-03-11 13:48:20 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_3 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is STARTED
+2024-03-11 13:48:20 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_3 [dev] [5.0.1] Trying to connect to cluster: dev
+2024-03-11 13:48:20 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_3 [dev] [5.0.1] Trying to connect to [127.0.0.1]:5701
+2024-03-11 13:48:20 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_3 [dev] [5.0.1] HazelcastClient 5.0.1 (20211216 - 69c0179) is CLIENT_CONNECTED
+2024-03-11 13:48:20 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_3 [dev] [5.0.1] Authenticated with server [127.0.0.1]:5701:3b9b9a97-dc51-4a5b-97af-7a577ec2167c, server version: 5.3.6, local address: /127.0.0.1:59307
+2024-03-11 13:48:20 [restartedMain] INFO  c.h.internal.diagnostics.Diagnostics - hz.client_3 [dev] [5.0.1] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-11 13:48:20 [hz.client_3.event-12] INFO  c.h.c.impl.spi.ClientClusterService - hz.client_3 [dev] [5.0.1] 
+
+Members [1] {
+	Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+}
+
+2024-03-11 13:48:20 [restartedMain] INFO  c.h.c.i.s.ClientStatisticsService - Client statistics is enabled with period 5 seconds.
+2024-03-11 13:48:21 [File Watcher] INFO  o.s.b.d.a.LocalDevToolsAutoConfiguration$RestartingClassPathChangeChangedEventListener - Restarting due to 218 class path changes (0 additions, 4 deletions, 214 modifications)
+2024-03-11 13:48:21 [Thread-20] INFO  o.a.catalina.core.StandardService - Stopping service [Tomcat]
+2024-03-11 13:49:58 [restartedMain] INFO  c.h.c.i.spi.ClientInvocationService - hz.client_1 [dev] [5.2.4] Running with 2 response threads, dynamic=true
+2024-03-11 13:49:58 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.2.4] HazelcastClient 5.2.4 (20230613 - bcacb08) is STARTING
+2024-03-11 13:49:58 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.2.4] HazelcastClient 5.2.4 (20230613 - bcacb08) is STARTED
+2024-03-11 13:49:58 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to cluster: dev
+2024-03-11 13:49:58 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5701
+2024-03-11 13:49:59 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.2.4] HazelcastClient 5.2.4 (20230613 - bcacb08) is CLIENT_CONNECTED
+2024-03-11 13:49:59 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Authenticated with server [127.0.0.1]:5701:3b9b9a97-dc51-4a5b-97af-7a577ec2167c, server version: 5.3.6, local address: /127.0.0.1:59407
+2024-03-11 13:49:59 [restartedMain] INFO  c.h.internal.diagnostics.Diagnostics - hz.client_1 [dev] [5.2.4] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-11 13:49:59 [hz.client_1.event-1] INFO  c.h.c.impl.spi.ClientClusterService - hz.client_1 [dev] [5.2.4] 
+
+Members [1] {
+	Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+}
+
+2024-03-11 13:49:59 [restartedMain] INFO  c.h.c.i.s.ClientStatisticsService - Client statistics is enabled with period 5 seconds.
+2024-03-11 13:50:04 [RMI TCP Connection(2)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:04 [RMI TCP Connection(2)-127.0.0.1] INFO  o.a.catalina.core.StandardService - Stopping service [Tomcat]
+2024-03-11 13:50:04 [RMI TCP Connection(2)-127.0.0.1] WARN  o.s.c.s.DefaultLifecycleProcessor - Failed to stop bean 'springBootLoggingLifecycle'
+java.lang.NoSuchMethodError: 'void ch.qos.logback.classic.LoggerContext.removeObject(java.lang.String)'
+	at org.springframework.boot.logging.logback.LogbackLoggingSystem.markAsUninitialized(LogbackLoggingSystem.java:443) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.boot.logging.logback.LogbackLoggingSystem.cleanUp(LogbackLoggingSystem.java:319) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.boot.context.logging.LoggingApplicationListener.cleanupLoggingSystem(LoggingApplicationListener.java:276) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.boot.context.logging.LoggingApplicationListener$Lifecycle.stop(LoggingApplicationListener.java:472) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.context.SmartLifecycle.stop(SmartLifecycle.java:117) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.DefaultLifecycleProcessor.doStop(DefaultLifecycleProcessor.java:235) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.DefaultLifecycleProcessor$LifecycleGroup.stop(DefaultLifecycleProcessor.java:374) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.DefaultLifecycleProcessor.stopBeans(DefaultLifecycleProcessor.java:207) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.DefaultLifecycleProcessor.onClose(DefaultLifecycleProcessor.java:130) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.AbstractApplicationContext.doClose(AbstractApplicationContext.java:1076) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.doClose(ServletWebServerApplicationContext.java:173) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.context.support.AbstractApplicationContext.close(AbstractApplicationContext.java:1035) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.boot.admin.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin.shutdown(SpringApplicationAdminMXBeanRegistrar.java:160) ~[spring-boot-3.1.5.jar:3.1.5]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]
+	at sun.reflect.misc.Trampoline.invoke(MethodUtil.java:72) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]
+	at java.base/sun.reflect.misc.MethodUtil.invoke(MethodUtil.java:262) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.ConvertingMethod.invokeWithOpenReturn(ConvertingMethod.java:193) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.ConvertingMethod.invokeWithOpenReturn(ConvertingMethod.java:175) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.MXBeanIntrospector.invokeM2(MXBeanIntrospector.java:117) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.MXBeanIntrospector.invokeM2(MXBeanIntrospector.java:54) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.MBeanIntrospector.invokeM(MBeanIntrospector.java:237) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.PerInterface.invoke(PerInterface.java:138) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.MBeanSupport.invoke(MBeanSupport.java:252) ~[na:na]
+	at java.management/com.sun.jmx.interceptor.DefaultMBeanServerInterceptor.invoke(DefaultMBeanServerInterceptor.java:814) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.JmxMBeanServer.invoke(JmxMBeanServer.java:802) ~[na:na]
+	at java.management.rmi/javax.management.remote.rmi.RMIConnectionImpl.doOperation(RMIConnectionImpl.java:1472) ~[na:na]
+	at java.management.rmi/javax.management.remote.rmi.RMIConnectionImpl$PrivilegedOperation.run(RMIConnectionImpl.java:1310) ~[na:na]
+	at java.management.rmi/javax.management.remote.rmi.RMIConnectionImpl.doPrivilegedOperation(RMIConnectionImpl.java:1405) ~[na:na]
+	at java.management.rmi/javax.management.remote.rmi.RMIConnectionImpl.invoke(RMIConnectionImpl.java:829) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360) ~[na:na]
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200) ~[na:na]
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197) ~[na:na]
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712) ~[na:na]
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196) ~[na:na]
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587) ~[na:na]
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828) ~[na:na]
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705) ~[na:na]
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399) ~[na:na]
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+2024-03-11 13:50:04 [RMI TCP Connection(3)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:04 [RMI TCP Connection(4)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:05 [RMI TCP Connection(5)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:05 [RMI TCP Connection(6)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:06 [RMI TCP Connection(7)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:06 [RMI TCP Connection(8)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:06 [RMI TCP Connection(9)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:07 [RMI TCP Connection(10)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:07 [RMI TCP Connection(11)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:07 [RMI TCP Connection(12)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:07 [RMI TCP Connection(13)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:08 [RMI TCP Connection(14)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:08 [RMI TCP Connection(15)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:09 [RMI TCP Connection(16)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:09 [RMI TCP Connection(17)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:09 [RMI TCP Connection(18)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:09 [RMI TCP Connection(19)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:09 [RMI TCP Connection(20)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:09 [RMI TCP Connection(21)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:10 [RMI TCP Connection(22)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:14 [RMI TCP Connection(23)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:14 [RMI TCP Connection(24)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:15 [RMI TCP Connection(25)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:15 [RMI TCP Connection(26)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:15 [RMI TCP Connection(27)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:15 [RMI TCP Connection(28)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:16 [RMI TCP Connection(29)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:16 [RMI TCP Connection(30)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:16 [RMI TCP Connection(31)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:16 [RMI TCP Connection(32)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:16 [RMI TCP Connection(33)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:50:34 [RMI TCP Connection(2)-127.0.0.1] INFO  o.s.c.s.DefaultLifecycleProcessor - Failed to shut down 1 bean with phase value -2147483647 within timeout of 30000ms: [springBootLoggingLifecycle]
+2024-03-11 13:56:15 [restartedMain] INFO  c.h.c.i.spi.ClientInvocationService - hz.client_1 [dev] [5.2.4] Running with 2 response threads, dynamic=true
+2024-03-11 13:56:15 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.2.4] HazelcastClient 5.2.4 (20230613 - bcacb08) is STARTING
+2024-03-11 13:56:15 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.2.4] HazelcastClient 5.2.4 (20230613 - bcacb08) is STARTED
+2024-03-11 13:56:15 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to cluster: dev
+2024-03-11 13:56:15 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5701
+2024-03-11 13:56:15 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.2.4] HazelcastClient 5.2.4 (20230613 - bcacb08) is CLIENT_CONNECTED
+2024-03-11 13:56:15 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Authenticated with server [127.0.0.1]:5701:3b9b9a97-dc51-4a5b-97af-7a577ec2167c, server version: 5.3.6, local address: /127.0.0.1:59906
+2024-03-11 13:56:15 [restartedMain] INFO  c.h.internal.diagnostics.Diagnostics - hz.client_1 [dev] [5.2.4] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-11 13:56:15 [hz.client_1.event-3] INFO  c.h.c.impl.spi.ClientClusterService - hz.client_1 [dev] [5.2.4] 
+
+Members [1] {
+	Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+}
+
+2024-03-11 13:56:15 [restartedMain] INFO  c.h.c.i.s.ClientStatisticsService - Client statistics is enabled with period 5 seconds.
+2024-03-11 13:57:41 [RMI TCP Connection(5)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:57:41 [RMI TCP Connection(5)-127.0.0.1] INFO  o.a.catalina.core.StandardService - Stopping service [Tomcat]
+2024-03-11 13:57:41 [RMI TCP Connection(5)-127.0.0.1] WARN  o.s.c.s.DefaultLifecycleProcessor - Failed to stop bean 'springBootLoggingLifecycle'
+java.lang.NoSuchMethodError: 'void ch.qos.logback.classic.LoggerContext.removeObject(java.lang.String)'
+	at org.springframework.boot.logging.logback.LogbackLoggingSystem.markAsUninitialized(LogbackLoggingSystem.java:443) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.boot.logging.logback.LogbackLoggingSystem.cleanUp(LogbackLoggingSystem.java:319) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.boot.context.logging.LoggingApplicationListener.cleanupLoggingSystem(LoggingApplicationListener.java:276) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.boot.context.logging.LoggingApplicationListener$Lifecycle.stop(LoggingApplicationListener.java:472) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.context.SmartLifecycle.stop(SmartLifecycle.java:117) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.DefaultLifecycleProcessor.doStop(DefaultLifecycleProcessor.java:235) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.DefaultLifecycleProcessor$LifecycleGroup.stop(DefaultLifecycleProcessor.java:374) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.DefaultLifecycleProcessor.stopBeans(DefaultLifecycleProcessor.java:207) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.DefaultLifecycleProcessor.onClose(DefaultLifecycleProcessor.java:130) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.AbstractApplicationContext.doClose(AbstractApplicationContext.java:1076) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.doClose(ServletWebServerApplicationContext.java:173) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.context.support.AbstractApplicationContext.close(AbstractApplicationContext.java:1035) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.boot.admin.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin.shutdown(SpringApplicationAdminMXBeanRegistrar.java:160) ~[spring-boot-3.1.5.jar:3.1.5]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]
+	at sun.reflect.misc.Trampoline.invoke(MethodUtil.java:72) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]
+	at java.base/sun.reflect.misc.MethodUtil.invoke(MethodUtil.java:262) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.ConvertingMethod.invokeWithOpenReturn(ConvertingMethod.java:193) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.ConvertingMethod.invokeWithOpenReturn(ConvertingMethod.java:175) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.MXBeanIntrospector.invokeM2(MXBeanIntrospector.java:117) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.MXBeanIntrospector.invokeM2(MXBeanIntrospector.java:54) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.MBeanIntrospector.invokeM(MBeanIntrospector.java:237) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.PerInterface.invoke(PerInterface.java:138) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.MBeanSupport.invoke(MBeanSupport.java:252) ~[na:na]
+	at java.management/com.sun.jmx.interceptor.DefaultMBeanServerInterceptor.invoke(DefaultMBeanServerInterceptor.java:814) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.JmxMBeanServer.invoke(JmxMBeanServer.java:802) ~[na:na]
+	at java.management.rmi/javax.management.remote.rmi.RMIConnectionImpl.doOperation(RMIConnectionImpl.java:1472) ~[na:na]
+	at java.management.rmi/javax.management.remote.rmi.RMIConnectionImpl$PrivilegedOperation.run(RMIConnectionImpl.java:1310) ~[na:na]
+	at java.management.rmi/javax.management.remote.rmi.RMIConnectionImpl.doPrivilegedOperation(RMIConnectionImpl.java:1405) ~[na:na]
+	at java.management.rmi/javax.management.remote.rmi.RMIConnectionImpl.invoke(RMIConnectionImpl.java:829) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360) ~[na:na]
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200) ~[na:na]
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197) ~[na:na]
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712) ~[na:na]
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196) ~[na:na]
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587) ~[na:na]
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828) ~[na:na]
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705) ~[na:na]
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399) ~[na:na]
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+2024-03-11 13:57:41 [RMI TCP Connection(6)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:57:41 [RMI TCP Connection(7)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:57:42 [RMI TCP Connection(8)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:57:42 [RMI TCP Connection(9)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:57:45 [RMI TCP Connection(10)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:57:45 [RMI TCP Connection(11)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:57:45 [RMI TCP Connection(12)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:57:45 [RMI TCP Connection(13)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:57:46 [RMI TCP Connection(14)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:57:46 [RMI TCP Connection(15)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 13:58:11 [RMI TCP Connection(5)-127.0.0.1] INFO  o.s.c.s.DefaultLifecycleProcessor - Failed to shut down 1 bean with phase value -2147483647 within timeout of 30000ms: [springBootLoggingLifecycle]
+2024-03-11 13:58:46 [restartedMain] INFO  c.h.c.i.spi.ClientInvocationService - hz.client_1 [dev] [5.2.4] Running with 2 response threads, dynamic=true
+2024-03-11 13:58:46 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.2.4] HazelcastClient 5.2.4 (20230613 - bcacb08) is STARTING
+2024-03-11 13:58:46 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.2.4] HazelcastClient 5.2.4 (20230613 - bcacb08) is STARTED
+2024-03-11 13:58:46 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to cluster: dev
+2024-03-11 13:58:46 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5701
+2024-03-11 13:58:46 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.2.4] HazelcastClient 5.2.4 (20230613 - bcacb08) is CLIENT_CONNECTED
+2024-03-11 13:58:46 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Authenticated with server [127.0.0.1]:5701:3b9b9a97-dc51-4a5b-97af-7a577ec2167c, server version: 5.3.6, local address: /127.0.0.1:60109
+2024-03-11 13:58:46 [restartedMain] INFO  c.h.internal.diagnostics.Diagnostics - hz.client_1 [dev] [5.2.4] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-11 13:58:46 [hz.client_1.event-1] INFO  c.h.c.impl.spi.ClientClusterService - hz.client_1 [dev] [5.2.4] 
+
+Members [1] {
+	Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+}
+
+2024-03-11 13:58:46 [restartedMain] INFO  c.h.c.i.s.ClientStatisticsService - Client statistics is enabled with period 5 seconds.
+2024-03-11 13:59:55 [iMQReadChannel-1] WARN  javax.jms - [I500]: Caught JVM Exception: java.net.SocketException: Connection reset
+2024-03-11 13:59:55 [iMQReadChannel-0] WARN  javax.jms - [I500]: Caught JVM Exception: java.net.SocketException: Connection reset
+2024-03-11 13:59:56 [hz.hz.client_1.IO.thread-in-0] WARN  c.h.c.i.c.tcp.TcpClientConnection - hz.client_1 [dev] [5.2.4] ClientConnection{alive=false, connectionId=1, channel=NioChannel{/127.0.0.1:60109->/127.0.0.1:5701}, remoteAddress=[127.0.0.1]:5701, lastReadTime=2024-03-11 13:59:56.298, lastWriteTime=2024-03-11 13:59:56.297, closedTime=2024-03-11 13:59:56.927, connected server version=null} closed. Reason: Exception in ClientConnection{alive=true, connectionId=1, channel=NioChannel{/127.0.0.1:60109->/127.0.0.1:5701}, remoteAddress=[127.0.0.1]:5701, lastReadTime=2024-03-11 13:59:56.298, lastWriteTime=2024-03-11 13:59:56.297, closedTime=never, connected server version=null}, thread=hz.hz.client_1.IO.thread-in-0
+java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.SocketChannelImpl.throwConnectionReset(SocketChannelImpl.java:394) ~[na:na]
+	at java.base/sun.nio.ch.SocketChannelImpl.read(SocketChannelImpl.java:426) ~[na:na]
+	at com.hazelcast.internal.networking.nio.NioInboundPipeline.process(NioInboundPipeline.java:115) ~[hazelcast-5.2.4.jar:5.2.4]
+	at com.hazelcast.internal.networking.nio.NioThread.processSelectionKey(NioThread.java:383) ~[hazelcast-5.2.4.jar:5.2.4]
+	at com.hazelcast.internal.networking.nio.NioThread.processSelectionKeys(NioThread.java:368) ~[hazelcast-5.2.4.jar:5.2.4]
+	at com.hazelcast.internal.networking.nio.NioThread.selectLoop(NioThread.java:294) ~[hazelcast-5.2.4.jar:5.2.4]
+	at com.hazelcast.internal.networking.nio.NioThread.executeRun(NioThread.java:249) ~[hazelcast-5.2.4.jar:5.2.4]
+	at com.hazelcast.internal.util.executor.HazelcastManagedThread.run(HazelcastManagedThread.java:102) ~[hazelcast-5.2.4.jar:5.2.4]
+2024-03-11 13:59:56 [hz.hz.client_1.IO.thread-in-0] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Removed connection to endpoint: [127.0.0.1]:5701:3b9b9a97-dc51-4a5b-97af-7a577ec2167c, connection: ClientConnection{alive=false, connectionId=1, channel=NioChannel{/127.0.0.1:60109->/127.0.0.1:5701}, remoteAddress=[127.0.0.1]:5701, lastReadTime=2024-03-11 13:59:56.298, lastWriteTime=2024-03-11 13:59:56.297, closedTime=2024-03-11 13:59:56.927, connected server version=null}
+2024-03-11 13:59:56 [hz.hz.client_1.IO.thread-in-0] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.2.4] HazelcastClient 5.2.4 (20230613 - bcacb08) is CLIENT_DISCONNECTED
+2024-03-11 13:59:56 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to cluster: dev
+2024-03-11 13:59:56 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+2024-03-11 13:59:56 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5701
+2024-03-11 13:59:56 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5702
+2024-03-11 13:59:56 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5702: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5702
+2024-03-11 13:59:56 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5703
+2024-03-11 13:59:56 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5703: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5703
+2024-03-11 13:59:56 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Unable to get live cluster connection, retry in 1000 ms, attempt: 1, cluster connect timeout: INFINITE, max backoff: 30000 ms
+2024-03-11 13:59:57 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+2024-03-11 13:59:57 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5701
+2024-03-11 13:59:57 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5702
+2024-03-11 13:59:57 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5702: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5702
+2024-03-11 13:59:57 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5703
+2024-03-11 13:59:57 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5703: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5703
+2024-03-11 13:59:57 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Unable to get live cluster connection, retry in 1050 ms, attempt: 2, cluster connect timeout: INFINITE, max backoff: 30000 ms
+2024-03-11 13:59:59 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+2024-03-11 13:59:59 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5701
+2024-03-11 13:59:59 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5703
+2024-03-11 13:59:59 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5703: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5703
+2024-03-11 13:59:59 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5702
+2024-03-11 13:59:59 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5702: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5702
+2024-03-11 13:59:59 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Unable to get live cluster connection, retry in 1102 ms, attempt: 3, cluster connect timeout: INFINITE, max backoff: 30000 ms
+2024-03-11 14:00:00 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+2024-03-11 14:00:00 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5701
+2024-03-11 14:00:00 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5702
+2024-03-11 14:00:00 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5702: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5702
+2024-03-11 14:00:00 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5703
+2024-03-11 14:00:00 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5703: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5703
+2024-03-11 14:00:00 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Unable to get live cluster connection, retry in 1157 ms, attempt: 4, cluster connect timeout: INFINITE, max backoff: 30000 ms
+2024-03-11 14:00:01 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+2024-03-11 14:00:01 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5701
+2024-03-11 14:00:01 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5702
+2024-03-11 14:00:01 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5702: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5702
+2024-03-11 14:00:01 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5703
+2024-03-11 14:00:01 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5703: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5703
+2024-03-11 14:00:01 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Unable to get live cluster connection, retry in 1214 ms, attempt: 5, cluster connect timeout: INFINITE, max backoff: 30000 ms
+2024-03-11 14:00:02 [RMI TCP Connection(5)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:00:02 [RMI TCP Connection(5)-127.0.0.1] INFO  o.a.catalina.core.StandardService - Stopping service [Tomcat]
+2024-03-11 14:00:02 [RMI TCP Connection(5)-127.0.0.1] WARN  o.s.c.s.DefaultLifecycleProcessor - Failed to stop bean 'springBootLoggingLifecycle'
+java.lang.NoSuchMethodError: 'void ch.qos.logback.classic.LoggerContext.removeObject(java.lang.String)'
+	at org.springframework.boot.logging.logback.LogbackLoggingSystem.markAsUninitialized(LogbackLoggingSystem.java:443) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.boot.logging.logback.LogbackLoggingSystem.cleanUp(LogbackLoggingSystem.java:319) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.boot.context.logging.LoggingApplicationListener.cleanupLoggingSystem(LoggingApplicationListener.java:276) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.boot.context.logging.LoggingApplicationListener$Lifecycle.stop(LoggingApplicationListener.java:472) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.context.SmartLifecycle.stop(SmartLifecycle.java:117) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.DefaultLifecycleProcessor.doStop(DefaultLifecycleProcessor.java:235) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.DefaultLifecycleProcessor$LifecycleGroup.stop(DefaultLifecycleProcessor.java:374) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.DefaultLifecycleProcessor.stopBeans(DefaultLifecycleProcessor.java:207) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.DefaultLifecycleProcessor.onClose(DefaultLifecycleProcessor.java:130) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.AbstractApplicationContext.doClose(AbstractApplicationContext.java:1076) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.doClose(ServletWebServerApplicationContext.java:173) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.context.support.AbstractApplicationContext.close(AbstractApplicationContext.java:1035) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.boot.admin.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin.shutdown(SpringApplicationAdminMXBeanRegistrar.java:160) ~[spring-boot-3.1.5.jar:3.1.5]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]
+	at sun.reflect.misc.Trampoline.invoke(MethodUtil.java:72) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]
+	at java.base/sun.reflect.misc.MethodUtil.invoke(MethodUtil.java:262) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.ConvertingMethod.invokeWithOpenReturn(ConvertingMethod.java:193) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.ConvertingMethod.invokeWithOpenReturn(ConvertingMethod.java:175) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.MXBeanIntrospector.invokeM2(MXBeanIntrospector.java:117) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.MXBeanIntrospector.invokeM2(MXBeanIntrospector.java:54) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.MBeanIntrospector.invokeM(MBeanIntrospector.java:237) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.PerInterface.invoke(PerInterface.java:138) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.MBeanSupport.invoke(MBeanSupport.java:252) ~[na:na]
+	at java.management/com.sun.jmx.interceptor.DefaultMBeanServerInterceptor.invoke(DefaultMBeanServerInterceptor.java:814) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.JmxMBeanServer.invoke(JmxMBeanServer.java:802) ~[na:na]
+	at java.management.rmi/javax.management.remote.rmi.RMIConnectionImpl.doOperation(RMIConnectionImpl.java:1472) ~[na:na]
+	at java.management.rmi/javax.management.remote.rmi.RMIConnectionImpl$PrivilegedOperation.run(RMIConnectionImpl.java:1310) ~[na:na]
+	at java.management.rmi/javax.management.remote.rmi.RMIConnectionImpl.doPrivilegedOperation(RMIConnectionImpl.java:1405) ~[na:na]
+	at java.management.rmi/javax.management.remote.rmi.RMIConnectionImpl.invoke(RMIConnectionImpl.java:829) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360) ~[na:na]
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200) ~[na:na]
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197) ~[na:na]
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712) ~[na:na]
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196) ~[na:na]
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587) ~[na:na]
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828) ~[na:na]
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705) ~[na:na]
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399) ~[na:na]
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+2024-03-11 14:00:02 [RMI TCP Connection(6)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:00:02 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+2024-03-11 14:00:02 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5701
+2024-03-11 14:00:02 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5703
+2024-03-11 14:00:02 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5703: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5703
+2024-03-11 14:00:02 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5702
+2024-03-11 14:00:02 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5702: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5702
+2024-03-11 14:00:02 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Unable to get live cluster connection, retry in 1274 ms, attempt: 6, cluster connect timeout: INFINITE, max backoff: 30000 ms
+2024-03-11 14:00:02 [RMI TCP Connection(7)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:00:03 [RMI TCP Connection(8)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:00:03 [RMI TCP Connection(9)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:00:03 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+2024-03-11 14:00:03 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5701
+2024-03-11 14:00:03 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5702
+2024-03-11 14:00:03 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5702: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5702
+2024-03-11 14:00:03 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5703
+2024-03-11 14:00:03 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5703: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5703
+2024-03-11 14:00:03 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Unable to get live cluster connection, retry in 1337 ms, attempt: 7, cluster connect timeout: INFINITE, max backoff: 30000 ms
+2024-03-11 14:00:03 [RMI TCP Connection(10)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:00:04 [RMI TCP Connection(11)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:00:04 [RMI TCP Connection(12)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:00:04 [RMI TCP Connection(13)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:00:05 [RMI TCP Connection(14)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:00:05 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+2024-03-11 14:00:05 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5701
+2024-03-11 14:00:05 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5703
+2024-03-11 14:00:05 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5703: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5703
+2024-03-11 14:00:05 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5702
+2024-03-11 14:00:05 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5702: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5702
+2024-03-11 14:00:05 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Unable to get live cluster connection, retry in 1403 ms, attempt: 8, cluster connect timeout: INFINITE, max backoff: 30000 ms
+2024-03-11 14:00:05 [RMI TCP Connection(15)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:00:06 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+2024-03-11 14:00:06 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5701
+2024-03-11 14:00:06 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5702
+2024-03-11 14:00:06 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5702: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5702
+2024-03-11 14:00:06 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5703
+2024-03-11 14:00:06 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5703: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5703
+2024-03-11 14:00:06 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Unable to get live cluster connection, retry in 1473 ms, attempt: 9, cluster connect timeout: INFINITE, max backoff: 30000 ms
+2024-03-11 14:00:08 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+2024-03-11 14:00:08 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5701
+2024-03-11 14:00:08 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5702
+2024-03-11 14:00:08 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5702: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5702
+2024-03-11 14:00:08 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5703
+2024-03-11 14:00:08 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5703: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5703
+2024-03-11 14:00:08 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Unable to get live cluster connection, retry in 1546 ms, attempt: 10, cluster connect timeout: INFINITE, max backoff: 30000 ms
+2024-03-11 14:00:09 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+2024-03-11 14:00:09 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5701
+2024-03-11 14:00:09 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5702
+2024-03-11 14:00:09 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5702: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5702
+2024-03-11 14:00:09 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5703
+2024-03-11 14:00:09 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5703: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5703
+2024-03-11 14:00:09 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Unable to get live cluster connection, retry in 1623 ms, attempt: 11, cluster connect timeout: INFINITE, max backoff: 30000 ms
+2024-03-11 14:00:11 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+2024-03-11 14:00:11 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5701
+2024-03-11 14:00:11 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5702
+2024-03-11 14:00:11 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5702: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5702
+2024-03-11 14:00:11 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5703
+2024-03-11 14:00:11 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5703: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5703
+2024-03-11 14:00:11 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Unable to get live cluster connection, retry in 1704 ms, attempt: 12, cluster connect timeout: INFINITE, max backoff: 30000 ms
+2024-03-11 14:00:13 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+2024-03-11 14:00:13 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5701
+2024-03-11 14:00:13 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5702
+2024-03-11 14:00:13 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5702: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5702
+2024-03-11 14:00:13 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5703
+2024-03-11 14:00:13 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5703: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5703
+2024-03-11 14:00:13 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Unable to get live cluster connection, retry in 1789 ms, attempt: 13, cluster connect timeout: INFINITE, max backoff: 30000 ms
+2024-03-11 14:00:14 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+2024-03-11 14:00:14 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5701
+2024-03-11 14:00:14 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5703
+2024-03-11 14:00:14 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5703: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5703
+2024-03-11 14:00:14 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5702
+2024-03-11 14:00:14 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Exception during initial connection to [127.0.0.1]:5702: com.hazelcast.core.HazelcastException: java.io.IOException: Connection refused: no further information to address /127.0.0.1:5702
+2024-03-11 14:00:14 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Unable to get live cluster connection, retry in 1878 ms, attempt: 14, cluster connect timeout: INFINITE, max backoff: 30000 ms
+2024-03-11 14:00:16 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to Member [127.0.0.1]:5701 - 3b9b9a97-dc51-4a5b-97af-7a577ec2167c
+2024-03-11 14:00:17 [hz.client_1.internal-1] WARN  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Switching from current cluster: 05866bc6-3876-43d6-81a1-819baca368c7 to new cluster: 7bc5f002-5d28-48e8-942f-2c072d309211
+2024-03-11 14:00:17 [hz.client_1.internal-1] INFO  com.hazelcast.core.HazelcastInstance - hz.client_1 [dev] [5.2.4] Clearing local state of the client, because of a cluster restart.
+2024-03-11 14:00:17 [hz.client_1.internal-1] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Authenticated with server [127.0.0.1]:5701:d249f54b-6829-4b79-8a5b-c5edf4279c32, server version: 5.3.6, local address: /127.0.0.1:60268
+2024-03-11 14:00:17 [hz.client_1.internal-3] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.2.4] HazelcastClient 5.2.4 (20230613 - bcacb08) is CLIENT_CONNECTED
+2024-03-11 14:00:17 [hz.client_1.event-4] INFO  c.h.c.impl.spi.ClientClusterService - hz.client_1 [dev] [5.2.4] 
+
+Members [1] {
+	Member [127.0.0.1]:5701 - d249f54b-6829-4b79-8a5b-c5edf4279c32
+}
+
+2024-03-11 14:00:17 [hz.client_1.event-4] INFO  com.hti.listener.MemberEventListener - Member Removed: 127.0.0.1
+2024-03-11 14:00:17 [hz.client_1.event-4] INFO  com.hti.listener.MemberEventListener - ******* Marked As Master Client ********
+2024-03-11 14:00:17 [hz.client_1.event-4] INFO  com.hti.listener.MemberEventListener - Member Connected: 127.0.0.1
+2024-03-11 14:00:17 [hz.client_1.event-4] INFO  com.hti.listener.MemberEventListener - ******* Marked As Master Client ********
+2024-03-11 14:00:32 [RMI TCP Connection(5)-127.0.0.1] INFO  o.s.c.s.DefaultLifecycleProcessor - Failed to shut down 1 bean with phase value -2147483647 within timeout of 30000ms: [springBootLoggingLifecycle]
+2024-03-11 14:01:07 [restartedMain] INFO  c.h.c.i.spi.ClientInvocationService - hz.client_1 [dev] [5.2.4] Running with 2 response threads, dynamic=true
+2024-03-11 14:01:08 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.2.4] HazelcastClient 5.2.4 (20230613 - bcacb08) is STARTING
+2024-03-11 14:01:08 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.2.4] HazelcastClient 5.2.4 (20230613 - bcacb08) is STARTED
+2024-03-11 14:01:08 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to cluster: dev
+2024-03-11 14:01:08 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Trying to connect to [127.0.0.1]:5701
+2024-03-11 14:01:08 [restartedMain] INFO  com.hazelcast.core.LifecycleService - hz.client_1 [dev] [5.2.4] HazelcastClient 5.2.4 (20230613 - bcacb08) is CLIENT_CONNECTED
+2024-03-11 14:01:08 [restartedMain] INFO  c.h.c.i.c.ClientConnectionManager - hz.client_1 [dev] [5.2.4] Authenticated with server [127.0.0.1]:5701:d249f54b-6829-4b79-8a5b-c5edf4279c32, server version: 5.3.6, local address: /127.0.0.1:60453
+2024-03-11 14:01:08 [restartedMain] INFO  c.h.internal.diagnostics.Diagnostics - hz.client_1 [dev] [5.2.4] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-11 14:01:08 [hz.client_1.event-1] INFO  c.h.c.impl.spi.ClientClusterService - hz.client_1 [dev] [5.2.4] 
+
+Members [1] {
+	Member [127.0.0.1]:5701 - d249f54b-6829-4b79-8a5b-c5edf4279c32
+}
+
+2024-03-11 14:01:08 [restartedMain] INFO  c.h.c.i.s.ClientStatisticsService - Client statistics is enabled with period 5 seconds.
+2024-03-11 14:01:31 [RMI TCP Connection(4)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:31 [RMI TCP Connection(4)-127.0.0.1] INFO  o.a.catalina.core.StandardService - Stopping service [Tomcat]
+2024-03-11 14:01:31 [RMI TCP Connection(4)-127.0.0.1] WARN  o.s.c.s.DefaultLifecycleProcessor - Failed to stop bean 'springBootLoggingLifecycle'
+java.lang.NoSuchMethodError: 'void ch.qos.logback.classic.LoggerContext.removeObject(java.lang.String)'
+	at org.springframework.boot.logging.logback.LogbackLoggingSystem.markAsUninitialized(LogbackLoggingSystem.java:443) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.boot.logging.logback.LogbackLoggingSystem.cleanUp(LogbackLoggingSystem.java:319) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.boot.context.logging.LoggingApplicationListener.cleanupLoggingSystem(LoggingApplicationListener.java:276) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.boot.context.logging.LoggingApplicationListener$Lifecycle.stop(LoggingApplicationListener.java:472) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.context.SmartLifecycle.stop(SmartLifecycle.java:117) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.DefaultLifecycleProcessor.doStop(DefaultLifecycleProcessor.java:235) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.DefaultLifecycleProcessor$LifecycleGroup.stop(DefaultLifecycleProcessor.java:374) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.DefaultLifecycleProcessor.stopBeans(DefaultLifecycleProcessor.java:207) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.DefaultLifecycleProcessor.onClose(DefaultLifecycleProcessor.java:130) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.context.support.AbstractApplicationContext.doClose(AbstractApplicationContext.java:1076) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.doClose(ServletWebServerApplicationContext.java:173) ~[spring-boot-3.1.5.jar:3.1.5]
+	at org.springframework.context.support.AbstractApplicationContext.close(AbstractApplicationContext.java:1035) ~[spring-context-6.0.13.jar:6.0.13]
+	at org.springframework.boot.admin.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin.shutdown(SpringApplicationAdminMXBeanRegistrar.java:160) ~[spring-boot-3.1.5.jar:3.1.5]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]
+	at sun.reflect.misc.Trampoline.invoke(MethodUtil.java:72) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]
+	at java.base/sun.reflect.misc.MethodUtil.invoke(MethodUtil.java:262) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.ConvertingMethod.invokeWithOpenReturn(ConvertingMethod.java:193) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.ConvertingMethod.invokeWithOpenReturn(ConvertingMethod.java:175) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.MXBeanIntrospector.invokeM2(MXBeanIntrospector.java:117) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.MXBeanIntrospector.invokeM2(MXBeanIntrospector.java:54) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.MBeanIntrospector.invokeM(MBeanIntrospector.java:237) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.PerInterface.invoke(PerInterface.java:138) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.MBeanSupport.invoke(MBeanSupport.java:252) ~[na:na]
+	at java.management/com.sun.jmx.interceptor.DefaultMBeanServerInterceptor.invoke(DefaultMBeanServerInterceptor.java:814) ~[na:na]
+	at java.management/com.sun.jmx.mbeanserver.JmxMBeanServer.invoke(JmxMBeanServer.java:802) ~[na:na]
+	at java.management.rmi/javax.management.remote.rmi.RMIConnectionImpl.doOperation(RMIConnectionImpl.java:1472) ~[na:na]
+	at java.management.rmi/javax.management.remote.rmi.RMIConnectionImpl$PrivilegedOperation.run(RMIConnectionImpl.java:1310) ~[na:na]
+	at java.management.rmi/javax.management.remote.rmi.RMIConnectionImpl.doPrivilegedOperation(RMIConnectionImpl.java:1405) ~[na:na]
+	at java.management.rmi/javax.management.remote.rmi.RMIConnectionImpl.invoke(RMIConnectionImpl.java:829) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360) ~[na:na]
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200) ~[na:na]
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197) ~[na:na]
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712) ~[na:na]
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196) ~[na:na]
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587) ~[na:na]
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828) ~[na:na]
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705) ~[na:na]
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399) ~[na:na]
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+2024-03-11 14:01:31 [RMI TCP Connection(5)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:31 [RMI TCP Connection(6)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:31 [RMI TCP Connection(7)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:32 [RMI TCP Connection(8)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:32 [RMI TCP Connection(11)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:32 [RMI TCP Connection(12)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:32 [RMI TCP Connection(13)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:33 [RMI TCP Connection(14)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:33 [RMI TCP Connection(15)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:34 [RMI TCP Connection(16)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:34 [RMI TCP Connection(17)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:34 [RMI TCP Connection(18)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:35 [RMI TCP Connection(19)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:35 [RMI TCP Connection(20)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:35 [RMI TCP Connection(21)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:35 [RMI TCP Connection(22)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:35 [RMI TCP Connection(23)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:36 [RMI TCP Connection(24)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:36 [RMI TCP Connection(25)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:36 [RMI TCP Connection(26)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:36 [RMI TCP Connection(27)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:36 [RMI TCP Connection(28)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:40 [RMI TCP Connection(30)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:40 [RMI TCP Connection(31)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:40 [RMI TCP Connection(32)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:40 [RMI TCP Connection(33)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:41 [RMI TCP Connection(34)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:41 [RMI TCP Connection(35)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:42 [RMI TCP Connection(36)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:42 [RMI TCP Connection(37)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:42 [RMI TCP Connection(38)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:43 [RMI TCP Connection(39)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:43 [RMI TCP Connection(40)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:43 [RMI TCP Connection(41)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:43 [RMI TCP Connection(42)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:43 [RMI TCP Connection(43)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:43 [RMI TCP Connection(44)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:44 [RMI TCP Connection(45)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:44 [RMI TCP Connection(46)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:44 [RMI TCP Connection(47)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:45 [RMI TCP Connection(48)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:45 [RMI TCP Connection(50)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:45 [RMI TCP Connection(51)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:47 [RMI TCP Connection(52)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:48 [RMI TCP Connection(53)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:48 [RMI TCP Connection(54)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:48 [RMI TCP Connection(55)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:48 [RMI TCP Connection(56)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:49 [RMI TCP Connection(57)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:49 [RMI TCP Connection(58)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:57 [RMI TCP Connection(59)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:57 [RMI TCP Connection(60)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:57 [RMI TCP Connection(61)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:57 [RMI TCP Connection(62)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:58 [RMI TCP Connection(63)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:58 [RMI TCP Connection(64)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:01:58 [RMI TCP Connection(65)-127.0.0.1] INFO  o.s.b.a.SpringApplicationAdminMXBeanRegistrar$SpringApplicationAdmin - Application shutdown requested.
+2024-03-11 14:02:01 [RMI TCP Connection(4)-127.0.0.1] INFO  o.s.c.s.DefaultLifecycleProcessor - Failed to shut down 1 bean with phase value -2147483647 within timeout of 30000ms: [springBootLoggingLifecycle]

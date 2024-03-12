@@ -1,0 +1,9 @@
+//set this variable for collecting all the information about mail
+
+
+emailCCAddress = rabih@broadnetme.com
+Mail_From = routes@broadnetme.com
+UserName = gw1@broadnetme.com
+Password = gw1rz0373a
+emailSubjectTxt = Credit Alert
+SMTP_HOST_NAME = mail.broadnetme.com
