@@ -6,18 +6,18 @@ import java.rmi.registry.LocateRegistry;
 import java.util.List;
 import java.util.Map;
 
-import com.hazelcast.map.impl.querycache.Registry;
+import com.hti.rmi.LookupService;
 import com.hti.smpp.common.rmi.dto.LookupReport;
-import com.hti.smpp.common.service.LookupService;
+
 
 public class LookupServiceInvoker {
 	LookupService impl = null;
 
 	public LookupServiceInvoker() throws RemoteException, NotBoundException {
 	// Connect HLR Server on port 1098
-		java.rmi.registry.Registry myRegistry = LocateRegistry.getRegistry("5.32.122.147", 1098);
+		java.rmi.registry.Registry myRegistry = LocateRegistry.getRegistry("127.0.0.1", 1098);
 		// search for service
-	impl = (LookupService) ((java.rmi.registry.Registry) myRegistry).lookup("lookupService");
+		impl = (LookupService) myRegistry.lookup("lookupService");
 	}
 			
 	public List<LookupReport> getLookupReport(Map<String, String> params) throws RemoteException {

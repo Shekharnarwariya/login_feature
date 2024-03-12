@@ -1,4 +1,4 @@
-package com.hti.smpp.common.service;
+package com.hti.rmi;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

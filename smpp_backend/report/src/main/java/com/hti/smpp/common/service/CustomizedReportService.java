@@ -12,14 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public interface CustomizedReportService {
 	public ResponseEntity<?> CustomizedReportView(String username, CustomizedReportRequest customReportForm);
 
-	public ResponseEntity<?> CustomizedReportdoc(String username, CustomizedReportRequest customReportForm,
-			HttpServletResponse response);
-
-	public String CustomizedReportxls(String username, CustomizedReportRequest customReportForm,
-			HttpServletResponse response);
-
-	public ResponseEntity<?> CustomizedReportpdf(String username, CustomizedReportRequest customReportForm,
-			HttpServletResponse response);
+	
 
 	public ResponseEntity<?> SmsReport(String username, SmsReportRequest smsReportRequest);
 

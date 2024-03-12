@@ -14,13 +14,6 @@ import jakarta.servlet.http.HttpServletResponse;
 public interface ContentReportService {
 	public ResponseEntity<?> ContentReportView(String username, ContentReportRequest customReportForm);
 
-	public ResponseEntity<?> ContentReportxls(String username, ContentReportRequest customReportForm,
-			HttpServletResponse response);
 
-	public ResponseEntity<?> ContentReportPdf(String username, ContentReportRequest customReportForm,
-			HttpServletResponse response);
-
-	public ResponseEntity<?> ContentReportDoc(String username, ContentReportRequest customReportForm,
-			HttpServletResponse response);
 
 }

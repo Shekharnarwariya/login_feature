@@ -207,6 +207,12 @@ public class ConstantMessages {
     public static final String CUSTOMIZED_REPORT_PROCESSING_ERROR_MESSAGE = "customized.report.processing.error";
     public static final String FAILED_GENERATE_JASPER_PRINT_MESSAGE = "jasperprint.generation.failed";
     
+    //Abort
+    public static final String NO_DATA_FOUND_ABORT_REPORT = "abort.report.data.not.found";
+    
+    
+    
+    
     
     //DLR Summary Report
     public static final String NO_DATA_FOUND_DLR_SUMMARY_REPORT = "dlr.summary.report.data.not.found";

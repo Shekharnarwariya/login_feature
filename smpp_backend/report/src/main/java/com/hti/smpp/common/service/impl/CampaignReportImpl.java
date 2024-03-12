@@ -24,6 +24,9 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -37,9 +40,11 @@ import com.hti.smpp.common.database.DataNotFoundException;
 import com.hti.smpp.common.database.ParameterMismatchException;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
+import com.hti.smpp.common.exception.ReportBoundaryException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.messages.dto.BulkMapEntry;
 import com.hti.smpp.common.request.CampaignReportRequest;
+import com.hti.smpp.common.response.CustomPagination;
 import com.hti.smpp.common.response.DeliveryDTO;
 import com.hti.smpp.common.sales.dto.SalesEntry;
 import com.hti.smpp.common.sales.repository.SalesRepository;
@@ -122,16 +127,24 @@ public class CampaignReportImpl implements CampaignReportService {
 						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 
 			}
+			ArrayList<Object> list = new ArrayList<Object>();
+			Page<DeliveryDTO> pageReport = getReportList(customReportForm, username, false);
+			CustomPagination page = new CustomPagination(pageReport.getNumber(), pageReport.getSize(), pageReport.getTotalPages(),
+					pageReport.getTotalElements(), pageReport.isLast(), pageReport.isFirst());
+			list.add(pageReport.getContent());
+			list.add(page);
 
-			List<DeliveryDTO> print = getReportList(customReportForm, username, false);
-
-			if (print != null && !print.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(),
-						print.size());
-				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
-
-				// Return ResponseEntity with the list in the response body
-				return new ResponseEntity<>(print, HttpStatus.OK);
+			if (!list.isEmpty()) {
+				System.out.println("Campaign Report Size: " + pageReport.getContent().size());
+				
+				if(pageReport.getTotalElements() > 0 && pageReport.getContent().size()>0) {
+					return ResponseEntity.ok(list);
+				}else if(customReportForm.getPage().getPageNumber() >= pageReport.getTotalPages() && pageReport.getTotalElements() > 0) {
+					throw new ReportBoundaryException("You have reached the end of the report. No more data is available.");
+				}else {
+					throw new NotFoundException("No data available!");
+				}
+				
 			} else {
 				throw new InternalServerException(messageResourceBundle
 						.getExMessage(ConstantMessages.INTERNAL_SERVER_EXCEPTION, new Object[] { username }));
@@ -147,8 +160,23 @@ public class CampaignReportImpl implements CampaignReportService {
 							+ " within the specified date range.");
 		}
 	}
+	
+	private static <T> Page<T> getPage(List<T> list, int page, int size) {
+	    if (page < 0 || size <= 0) {
+	        throw new IllegalArgumentException("Invalid page or size parameters");
+	    }
+	    int start = page * size;
+	    if (start > list.size()) {
+	        start = list.size(); 
+	    }
+	    int end = Math.min(start + size, list.size());
+	    return new PageImpl<>(list.subList(start, end), PageRequest.of(page, size), list.size());
+	}
 
-	private List<DeliveryDTO> getReportList(CampaignReportRequest customReportForm, String username, boolean paging) {
+
+	private Page<DeliveryDTO> getReportList(CampaignReportRequest customReportForm, String username, boolean paging) {
+		int pageSize = customReportForm.getPage().getPageSize();
+        int currentPage = customReportForm.getPage().getPageNumber();
 		if (customReportForm.getClientId() == null) {
 			return null;
 		}
@@ -204,6 +232,7 @@ public class CampaignReportImpl implements CampaignReportService {
 		List<BulkMapEntry> list = list(users.toArray(new String[users.size()]), Long.parseLong(start_date_str),
 				Long.parseLong(end_date_str));
 		if (customReportForm.getGroupBy().equalsIgnoreCase("name")) {
+			System.out.println("run 235");
 			Map<String, Map<String, List<String>>> filtered_map = new HashMap<String, Map<String, List<String>>>();
 			for (BulkMapEntry entry : list) {
 				Map<String, List<String>> campaign_mapping = null;
@@ -238,8 +267,10 @@ public class CampaignReportImpl implements CampaignReportService {
 								"Sorry, there was an issue retrieving the campaign report. Please try again later.");
 
 					}
+					System.out.println("run 270"+report_map);
 					for (Map.Entry<String, Map<String, Map<String, Integer>>> time_entry : report_map.entrySet()) {
 						for (Map.Entry<String, Map<String, Integer>> source_entry : time_entry.getValue().entrySet()) {
+							System.out.println("run 272");
 							report = new DeliveryDTO();
 							report.setUsername(entry.getKey());
 							report.setDate(time_entry.getKey());
@@ -247,6 +278,7 @@ public class CampaignReportImpl implements CampaignReportService {
 							report.setSender(source_entry.getKey());
 							int total_submitted = 0;
 							int others = 0;
+							System.out.println("run 280");
 							for (Map.Entry<String, Integer> status_entry : source_entry.getValue().entrySet()) {
 								if (status_entry.getKey() != null && status_entry.getKey().length() > 0) {
 									if (status_entry.getKey().toLowerCase().startsWith("del")) {
@@ -273,6 +305,7 @@ public class CampaignReportImpl implements CampaignReportService {
 							report.setOthers(others);
 							final_others += others;
 							final_list.add(report);
+							System.out.println("this is final list"+final_list);
 						}
 					}
 				}
@@ -381,49 +414,12 @@ public class CampaignReportImpl implements CampaignReportService {
 		if (!final_list.isEmpty()) {
 			logger.info(messageResourceBundle.getLogMessage("prepared.list.message"), user.getSystemId(),
 					final_list.size());
-
 			final_list = sortList(final_list);
-//			JasperDesign design = null;
-//			try {
-//				design = JRXmlLoader.load(template_file);
-//			} catch (JRException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//			// List<DeliveryDTO> chart_list = new ArrayList<DeliveryDTO>();
-//			JasperReport jasperreport = null;
-//			try {
-//				jasperreport = JasperCompileManager.compileReport(design);
-//			} catch (JRException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//			JRBeanCollectionDataSource piechartDataSource = new JRBeanCollectionDataSource(chart_list);
-//			Map parameters = new HashMap();
-//			parameters.put("piechartDataSource", piechartDataSource);
-//			JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(final_list);
-//			if (final_list.size() > 20000) {
-//				logger.info(user.getSystemId() + " <-- Creating Virtualizer --> ");
-//				JRSwapFileVirtualizer virtualizer = new JRSwapFileVirtualizer(1000,
-//						new JRSwapFile(IConstants.WEBAPP_DIR + "temp//", 2048, 1024));
-//				parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
-//			}
-//			parameters.put(JRParameter.IS_IGNORE_PAGINATION, paging);
-//			ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);
-//			parameters.put("REPORT_RESOURCE_BUNDLE", bundle);
-//			logger.info(user.getSystemId() + " <-- Filling Report Data --> ");
-//			try {
-//				print = (List<DeliveryDTO>) JasperFillManager.fillReport(jasperreport, parameters, beanColDataSource);
-//			} catch (JRException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//			logger.info(user.getSystemId() + " <-- Filling Finished --> ");
-//		} else {
-//			logger.info(user.getSystemId() + " <-- No Report Data Found --> ");
-		}
 
-		return final_list;
+		}
+		Page<DeliveryDTO> page = getPage(final_list, currentPage, pageSize);
+
+		return page;
 
 	}
 
@@ -434,8 +430,7 @@ public class CampaignReportImpl implements CampaignReportService {
 		CriteriaQuery<BulkMapEntry> criteriaQuery = criteriaBuilder.createQuery(BulkMapEntry.class);
 		Root<BulkMapEntry> root = criteriaQuery.from(BulkMapEntry.class);
 
-		jakarta.persistence.criteria.Predicate predicate = criteriaBuilder.conjunction(); // Initialize with conjunction
-																							// (AND)
+		jakarta.persistence.criteria.Predicate predicate = criteriaBuilder.conjunction(); 
 
 		if (systemId != null && systemId.length > 0) {
 			predicate = criteriaBuilder.and(predicate, root.get("systemId").in((Object[]) systemId));
@@ -478,14 +473,13 @@ public class CampaignReportImpl implements CampaignReportService {
 
 	public Map<String, Map<String, Map<String, Integer>>> getCampaignReport(String username, List<String> msg_id_list)
 			throws SQLException {
-		// logger.info("<--- checking For campaign report[" + username + "] --> ");
 		Map<String, Map<String, Map<String, Integer>>> report_list = new HashMap<String, Map<String, Map<String, Integer>>>();
 		Connection con = null;
 		PreparedStatement pStmt = null;
 		ResultSet rs = null;
 		String sql = "select count(msg_id) as count,Date(submitted_time) as time,source_no,status from mis_" + username
 				+ " where msg_id in(" + String.join(",", msg_id_list) + ") group by time,source_no,status";
-		// System.out.println(sql);
+		 System.out.println(sql);
 		try {
 			con = getConnection();
 			pStmt = con.prepareStatement(sql);
@@ -518,10 +512,9 @@ public class CampaignReportImpl implements CampaignReportService {
 				status_map.put(status, status_count);
 				source_map.put(rs.getString("source_no"), status_map);
 				report_list.put(rs.getString("time"), source_map);
-				// System.out.println(report_list);
+				System.out.println(report_list);
 			}
 			logger.info(messageResourceBundle.getLogMessage("campaign.report.message"), username, report_list.size());
-
 		} catch (SQLException sqle) {
 			logger.error(" ", sqle.fillInStackTrace());
 		} finally {

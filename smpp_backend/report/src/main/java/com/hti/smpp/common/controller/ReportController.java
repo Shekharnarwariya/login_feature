@@ -257,22 +257,7 @@ public class ReportController {
 		return contentReportService.ContentReportView(username, customReportForm);
 	}
 
-	@PostMapping("/content-report-pdf")
-	@Operation(summary = "content Report PDF", description = "Generate content report in PDF format")
-	public ResponseEntity<?> contentReportPdf(@Valid @Parameter(description = "Username") @RequestParam String username,
-			@Parameter(description = "Custom Report Form") @RequestBody ContentReportRequest customReportForm,
-			@Parameter(description = "language of the report") @RequestParam String lang,
-			HttpServletResponse response) {
-		return contentReportService.ContentReportPdf(username, customReportForm, response);
-	}
-
-	@PostMapping("/content-report-Doc")
-	@Operation(summary = "content Report Doc", description = "Generate content report in Doc format")
-	public ResponseEntity<?> contentReportDoc(@Valid @Parameter(description = "Username") @RequestParam String username,
-			@Parameter(description = "Custom Report Form") @RequestBody ContentReportRequest customReportForm,
-			HttpServletResponse response) {
-		return contentReportService.ContentReportDoc(username, customReportForm, response);
-	}
+	
 
 	@Operation(summary = " Download User Delivery Report View")
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Successfully downloaded DOC file"),
@@ -348,29 +333,7 @@ public class ReportController {
 	}
 	
 	
-	@Operation(summary = "Download Customized Report DOC")
-	@PostMapping("/customized-report-doc")
-	public ResponseEntity<?> downloadCustomizedReportDoc(@Valid @RequestParam String username,
-			@RequestBody CustomizedReportRequest customReportForm, @RequestParam String lang,
-			HttpServletResponse response) {
-		return customizedReportService.CustomizedReportdoc(username, customReportForm, response);
-
-	}
-
-	@Operation(summary = "Download Customized Report Excel")
-	@PostMapping("/customized-report-xls")
-	public ResponseEntity<String> downloadCustomizedReportXLS(@Valid @RequestParam String username,
-			@RequestBody CustomizedReportRequest customReportForm, HttpServletResponse response) {
-		String result = customizedReportService.CustomizedReportxls(username, customReportForm, response);
-		return ResponseEntity.ok(result);
-	}
-
-	@Operation(summary = "Download Customized Report PDF")
-	@PostMapping("/customized-report-pdf")
-	public ResponseEntity<?> downloadCustomizedReportPDF(@Valid @RequestParam String username,
-			@RequestBody CustomizedReportRequest customReportForm, HttpServletResponse response) {
-		return customizedReportService.CustomizedReportpdf(username, customReportForm, response);
-	}
+	
 
 ////////////////performance
 	@PostMapping("/performance-report-view")
