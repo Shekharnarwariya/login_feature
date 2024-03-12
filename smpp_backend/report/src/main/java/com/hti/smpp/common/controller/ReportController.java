@@ -299,33 +299,11 @@ public class ReportController {
 
 	}
 
-	@Operation(summary = "Download Lookup Report Excel")
-	@PostMapping("/lookup-report-xls")
-	public ResponseEntity<?> downloadLookupReportXLS(@Valid @RequestParam String username,
-			@RequestBody LookUpReportRequest customReportForm, HttpServletResponse response) {
-		return lookupReportService.LookupReportxls(username, customReportForm, response);
 
-	}
-
-	@Operation(summary = "Download Lookup Report PDF")
-	@PostMapping("/lookup-report-pdf")
-	public ResponseEntity<?> downloadLookupReportPDF(@Valid @RequestParam String username,
-			@RequestBody LookUpReportRequest customReportForm, HttpServletResponse response) {
-		return lookupReportService.LookupReportPdf(username, customReportForm, response);
-
-	}
-
-	@Operation(summary = "Download Lookup Report DOC")
-	@PostMapping("/lookup-report-doc")
-	public ResponseEntity<?> downloadLookupReportDoc(@Valid @RequestParam String username,
-			@RequestBody LookUpReportRequest customReportForm, HttpServletResponse response) {
-		return lookupReportService.LookupReportDoc(username, customReportForm, response);
-
-	}
 
 	@Operation(summary = "Recheck Lookup Report")
 	@PostMapping("/recheck-report")
-	public ResponseEntity<?> recheckLookupReport(@Valid @RequestParam String username,
+	public ResponseEntity<?> recheckLookupReport(@Valid @RequestHeader String username,
 			@RequestBody LookUpReportRequest customReportForm, HttpServletResponse response) {
 		return lookupReportService.LookupReportRecheck(username, customReportForm, response);
 

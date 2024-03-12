@@ -43,6 +43,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.hti.rmi.LookupReport;
 import com.hti.smpp.common.database.DataBase;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
@@ -51,7 +52,6 @@ import com.hti.smpp.common.request.CustomReportForm;
 import com.hti.smpp.common.request.LookUpReportRequest;
 import com.hti.smpp.common.request.LookupServiceInvoker;
 
-import com.hti.smpp.common.rmi.dto.LookupReport;
 import com.hti.smpp.common.sales.repository.SalesRepository;
 import com.hti.smpp.common.service.LookupReportService;
 import com.hti.smpp.common.service.UserDAService;
@@ -85,12 +85,9 @@ import net.sf.jasperreports.engine.xml.JRXmlLoader;
 public class LookupReportServiceImpl implements LookupReportService {
 	private static final Logger logger = LoggerFactory.getLogger(LookupReportServiceImpl.class);
 
-	
-
 	@Autowired
 	private UserEntryRepository userRepository;
 
-	
 	@Autowired
 	private WebMasterEntryRepository webMasterEntryRepository;
 
@@ -102,7 +99,6 @@ public class LookupReportServiceImpl implements LookupReportService {
 
 	@Override
 	public ResponseEntity<?> LookupReportview(String username, LookUpReportRequest customReportForm) {
-	
 
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
@@ -140,200 +136,7 @@ public class LookupReportServiceImpl implements LookupReportService {
 	}
 
 	@Override
-	public ResponseEntity<?> LookupReportxls(String username, LookUpReportRequest customReportForm,
-			HttpServletResponse response) {
-
-	
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-
-		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
-				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
-
-		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
-					new Object[] { username }));
-		}
-
-		try {
-			List<LookupReport> reportList = getLookupReport(customReportForm, user.getRole(), username);
-			if (reportList != null && !reportList.isEmpty()) {
-				int total_rec = reportList.size();
-				System.out.println("Report Size: " + total_rec);
-				reportList = sortList(reportList);
-				org.apache.poi.ss.usermodel.Workbook workbook = getWorkBook(reportList);
-				if (total_rec > 100000) {
-					response.setContentType("application/zip");
-					response.setHeader("Content-Disposition", "attachment; filename=" + "lookup_"
-							+ new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".zip");
-					ZipOutputStream zos = new ZipOutputStream(response.getOutputStream()); // create a ZipOutputStream
-																							// from servletOutputStream
-					String reportName = "lookup.xlsx";
-					ZipEntry entry = new ZipEntry(reportName); // create a zip entry and add it to ZipOutputStream
-					zos.putNextEntry(entry);
-					logger.info(messageResourceBundle.getLogMessage("zip.download.start"));
-
-					workbook.write(zos);
-					zos.close();
-				} else {
-					// response.setContentType("text/html; charset=utf-8");
-					response.setHeader("Content-Disposition", "attachment; filename=" + "lookup_"
-							+ new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".xlsx");
-					ByteArrayOutputStream bos = new ByteArrayOutputStream();
-					workbook.write(bos);
-					InputStream is = null;
-					OutputStream out = null;
-					try {
-						is = new ByteArrayInputStream(bos.toByteArray());
-						int curByte = -1;
-						out = response.getOutputStream();
-						logger.info(messageResourceBundle.getLogMessage("download.start"));
-
-						while ((curByte = is.read()) != -1) {
-							out.write(curByte);
-						}
-						out.flush();
-					} catch (Exception ex) {
-						logger.error(messageResourceBundle.getLogMessage("xls.download.error"), ex.toString());
-
-						// ex.printStackTrace();
-					} finally {
-						try {
-							if (is != null) {
-								is.close();
-							}
-							if (out != null) {
-								out.close();
-							}
-						} catch (Exception ex) {
-							logger.error(messageResourceBundle.getLogMessage("stream.release.error"), ex.toString());
-
-						}
-					}
-				}
-				logger.info(messageResourceBundle.getLogMessage("finish.message"));
-			} else {
-				throw new InternalServerException(messageResourceBundle
-						.getExMessage(ConstantMessages.ERROR_GENERATING_PDF_LOOKUP_REPORT_MESSAGE));
-			}
-		} catch (Exception e) {
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_MESSAGE,
-					new Object[] { e.getMessage() }));
-		}
-		return null;
-	}
-
-	@Override
-	public ResponseEntity<?> LookupReportPdf(String username, LookUpReportRequest customReportForm, 
-			HttpServletResponse response) {
-		String target = IConstants.FAILURE_KEY;
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-
-		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
-				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
-
-		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
-					new Object[] { username }));
-		}
-
-		try {
-			List<LookupReport> reportList = getLookupReport(customReportForm, user.getRole(), username);
-			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
-
-				JasperPrint print = getJasperPrint(reportList, false);
-				logger.info(messageResourceBundle.getLogMessage("prepare.outputstream"));
-
-				String reportName = "lookup_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".pdf";
-				response.setContentType("text/html; charset=utf-8");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				logger.info(messageResourceBundle.getLogMessage("create.pdf"));
-
-				OutputStream out = response.getOutputStream();
-				JRExporter exporter = new JRPdfExporter();
-				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-				exporter.exportReport();
-				if (out != null) {
-					try {
-						out.close();
-					} catch (Exception e) {
-						logger.error(messageResourceBundle.getLogMessage("pdf.outputstream.error"));
-
-					}
-				}
-				logger.info(messageResourceBundle.getLogMessage("finish.message"));
-				target = IConstants.SUCCESS_KEY;
-			} else {
-				throw new InternalServerException(messageResourceBundle
-						.getExMessage(ConstantMessages.ERROR_GENERATING_PDF_LOOKUP_REPORT_MESSAGE));
-			}
-		} catch (Exception e) {
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_MESSAGE,
-					new Object[] { e.getMessage() }));
-		}
-		return null;
-	}
-
-	@Override
-	public ResponseEntity<?> LookupReportDoc(String username, LookUpReportRequest customReportForm, 
-			HttpServletResponse response) {
-		String target = IConstants.FAILURE_KEY;
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-
-		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
-				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
-
-		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
-					new Object[] { username }));
-		}
-
-		try {
-
-			List<LookupReport> reportList = getLookupReport(customReportForm, user.getRole(), username);
-			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
-
-				JasperPrint print = getJasperPrint(reportList, false);
-
-				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), user.getSystemId());
-
-				String reportName = "lookup_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".doc";
-				response.setContentType("text/html; charset=utf-8");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-
-				logger.info(messageResourceBundle.getLogMessage("creating.doc.message"), user.getSystemId());
-
-				OutputStream out = response.getOutputStream();
-				JRExporter exporter = new JRDocxExporter();
-				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-				exporter.exportReport();
-				if (out != null) {
-					try {
-						out.close();
-					} catch (Exception e) {
-						logger.error(messageResourceBundle.getLogMessage("doc.outputstream.error"));
-
-					}
-				}
-				logger.info(messageResourceBundle.getLogMessage("finish.message"));
-
-				target = IConstants.SUCCESS_KEY;
-			} else {
-				throw new InternalServerException(messageResourceBundle
-						.getExMessage(ConstantMessages.ERROR_GENERATING_PDF_LOOKUP_REPORT_MESSAGE));
-			}
-		} catch (Exception e) {
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_MESSAGE,
-					new Object[] { e.getMessage() }));
-		}
-		return null;
-	}
-
-	@Override
-	public ResponseEntity<?> LookupReportRecheck(String username, LookUpReportRequest customReportForm, 
+	public ResponseEntity<?> LookupReportRecheck(String username, LookUpReportRequest customReportForm,
 			HttpServletResponse response) {
 		String target = IConstants.FAILURE_KEY;
 		String sql = "select * from lookup_result where status='ACCEPTD' ";
@@ -359,7 +162,6 @@ public class LookupReportServiceImpl implements LookupReportService {
 			if (batchid != null) {
 				sql += "and batch_id = '" + batchid + "' ";
 			} else {
-
 				// String role = SessionHelper.getClientRole(request);
 				String role = user.getRole();
 				if (role.equalsIgnoreCase("superadmin") || role.equalsIgnoreCase("system")) {
@@ -391,9 +193,14 @@ public class LookupReportServiceImpl implements LookupReportService {
 
 			if (count > 0) {
 				logger.info(messageResourceBundle.getLogMessage("message.recheckSuccess"));
-				target = "recheck";
+				target = IConstants.SUCCESS_KEY;
+				// Return a success response with count
+				return ResponseEntity.ok().body(Map.of("status", "success", "count", count));
 			} else {
 				logger.info(messageResourceBundle.getLogMessage("error.record.unavailable"));
+				// Return a failure response
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body(Map.of("status", "failure", "message", "No records found"));
 			}
 		} catch (Exception ex) {
 			throw new InternalServerException(
@@ -401,7 +208,6 @@ public class LookupReportServiceImpl implements LookupReportService {
 
 		}
 
-		return null;
 	}
 
 	private org.apache.poi.ss.usermodel.Workbook getWorkBook(List reportList) {
@@ -585,7 +391,7 @@ public class LookupReportServiceImpl implements LookupReportService {
 	private List<LookupReport> getLookupReport(LookUpReportRequest customReportForm, String role, String username)
 			throws Exception {
 
-		//UserDAService userDAService = new UserDAServiceImpl();
+		// UserDAService userDAService = new UserDAServiceImpl();
 		if (customReportForm.getClientId() == null) {
 			return null;
 		}
