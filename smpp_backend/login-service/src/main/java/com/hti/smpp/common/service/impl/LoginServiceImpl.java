@@ -1,8 +1,15 @@
 package com.hti.smpp.common.service.impl;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Types;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -11,6 +18,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -18,11 +26,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.UUID;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -33,10 +44,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.hazelcast.map.IMap;
 import com.hti.smpp.common.email.EmailSender;
 import com.hti.smpp.common.exception.AuthenticationExceptionFailed;
 import com.hti.smpp.common.exception.InternalServerException;
@@ -80,7 +94,6 @@ import com.hti.smpp.common.user.repository.WebMenuAccessEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.Constant;
 import com.hti.smpp.common.util.ConstantMessages;
-import com.hti.smpp.common.util.Constants;
 import com.hti.smpp.common.util.EmailValidator;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
@@ -237,8 +250,8 @@ public class LoginServiceImpl implements LoginService {
 			profileResponse.setRoles(userEntry.getRole());
 			profileResponse.setContactNo(professionEntry.getMobile());
 			profileResponse.setCurrency(userEntry.getCurrency());
-
-			return ResponseEntity.ok(profileResponse);
+			profileResponse.setProfilePath(professionEntry.getImageFilePath());
+		return ResponseEntity.ok(profileResponse);
 		} else {
 			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 		}
@@ -519,6 +532,7 @@ public class LoginServiceImpl implements LoginService {
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getMessage());
 		} catch (Exception e) {
+			e.printStackTrace();
 			// Handle exceptions, log or return appropriate error response
 			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 		}
@@ -570,14 +584,14 @@ public class LoginServiceImpl implements LoginService {
 	 * Updates the user profile information for the specified username.
 	 */
 	@Override
-	public ResponseEntity<?> updateUserProfile(String username, ProfileUpdateRequest profileUpdateRequest) {
+	public ResponseEntity<?> updateUserProfile(String username,String email,String firstName,String lastName,String contact,MultipartFile profileImageFile) {
 		Optional<UserEntry> optionalUser = userEntryRepository.findBySystemId(username);
 		if (optionalUser.isPresent()) {
 			UserEntry user = optionalUser.get();
 			ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
 					.orElseThrow(() -> new NotFoundException(
 							messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
-			updateUserData(user, profileUpdateRequest, professionEntry);
+			updateUserData(user, email,firstName,lastName,contact,professionEntry,profileImageFile);
 			user.setEditOn(LocalDateTime.now() + "");
 			user.setEditBy(username);
 			userEntryRepository.save(user);
@@ -597,20 +611,41 @@ public class LoginServiceImpl implements LoginService {
 	 * @param profileUpdateRequest
 	 * @param professionEntry
 	 */
-	private void updateUserData(UserEntry user, ProfileUpdateRequest profileUpdateRequest,
-			ProfessionEntry professionEntry) {
-		// Use null checks to update only non-null fields
-		if (profileUpdateRequest.getEmail() != null) {
-			professionEntry.setDomainEmail(profileUpdateRequest.getEmail());
+	private void updateUserData(UserEntry user, String email, String firstName, String lastName, String contact,
+            ProfessionEntry professionEntry, MultipartFile profileImageFile) {
+		if (email != null) {
+				professionEntry.setDomainEmail(email);
 		}
-		if (profileUpdateRequest.getFirstName() != null) {
-			professionEntry.setFirstName(profileUpdateRequest.getFirstName());
+		if (firstName != null) {
+			professionEntry.setFirstName(firstName);
 		}
-		if (profileUpdateRequest.getLastName() != null) {
-			professionEntry.setLastName(profileUpdateRequest.getLastName());
+		if (lastName != null) {
+			professionEntry.setLastName(lastName);
 		}
-		if (profileUpdateRequest.getContact() != null) {
-			professionEntry.setMobile(profileUpdateRequest.getContact());
+		if (contact != null) {
+			professionEntry.setMobile(contact);
+		}
+
+		if (profileImageFile != null && !profileImageFile.isEmpty()) {
+		    try {
+		       byte[] fileContent=profileImageFile.getBytes();
+	       	   String originalFileName=profileImageFile.getOriginalFilename();
+		       String filePath=IConstants.PROFILE_DIR+"profile//";
+		       
+		       File directory = new File(filePath);
+               if (!directory.exists()) {
+                   directory.mkdirs(); 
+               }
+               String originalImagePath = filePath + originalFileName;
+               File originalFile = new File(originalImagePath);
+               FileOutputStream fos = new FileOutputStream(originalFile);
+               fos.write(fileContent);
+               fos.close();
+		      professionEntry.setImageFilePath(originalFileName);	       
+		    } catch (IOException e) {
+		        e.printStackTrace();
+		        throw new InternalServerException("Error while parsing the image");
+		    }
 		}
 	}
 
@@ -672,7 +707,6 @@ public class LoginServiceImpl implements LoginService {
 			WebMasterEntry webEntry = getWebMasterEntry(userId);
 			if (webEntry != null) {
 				if (webEntry.isWebAccess()) {
-
 					boolean isExpired = false;
 					try {
 						isExpired = new SimpleDateFormat("yyyy-MM-dd").parse(userEntry.getExpiry())
@@ -711,8 +745,8 @@ public class LoginServiceImpl implements LoginService {
 						throw new InternalServerException(messageResourceBundle.getExMessage(
 								ConstantMessages.PASSWORD_EXPIRED, new Object[] { userEntry.getSystemId() }));
 					} else {
-						String fileName = Constants.USER_FLAG_DIR + userEntry.getSystemId() + ".txt";
-						String flagValue = MultiUtility.readFlag(fileName);
+						IMap<String, String> user_flag_status = GlobalVars.user_flag_status;
+						String flagValue = user_flag_status.get(userEntry.getSystemId());
 						if (flagValue != null) {
 							if (flagValue.contains("404")) {
 								webAccess = false;
@@ -724,10 +758,8 @@ public class LoginServiceImpl implements LoginService {
 								throw new InternalServerException(messageResourceBundle.getExMessage(
 										ConstantMessages.ACCOUNT_BLOCKED, new Object[] { userEntry.getSystemId() }));
 							} else {
-								// userEntry.setFlagValue("100");
 								logger.info(messageResourceBundle.getLogMessage("user.flag.value"),
 										userEntry.getSystemId(), flagValue);
-
 							}
 						} else {
 							logger.info(messageResourceBundle.getLogMessage("user.flag.read.error"),
@@ -740,7 +772,6 @@ public class LoginServiceImpl implements LoginService {
 									messageResourceBundle.getExMessage(ConstantMessages.FLAG_READ_ERROR));
 						}
 						if (webAccess) {
-							// ip validation starts
 							logger.info(messageResourceBundle.getLogMessage("user.check.ipaddress"),
 									userEntry.getSystemId());
 							if (Access.isAuthorized(userEntry.getRole(), "isAuthorizedSuperAdminAndSystem")) {
@@ -761,15 +792,12 @@ public class LoginServiceImpl implements LoginService {
 
 										String[] IPs = IConstants.AccessIP.split(",");
 										for (String allowedip : IPs) {
-											if (allowedip.indexOf("/") > 0) {
-												if (isInRange(allowedip, ipaddress)) {
-													logger.info(
-															messageResourceBundle
-																	.getLogMessage("user.range.matched.info"),
-															userEntry.getSystemId(), allowedip, ipaddress);
-													matched = true;
-													break;
-												}
+											if (allowedip.indexOf("/") > 0 && isInRange(allowedip, ipaddress)) {
+												logger.info(
+														messageResourceBundle.getLogMessage("user.range.matched.info"),
+														userEntry.getSystemId(), allowedip, ipaddress);
+												matched = true;
+												break;
 											} else {
 												if (ipaddress.equalsIgnoreCase(allowedip)) {
 													logger.info(
@@ -790,15 +818,13 @@ public class LoginServiceImpl implements LoginService {
 													userEntry.getSystemId(), ipaddress);
 											IPs = IConstants.GLOBAl_ACCESS_IP.split(",");
 											for (String allowedip : IPs) {
-												if (allowedip.indexOf("/") > 0) {
-													if (isInRange(allowedip, ipaddress)) {
-														logger.info(
-																messageResourceBundle
-																		.getLogMessage("user.range.matched.info"),
-																userEntry.getSystemId(), allowedip, ipaddress);
-														matched = true;
-														break;
-													}
+												if (allowedip.indexOf("/") > 0 && isInRange(allowedip, ipaddress)) {
+													logger.info(
+															messageResourceBundle
+																	.getLogMessage("user.range.matched.info"),
+															userEntry.getSystemId(), allowedip, ipaddress);
+													matched = true;
+													break;
 												} else {
 													if (ipaddress.equalsIgnoreCase(allowedip)) {
 														logger.info(
@@ -879,6 +905,7 @@ public class LoginServiceImpl implements LoginService {
 								}
 
 							} else {
+
 								if (userEntry.getAccessIp() != null && userEntry.getAccessIp().length() > 0) {
 									boolean matched = false;
 									if (ipaddress != null && !ipaddress.isEmpty()) {
@@ -891,15 +918,15 @@ public class LoginServiceImpl implements LoginService {
 										} else {
 											String[] allowed_list = userEntry.getAccessIp().split(",");
 											for (String allowedip : allowed_list) {
-												if (allowedip.indexOf("/") > 0) {
-													if (isInRange(allowedip, ipaddress)) {
-														logger.info(
-																messageResourceBundle
-																		.getLogMessage("user.range.matched.info"),
-																userEntry.getSystemId(), allowedip, ipaddress);
-														matched = true;
-														break;
-													}
+												if (allowedip.indexOf("/") > 0 && isInRange(allowedip, ipaddress)) {
+//													if (isInRange(allowedip, ipaddress)) {
+													logger.info(
+															messageResourceBundle
+																	.getLogMessage("user.range.matched.info"),
+															userEntry.getSystemId(), allowedip, ipaddress);
+													matched = true;
+													break;
+//													}
 												} else {
 													if (ipaddress.equalsIgnoreCase(allowedip)) {
 
@@ -1022,6 +1049,7 @@ public class LoginServiceImpl implements LoginService {
 									logger.info(
 											messageResourceBundle.getLogMessage("user.access.ip.not.configured.info"),
 											userEntry.getSystemId());
+
 									if (userEntry.getAccessCountry() != null
 											&& userEntry.getAccessCountry().length() > 0) {
 										boolean matched = false;
@@ -1074,6 +1102,7 @@ public class LoginServiceImpl implements LoginService {
 										}
 
 									} else {
+
 										logger.info(
 												messageResourceBundle
 														.getLogMessage("user.access.countries.not.configured.info"),
@@ -1085,13 +1114,12 @@ public class LoginServiceImpl implements LoginService {
 								}
 
 							}
-
-							// -------------------------Send Otp and email
-							// alert--------------------------------
 							if (webAccess) {
+
 								if (webEntry.isOtpLogin()) {
 
 									boolean otplogin = true;
+
 									if (webEntry.isMultiUserAccess()) {
 										logger.info(
 												messageResourceBundle
@@ -1106,7 +1134,6 @@ public class LoginServiceImpl implements LoginService {
 													userEntry.getSystemId());
 
 										} else {
-											// forward to ask access name page.
 											otplogin = false;
 //											target = "multiaccess";
 											// TODO ask Vinod Sir about this line
@@ -1115,8 +1142,10 @@ public class LoginServiceImpl implements LoginService {
 
 									}
 									if (otplogin) {
+
 										if (webEntry.getOtpNumber() != null && webEntry.getOtpNumber().length() > 0) {
 											String valid_otp_numbers = "";
+
 											for (String number : webEntry.getOtpNumber().split(",")) {
 												logger.info(messageResourceBundle.getLogMessage("user.otp.number.info"),
 														userEntry.getSystemId(), number);
@@ -1130,7 +1159,9 @@ public class LoginServiceImpl implements LoginService {
 																	.getLogMessage("user.invalid.otp.number.error"),
 															userEntry.getSystemId(), number);
 												}
+
 												if (valid_otp_numbers.length() > 0) {
+
 													int otp = 0;
 													valid_otp_numbers = valid_otp_numbers.substring(0,
 															valid_otp_numbers.length() - 1);
@@ -1142,16 +1173,24 @@ public class LoginServiceImpl implements LoginService {
 													Optional<OTPEntry> optionalOtp = this.otpEntryRepository
 															.findBySystemId(userEntry.getSystemId());
 													OTPEntry otpEntry = null;
+
 													if (optionalOtp.isPresent()) {
 														otpEntry = optionalOtp.get();
 													} else {
 														logger.info(messageResourceBundle
 																.getLogMessage("user.no.otp.entry.found.info"));
 													}
+
 													boolean generate_otp = true;
 													if (otpEntry != null) {
 														if (otpEntry.getExpiresOn() != null) {
+
 															try {
+
+																System.out.println(new Date().after(
+																		new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+																				.parse(otpEntry.getExpiresOn())));
+
 																if (new Date().after(
 																		new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 																				.parse(otpEntry.getExpiresOn()))) {
@@ -1174,17 +1213,22 @@ public class LoginServiceImpl implements LoginService {
 														}
 
 													}
+
 													if (generate_otp) {
+
 														otp = new Random().nextInt(999999 - 100000) + 100000;
 														Calendar calendar = Calendar.getInstance();
-														int duration = 5;
-														if (IConstants.LOGIN_OTP_VALIDITY > 0) {
-															duration = IConstants.LOGIN_OTP_VALIDITY;
-														}
+
+														int duration = (IConstants.LOGIN_OTP_VALIDITY > 0)
+																? IConstants.LOGIN_OTP_VALIDITY
+																: 5;
+
 														calendar.add(Calendar.MINUTE, duration);
 														String validity = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 																.format(calendar.getTime());
+
 														if (otpEntry != null) {
+
 															otpEntry.setExpiresOn(validity);
 															otpEntry.setOneTimePass(otp);
 															// updateOTPEntry in database
@@ -1199,7 +1243,9 @@ public class LoginServiceImpl implements LoginService {
 																.findByRole("internal");
 														DriverInfo driverInfo = driverInfoRepository
 																.findById(internalUser.getId()).get();
+
 														if (internalUser != null) {
+
 															String content = null;
 															try {
 																content = MultiUtility
@@ -1210,9 +1256,11 @@ public class LoginServiceImpl implements LoginService {
 																				.getLogMessage("user.otp.format.error"),
 																		ex.getMessage());
 															}
+
 															if (content == null) {
 																content = "Hello [system_id], [otp_pass] is your One-Time Password (OTP) on [url] valid for next [duration] minutes";
 															}
+
 															content = content.replace("[system_id]",
 																	userEntry.getSystemId());
 															content = content.replace("[otp_pass]",
@@ -1234,27 +1282,34 @@ public class LoginServiceImpl implements LoginService {
 															} else {
 																smsDTO.setSenderId(IConstants.OTP_SENDER_ID);
 															}
-															final String url = "http://localhost:8083/sms/send/alert";
-															HttpHeaders headers = new HttpHeaders();
-															headers.set("username", userEntry.getSystemId());
-															HttpEntity<BulkSmsDTO> requestEntity = new HttpEntity<>(
-																	smsDTO, headers);
-															ResponseEntity<?> response = restTemplate.postForEntity(url,
-																	requestEntity, String.class);
+															ResponseEntity<?> response = null;
+															try {
+																System.out.println(
+																		"working fine till line *************1319");
+																final String url = "http://127.0.0.1:8083//sms/send/alert";
+																HttpHeaders headers = new HttpHeaders();
+																;
+																headers.set("username", userEntry.getSystemId());
+																HttpEntity<BulkSmsDTO> requestEntity = new HttpEntity<>(
+																		smsDTO, headers);
+																response = restTemplate.postForEntity(url,
+																		requestEntity, String.class);
 
+															} catch (RestClientException e) {
+																e.printStackTrace();
+															}
 															logger.info("<OTP SMS: " + response.getBody().toString()
 																	+ ">" + userEntry.getSystemId() + "<"
 																	+ valid_otp_numbers + ">");
-
 															if (webEntry.getOtpEmail() != null
-																	&& webEntry.getOtpEmail().length() > 0) {
+																	&& webEntry.getOtpEmail().length() > 0
+																	&& isValidEmail(webEntry.getOtpEmail())) {
 																String from = IConstants.SUPPORT_EMAIL[0];
 																ProfessionEntry proEntry = getProfessionEntry(
 																		userEntry.getId());
+//																
 																if (proEntry.getDomainEmail() != null
-																		&& proEntry.getDomainEmail().length() > 0
-																		&& proEntry.getDomainEmail().contains("@")
-																		&& proEntry.getDomainEmail().contains(".")) {
+																		&& isValidEmail(proEntry.getDomainEmail())) {
 																	from = proEntry.getDomainEmail();
 																	logger.info(
 																			messageResourceBundle.getLogMessage(
@@ -1264,14 +1319,8 @@ public class LoginServiceImpl implements LoginService {
 																	String master = userEntry.getMasterId();
 																	ProfessionEntry professionEntry = getProfessionEntry(
 																			master);
-																	if (professionEntry != null
-																			&& professionEntry.getDomainEmail() != null
-																			&& professionEntry.getDomainEmail()
-																					.length() > 0
-																			&& professionEntry.getDomainEmail()
-																					.contains("@")
-																			&& professionEntry.getDomainEmail()
-																					.contains(".")) {
+																	if (professionEntry != null && isValidEmail(
+																			professionEntry.getDomainEmail())) {
 																		from = professionEntry.getDomainEmail();
 																		logger.info(messageResourceBundle.getLogMessage(
 																				"user.master.domain.email.found.info"),
@@ -1291,6 +1340,9 @@ public class LoginServiceImpl implements LoginService {
 																		Constant.OTP_SUBJECT,
 																		Constant.GENERAL_TEMPLATE_PATH,
 																		emailSender.createSourceMap(content));
+															} else {
+																throw new InternalServerException(
+																		"Invalid Email Address Provided!");
 															}
 
 														}
@@ -1326,36 +1378,35 @@ public class LoginServiceImpl implements LoginService {
 										loginResponse.setJwtResponse(jwtResp);
 										loginResponse.setOtpLogin(false);
 										loginResponse.setStatus("User Has Multi User Access!");
+										System.out.println("User Has Multi User Access!!-----1385");
 										return ResponseEntity.ok(loginResponse);
 									}
 
 									// otp sent successfully
-									ResponseEntity<?> userLogin = login(loginRequest);
-									JwtResponse jwtResp = (JwtResponse) userLogin.getBody();
+
 									LoginResponse loginResponse = new LoginResponse();
-									loginResponse.setJwtResponse(jwtResp);
-									loginResponse.setOtpLogin(true);
 									loginResponse.setStatus("Otp sent successfully!");
 									return ResponseEntity.ok(loginResponse);
 
 								} else if (webEntry.isEmailOnLogin()) {
+
+									System.out.println(webEntry.isEmailOnLogin());
+
 									// if not otp login send email to user of login alert
 									// send email for login
 									String to = IConstants.TO_EMAIl;
 									String from = IConstants.SUPPORT_EMAIL[0];
 									ProfessionEntry proEntry = getProfessionEntry(userEntry.getId());
-									if (proEntry.getDomainEmail() != null && proEntry.getDomainEmail().length() > 0
-											&& proEntry.getDomainEmail().contains("@")
-											&& proEntry.getDomainEmail().contains(".")) {
+
+									if (isValidEmail(proEntry.getDomainEmail())) {
+
 										from = proEntry.getDomainEmail();
 										logger.info(messageResourceBundle.getLogMessage("user.domain.email.found.info"),
 												userEntry.getSystemId(), from);
+
 									} else {
 										ProfessionEntry professionEntry = getProfessionEntry(userEntry.getMasterId());
-										if (professionEntry != null && professionEntry.getDomainEmail() != null
-												&& professionEntry.getDomainEmail().length() > 0
-												&& professionEntry.getDomainEmail().contains("@")
-												&& professionEntry.getDomainEmail().contains(".")) {
+										if (professionEntry != null && isValidEmail(professionEntry.getDomainEmail())) {
 											from = professionEntry.getDomainEmail();
 											logger.info(
 													messageResourceBundle
@@ -1368,6 +1419,9 @@ public class LoginServiceImpl implements LoginService {
 													userEntry.getSystemId());
 										}
 									}
+
+									System.out.println(webEntry.getEmail());
+
 									if (webEntry.getEmail() != null && webEntry.getEmail().contains("@")
 											&& webEntry.getEmail().contains(".")) {
 										to = webEntry.getEmail();
@@ -1432,6 +1486,70 @@ public class LoginServiceImpl implements LoginService {
 
 	}
 
+	@Override
+	public ResponseEntity<?> userIpOtpValidate(LoginRequest loginRequest, int otp) {
+		int userId = 0;
+		String systemId = loginRequest.getUsername();
+		String password = encoder.encode(loginRequest.getPassword());
+		UserEntry userEntry = getUser(loginRequest.getUsername());
+		if (userEntry.getPassword().equals(password)) {
+			userId = userEntry.getId();
+		} else {
+			logger.error(messageResourceBundle.getLogMessage("auth.failed.password"), systemId);
+			userId = 0;
+		}
+
+		int otp1 = 0;
+		Optional<OTPEntry> optionalOtp = this.otpEntryRepository.findBySystemId(userEntry.getSystemId());
+		OTPEntry otpEntry = null;
+
+		if (optionalOtp.isPresent()) {
+			otpEntry = optionalOtp.get();
+		} else {
+			logger.info(messageResourceBundle.getLogMessage("user.no.otp.entry.found.info"));
+		}
+
+		if (otpEntry.getExpiresOn() != null) {
+
+			try {
+
+				System.out.println(
+						new Date().after(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(otpEntry.getExpiresOn())));
+
+				if (new Date().after(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(otpEntry.getExpiresOn()))) {
+
+					logger.info(messageResourceBundle.getLogMessage("user.otp.expired.on.info"),
+							userEntry.getSystemId(), otpEntry.getExpiresOn());
+				} else {
+					otp1 = otpEntry.getOneTimePass();
+				}
+			} catch (ParseException e) {
+				logger.error(e.getLocalizedMessage());
+				throw new InternalServerException(
+						messageResourceBundle.getExMessage(ConstantMessages.OTPEXPIRYDATE_PARSE_ERROR));
+			}
+		}
+
+		LoginResponse loginResponse = new LoginResponse();
+		if (otp == otp1) {
+
+			ResponseEntity<?> userLogin = login(loginRequest);
+			JwtResponse jwtResp = (JwtResponse) userLogin.getBody();
+			loginResponse.setJwtResponse(jwtResp);
+			loginResponse.setOtpLogin(true);
+			loginResponse.setStatus("Otp Matched successfully!");
+			return ResponseEntity.ok(loginResponse);
+		} else {
+			loginResponse.setStatus("OTP Expired Or Invalid OTP Entered!");
+			return ResponseEntity.ok(loginResponse);
+		}
+
+	}
+
+	private boolean isValidEmail(String email) {
+		return email != null && email.length() > 0 && email.contains("@") && email.contains(".");
+	}
+
 	public String getCountryname(String ip_address) {
 
 		String sql = "SELECT ip_location.country_name FROM ip_blocks JOIN ip_location ON ip_blocks.geoname_id = ip_location.geoname_id WHERE INET_ATON('"
@@ -1479,6 +1597,32 @@ public class LoginServiceImpl implements LoginService {
 		return inRange;
 	}
 
+//	public String getClientIp() {
+//		// Retrieve the current request attributes
+//		ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder
+//				.getRequestAttributes();
+//		if (requestAttributes != null) {
+//			HttpServletRequest request = requestAttributes.getRequest();
+//			// Retrieve client's IP address
+//			String clientIp = request.getHeader("X-Forwarded-For");
+//			if (clientIp == null || clientIp.isEmpty() || "unknown".equalsIgnoreCase(clientIp)) {
+//				clientIp = request.getHeader("Proxy-Client-IP");
+//			}
+//			if (clientIp == null || clientIp.isEmpty() || "unknown".equalsIgnoreCase(clientIp)) {
+//				clientIp = request.getHeader("WL-Proxy-Client-IP");
+//			}
+//			if (clientIp == null || clientIp.isEmpty() || "unknown".equalsIgnoreCase(clientIp)) {
+//				clientIp = request.getHeader("HTTP_X_FORWARDED_FOR");
+//			}
+//			if (clientIp == null || clientIp.isEmpty() || "unknown".equalsIgnoreCase(clientIp)) {
+//				clientIp = request.getRemoteAddr();
+//			}
+//			return clientIp;
+//		} else {
+//			return null;
+//		}
+//	}
+
 	public String getClientIp() {
 		// Retrieve the current request attributes
 		ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder
@@ -1487,22 +1631,27 @@ public class LoginServiceImpl implements LoginService {
 			HttpServletRequest request = requestAttributes.getRequest();
 			// Retrieve client's IP address
 			String clientIp = request.getHeader("X-Forwarded-For");
-			if (clientIp == null || clientIp.isEmpty() || "unknown".equalsIgnoreCase(clientIp)) {
+			if (checkIPisEmptyOrUnknown(clientIp)) {
 				clientIp = request.getHeader("Proxy-Client-IP");
 			}
-			if (clientIp == null || clientIp.isEmpty() || "unknown".equalsIgnoreCase(clientIp)) {
+			if (checkIPisEmptyOrUnknown(clientIp)) {
 				clientIp = request.getHeader("WL-Proxy-Client-IP");
 			}
-			if (clientIp == null || clientIp.isEmpty() || "unknown".equalsIgnoreCase(clientIp)) {
+			if (checkIPisEmptyOrUnknown(clientIp)) {
 				clientIp = request.getHeader("HTTP_X_FORWARDED_FOR");
 			}
-			if (clientIp == null || clientIp.isEmpty() || "unknown".equalsIgnoreCase(clientIp)) {
+			if (checkIPisEmptyOrUnknown(clientIp)) {
 				clientIp = request.getRemoteAddr();
 			}
 			return clientIp;
 		} else {
 			return null;
 		}
+	}
+
+	// Helper method to check if the IP is empty or unknown
+	private boolean checkIPisEmptyOrUnknown(String value) {
+		return value == null || value.isEmpty() || "unknown".equalsIgnoreCase(value);
 	}
 
 	public ProfessionEntry getProfessionEntry(String systemId) {

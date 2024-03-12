@@ -67,7 +67,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.HeaderParam;
 
 @RestController
 @RequestMapping("/reports")
@@ -95,7 +94,7 @@ public class ReportController {
 	@Autowired
 	private ContentReportService contentReportService;
 	@Autowired
-	 private  TransactionReportService transactionReportService;
+	private TransactionReportService transactionReportService;
 
 	@Autowired
 	private CustomizedReportService customizedReportService;
@@ -126,7 +125,7 @@ public class ReportController {
 
 	@Autowired
 	private DashboardService dashboardService;
-	
+
 	@Autowired
 	private FileAttachmentSenderService fileAttachmentSenderService;
 
@@ -260,7 +259,7 @@ public class ReportController {
 	
 
 	@Operation(summary = " Download User Delivery Report View")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Successfully downloaded DOC file"),
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Successfully downloaded report file"),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
 	@PostMapping("/userDelivery-report-view")
 	public ResponseEntity<?> userDeliveryReportView(@Valid @RequestHeader String username,
@@ -268,7 +267,6 @@ public class ReportController {
 		return deliveryService.UserDeliveryReportView(username, customReportForm);
 	}
 
-	
 	@Operation(summary = "Get Track Result Report")
 	@PostMapping("/track-result-report")
 	public ResponseEntity<TrackResultResponse> trackResultReport(@Valid @RequestParam String username,
@@ -286,33 +284,11 @@ public class ReportController {
 
 	}
 
-	@Operation(summary = "Download Lookup Report Excel")
-	@PostMapping("/lookup-report-xls")
-	public ResponseEntity<?> downloadLookupReportXLS(@Valid @RequestParam String username,
-			@RequestBody LookUpReportRequest customReportForm, HttpServletResponse response) {
-		return lookupReportService.LookupReportxls(username, customReportForm, response);
 
-	}
-
-	@Operation(summary = "Download Lookup Report PDF")
-	@PostMapping("/lookup-report-pdf")
-	public ResponseEntity<?> downloadLookupReportPDF(@Valid @RequestParam String username,
-			@RequestBody LookUpReportRequest customReportForm, HttpServletResponse response) {
-		return lookupReportService.LookupReportPdf(username, customReportForm, response);
-
-	}
-
-	@Operation(summary = "Download Lookup Report DOC")
-	@PostMapping("/lookup-report-doc")
-	public ResponseEntity<?> downloadLookupReportDoc(@Valid @RequestParam String username,
-			@RequestBody LookUpReportRequest customReportForm, HttpServletResponse response) {
-		return lookupReportService.LookupReportDoc(username, customReportForm, response);
-
-	}
 
 	@Operation(summary = "Recheck Lookup Report")
 	@PostMapping("/recheck-report")
-	public ResponseEntity<?> recheckLookupReport(@Valid @RequestParam String username,
+	public ResponseEntity<?> recheckLookupReport(@Valid @RequestHeader String username,
 			@RequestBody LookUpReportRequest customReportForm, HttpServletResponse response) {
 		return lookupReportService.LookupReportRecheck(username, customReportForm, response);
 
@@ -325,15 +301,15 @@ public class ReportController {
 		return customizedReportService.CustomizedReportView(username, customReportForm);
 	}
 
-	
-	@GetMapping("/sms/report")
+	@PostMapping("/sms/report")
 	public ResponseEntity<?> getSmsReport(@RequestHeader String username,
 			@RequestBody SmsReportRequest smsReportRequest) {
 		return customizedReportService.SmsReport(username, smsReportRequest);
 	}
-	
-	
-	
+
+
+
+
 
 ////////////////performance
 	@PostMapping("/performance-report-view")
@@ -446,16 +422,16 @@ public class ReportController {
 	@PostMapping("/profit-report-view")
 	@Operation(summary = "Profit Report View", description = "View profit report")
 	public ResponseEntity<?> profitReportView(
-	        @Valid @Parameter(description = "Username") @RequestHeader String username,
-	        @Parameter(description = "Custom Report Form") @RequestBody ProfitReportRequest customReportForm) {
+			@Valid @Parameter(description = "Username") @RequestHeader String username,
+			@Parameter(description = "Custom Report Form") @RequestBody ProfitReportRequest customReportForm) {
 
-	    // Extract page and size from the customReportForm
-	    int page = customReportForm.getPage();
-	    int size = customReportForm.getSize();
+		// Extract page and size from the customReportForm
+		int page = customReportForm.getPage();
+		int size = customReportForm.getSize();
 
-	    // Validate page and size if necessary (e.g., ensure size is not too large)
+		// Validate page and size if necessary (e.g., ensure size is not too large)
 
-	    return profitReportService.ProfitReportview(username, customReportForm, page, size);
+		return profitReportService.ProfitReportview(username, customReportForm, page, size);
 	}
 
 	@PostMapping("/profit-report-xls")
@@ -585,26 +561,19 @@ public class ReportController {
 		return summaryReportService.SummaryReportdoc(username, customReportForm, response);
 
 	}
-	
 
+	@GetMapping("/transactions")
+	public ResponseEntity<?> executeTransaction(@RequestHeader("username") String username) {
+		return transactionReportService.executeTransaction(username);
+	}
 
-
-
-    @GetMapping("/transactions")
-    public ResponseEntity<?> executeTransaction(@RequestHeader("username") String username) {
-        return transactionReportService.executeTransaction(username);
-    }
-
-    
-	@PostMapping(value="/send-attachment" ,consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	@Operation(summary="send email with file atttachement to the User",description = "This endPoint send a file attaced to the email")
-	public ResponseEntity<?>sentAttachmentWithEmail(
-			@RequestPart(value="file",required = false) MultipartFile attachment,
-			@Parameter(description = "attach file for sending to the email",content = @Content(schema = @Schema(implementation = SendAttachmentRequest.class))) @RequestParam(value = "sendAttachmentRequest", required = true) String sendAttachmentRequest
-			){
-			fileAttachmentSenderService.sendEmailWithAttachment(attachment, sendAttachmentRequest);
-			return new ResponseEntity<>("Email Sent Successfully",HttpStatus.OK);
-		}
+	@PostMapping(value = "/send-attachment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@Operation(summary = "send email with file atttachement to the User", description = "This endPoint send a file attaced to the email")
+	public ResponseEntity<?> sentAttachmentWithEmail(@RequestHeader("username") String username,
+			@RequestPart(value = "file", required = false) MultipartFile attachment,
+			@Parameter(description = "attach file for sending to the email", content = @Content(schema = @Schema(implementation = SendAttachmentRequest.class))) @RequestParam(value = "sendAttachmentRequest", required = true) String sendAttachmentRequest) {
+		fileAttachmentSenderService.sendEmailWithAttachment(username, attachment, sendAttachmentRequest);
+		return new ResponseEntity<>("Email Sent Successfully", HttpStatus.OK);
+	}
 
 }
-

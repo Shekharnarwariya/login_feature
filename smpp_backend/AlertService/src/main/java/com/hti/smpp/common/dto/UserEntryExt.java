@@ -22,6 +22,7 @@ public class UserEntryExt {
 	private BindErrorEntry bindErrorEntry;
 	private String walletAmount;
 	
+	
 	public UserEntryExt(UserEntry userEntry) {
 		this.userEntry = userEntry;
 	}

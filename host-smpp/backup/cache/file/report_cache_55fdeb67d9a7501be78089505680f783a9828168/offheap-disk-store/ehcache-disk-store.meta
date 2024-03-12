@@ -1,0 +1,4 @@
+#Key and value types
+#Thu Aug 24 19:25:14 IST 2017
+keyType=java.lang.String
+valueType=com.hti.objects.ReportLogObject

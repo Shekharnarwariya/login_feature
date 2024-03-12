@@ -1,0 +1,6 @@
+2019-05-31 15:45:50 [main] INFO  com.hti.database.ConnectionPool - Initializing Connection Pool[1]
+2019-05-31 15:45:51 [main] INFO  com.hti.database.ConnectionPool - Total Database Connections Created[1] : 25
+2019-05-31 15:45:51 [main] INFO  com.hti.database.ConnectionPool - Initializing Connection Pool[2]
+2019-05-31 15:45:51 [main] INFO  com.hti.database.ConnectionPool - Total Database Connections Created[2] : 25
+2019-05-31 15:45:51 [main] INFO  com.hti.database.LogDBConnection - Log Database Connection Count: 10
+2019-05-31 15:45:51 [main] INFO  com.hti.thread.StartUserServer -  Deleting temporary Queue folder

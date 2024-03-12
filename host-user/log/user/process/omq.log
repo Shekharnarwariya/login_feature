@@ -1,0 +1,33 @@
+2024-03-11 13:17:34:363 com.hti.thread.ProcessPDU - ProcessPDU Thread Starting
+2024-03-11 13:17:34:365 com.hti.thread.ProcessPDU - <------  Trying to Connect OMQ Server to Submit PDUs ------->
+2024-03-11 13:17:34:549 com.hti.thread.ProcessPDU - <------  OMQ Server Connected to Submit PDUs ------->
+2024-03-11 13:31:28:078 com.hti.thread.ProcessPDU - ProcessPDU Thread Starting
+2024-03-11 13:31:28:079 com.hti.thread.ProcessPDU - <------  Trying to Connect OMQ Server to Submit PDUs ------->
+2024-03-11 13:31:28:146 com.hti.thread.ProcessPDU - <------  OMQ Server Connected to Submit PDUs ------->
+2024-03-11 13:41:12:779 com.hti.thread.ProcessPDU - ProcessPDU Thread Starting
+2024-03-11 13:41:12:780 com.hti.thread.ProcessPDU - <------  Trying to Connect OMQ Server to Submit PDUs ------->
+2024-03-11 13:41:12:844 com.hti.thread.ProcessPDU - <------  OMQ Server Connected to Submit PDUs ------->
+2024-03-11 13:43:56:424 com.hti.thread.ProcessPDU - ProcessPDU Thread Starting
+2024-03-11 13:43:56:425 com.hti.thread.ProcessPDU - <------  Trying to Connect OMQ Server to Submit PDUs ------->
+2024-03-11 13:43:56:521 com.hti.thread.ProcessPDU - <------  OMQ Server Connected to Submit PDUs ------->
+2024-03-11 13:45:22:995 com.hti.thread.ProcessPDU - ProcessPDU Thread Starting
+2024-03-11 13:45:22:997 com.hti.thread.ProcessPDU - <------  Trying to Connect OMQ Server to Submit PDUs ------->
+2024-03-11 13:45:23:142 com.hti.thread.ProcessPDU - <------  OMQ Server Connected to Submit PDUs ------->
+2024-03-11 13:47:00:234 com.hti.thread.ProcessPDU - ProcessPDU Thread Starting
+2024-03-11 13:47:00:235 com.hti.thread.ProcessPDU - <------  Trying to Connect OMQ Server to Submit PDUs ------->
+2024-03-11 13:47:00:348 com.hti.thread.ProcessPDU - <------  OMQ Server Connected to Submit PDUs ------->
+2024-03-11 13:48:08:977 com.hti.thread.ProcessPDU - ProcessPDU Thread Starting
+2024-03-11 13:48:08:977 com.hti.thread.ProcessPDU - <------  Trying to Connect OMQ Server to Submit PDUs ------->
+2024-03-11 13:48:09:016 com.hti.thread.ProcessPDU - <------  OMQ Server Connected to Submit PDUs ------->
+2024-03-11 13:50:00:759 com.hti.thread.ProcessPDU - ProcessPDU Thread Starting
+2024-03-11 13:50:00:760 com.hti.thread.ProcessPDU - <------  Trying to Connect OMQ Server to Submit PDUs ------->
+2024-03-11 13:50:00:847 com.hti.thread.ProcessPDU - <------  OMQ Server Connected to Submit PDUs ------->
+2024-03-11 13:56:16:911 com.hti.thread.ProcessPDU - ProcessPDU Thread Starting
+2024-03-11 13:56:16:912 com.hti.thread.ProcessPDU - <------  Trying to Connect OMQ Server to Submit PDUs ------->
+2024-03-11 13:56:17:012 com.hti.thread.ProcessPDU - <------  OMQ Server Connected to Submit PDUs ------->
+2024-03-11 13:58:47:898 com.hti.thread.ProcessPDU - ProcessPDU Thread Starting
+2024-03-11 13:58:47:899 com.hti.thread.ProcessPDU - <------  Trying to Connect OMQ Server to Submit PDUs ------->
+2024-03-11 13:58:47:989 com.hti.thread.ProcessPDU - <------  OMQ Server Connected to Submit PDUs ------->
+2024-03-11 14:01:10:123 com.hti.thread.ProcessPDU - ProcessPDU Thread Starting
+2024-03-11 14:01:10:124 com.hti.thread.ProcessPDU - <------  Trying to Connect OMQ Server to Submit PDUs ------->
+2024-03-11 14:01:10:228 com.hti.thread.ProcessPDU - <------  OMQ Server Connected to Submit PDUs ------->

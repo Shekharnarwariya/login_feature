@@ -22,6 +22,11 @@ public class CorsConfig {
 		corsConfig.addAllowedMethod("*");
 		// Allow all headers
 		corsConfig.addAllowedHeader("*");
+		
+
+	    corsConfig.addExposedHeader("Content-Disposition");
+	    
+
 		// Create a UrlBasedCorsConfigurationSource
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		 // Register the CorsConfiguration for all paths (/**)

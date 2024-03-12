@@ -115,6 +115,12 @@ public class SpringCloudConfig {
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
 								.uri("lb://report-service:8094"))
 
+				// Route for REPORT_SERVICE
+				.route("downloads-service",
+						r -> r.path("/download/**")
+								.filters(f -> f.rewritePath("./download/(?<segment>.*)", "/${segment}")
+										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
+								.uri("lb://downloads-service:8095"))
 				.build(); // Build the routes
 	}
 }

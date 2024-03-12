@@ -40,6 +40,9 @@ public class ProfessionEntry implements Serializable {
 	private String logoFileName;
 	@Column(name = "logo_file")
 	private String logoFile;
+	
+	@Column(name="imagePath")
+	private String imageFilePath;
 
 	public int getUserId() {
 		return userId;
@@ -150,4 +153,15 @@ public class ProfessionEntry implements Serializable {
 				+ ",company=" + company + ",Designation=" + designation + ",DomainEmail=" + domainEmail + ",city="
 				+ city + ",State=" + state + ",Country=" + country;
 	}
+
+	public String getImageFilePath() {
+		return imageFilePath;
+	}
+
+	public void setImageFilePath(String imageFilePath) {
+		this.imageFilePath = imageFilePath;
+	}
+
+	
+
 }

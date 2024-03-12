@@ -1,5 +1,7 @@
 package com.hti.smpp.common.user.repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -20,9 +22,15 @@ public interface UserEntryRepository extends JpaRepository<UserEntry, Integer> {
 	public Optional<User> getUsers(@Param("systemId") String systemId);
 
 	public boolean existsBySystemId(String username);
-	
+
 	public UserEntry findByRole(String role);
-	
+
 	@Query("SELECT u.id FROM UserEntry u")
-    Set<Integer> getAllIds();
+	Set<Integer> getAllIds();
+
+	public List<UserEntry> getByRole(String string);
+
+	@Query(value = "SELECT * FROM usermaster u WHERE STR_TO_DATE(u.expiryday, '%Y-%m-%d') < CURDATE()", nativeQuery = true)
+	public List<UserEntry> findByExpiryBefore();
+
 }

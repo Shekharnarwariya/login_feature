@@ -1,0 +1,47 @@
+#--- comma seperated local ip:port to listen
+SMPP-IP-PORT = 0.0.0.0:8899,0.0.0.0:8898,0.0.0.0:8897
+BACKUP-IP-PORT = 0.0.0.0:8889,0.0.0.0:8890,0.0.0.0:8891
+SERVER-ID = 1
+BACKUP-SERVER-ID = 2
+SERVER_NAME=GWJO1
+#------ database ------------
+JDBC-DRIVER = com.mysql.cj.jdbc.Driver
+CONNECTION-URL = jdbc:mysql://localhost:3306/host_brd?autoReconnect=true&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC
+LOG-CONNECTION-URL = jdbc:mysql://localhost:3306/host_brd_log?autoReconnect=true&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC
+MAX_CONNECTIONS = 10
+DB_USER = root
+DB_PASSWORD = root
+DB_ALTER_USER = root
+DB_ALTER_PASSWORD = root
+# ------ ehcache ------------
+//routing
+route.heap.size = 10
+route.disk.size = 1000
+route.expired.time = 0
+#-------- other -------------
+INIT_PARAM=INIT_DONE
+// MINIMUM LENGTH OF DESTINATION NUMBER
+MIN_DEST_LENGTH=9
+// ROUTED SMSC IF DESTINATION NUMBER IS LESS THAN MIN_DEST_LENGTH
+INVALID_DEST_SMSC=GW_INVDST
+// ROUTED SMSC TO BE REJECTD
+REJECT_SMSC=GW997
+// ROUTED SMSC TO BE UNDELIV
+UNDELIV_SMSC=GW998
+// ROUTED SMSC TO BE DELIVRD
+DELIVRD_SMSC=GW999
+// LONG SMS WAIT TIME TO REBUILD (Seconds)
+FIX_LONG_WAIT_TIME = 5
+// RECEIVER QUEUE SIZE PER SESSION
+RECEIVER_QUEUE_SIZE = 10000
+// Allowed sessions per user
+SESSION_LIMIT = 20
+// URL Check wait time for clean(ms)
+URL_CHECK_WAIT_TIME = 1000
+#------- email --------------
+EMAIL_CC = rabih@broadnetme.com
+EMAIL_FROM = routes@broadnetme.com
+EMAIL_USER = gw1@broadnetme.com
+EMAIL_PASSWORD = gw1rz0373a
+SMTP_HOST_NAME = mail.broadnetme.com
+SMTP_PORT = 587

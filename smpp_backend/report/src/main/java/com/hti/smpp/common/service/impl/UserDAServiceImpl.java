@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -29,21 +29,17 @@ import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class UserDAServiceImpl implements UserDAService {
-	
 
 	private Logger logger = LoggerFactory.getLogger(UserDAServiceImpl.class);
-	
+
 	@Autowired
 	private UserDAO userDAO;
 
 	@Autowired
 	private UserEntryRepository userRepository;
-	
+
 	@Autowired
 	private BalanceEntryRepository balanceEntryRepository;
-	
-	
-
 
 	public UserDAServiceImpl() {
 		GlobalVars.UserEntries = GlobalVars.hazelInstance.getMap("user_entries");
@@ -313,6 +309,7 @@ public class UserDAServiceImpl implements UserDAService {
 				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 		return sortedMap;
 	}
+
 	@Override
 	public Map<Integer, String> listUsersUnderSeller(int seller) {
 		logger.debug("listUsersUnderSeller(" + seller + ")");
@@ -407,16 +404,12 @@ public class UserDAServiceImpl implements UserDAService {
 	public Map<Integer, RechargeEntry> listRecentRecharges(Integer[] userid) {
 		logger.debug("listRecentRecharges(" + userid + ")");
 		Map<Integer, RechargeEntry> map = new HashMap<Integer, RechargeEntry>();
-		List<RechargeEntry> results =(List<RechargeEntry>) listRecentRecharges(userid);
+		List<RechargeEntry> results = (List<RechargeEntry>) listRecentRecharges(userid);
 		for (RechargeEntry entry : results) {
 			map.put(entry.getUserId(), entry);
 		}
 		return map;
 	}
-
-
-
-	
 
 	@Override
 	public Map<Integer, List<RechargeEntry>> listTransactions(Integer[] userid, String txnType, String startTime,
@@ -431,15 +424,15 @@ public class UserDAServiceImpl implements UserDAService {
 			entry.setParticular(particular_arr[0]);
 			String effectiveUser = particular_arr[1];
 			entry.setEffectiveUser(effectiveUser);
-			if ( userRepository.findById(entry.getUserId()) != null) {
-				UserEntry userEntry =  userRepository.findById(userid[0]).get();
+			if (userRepository.findById(entry.getUserId()) != null) {
+				UserEntry userEntry = userRepository.findById(userid[0]).get();
 				Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findById(userid[0]);
 
 				BalanceEntry balance;
 				if (balanceOptional.isPresent()) {
-				    balance = balanceOptional.get();
+					balance = balanceOptional.get();
 				} else {
-				    throw new EntityNotFoundException("Balance entry not found for user ID: " + userid[0]);
+					throw new EntityNotFoundException("Balance entry not found for user ID: " + userid[0]);
 				}
 				logger.debug(userEntry.getSystemId() + "[" + userEntry.getRole() + "]: " + entry);
 				entry.setSystemId(userEntry.getSystemId());
@@ -477,8 +470,6 @@ public class UserDAServiceImpl implements UserDAService {
 		return listTransactions(userid, null, null, null);
 	}
 
-	
-	
 //	@Override
 //	public void saveAccessLogEntry(AccessLogEntry entry) {
 //		userDAO.saveAccessLogEntry(entry);

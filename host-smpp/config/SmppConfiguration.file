@@ -1,0 +1,61 @@
+# --- ip:port of host_user
+SMPP-IP-PORT = 0.0.0.0:8898
+SERVER-ID = 1
+SERVER_NAME=GWJO1
+#------ database ------------
+JDBC-DRIVER = com.mysql.cj.jdbc.Driver
+CONNECTION-URL = jdbc:mysql://localhost:3306/host_brd?autoReconnect=true&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC
+LOG-CONNECTION-URL = jdbc:mysql://localhost:3306/host_brd_log?autoReconnect=true&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC
+MAX_CONNECTIONS = 10
+DB_USER = root
+DB_PASSWORD = root
+DB_ALTER_USER = root
+DB_ALTER_PASSWORD = root
+LOG-DB=host_brd_log
+#-------- caches-------------
+// smsc Queue 
+queue.heap.size = 10
+queue.disk.size = 5000
+queue.expired.time = 0
+// Response 
+resp.heap.size = 10
+resp.disk.size = 5000
+resp.expired.time = 10
+resp.dlr.expired.time = 60
+// Report
+rep.heap.size = 10
+rep.disk.size = 5000
+rep.expired.time = 0
+// Resend pdu
+resd.pdu.heap.size = 10
+resd.pdu.disk.size = 3000
+resd.pdu.expired.time = 60
+#------- email --------------
+EMAIL_CC = rabih@broadnetme.com
+EMAIL_FROM = routes@broadnetme.com
+EMAIL_USER = gw1@broadnetme.com
+EMAIL_PASSWORD = gw1rz0373a
+SMTP_HOST_NAME = mail.broadnetme.com
+SMTP_PORT = 587
+#-------- other--------------
+DCS = 0
+// Waiting time to mark nonresponding(in min)
+NON_RESP_WAIT_TIME =  4
+// Waiting Time For SMSC Unbind Alert(in SECONDS)
+WAIT_DURATION = 100
+// Looping dump smsc
+L_DUMP_SMSC = GW_LOOP
+// twoway dump smsc
+TW_DUMP_SMSC = GW_TWDUMP
+// DLT missing param route
+DLT_UNDELIV_SMSC=GW_DLT
+// DLT enabled countries
+DLT_PREFIX = 91
+// route for BSFM unmatched content 
+B_DUMP_SMSC = GW_BDUMP
+#-----queued alert ----------
+QUEUED_ALERT_COUNT = 10
+#minutes
+QUEUED_ALERT_DURATION = 3
+QUEUED_ALERT_EMAILS = rabih@broadnetme.com
+QUEUED_ALERT_NUMBERS = 9613045212
