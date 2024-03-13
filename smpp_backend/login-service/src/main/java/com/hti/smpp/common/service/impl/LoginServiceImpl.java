@@ -250,7 +250,18 @@ public class LoginServiceImpl implements LoginService {
 			profileResponse.setRoles(userEntry.getRole());
 			profileResponse.setContactNo(professionEntry.getMobile());
 			profileResponse.setCurrency(userEntry.getCurrency());
-			profileResponse.setProfilePath(professionEntry.getImageFilePath());
+			String profileImagePath = professionEntry.getImageFilePath();
+		        if (profileImagePath != null && !profileImagePath.isEmpty()) {
+		            try {
+		                Path imagePath = Paths.get(IConstants.PROFILE_DIR + "profile//" + profileImagePath);
+		                byte[] imageBytes = Files.readAllBytes(imagePath);
+		                profileResponse.setProfilePath(imageBytes);
+		            } catch (IOException e) {
+		                e.printStackTrace();
+		                throw new InternalServerException("Error while reading the image file");
+		            }
+		        }
+
 		return ResponseEntity.ok(profileResponse);
 		} else {
 			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
@@ -514,14 +525,15 @@ public class LoginServiceImpl implements LoginService {
 							} else {
 								smsDTO.setSenderId(IConstants.OTP_SENDER_ID);
 							}
-							final String url = "http://localhost:8083/sms/send/alert";
-							HttpHeaders headers = new HttpHeaders();
-							headers.set("username", user.getSystemId());
-							HttpEntity<BulkSmsDTO> requestEntity = new HttpEntity<>(smsDTO, headers);
-							ResponseEntity<?> response = restTemplate.postForEntity(url, requestEntity, String.class);
-
-							logger.info("<OTP SMS: " + response.getBody().toString() + ">" + user.getSystemId() + "<"
-									+ valid_otp_numbers + ">");
+//							final String url = "http://localhost:8083/sms/send/alert";
+//							HttpHeaders headers = new HttpHeaders();
+//							headers.set("username", user.getSystemId());
+//							HttpEntity<BulkSmsDTO> requestEntity = new HttpEntity<>(smsDTO, headers);
+//							ResponseEntity<?> response = restTemplate.postForEntity(url, requestEntity, String.class);
+//
+//							logger.info("<OTP SMS: " + response.getBody().toString() + ">" + user.getSystemId() + "<"
+//									+ valid_otp_numbers + ">");
+							 MultiUtility.sendOtpSms(user.getSystemId(), smsDTO, restTemplate);
 						}
 					}
 				}
@@ -890,9 +902,9 @@ public class LoginServiceImpl implements LoginService {
 													messageResourceBundle
 															.getLogMessage("user.access.countries.not.configured.info"),
 													userEntry.getSystemId());
-											throw new InternalServerException(messageResourceBundle.getExMessage(
-													ConstantMessages.ACCESS_COUNTRY_NOTCONFIGURED,
-													new Object[] { userEntry.getSystemId() }));
+//											throw new InternalServerException(messageResourceBundle.getExMessage(
+//													ConstantMessages.ACCESS_COUNTRY_NOTCONFIGURED,
+//													new Object[] { userEntry.getSystemId() }));
 										}
 									} else {
 										logger.info(messageResourceBundle.getLogMessage("user.valid.access.ip.info"),
@@ -906,6 +918,7 @@ public class LoginServiceImpl implements LoginService {
 
 							} else {
 
+								System.out.println("****************876");
 								if (userEntry.getAccessIp() != null && userEntry.getAccessIp().length() > 0) {
 									boolean matched = false;
 									if (ipaddress != null && !ipaddress.isEmpty()) {
@@ -1030,9 +1043,9 @@ public class LoginServiceImpl implements LoginService {
 														messageResourceBundle.getLogMessage(
 																"user.access.countries.not.configured.info"),
 														userEntry.getSystemId());
-												throw new InternalServerException(messageResourceBundle.getExMessage(
-														ConstantMessages.ACCESS_COUNTRY_NOTCONFIGURED,
-														new Object[] { userEntry.getSystemId() }));
+//												throw new InternalServerException(messageResourceBundle.getExMessage(
+//														ConstantMessages.ACCESS_COUNTRY_NOTCONFIGURED,
+//														new Object[] { userEntry.getSystemId() }));
 											}
 										} else {
 											logger.info(
@@ -1041,11 +1054,13 @@ public class LoginServiceImpl implements LoginService {
 										}
 
 									} else {
-										throw new NotFoundException(messageResourceBundle
-												.getExMessage(ConstantMessages.IPADDRESS_NOTFOUND));
+//										throw new NotFoundException(messageResourceBundle
+//												.getExMessage(ConstantMessages.IPADDRESS_NOTFOUND));
 									}
 
 								} else {
+
+									System.out.println(webAccess);
 									logger.info(
 											messageResourceBundle.getLogMessage("user.access.ip.not.configured.info"),
 											userEntry.getSystemId());
@@ -1065,6 +1080,7 @@ public class LoginServiceImpl implements LoginService {
 															.getLogMessage("user.matching.allowed.country.info"),
 													userEntry.getSystemId(), ipaddress);
 											String country = getCountryname(ipaddress);
+											System.out.println(country);
 											if (country != null && !country.isEmpty()) {
 												logger.info(
 														messageResourceBundle.getLogMessage("user.country.found.info"),
@@ -1090,9 +1106,9 @@ public class LoginServiceImpl implements LoginService {
 													messageResourceBundle
 															.getLogMessage("user.access.ip.not.allowed.info"),
 													userEntry.getSystemId(), ipaddress);
-											throw new InternalServerException(messageResourceBundle.getExMessage(
-													ConstantMessages.USER_ACCESS_IPNOTALLOWED,
-													new Object[] { userEntry.getSystemId(), ipaddress }));
+//											throw new InternalServerException(messageResourceBundle.getExMessage(
+//													ConstantMessages.USER_ACCESS_IPNOTALLOWED,
+//													new Object[] { userEntry.getSystemId(), ipaddress }));
 
 										} else {
 											logger.info(
@@ -1107,14 +1123,17 @@ public class LoginServiceImpl implements LoginService {
 												messageResourceBundle
 														.getLogMessage("user.access.countries.not.configured.info"),
 												userEntry.getSystemId());
-										throw new InternalServerException(messageResourceBundle.getExMessage(
-												ConstantMessages.ACCESS_COUNTRY_NOTCONFIGURED,
-												new Object[] { userEntry.getSystemId() }));
+//										throw new InternalServerException(messageResourceBundle.getExMessage(
+//												ConstantMessages.ACCESS_COUNTRY_NOTCONFIGURED,
+//												new Object[] { userEntry.getSystemId() }));
 									}
 								}
 
 							}
+
+							System.out.println("1088" + webAccess);
 							if (webAccess) {
+								System.out.println("*********************1085");
 
 								if (webEntry.isOtpLogin()) {
 
@@ -1257,7 +1276,7 @@ public class LoginServiceImpl implements LoginService {
 																		ex.getMessage());
 															}
 
-															if (content == null) {
+															if (content == null) 	{
 																content = "Hello [system_id], [otp_pass] is your One-Time Password (OTP) on [url] valid for next [duration] minutes";
 															}
 
@@ -1374,18 +1393,17 @@ public class LoginServiceImpl implements LoginService {
 										// otp login is false and user has multi access
 										ResponseEntity<?> userLogin = login(loginRequest);
 										JwtResponse jwtResp = (JwtResponse) userLogin.getBody();
-										LoginResponse loginResponse = new LoginResponse();
-										loginResponse.setJwtResponse(jwtResp);
-										loginResponse.setOtpLogin(false);
-										loginResponse.setStatus("User Has Multi User Access!");
+										jwtResp.setOtpLogin(false);
+										jwtResp.setStatus("User Has Multi User Access!");
 										System.out.println("User Has Multi User Access!!-----1385");
-										return ResponseEntity.ok(loginResponse);
+										return ResponseEntity.ok(jwtResp);
 									}
 
 									// otp sent successfully
 
 									LoginResponse loginResponse = new LoginResponse();
 									loginResponse.setStatus("Otp sent successfully!");
+									loginResponse.setOtpLogin(true);
 									return ResponseEntity.ok(loginResponse);
 
 								} else if (webEntry.isEmailOnLogin()) {
@@ -1434,20 +1452,16 @@ public class LoginServiceImpl implements LoginService {
 
 									ResponseEntity<?> userLogin = login(loginRequest);
 									JwtResponse jwtResp = (JwtResponse) userLogin.getBody();
-									LoginResponse loginResponse = new LoginResponse();
-									loginResponse.setJwtResponse(jwtResp);
-									loginResponse.setOtpLogin(false);
-									loginResponse.setStatus("Login Alert Email Sent Successfully!");
-									return ResponseEntity.ok(loginResponse);
+									jwtResp.setOtpLogin(false);
+									jwtResp.setStatus("Login Alert Email Sent Successfully!");
+									return ResponseEntity.ok(jwtResp);
 
 								} else {
 									ResponseEntity<?> userLogin = login(loginRequest);
 									JwtResponse jwtResp = (JwtResponse) userLogin.getBody();
-									LoginResponse loginResponse = new LoginResponse();
-									loginResponse.setJwtResponse(jwtResp);
-									loginResponse.setOtpLogin(false);
-									loginResponse.setStatus("Jwt Token Generated Successfully!");
-									return ResponseEntity.ok(loginResponse);
+									jwtResp.setOtpLogin(false);
+									jwtResp.setStatus("Jwt Token Generated Successfully!");
+									return ResponseEntity.ok(jwtResp);
 								}
 
 							} else {
@@ -1529,19 +1543,15 @@ public class LoginServiceImpl implements LoginService {
 						messageResourceBundle.getExMessage(ConstantMessages.OTPEXPIRYDATE_PARSE_ERROR));
 			}
 		}
-
-		LoginResponse loginResponse = new LoginResponse();
 		if (otp == otp1) {
 
 			ResponseEntity<?> userLogin = login(loginRequest);
 			JwtResponse jwtResp = (JwtResponse) userLogin.getBody();
-			loginResponse.setJwtResponse(jwtResp);
-			loginResponse.setOtpLogin(true);
-			loginResponse.setStatus("Otp Matched successfully!");
-			return ResponseEntity.ok(loginResponse);
+			jwtResp.setOtpLogin(true);
+			jwtResp.setStatus("Otp Matched successfully!");
+			return ResponseEntity.ok(jwtResp);
 		} else {
-			loginResponse.setStatus("OTP Expired Or Invalid OTP Entered!");
-			return ResponseEntity.ok(loginResponse);
+			throw new InvalidOtpException("OTP Expired Or Invalid OTP Entered!");
 		}
 
 	}

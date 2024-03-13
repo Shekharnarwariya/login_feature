@@ -33,6 +33,8 @@ public interface GroupDataEntryRepository extends JpaRepository<GroupDataEntry, 
 	
 	@Query(value = "SELECT DISTINCT area FROM groupcontacts", nativeQuery = true)
 	List<String> findDistinctArea();
+
+	public List<GroupDataEntry> findByGroupId(int groupId, PageRequest pageRequest);
 	
 
 }

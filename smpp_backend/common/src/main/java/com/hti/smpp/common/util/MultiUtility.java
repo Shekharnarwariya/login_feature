@@ -20,6 +20,12 @@ import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+
+import com.hti.smpp.common.messages.dto.BulkSmsDTO;
 
 /**
  * @@*********** @Done by Amit_vish*****************
@@ -36,6 +42,19 @@ public class MultiUtility {
 		}
 		return true;
 	}
+	  public static void sendOtpSms(String systemId, BulkSmsDTO smsDTO, RestTemplate restTemplate) {
+	        try {
+	            final String url = IConstants.SMS_URL;
+	            System.out.println("Hello Url------>"+url);
+	            HttpHeaders headers = new HttpHeaders();
+	            headers.set("username", systemId);
+	            HttpEntity<BulkSmsDTO> requestEntity = new HttpEntity<>(smsDTO, headers);
+	            ResponseEntity<?> response = restTemplate.postForEntity(url, requestEntity, String.class);
+
+	            logger.info("<OTP SMS: " + response.getBody().toString() + ">" + systemId);
+	        } catch (Exception e) {
+	            logger.error("Error sending OTP SMS for user: " + systemId, e);
+	        }}
 
 	public static boolean changeFlag(String path, String flagValue) {
 		String writeData = "FLAG = " + flagValue;

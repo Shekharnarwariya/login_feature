@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Component;
 
+import com.hti.smpp.common.httpclient.HlrSessionHandler;
 import com.hti.smpp.common.network.dto.NetworkEntry;
 import com.hti.smpp.common.route.dto.HlrRouteEntry;
 import com.hti.smpp.common.route.dto.OptionalRouteEntry;
@@ -43,6 +44,9 @@ public class GlobalVarsSms {
 	public static Map<String, Integer> PrefixMapping = Collections.synchronizedMap(new HashMap<String, Integer>());
 
 	public static Map<String, String> hashTabOne = new HashMap<String, String>();
+	
+	public static Map<String, HlrSessionHandler> HlrUserSessionHandler = Collections
+			.synchronizedMap(new HashMap<String, HlrSessionHandler>());
 
 	static {
 		hashTabOne.put("A", "41");
