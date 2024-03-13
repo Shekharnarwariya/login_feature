@@ -3,7 +3,6 @@ package com.hti.smpp.common.service.impl;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -18,7 +17,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -26,16 +24,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.UUID;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -44,7 +37,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -251,18 +243,18 @@ public class LoginServiceImpl implements LoginService {
 			profileResponse.setContactNo(professionEntry.getMobile());
 			profileResponse.setCurrency(userEntry.getCurrency());
 			String profileImagePath = professionEntry.getImageFilePath();
-		        if (profileImagePath != null && !profileImagePath.isEmpty()) {
-		            try {
-		                Path imagePath = Paths.get(IConstants.PROFILE_DIR + "profile//" + profileImagePath);
-		                byte[] imageBytes = Files.readAllBytes(imagePath);
-		                profileResponse.setProfilePath(imageBytes);
-		            } catch (IOException e) {
-		                e.printStackTrace();
-		                throw new InternalServerException("Error while reading the image file");
-		            }
-		        }
+			if (profileImagePath != null && !profileImagePath.isEmpty()) {
+				try {
+					Path imagePath = Paths.get(IConstants.PROFILE_DIR + "profile//" + profileImagePath);
+					byte[] imageBytes = Files.readAllBytes(imagePath);
+					profileResponse.setProfilePath(imageBytes);
+				} catch (IOException e) {
+					e.printStackTrace();
+					throw new InternalServerException("Error while reading the image file");
+				}
+			}
 
-		return ResponseEntity.ok(profileResponse);
+			return ResponseEntity.ok(profileResponse);
 		} else {
 			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 		}
@@ -525,15 +517,10 @@ public class LoginServiceImpl implements LoginService {
 							} else {
 								smsDTO.setSenderId(IConstants.OTP_SENDER_ID);
 							}
-//							final String url = "http://localhost:8083/sms/send/alert";
-//							HttpHeaders headers = new HttpHeaders();
-//							headers.set("username", user.getSystemId());
-//							HttpEntity<BulkSmsDTO> requestEntity = new HttpEntity<>(smsDTO, headers);
-//							ResponseEntity<?> response = restTemplate.postForEntity(url, requestEntity, String.class);
-//
-//							logger.info("<OTP SMS: " + response.getBody().toString() + ">" + user.getSystemId() + "<"
-//									+ valid_otp_numbers + ">");
-							 MultiUtility.sendOtpSms(user.getSystemId(), smsDTO, restTemplate);
+							ResponseEntity<?> response = MultiUtility.sendOtpSms(user.getSystemId(), smsDTO,
+									restTemplate);
+							logger.info("<OTP SMS: " + response.getBody().toString() + ">" + user.getSystemId() + "<"
+									+ valid_otp_numbers + ">");
 						}
 					}
 				}
@@ -596,14 +583,15 @@ public class LoginServiceImpl implements LoginService {
 	 * Updates the user profile information for the specified username.
 	 */
 	@Override
-	public ResponseEntity<?> updateUserProfile(String username,String email,String firstName,String lastName,String contact,MultipartFile profileImageFile) {
+	public ResponseEntity<?> updateUserProfile(String username, String email, String firstName, String lastName,
+			String contact, MultipartFile profileImageFile) {
 		Optional<UserEntry> optionalUser = userEntryRepository.findBySystemId(username);
 		if (optionalUser.isPresent()) {
 			UserEntry user = optionalUser.get();
 			ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
 					.orElseThrow(() -> new NotFoundException(
 							messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
-			updateUserData(user, email,firstName,lastName,contact,professionEntry,profileImageFile);
+			updateUserData(user, email, firstName, lastName, contact, professionEntry, profileImageFile);
 			user.setEditOn(LocalDateTime.now() + "");
 			user.setEditBy(username);
 			userEntryRepository.save(user);
@@ -624,9 +612,9 @@ public class LoginServiceImpl implements LoginService {
 	 * @param professionEntry
 	 */
 	private void updateUserData(UserEntry user, String email, String firstName, String lastName, String contact,
-            ProfessionEntry professionEntry, MultipartFile profileImageFile) {
+			ProfessionEntry professionEntry, MultipartFile profileImageFile) {
 		if (email != null) {
-				professionEntry.setDomainEmail(email);
+			professionEntry.setDomainEmail(email);
 		}
 		if (firstName != null) {
 			professionEntry.setFirstName(firstName);
@@ -639,25 +627,25 @@ public class LoginServiceImpl implements LoginService {
 		}
 
 		if (profileImageFile != null && !profileImageFile.isEmpty()) {
-		    try {
-		       byte[] fileContent=profileImageFile.getBytes();
-	       	   String originalFileName=profileImageFile.getOriginalFilename();
-		       String filePath=IConstants.PROFILE_DIR+"profile//";
-		       
-		       File directory = new File(filePath);
-               if (!directory.exists()) {
-                   directory.mkdirs(); 
-               }
-               String originalImagePath = filePath + originalFileName;
-               File originalFile = new File(originalImagePath);
-               FileOutputStream fos = new FileOutputStream(originalFile);
-               fos.write(fileContent);
-               fos.close();
-		      professionEntry.setImageFilePath(originalFileName);	       
-		    } catch (IOException e) {
-		        e.printStackTrace();
-		        throw new InternalServerException("Error while parsing the image");
-		    }
+			try {
+				byte[] fileContent = profileImageFile.getBytes();
+				String originalFileName = profileImageFile.getOriginalFilename();
+				String filePath = IConstants.PROFILE_DIR + "profile//";
+
+				File directory = new File(filePath);
+				if (!directory.exists()) {
+					directory.mkdirs();
+				}
+				String originalImagePath = filePath + originalFileName;
+				File originalFile = new File(originalImagePath);
+				FileOutputStream fos = new FileOutputStream(originalFile);
+				fos.write(fileContent);
+				fos.close();
+				professionEntry.setImageFilePath(originalFileName);
+			} catch (IOException e) {
+				e.printStackTrace();
+				throw new InternalServerException("Error while parsing the image");
+			}
 		}
 	}
 
@@ -1269,7 +1257,7 @@ public class LoginServiceImpl implements LoginService {
 																		ex.getMessage());
 															}
 
-															if (content == null) 	{
+															if (content == null) {
 																content = "Hello [system_id], [otp_pass] is your One-Time Password (OTP) on [url] valid for next [duration] minutes";
 															}
 
@@ -1294,22 +1282,8 @@ public class LoginServiceImpl implements LoginService {
 															} else {
 																smsDTO.setSenderId(IConstants.OTP_SENDER_ID);
 															}
-															ResponseEntity<?> response = null;
-															try {
-																System.out.println(
-																		"working fine till line *************1319");
-																final String url = "http://127.0.0.1:8083//sms/send/alert";
-																HttpHeaders headers = new HttpHeaders();
-																;
-																headers.set("username", userEntry.getSystemId());
-																HttpEntity<BulkSmsDTO> requestEntity = new HttpEntity<>(
-																		smsDTO, headers);
-																response = restTemplate.postForEntity(url,
-																		requestEntity, String.class);
-
-															} catch (RestClientException e) {
-																e.printStackTrace();
-															}
+															ResponseEntity<?> response = MultiUtility.sendOtpSms(
+																	userEntry.getSystemId(), smsDTO, restTemplate);
 															logger.info("<OTP SMS: " + response.getBody().toString()
 																	+ ">" + userEntry.getSystemId() + "<"
 																	+ valid_otp_numbers + ">");
@@ -1395,7 +1369,6 @@ public class LoginServiceImpl implements LoginService {
 									}
 
 									// otp sent successfully
-
 									LoginResponse loginResponse = new LoginResponse();
 									loginResponse.setStatus("Otp sent successfully!");
 									return ResponseEntity.ok(loginResponse);
@@ -1609,39 +1582,11 @@ public class LoginServiceImpl implements LoginService {
 		return inRange;
 	}
 
-//	public String getClientIp() {
-//		// Retrieve the current request attributes
-//		ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder
-//				.getRequestAttributes();
-//		if (requestAttributes != null) {
-//			HttpServletRequest request = requestAttributes.getRequest();
-//			// Retrieve client's IP address
-//			String clientIp = request.getHeader("X-Forwarded-For");
-//			if (clientIp == null || clientIp.isEmpty() || "unknown".equalsIgnoreCase(clientIp)) {
-//				clientIp = request.getHeader("Proxy-Client-IP");
-//			}
-//			if (clientIp == null || clientIp.isEmpty() || "unknown".equalsIgnoreCase(clientIp)) {
-//				clientIp = request.getHeader("WL-Proxy-Client-IP");
-//			}
-//			if (clientIp == null || clientIp.isEmpty() || "unknown".equalsIgnoreCase(clientIp)) {
-//				clientIp = request.getHeader("HTTP_X_FORWARDED_FOR");
-//			}
-//			if (clientIp == null || clientIp.isEmpty() || "unknown".equalsIgnoreCase(clientIp)) {
-//				clientIp = request.getRemoteAddr();
-//			}
-//			return clientIp;
-//		} else {
-//			return null;
-//		}
-//	}
-
 	public String getClientIp() {
-		// Retrieve the current request attributes
 		ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder
 				.getRequestAttributes();
 		if (requestAttributes != null) {
 			HttpServletRequest request = requestAttributes.getRequest();
-			// Retrieve client's IP address
 			String clientIp = request.getHeader("X-Forwarded-For");
 			if (checkIPisEmptyOrUnknown(clientIp)) {
 				clientIp = request.getHeader("Proxy-Client-IP");
@@ -1661,7 +1606,6 @@ public class LoginServiceImpl implements LoginService {
 		}
 	}
 
-	// Helper method to check if the IP is empty or unknown
 	private boolean checkIPisEmptyOrUnknown(String value) {
 		return value == null || value.isEmpty() || "unknown".equalsIgnoreCase(value);
 	}

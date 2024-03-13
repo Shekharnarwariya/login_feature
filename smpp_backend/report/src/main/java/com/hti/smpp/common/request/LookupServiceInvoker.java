@@ -14,58 +14,41 @@ import com.hti.rmi.LookupReport;
 import com.hti.rmi.LookupService;
 
 public class LookupServiceInvoker {
-    private LookupService impl = null;
 
-<<<<<<< HEAD
-    public LookupServiceInvoker() throws IOException, NotBoundException {
-        // Load RMI configuration from application.properties in the resources folder
-        Properties prop = loadProperties("/application.properties");
-        String rmiAddress = prop.getProperty("rmi.server.address");
-        int rmiPort = Integer.parseInt(prop.getProperty("rmi.server.port"));
+	private LookupService impl = null;
 
-        // Connect to RMI Registry
-        connectToRegistry(rmiAddress, rmiPort);
-    }
+	public LookupServiceInvoker() throws IOException, NotBoundException {
+		// Load RMI configuration from application.properties in the resources folder
+		Properties prop = loadProperties("/application.properties");
+		String rmiAddress = prop.getProperty("rmi.server.address");
+		int rmiPort = Integer.parseInt(prop.getProperty("rmi.server.port"));
 
-    private Properties loadProperties(String resourcePath) throws IOException {
-        Properties prop = new Properties();
-        try (InputStream is = getClass().getResourceAsStream(resourcePath)) {
-            if (is == null) {
-                throw new IOException("Unable to load properties file: " + resourcePath);
-            }
-            prop.load(is);
-        }
-        return prop;
-    }
+		// Connect to RMI Registry
+		connectToRegistry(rmiAddress, rmiPort);
+	}
 
-    private void connectToRegistry(String address, int port) throws RemoteException, NotBoundException {
-        Registry myRegistry = LocateRegistry.getRegistry(address, port);
-        impl = (LookupService) myRegistry.lookup("lookupService");
-    }
+	private Properties loadProperties(String resourcePath) throws IOException {
+		Properties prop = new Properties();
+		try (InputStream is = getClass().getResourceAsStream(resourcePath)) {
+			if (is == null) {
+				throw new IOException("Unable to load properties file: " + resourcePath);
+			}
+			prop.load(is);
+		}
+		return prop;
+	}
 
-    public List<LookupReport> getLookupReport(Map<String, String> params) throws RemoteException {
-        System.out.println("LookupReport Params: " + params);
-        return impl.getLookupReport(params);
-    }
-
-    public int reCheckStatus(String sql) throws RemoteException {
-        return impl.reCheckStatus(sql);
-    }
-=======
-	public LookupServiceInvoker() throws RemoteException, NotBoundException {
-	    // Connect HLR Server on port 1098
-		java.rmi.registry.Registry myRegistry = LocateRegistry.getRegistry("5.32.122.147", 1098);
-		// search for service
+	private void connectToRegistry(String address, int port) throws RemoteException, NotBoundException {
+		Registry myRegistry = LocateRegistry.getRegistry(address, port);
 		impl = (LookupService) myRegistry.lookup("lookupService");
 	}
-			
+
 	public List<LookupReport> getLookupReport(Map<String, String> params) throws RemoteException {
 		System.out.println("LookupReport Params: " + params);
 		return impl.getLookupReport(params);
 	}
-			
+
 	public int reCheckStatus(String sql) throws RemoteException {
 		return impl.reCheckStatus(sql);
 	}
->>>>>>> 3bd8e54ed54e5ca636356c9bf48310633e204b9c
 }
