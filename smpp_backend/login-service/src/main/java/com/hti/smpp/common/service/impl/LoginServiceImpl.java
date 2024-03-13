@@ -250,7 +250,18 @@ public class LoginServiceImpl implements LoginService {
 			profileResponse.setRoles(userEntry.getRole());
 			profileResponse.setContactNo(professionEntry.getMobile());
 			profileResponse.setCurrency(userEntry.getCurrency());
-			profileResponse.setProfilePath(professionEntry.getImageFilePath());
+			String profileImagePath = professionEntry.getImageFilePath();
+		        if (profileImagePath != null && !profileImagePath.isEmpty()) {
+		            try {
+		                Path imagePath = Paths.get(IConstants.PROFILE_DIR + "profile//" + profileImagePath);
+		                byte[] imageBytes = Files.readAllBytes(imagePath);
+		                profileResponse.setProfilePath(imageBytes);
+		            } catch (IOException e) {
+		                e.printStackTrace();
+		                throw new InternalServerException("Error while reading the image file");
+		            }
+		        }
+
 		return ResponseEntity.ok(profileResponse);
 		} else {
 			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
@@ -514,14 +525,15 @@ public class LoginServiceImpl implements LoginService {
 							} else {
 								smsDTO.setSenderId(IConstants.OTP_SENDER_ID);
 							}
-							final String url = "http://localhost:8083/sms/send/alert";
-							HttpHeaders headers = new HttpHeaders();
-							headers.set("username", user.getSystemId());
-							HttpEntity<BulkSmsDTO> requestEntity = new HttpEntity<>(smsDTO, headers);
-							ResponseEntity<?> response = restTemplate.postForEntity(url, requestEntity, String.class);
-
-							logger.info("<OTP SMS: " + response.getBody().toString() + ">" + user.getSystemId() + "<"
-									+ valid_otp_numbers + ">");
+//							final String url = "http://localhost:8083/sms/send/alert";
+//							HttpHeaders headers = new HttpHeaders();
+//							headers.set("username", user.getSystemId());
+//							HttpEntity<BulkSmsDTO> requestEntity = new HttpEntity<>(smsDTO, headers);
+//							ResponseEntity<?> response = restTemplate.postForEntity(url, requestEntity, String.class);
+//
+//							logger.info("<OTP SMS: " + response.getBody().toString() + ">" + user.getSystemId() + "<"
+//									+ valid_otp_numbers + ">");
+							 MultiUtility.sendOtpSms(user.getSystemId(), smsDTO, restTemplate);
 						}
 					}
 				}
@@ -1257,7 +1269,7 @@ public class LoginServiceImpl implements LoginService {
 																		ex.getMessage());
 															}
 
-															if (content == null) {
+															if (content == null) 	{
 																content = "Hello [system_id], [otp_pass] is your One-Time Password (OTP) on [url] valid for next [duration] minutes";
 															}
 

@@ -22,7 +22,7 @@ public class ProfileResponse {
 
 	private String currency;
 	
-	private String profilePath;
+	private byte[] profilePath;
 
 	public String getCurrency() {
 		return currency;
@@ -111,10 +111,10 @@ public class ProfileResponse {
 	public ProfileResponse() {
 		super();
 	}
-	public String getProfilePath() {
+	public byte[] getProfilePath() {
 		return profilePath;
 	}
-	public void setProfilePath(String profilePath) {
+	public void setProfilePath(byte[] profilePath) {
 		this.profilePath = profilePath;
 	}
 	

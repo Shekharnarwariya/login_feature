@@ -20,7 +20,8 @@ public final class IConstants {
 	public static final String SCHEDULE_DIR = TOMCAT_DIR + ContextListener.property.getProperty("tomcat.schedule.dir");
 	public static final String WEBSMPP_EXT_DIR = TOMCAT_DIR + "websmpp//";
 	public static final String PROFILE_DIR=HOME_DIR+"websmpp//";
-	// ------------ Prefix Settings ---------------
+	public static final String SMS_URL=ContextListener.property.getProperty("sms.url");
+	// ------------ Prefix Settings --------------- 
 	public static final int PREFIX_APPLY = Integer.parseInt(ContextListener.property.getProperty("load.prefix.apply"));
 	public static final int PREFIX_TO_APPLY = Integer
 			.parseInt(ContextListener.property.getProperty("load.prefix.value"));
