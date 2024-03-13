@@ -160,12 +160,10 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		} catch (IllegalArgumentException e) {
 
 			logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
-
 			throw new BadRequestException(messageResourceBundle
 					.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] { e.getMessage() }));
 
 		} catch (Exception e) {
-			// Log other exceptions
 			logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
 			throw new InternalServerException(e.getMessage());
 		}
@@ -468,17 +466,17 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	public List sortListByCountry(List reportList) {
 		boolean isSummary = false;
 
-		// logger.info(user.getSystemId() + " sortListByCountry ");
-		Comparator<DeliveryDTO> comparator = null;
-		if (isSummary) {
-			comparator = Comparator.comparing(DeliveryDTO::getDate).thenComparing(DeliveryDTO::getCountry);
-		} else {
-			comparator = Comparator.comparing(DeliveryDTO::getDate).thenComparing(DeliveryDTO::getCountry)
-					.thenComparing(DeliveryDTO::getMsgid);
-		}
-		Stream<DeliveryDTO> personStream = reportList.stream().sorted(comparator);
-		List<DeliveryDTO> sortedlist = personStream.collect(Collectors.toList());
-		return sortedlist;
+		 Comparator<DeliveryDTO> comparator = Comparator
+		            .comparing(DeliveryDTO::getDate, Comparator.nullsLast(Comparator.naturalOrder()))
+		            .thenComparing(DeliveryDTO::getCountry, Comparator.nullsLast(Comparator.naturalOrder()));
+
+		    if (!isSummary) {
+		        comparator = comparator.thenComparing(DeliveryDTO::getMsgid, Comparator.nullsLast(Comparator.naturalOrder()));
+		    }
+
+		    List<DeliveryDTO> sortedList = (List<DeliveryDTO>) reportList.stream().sorted(comparator).collect(Collectors.toList());
+		    System.out.println(sortedList);
+		    return sortedList;
 	}
 
 	private List<DeliveryDTO> getCustomizedReportList(CustomizedReportRequest customReportForm, String username) {
@@ -830,7 +828,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 						String hexmsg = "";
 						if (customReportForm.getContentType().equalsIgnoreCase("7bit")) {
 							hexmsg = SevenBitChar.getHexValue(customReportForm.getContent());
-							// System.out.println("Hex: " + hexmsg);
+						System.out.println("Hex: " + hexmsg);
 							hexmsg = Converter.getContent(hexmsg.toCharArray());
 							// System.out.println("content: " + hexmsg);
 							hexmsg = new Converters().UTF16(hexmsg);
