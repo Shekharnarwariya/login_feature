@@ -250,7 +250,18 @@ public class LoginServiceImpl implements LoginService {
 			profileResponse.setRoles(userEntry.getRole());
 			profileResponse.setContactNo(professionEntry.getMobile());
 			profileResponse.setCurrency(userEntry.getCurrency());
-			profileResponse.setProfilePath(professionEntry.getImageFilePath());
+			String profileImagePath = professionEntry.getImageFilePath();
+		        if (profileImagePath != null && !profileImagePath.isEmpty()) {
+		            try {
+		                Path imagePath = Paths.get(IConstants.PROFILE_DIR + "profile//" + profileImagePath);
+		                byte[] imageBytes = Files.readAllBytes(imagePath);
+		                profileResponse.setProfilePath(imageBytes);
+		            } catch (IOException e) {
+		                e.printStackTrace();
+		                throw new InternalServerException("Error while reading the image file");
+		            }
+		        }
+
 		return ResponseEntity.ok(profileResponse);
 		} else {
 			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
