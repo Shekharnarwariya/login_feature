@@ -33,8 +33,6 @@ import com.hti.smpp.common.util.dto.AlertDTO;
  */
 public class GlobalVars {
 	public static HazelcastInstance hazelInstance;
-
-	// HazelcastInstance representing the distributed Hazelcast cluster.
 	public static IMap<Integer, FlagDTO> flag_write_Cache;
 	public static boolean MASTER_CLIENT = true;
 	public static boolean DB_CLUSTER = false;
@@ -43,41 +41,27 @@ public class GlobalVars {
 	public static IMap<Integer, GroupEntry> SmscGroupEntries;
 	public static IMap<String, String> HttpDlrParam;
 	public static IMap<String, String> user_flag_status;
-//	public static Map<String, Set<Integer>> ScheduledBatches = new ConcurrentHashMap<String, Set<Integer>>();
-//	public static Set<Integer> RepeatedSchedules = Collections.synchronizedSet(new HashSet<Integer>());
 	public static Map<String, String> ActiveUsers = Collections.synchronizedMap(new HashMap<String, String>());
 	public static Map<Integer, AlertDTO> PerformanceAlerts = Collections
 			.synchronizedMap(new HashMap<Integer, AlertDTO>());
 	public static Map<Integer, SalesEntry> ExecutiveEntryMap = Collections
 			.synchronizedMap(new HashMap<Integer, SalesEntry>());
 	// ----------------------------------------------------------------------------------------
-	// public static Set<String> UsedCurrencies = new TreeSet<String>();
 	public static Map<String, String> currencies = new java.util.TreeMap<String, String>();
 	public static Set<String> smscTypes = new TreeSet<String>();
-	// Distributed maps for storing various entries using Hazelcast IMap.
 	// --------------------------------------------------------------
-
-	// Group entries related to SMS centers.
-
-	// public static Set<String> UsedSmscTypes = new TreeSet<String>();
 	public static Map<String, String> GmtMapping = Collections.synchronizedMap(new LinkedHashMap<String, String>());
 	public static Map<String, Integer> PrefixMapping = Collections.synchronizedMap(new HashMap<String, Integer>());
 	public static Map<String, Integer> LoginAttempts = Collections.synchronizedMap(new HashMap<String, Integer>());
-
-	// ************** hazelcast **************************************
 	// ---------- network ----------------------------
 	public static IMap<Integer, NetworkEntry> NetworkEntries;
 	// ---------- smsc -------------------------------
 	public static IMap<Integer, SmscEntry> SmscEntries;
-	
-	
-	
 	public static MultiMap<Integer, GroupMemberEntry> SmscGroupMember;
 	// --------- routing entries ---------------------
 	public static IMap<Integer, RouteEntry> BasicRouteEntries;
 	public static IMap<Integer, HlrRouteEntry> HlrRouteEntries;
 	public static IMap<Integer, OptionalRouteEntry> OptionalRouteEntries;
-	// public static MultiMap<Integer, Integer> RouteIdentity;
 	// ------ user based entries ---------------------
 
 	public static IMap<String, String> UserFlagStatus;
@@ -88,7 +72,7 @@ public class GlobalVars {
 	public static IMap<Integer, WebMasterEntry> WebmasterEntries;
 	public static IMap<Integer, DlrSettingEntry> DlrSettingEntries;
 
-	//public static IMap<Integer,bulkService> bulkService;
+	// public static IMap<Integer,bulkService> bulkService;
 	static {
 		smscTypes.add("A");
 		smscTypes.add("B");

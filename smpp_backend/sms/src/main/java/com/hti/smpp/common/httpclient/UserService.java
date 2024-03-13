@@ -20,21 +20,6 @@ public class UserService {
 	@Autowired
 	private UserDAO userDAO;
 
-	public UserService() {
-		GlobalVars.UserEntries = GlobalVars.hazelInstance.getMap("user_entries");
-		GlobalVars.BalanceEntries = GlobalVars.hazelInstance.getMap("balance_entries");
-		GlobalVars.UserMapping = GlobalVars.hazelInstance.getMap("user_mapping");
-		GlobalVars.ProfessionEntries = GlobalVars.hazelInstance.getMap("profession_entries");
-		GlobalVars.WebmasterEntries = GlobalVars.hazelInstance.getMap("webmaster_entries");
-		GlobalVars.DlrSettingEntries = GlobalVars.hazelInstance.getMap("dlrSetting_entries");
-		GlobalVars.UserFlagStatus = GlobalVars.hazelInstance.getMap("user_flag_status");
-		logger.info("UserEntries: " + GlobalVars.UserEntries.size());
-		logger.info("BalanceEntries: " + GlobalVars.BalanceEntries.size());
-		logger.info("ProfessionEntries: " + GlobalVars.ProfessionEntries.size());
-		logger.info("WebmasterEntries: " + GlobalVars.WebmasterEntries.size());
-		logger.info("DlrSettingEntries: " + GlobalVars.DlrSettingEntries.size());
-	}
-
 	private Logger logger = LoggerFactory.getLogger(UserService.class);
 
 	public UserEntryExt getUserEntryExt(String systemid) {
@@ -71,6 +56,7 @@ public class UserService {
 			return null;
 		}
 	}
+
 	public UserEntry getUserEntry(int userid) {
 		logger.debug("getUserEntry(" + userid + ")");
 		if (GlobalVars.UserEntries.containsKey(userid)) {
