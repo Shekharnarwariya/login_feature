@@ -243,7 +243,7 @@ public class LoginController {
 	@Operation(summary = "Validate OTP User Ip", description = "Endpoint to validate user ip address and send otp in sms and email if user is enabled to get otp else the user will be notified by email alert when the user logged in.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "OTP authenticated successfully. JWT token generated.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponse.class))),
-			@ApiResponse(responseCode = "400", description = "Invalid or malformed request. Unable to authenticate user.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "504", description = "Invalid or malformed request. Unable to authenticate user.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "500", description = "Internal server error during authentication process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class)))
 	})

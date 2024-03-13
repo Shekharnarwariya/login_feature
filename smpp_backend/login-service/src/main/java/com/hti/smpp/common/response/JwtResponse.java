@@ -1,6 +1,7 @@
 package com.hti.smpp.common.response;
 
 import java.util.List;
+
 /**
  * Represents a response containing a JWT token.
  */
@@ -10,6 +11,24 @@ public class JwtResponse {
 	private int id;
 	private String username;
 	private List<String> roles;
+	private boolean isOtpLogin;
+	private String status;
+
+	public boolean isOtpLogin() {
+		return isOtpLogin;
+	}
+
+	public void setOtpLogin(boolean isOtpLogin) {
+		this.isOtpLogin = isOtpLogin;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
 
 	public JwtResponse(String accessToken, int id, String username, List<String> roles) {
 		this.token = accessToken;
@@ -17,6 +36,7 @@ public class JwtResponse {
 		this.username = username;
 		this.roles = roles;
 	}
+
 //Getter and Setter
 	public String getAccessToken() {
 		return token;
