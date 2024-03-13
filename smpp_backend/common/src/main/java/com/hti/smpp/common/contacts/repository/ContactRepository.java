@@ -2,6 +2,7 @@ package com.hti.smpp.common.contacts.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,5 +23,7 @@ public interface ContactRepository extends JpaRepository<ContactEntry, Integer> 
 	@Query("SELECT c FROM ContactEntry c WHERE c.groupId = :groupId AND c.createdOn BETWEEN :start AND :end")
 	List<ContactEntry> findContactByDateAndGroupId(@Param("start") String start, @Param("end") String end,
 			@Param("groupId") int groupId);
+
+	public List<ContactEntry> findByGroupId(int groupId, PageRequest pageRequest);
 
 }

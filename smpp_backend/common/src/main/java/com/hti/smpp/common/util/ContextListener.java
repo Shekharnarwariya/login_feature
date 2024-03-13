@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.cluster.Member;
+
 /**
  * Application context listener responsible for initializing properties and
  * connecting to Hazelcast Cluster.
@@ -67,9 +68,14 @@ public class ContextListener {
 			GlobalVars.NetworkEntries = GlobalVars.hazelInstance.getMap("network_entries");
 			GlobalVars.flag_write_Cache = GlobalVars.hazelInstance.getMap("flag_write_cache");
 			GlobalVars.user_flag_status = GlobalVars.hazelInstance.getMap("user_flag_status");
-
 			GlobalVars.SmscEntries = GlobalVars.hazelInstance.getMap("smsc_entries");
-
+			GlobalVars.UserEntries = GlobalVars.hazelInstance.getMap("user_entries");
+			GlobalVars.BalanceEntries = GlobalVars.hazelInstance.getMap("balance_entries");
+			GlobalVars.UserMapping = GlobalVars.hazelInstance.getMap("user_mapping");
+			GlobalVars.ProfessionEntries = GlobalVars.hazelInstance.getMap("profession_entries");
+			GlobalVars.WebmasterEntries = GlobalVars.hazelInstance.getMap("webmaster_entries");
+			GlobalVars.DlrSettingEntries = GlobalVars.hazelInstance.getMap("dlrSetting_entries");
+			GlobalVars.UserFlagStatus = GlobalVars.hazelInstance.getMap("user_flag_status");
 			logClusterMembers();
 
 		} catch (Exception e) {

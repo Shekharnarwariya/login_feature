@@ -16,6 +16,7 @@ import com.hti.rmi.LookupService;
 public class LookupServiceInvoker {
     private LookupService impl = null;
 
+<<<<<<< HEAD
     public LookupServiceInvoker() throws IOException, NotBoundException {
         // Load RMI configuration from application.properties in the resources folder
         Properties prop = loadProperties("/application.properties");
@@ -50,4 +51,21 @@ public class LookupServiceInvoker {
     public int reCheckStatus(String sql) throws RemoteException {
         return impl.reCheckStatus(sql);
     }
+=======
+	public LookupServiceInvoker() throws RemoteException, NotBoundException {
+	    // Connect HLR Server on port 1098
+		java.rmi.registry.Registry myRegistry = LocateRegistry.getRegistry("5.32.122.147", 1098);
+		// search for service
+		impl = (LookupService) myRegistry.lookup("lookupService");
+	}
+			
+	public List<LookupReport> getLookupReport(Map<String, String> params) throws RemoteException {
+		System.out.println("LookupReport Params: " + params);
+		return impl.getLookupReport(params);
+	}
+			
+	public int reCheckStatus(String sql) throws RemoteException {
+		return impl.reCheckStatus(sql);
+	}
+>>>>>>> 3bd8e54ed54e5ca636356c9bf48310633e204b9c
 }
