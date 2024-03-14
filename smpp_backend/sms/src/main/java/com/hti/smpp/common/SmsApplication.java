@@ -42,7 +42,7 @@ public class SmsApplication implements CommandLineRunner {
 	public static void main(String[] args) {
 		SpringApplication.run(SmsApplication.class, args);
 		logger.info("SMS Application started successfully.");
-		new ApiRequestProcessor();
+		//new ApiRequestProcessor();
 
 	}
 
