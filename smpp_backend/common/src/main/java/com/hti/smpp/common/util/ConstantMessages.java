@@ -209,6 +209,12 @@ public class ConstantMessages {
     
     //Abort
     public static final String NO_DATA_FOUND_ABORT_REPORT = "abort.report.data.not.found";
+  //Blocked
+    public static final String NO_DATA_FOUND_BLOCKED_REPORT="bloked.report.data.not.found";
+    //schedule
+    public static final String NO_DATA_FOUND_SCHEDULE_REPORT="schedule.report.data.not.found";
+    //Summary
+    public static final String SUMMARY_REPORT_NOT_FOUND_MESSAGE="summary.report.data.not.found";
     
     
     
@@ -393,6 +399,7 @@ public class ConstantMessages {
     public static final String UNABLE_TO_FIND_ALL_ALERTS = "unable.to.find.all.alerts";
     public static final String ALERT_ENTRIES_NOT_FOUND = "alert.entries.not.found";
     public static final String UPDATE_ALERT_ENTITY_FAILED = "update.alert.entity.failed";
+	public static final String CAMPAIGN_REPORT_NOT_FOUND_MESSAGE = "campaign.report.not.found";
 
     
 }

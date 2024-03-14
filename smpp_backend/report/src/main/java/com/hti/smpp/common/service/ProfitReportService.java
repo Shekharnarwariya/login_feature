@@ -14,13 +14,7 @@ public interface ProfitReportService {
 
 	public ResponseEntity<?> ProfitReportview(String username, ProfitReportRequest customReportForm, int page, int size);
 
-	public ResponseEntity<?>  ProfitReportxls(String username, ProfitReportRequest customReportForm,
-			HttpServletResponse response);
-
-	public ResponseEntity<?>  ProfitReportpdf(String username, ProfitReportRequest customReportForm,
-			HttpServletResponse response);
-
-	public ResponseEntity<?>  ProfitReportdoc(String username, ProfitReportRequest customReportForm, HttpServletResponse response);
+	
 	
 
 }

@@ -105,7 +105,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 
 	@Autowired
 	private WebMasterEntryRepository webMasterEntryRepository;
-	
+
 	@Autowired
 	private MessageResourceBundle messageResourceBundle;
 
@@ -128,30 +128,33 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 	public ResponseEntity<?> SmscDlrReportview(String username, SmscDlrReportRequest customReportForm) {
 		List<DeliveryDTO> target = new ArrayList<>();
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
+					new Object[] { username }));
 		}
 		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
 		if (webMasterEntry == null) {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE,new Object[] {user.getId()}));
+			throw new NotFoundException(messageResourceBundle
+					.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE, new Object[] { user.getId() }));
 
 		}
 		try {
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username, webMasterEntry);
 			if (!reportList.isEmpty()) {
 				System.out.println(user.getSystemId() + " Report Size: " + reportList.size());
-				//JasperPrint print = null;
+				// JasperPrint print = null;
 
 				if (isSummary) {
-					//print = getSummaryJasperPrint(reportList, false, username);
+					// print = getSummaryJasperPrint(reportList, false, username);
 				} else {
-					//print = getJasperPrint(reportList, false, username, webMasterEntry);
+					// print = getJasperPrint(reportList, false, username, webMasterEntry);
 				}
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
-				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_DLR_REPORT_NOT_FOUND_MESSAGE, new Object[] {username}));
+				throw new NotFoundException(messageResourceBundle
+						.getExMessage(ConstantMessages.SMS_DLR_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
 
 			}
 		} catch (Exception e) {
@@ -167,14 +170,16 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 
 		List<DeliveryDTO> target = null;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
+					new Object[] { username }));
 		}
 		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
 		if (webMasterEntry == null) {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE,new Object[] {user.getId()}));
+			throw new NotFoundException(messageResourceBundle
+					.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE, new Object[] { user.getId() }));
 		}
 		try {
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username, webMasterEntry);
@@ -280,7 +285,8 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 
 				target = reportList;
 			} else {
-				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_DLR_REPORT_NOT_FOUND_MESSAGE, new Object[] {username}));
+				throw new NotFoundException(messageResourceBundle
+						.getExMessage(ConstantMessages.SMS_DLR_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
 			}
 		} catch (Exception e) {
 			logger.error(messageResourceBundle.getMessage("error.message"), username);
@@ -296,17 +302,19 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 			HttpServletResponse response) {
 		List<DeliveryDTO> target = null;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
+					new Object[] { username }));
 		}
 
 		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
 
 		if (webMasterEntry == null) {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE,new Object[] {user.getId()}));
+			throw new NotFoundException(messageResourceBundle
+					.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE, new Object[] { user.getId() }));
 		}
 
 		try {
@@ -321,31 +329,30 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
 				logger.info(user.getSystemId() + " <-- Creating PDF --> ");
 				OutputStream out = response.getOutputStream();
-				
-				 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-			        JRExporter exporter = new JRPdfExporter();
-			        exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-			        exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, byteArrayOutputStream);
-			        exporter.exportReport();
 
-			        // Set up the response headers
-			        HttpHeaders headers = new HttpHeaders();
-			        headers.setContentType(MediaType.APPLICATION_PDF);
-			        headers.setContentDispositionFormData("attachment", "delivery_report.pdf");
+				ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+				JRExporter exporter = new JRPdfExporter();
+				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
+				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, byteArrayOutputStream);
+				exporter.exportReport();
 
-			        // Return the byte array as ResponseEntity
-			        return ResponseEntity.ok()
-			                .headers(headers)
-			                .contentLength(byteArrayOutputStream.size())
-			                .body(byteArrayOutputStream.toByteArray());
+				// Set up the response headers
+				HttpHeaders headers = new HttpHeaders();
+				headers.setContentType(MediaType.APPLICATION_PDF);
+				headers.setContentDispositionFormData("attachment", "delivery_report.pdf");
+
+				// Return the byte array as ResponseEntity
+				return ResponseEntity.ok().headers(headers).contentLength(byteArrayOutputStream.size())
+						.body(byteArrayOutputStream.toByteArray());
 			} else {
-				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SMS_DLR_REPORT_NOT_FOUND_MESSAGE, new Object[] {username}));
+				throw new NotFoundException(messageResourceBundle
+						.getExMessage(ConstantMessages.SMS_DLR_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
-		
+
 	}
 
 	@Override
@@ -1185,7 +1192,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 					rs.close();
 				}
 				if (con != null) {
-					// dbCon.releaseConnection(con);
+					con.close();
 				}
 			} catch (SQLException sqle) {
 			}
@@ -1221,7 +1228,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 					rs.close();
 				}
 				if (con != null) {
-					// dbCon.releaseConnection(con);
+					con.close();
 				}
 			} catch (SQLException sqle) {
 			}
@@ -1404,8 +1411,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 		} catch (SQLException ex) {
 			if (ex.getMessage().contains("Table") && ex.getMessage().contains("doesn't exist")) {
 				logger.error("<-- " + username + " Mis & Content Table Doesn't Exist -->");
-				// createMisTable(username);
-				// createContentTable(username);
+
 			} else {
 				logger.error(" ", ex.fillInStackTrace());
 			}
@@ -1418,7 +1424,7 @@ public class SmscDlrReportReportImpl implements SmscDlrReportReportService {
 					rs.close();
 				}
 				if (con != null) {
-					// dbCon.releaseConnection(con);
+					con.close();
 				}
 			} catch (SQLException sqle) {
 			}

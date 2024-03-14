@@ -146,60 +146,6 @@ public class ContentReportServiceImpl implements ContentReportService {
 				}
 			}
 
-//			if (reportList != null && !reportList.isEmpty()) {
-//				int totalPages = 0;
-//				String tableName = "mis_" + username.toLowerCase();
-//				long totalElements = 0l;
-//				String countSql = "SELECT (" + "SELECT COUNT(*) FROM " + tableName + ") + ("
-//						+ "SELECT COUNT(DISTINCT msg_id) " + "FROM (" + "SELECT msg_id FROM smsc_in WHERE username = ? "
-//						+ "UNION " + "SELECT msg_id FROM unprocessed WHERE username = ?"
-//						+ ") AS combined_unique_msg_ids" + ") AS total_count";
-//				try (Connection connection = getConnection();
-//						PreparedStatement pStmt = connection.prepareStatement(countSql)) {
-//					pStmt.setString(1, username);
-//					pStmt.setString(2, username);
-//					try (ResultSet rs = pStmt.executeQuery()) {
-//						if (rs.next()) {
-//							totalElements = rs.getLong(1);
-//							totalPages = (int) Math.ceil((double) totalElements / p.getPageSize());
-//						}
-//					}
-//				} catch (SQLException e) {
-//					e.printStackTrace();
-//				}
-//				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(),
-//						reportList.size());
-//				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(),
-//						reportList.size());
-//				logger.info(messageResourceBundle.getLogMessage("report.view.size.message"), user.getSystemId(),
-//						reportList.size());
-//
-//				// JasperPrint print = dataBase.getJasperPrint(reportList, false, username);
-//				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
-//				PaginatedResponse<DeliveryDTO> paginatedResponse = new PaginatedResponse<>(reportList,
-//						p.getPageNumber(), p.getPageSize(), totalElements, totalPages-1);
-//				return ResponseEntity.ok(paginatedResponse);
-//			} else {
-//				throw new NotFoundException(
-//						messageResourceBundle.getExMessage(ConstantMessages.DATA_NOT_FOUND_CONTENT));
-//
-//			}
-//		} catch (NotFoundException e) {
-//			// Log NotFoundException
-//			throw new NotFoundException(e.getMessage());
-//		} catch (IllegalArgumentException e) {
-//			logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
-//
-//			throw new BadRequestException(messageResourceBundle
-//					.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] { e.getMessage() }));
-//
-//		} catch (Exception e) {
-//			// Log other exceptions
-//			logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
-//			throw new InternalServerException(e.getMessage());
-//		}
-//	}
-
 
 
 
@@ -375,56 +321,6 @@ public class ContentReportServiceImpl implements ContentReportService {
 			}
 		}
 
-//		int remainingSize = pageable.getPageSize();
-//		int currentOffset = pageable.getPageNumber() * pageable.getPageSize();
-//		List<DeliveryDTO> combinedList = new ArrayList<>();
-//		List<DeliveryDTO> list = contentWiseDlrReport(query + " LIMIT " + remainingSize + " OFFSET " + currentOffset,
-//				report_user, webMasterEntry.isHideNum());
-//		combinedList.addAll(list);
-//		remainingSize -= list.size();
-//		currentOffset = Math.max(0, currentOffset - list.size());
-//		System.out.println("currentOffset" + currentOffset);
-//		logger.info(messageResourceBundle.getLogMessage("report.sql.message"), user.getSystemId(), query);
-//
-//		if (remainingSize > 0) {
-//			List<DeliveryDTO> unproc_list_1 = contentWiseUprocessedReport(
-//					unproc_query.replaceAll("table_name", "smsc_in") + " LIMIT " + remainingSize + " OFFSET "
-//							+ currentOffset,
-//					report_user, webMasterEntry.isHideNum());
-//			combinedList.addAll(unproc_list_1);
-//			remainingSize -= unproc_list_1.size();
-//			currentOffset = Math.max(0, currentOffset - unproc_list_1.size());
-//		}
-//		logger.info(messageResourceBundle.getLogMessage("report.sql.message"), user.getSystemId(), query);
-//
-//		if (remainingSize > 0) {
-//			List<DeliveryDTO> unproc_list_2 = contentWiseUprocessedReport(
-//					unproc_query.replaceAll("table_name", "unprocessed") + " LIMIT " + remainingSize + " OFFSET "
-//							+ currentOffset,
-//					report_user, webMasterEntry.isHideNum());
-//			combinedList.addAll(unproc_list_2);
-//		}
-//		logger.info(messageResourceBundle.getLogMessage("end.criteria.report.message"), user.getSystemId(),
-//				combinedList.size());
-//		return combinedList;
-		//----------------
-//		logger.info(user.getSystemId() + " ReportSQL:" + query);
-//		System.out.println("this is line run 455");
-//		List<DeliveryDTO> list = contentWiseDlrReport(query, report_user, webMasterEntry.isHideNum());
-//		logger.info(messageResourceBundle.getLogMessage("report.sql.message"), user.getSystemId(), query);
-//
-//		List<DeliveryDTO> unproc_list_1 = contentWiseUprocessedReport(unproc_query.replaceAll("table_name", "smsc_in"),
-//				report_user, webMasterEntry.isHideNum());
-//		list.addAll(unproc_list_1);
-//		logger.info(messageResourceBundle.getLogMessage("report.sql.message"), user.getSystemId(), query);
-//
-//		List<DeliveryDTO> unproc_list_2 = contentWiseUprocessedReport(
-//				unproc_query.replaceAll("table_name", "unprocessed"), report_user, webMasterEntry.isHideNum());
-//		list.addAll(unproc_list_2);
-//		logger.info(messageResourceBundle.getLogMessage("end.criteria.report.message"), user.getSystemId(),
-//				list.size());
-//
-//		return list;
 		logger.info(user.getSystemId() + " ReportSQL:" + query);
 		List<DeliveryDTO> list = contentWiseDlrReport(query, report_user,
 				webMasterEntry.isHideNum());

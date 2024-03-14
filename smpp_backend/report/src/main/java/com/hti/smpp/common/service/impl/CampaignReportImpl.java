@@ -24,9 +24,6 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -40,11 +37,9 @@ import com.hti.smpp.common.database.DataNotFoundException;
 import com.hti.smpp.common.database.ParameterMismatchException;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
-import com.hti.smpp.common.exception.ReportBoundaryException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.messages.dto.BulkMapEntry;
 import com.hti.smpp.common.request.CampaignReportRequest;
-import com.hti.smpp.common.response.CustomPagination;
 import com.hti.smpp.common.response.DeliveryDTO;
 import com.hti.smpp.common.sales.dto.SalesEntry;
 import com.hti.smpp.common.sales.repository.SalesRepository;
@@ -65,6 +60,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.BadRequestException;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRExporter;
 import net.sf.jasperreports.engine.JRExporterParameter;
@@ -127,56 +123,34 @@ public class CampaignReportImpl implements CampaignReportService {
 						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 
 			}
-			ArrayList<Object> list = new ArrayList<Object>();
-			Page<DeliveryDTO> pageReport = getReportList(customReportForm, username, false);
-			CustomPagination page = new CustomPagination(pageReport.getNumber(), pageReport.getSize(), pageReport.getTotalPages(),
-					pageReport.getTotalElements(), pageReport.isLast(), pageReport.isFirst());
-			list.add(pageReport.getContent());
-			list.add(page);
 
-			if (!list.isEmpty()) {
-				System.out.println("Campaign Report Size: " + pageReport.getContent().size());
-				
-				if(pageReport.getTotalElements() > 0 && pageReport.getContent().size()>0) {
-					return ResponseEntity.ok(list);
-				}else if(customReportForm.getPage().getPageNumber() >= pageReport.getTotalPages() && pageReport.getTotalElements() > 0) {
-					throw new ReportBoundaryException("You have reached the end of the report. No more data is available.");
-				}else {
-					throw new NotFoundException("No data available!");
-				}
-				
-			} else {
-				throw new InternalServerException(messageResourceBundle
-						.getExMessage(ConstantMessages.INTERNAL_SERVER_EXCEPTION, new Object[] { username }));
+			List<DeliveryDTO> print = getReportList(customReportForm, username, false);
 
+			if (print != null && !print.isEmpty()) {
+				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(),
+						print.size());
+				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
+
+				// Return ResponseEntity with the list in the response body
+				return new ResponseEntity<>(print, HttpStatus.OK);
 			}
-			// return new ResponseEntity<>(print, HttpStatus.OK);
-		} catch (DataNotFoundException | UnauthorizedException | ParameterMismatchException e) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body("Error: No Campaign report data found for username " + username
-							+ " within the specified date range.");
-		}
-	}
-	
-	private static <T> Page<T> getPage(List<T> list, int page, int size) {
-	    if (page < 0 || size <= 0) {
-	        throw new IllegalArgumentException("Invalid page or size parameters");
-	    }
-	    int start = page * size;
-	    if (start > list.size()) {
-	        start = list.size(); 
-	    }
-	    int end = Math.min(start + size, list.size());
-	    return new PageImpl<>(list.subList(start, end), PageRequest.of(page, size), list.size());
-	}
+				 else {
+						throw new NotFoundException(messageResourceBundle.getExMessage(
+								ConstantMessages.CAMPAIGN_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
+					}
+				} catch (NotFoundException e) {
+					throw new NotFoundException(e.getMessage());
+				} catch (IllegalArgumentException e) {
+					logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
+					throw new BadRequestException(messageResourceBundle
+							.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] { e.getMessage() }));
 
-
-	private Page<DeliveryDTO> getReportList(CampaignReportRequest customReportForm, String username, boolean paging) {
-		int pageSize = customReportForm.getPage().getPageSize();
-        int currentPage = customReportForm.getPage().getPageNumber();
+				} catch (Exception e) {
+					logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
+					throw new InternalServerException(e.getMessage());
+				}
+			}
+	private List<DeliveryDTO> getReportList(CampaignReportRequest customReportForm, String username, boolean paging) {
 		if (customReportForm.getClientId() == null) {
 			return null;
 		}
@@ -232,7 +206,6 @@ public class CampaignReportImpl implements CampaignReportService {
 		List<BulkMapEntry> list = list(users.toArray(new String[users.size()]), Long.parseLong(start_date_str),
 				Long.parseLong(end_date_str));
 		if (customReportForm.getGroupBy().equalsIgnoreCase("name")) {
-			System.out.println("run 235");
 			Map<String, Map<String, List<String>>> filtered_map = new HashMap<String, Map<String, List<String>>>();
 			for (BulkMapEntry entry : list) {
 				Map<String, List<String>> campaign_mapping = null;
@@ -267,10 +240,8 @@ public class CampaignReportImpl implements CampaignReportService {
 								"Sorry, there was an issue retrieving the campaign report. Please try again later.");
 
 					}
-					System.out.println("run 270"+report_map);
 					for (Map.Entry<String, Map<String, Map<String, Integer>>> time_entry : report_map.entrySet()) {
 						for (Map.Entry<String, Map<String, Integer>> source_entry : time_entry.getValue().entrySet()) {
-							System.out.println("run 272");
 							report = new DeliveryDTO();
 							report.setUsername(entry.getKey());
 							report.setDate(time_entry.getKey());
@@ -278,7 +249,6 @@ public class CampaignReportImpl implements CampaignReportService {
 							report.setSender(source_entry.getKey());
 							int total_submitted = 0;
 							int others = 0;
-							System.out.println("run 280");
 							for (Map.Entry<String, Integer> status_entry : source_entry.getValue().entrySet()) {
 								if (status_entry.getKey() != null && status_entry.getKey().length() > 0) {
 									if (status_entry.getKey().toLowerCase().startsWith("del")) {
@@ -305,7 +275,6 @@ public class CampaignReportImpl implements CampaignReportService {
 							report.setOthers(others);
 							final_others += others;
 							final_list.add(report);
-							System.out.println("this is final list"+final_list);
 						}
 					}
 				}
@@ -417,12 +386,10 @@ public class CampaignReportImpl implements CampaignReportService {
 			final_list = sortList(final_list);
 
 		}
-		Page<DeliveryDTO> page = getPage(final_list, currentPage, pageSize);
 
-		return page;
-
+		return final_list;
 	}
-
+	
 	public List<BulkMapEntry> list(String[] systemId, long from, long to) {
 		logger.info(messageResourceBundle.getLogMessage("checking.systemId.message"), systemId, from, to);
 
@@ -430,7 +397,8 @@ public class CampaignReportImpl implements CampaignReportService {
 		CriteriaQuery<BulkMapEntry> criteriaQuery = criteriaBuilder.createQuery(BulkMapEntry.class);
 		Root<BulkMapEntry> root = criteriaQuery.from(BulkMapEntry.class);
 
-		jakarta.persistence.criteria.Predicate predicate = criteriaBuilder.conjunction(); 
+		jakarta.persistence.criteria.Predicate predicate = criteriaBuilder.conjunction(); // Initialize with conjunction
+																							// (AND)
 
 		if (systemId != null && systemId.length > 0) {
 			predicate = criteriaBuilder.and(predicate, root.get("systemId").in((Object[]) systemId));
@@ -473,13 +441,14 @@ public class CampaignReportImpl implements CampaignReportService {
 
 	public Map<String, Map<String, Map<String, Integer>>> getCampaignReport(String username, List<String> msg_id_list)
 			throws SQLException {
+		// logger.info("<--- checking For campaign report[" + username + "] --> ");
 		Map<String, Map<String, Map<String, Integer>>> report_list = new HashMap<String, Map<String, Map<String, Integer>>>();
 		Connection con = null;
 		PreparedStatement pStmt = null;
 		ResultSet rs = null;
 		String sql = "select count(msg_id) as count,Date(submitted_time) as time,source_no,status from mis_" + username
 				+ " where msg_id in(" + String.join(",", msg_id_list) + ") group by time,source_no,status";
-		 System.out.println(sql);
+		// System.out.println(sql);
 		try {
 			con = getConnection();
 			pStmt = con.prepareStatement(sql);
@@ -512,9 +481,10 @@ public class CampaignReportImpl implements CampaignReportService {
 				status_map.put(status, status_count);
 				source_map.put(rs.getString("source_no"), status_map);
 				report_list.put(rs.getString("time"), source_map);
-				System.out.println(report_list);
+				// System.out.println(report_list);
 			}
 			logger.info(messageResourceBundle.getLogMessage("campaign.report.message"), username, report_list.size());
+
 		} catch (SQLException sqle) {
 			logger.error(" ", sqle.fillInStackTrace());
 		} finally {
@@ -584,131 +554,5 @@ public class CampaignReportImpl implements CampaignReportService {
 		}
 		return list;
 	}
-
-//	@Override
-//	public ResponseEntity<?> CampaignReportxls(String username, CampaignReportRequest customReportForm,
-//	        HttpServletResponse response, String lang) {
-//	    List<DeliveryDTO> reportList = null;
-//	    String target = IConstants.FAILURE_KEY;
-//
-//	    Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-//	    UserEntry user = userOptional.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
-//
-//	    if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-//	        throw new UnauthorizedException("User does not have the required roles for this operation.");
-//	    }
-//
-//	    try {
-//	        locale = Customlocale.getLocaleByLanguage(lang);
-//	        JasperPrint print = getReportList(customReportForm, username, false, lang);
-//	        // Replace the following line with actual data retrieval logic if necessary
-//	        // reportList = dataBase.getCampaignReportList(customReportForm, username, false, lang);
-//
-//	        if (print != null) {
-//	            System.out.println("<-- Preparing Outputstream --> ");
-//	            String reportName = "Campaign_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".xlsx";
-//
-//	            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-//	            response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-//
-//	            System.out.println("<-- Creating XLS --> ");
-//	            ByteArrayOutputStream out = new ByteArrayOutputStream();
-//	            JRExporter exporter = new JRXlsxExporter();
-//	            exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-//	            exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-//	            exporter.setParameter(JRXlsExporterParameter.IS_ONE_PAGE_PER_SHEET, Boolean.FALSE);
-//	            exporter.setParameter(JRXlsExporterParameter.MAXIMUM_ROWS_PER_SHEET, 60000);
-//	            exporter.exportReport();
-//
-//	            System.out.println("<-- Finished --> ");
-//	            target = IConstants.SUCCESS_KEY;
-//
-//	            return ResponseEntity.ok().body(out.toByteArray());
-//	        } else {
-//	            target = IConstants.FAILURE_KEY;
-//	            throw new NotFoundException("No data found for the report");
-//	        }
-//	    } catch (Exception e) {
-//	        e.printStackTrace();
-//	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-//	    }
-//	}
-
-//	@Override
-//	public ResponseEntity<?> CampaignReportPdf(String username, CampaignReportRequest customReportForm,
-//			HttpServletResponse response, String lang) {
-//		try {
-//			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-//			UserEntry user = userOptional
-//					.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
-//
-//			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-//				throw new UnauthorizedException("User does not have the required roles for this operation.");
-//			}
-//
-//			locale = Customlocale.getLocaleByLanguage(lang);
-//			JasperPrint print = getReportList(customReportForm, username, false, lang);
-//			byte[] pdfReport = JasperExportManager.exportReportToPdf(print);
-//				
-//			HttpHeaders headers = new HttpHeaders();
-//			headers.setContentType(MediaType.APPLICATION_PDF);
-//			headers.setContentDispositionFormData("attachment", "campaign_report.pdf");
-//
-//			// Return the file in the ResponseEntity
-//			return new ResponseEntity<>(pdfReport, headers, HttpStatus.OK);
-//		} catch (NotFoundException e) {
-//			throw new NotFoundException(e.getMessage());
-//		} catch (UnauthorizedException e) {
-//			throw new UnauthorizedException(e.getMessage());
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//			throw new InternalServerException(
-//					"Error: An unexpected error occurred in the Campaign report: " + e.getMessage());
-//		}
-//	}
-//
-//	@Override
-//	public ResponseEntity<?> CampaignReportDoc(String username, CampaignReportRequest customReportForm,
-//	        HttpServletResponse response, String lang) {
-//	    JasperPrint print = null;
-//	    String target = IConstants.FAILURE_KEY;
-//	    Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-//
-//	    UserEntry user = userOptional.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
-//
-//	    if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-//	        throw new UnauthorizedException("User does not have the required roles for this operation.");
-//	    }
-//
-//	    try {
-//	        locale = Customlocale.getLocaleByLanguage(lang);
-//
-//	        print = getReportList(customReportForm, username, false, lang);
-//
-//	        if (print != null) {
-//	            System.out.println("<-- Preparing Outputstream --> ");
-//	            String reportName = "Operator_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".docx";
-//	            response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-//	            response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-//	            System.out.println("<-- Creating DOCX --> ");
-//
-//	            ByteArrayOutputStream out = new ByteArrayOutputStream();
-//	            JRExporter exporter = new JRDocxExporter();
-//	            exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-//	            exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-//	            exporter.exportReport();
-//
-//	            System.out.println("<-- Finished --> ");
-//	            target = IConstants.SUCCESS_KEY;
-//
-//	            return new ResponseEntity<>(out.toByteArray(), HttpStatus.OK);
-//	        } else {
-//	            throw new InternalServerException("No data found for the report");
-//	        }
-//	    } catch (Exception e) {
-//	        e.printStackTrace();
-//	        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-//	    }
-//	}
 
 }

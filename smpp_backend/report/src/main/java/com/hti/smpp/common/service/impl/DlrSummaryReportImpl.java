@@ -63,6 +63,7 @@ import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MessageResourceBundle;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.BadRequestException;
 import net.sf.jasperreports.engine.JRExporter;
 import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JRParameter;
@@ -136,241 +137,27 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.view.size.message"), user, reportList.size());
-
-//				JasperPrint print = getdlrSummaryJasperPrint(reportList, false, username);
-//
-//				// Convert JasperPrint to byte array (PDF)
-//				byte[] pdfBytes = JasperExportManager.exportReportToPdf(print);
-//
-//				// Set response headers
-//				HttpHeaders headers = new HttpHeaders();
-//				headers.setContentType(MediaType.APPLICATION_PDF);
-//				headers.setContentDispositionFormData("attachment", "DlrSummaryReport.pdf");
-
 				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), username);
 
-				// Return PDF file in the response body
 				return ResponseEntity.ok(reportList);
-			} else {
-				throw new Exception(
-						messageResourceBundle.getExMessage(ConstantMessages.NO_DATA_FOUND_DLR_SUMMARY_REPORT));
 
+			} else {
+				throw new NotFoundException(
+						messageResourceBundle.getExMessage(ConstantMessages.NO_DATA_FOUND_DLR_SUMMARY_REPORT));
 			}
-		} catch (UnauthorizedException e) {
-			// Handle unauthorized exception
-			throw new InternalServerException(
-					messageResourceBundle.getExMessage(ConstantMessages.ERROR_PROCESSING_DLR_SUMMARY_REPORT_MESSAGE));
+		} catch (NotFoundException e) {
+			// Log NotFoundException
+			throw new NotFoundException(e.getMessage());
+		} catch (IllegalArgumentException e) {
+
+			logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
+			throw new BadRequestException(messageResourceBundle
+					.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] { e.getMessage() }));
 
 		} catch (Exception e) {
-			// Handle other general exceptions
-			logger.error(e.getMessage());
-
-			throw new InternalServerException(messageResourceBundle.getExMessage(
-					ConstantMessages.GETTING_ERROR_DLR_SUMMARY_REPORT_MESSAGE, new Object[] { username }));
-
+			logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(e.getMessage());
 		}
-	}
-
-	@Override
-	public ResponseEntity<?> DlrSummaryReportdoc(String username, DlrSummaryReport customReportForm,
-			HttpServletResponse response) {
-
-		String target = IConstants.SUCCESS_KEY;
-
-		try {
-			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-
-			UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
-					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
-
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle
-						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
-			}
-
-			List<DeliveryDTO> reportList = getDlrReportList(customReportForm, username);
-			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("report.size.doc.message"), username,
-						reportList.size());
-
-				JasperPrint print = getdlrSummaryJasperPrint(reportList, false, username);
-				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), username);
-
-				// Generate a unique filename based on the current timestamp
-				String reportName = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".docx";
-
-				// Set response headers
-				response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-
-				logger.info(messageResourceBundle.getLogMessage("creating.docx.message"), username);
-
-				// Create the DOCX file and write it to the response output stream
-				ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-				JRDocxExporter exporter = new JRDocxExporter();
-				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, byteArrayOutputStream);
-				exporter.exportReport();
-
-				// Convert ByteArrayOutputStream to byte array
-				byte[] docxBytes = byteArrayOutputStream.toByteArray();
-
-				// Return DOCX file in the response body
-				return ResponseEntity.ok().contentLength(docxBytes.length).body(docxBytes);
-			} else {
-				throw new Exception(
-						messageResourceBundle.getExMessage(ConstantMessages.NO_DATA_FOUND_DLR_SUMMARY_REPORT));
-
-			}
-		} catch (UnauthorizedException e) {
-			// Handle unauthorized exception
-			e.printStackTrace();
-			throw new InternalServerException(
-					messageResourceBundle.getExMessage(ConstantMessages.ERROR_PROCESSING_DLR_SUMMARY_REPORT_MESSAGE));
-
-		} catch (Exception e) {
-			// Handle other general exceptions
-			e.printStackTrace();
-			throw new InternalServerException(
-					messageResourceBundle.getExMessage(ConstantMessages.ERROR_PROCESSING_DLR_SUMMARY_REPORT_MESSAGE));
-		}
-		// return ResponseEntity.ok(target);
-	}
-
-	@Override
-	public ResponseEntity<?> DlrSummaryReportdpdf(String username, DlrSummaryReport customReportForm,
-			HttpServletResponse response) {
-		String target = IConstants.FAILURE_KEY;
-
-		try {
-
-			List<DeliveryDTO> reportList = getDlrReportList(customReportForm, username);
-			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(username + " ReportSize[pdf]:" + reportList.size());
-				JasperPrint print = getdlrSummaryJasperPrint(reportList, false, username);
-				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), username);
-
-				// Generate a unique filename based on the current timestamp
-				String reportName = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".xls";
-
-				// Set response headers
-				response.setContentType("application/vnd.ms-excel");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-
-				logger.info(messageResourceBundle.getLogMessage("creating.xls.message"), username);
-
-				// Create the XLS file and write it to the response output stream
-				OutputStream out = response.getOutputStream();
-				JRXlsExporter exporter = new JRXlsExporter();
-				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-				exporter.exportReport();
-
-				// Close the output stream
-				if (out != null) {
-					try {
-						out.close();
-					} catch (IOException ioe) {
-						logger.info(messageResourceBundle.getLogMessage("xls.outputstream.error.message"), username);
-
-					}
-				}
-
-				logger.info(messageResourceBundle.getLogMessage("xls.report.finished.message"), username);
-
-				return ResponseEntity.ok().build();
-			} else {
-				throw new Exception(
-						messageResourceBundle.getExMessage(ConstantMessages.NO_DATA_FOUND_DLR_SUMMARY_REPORT));
-
-			}
-		} catch (UnauthorizedException e) {
-			// Handle unauthorized exception
-			e.printStackTrace();
-			throw new InternalServerException(
-					messageResourceBundle.getExMessage(ConstantMessages.ERROR_PROCESSING_DLR_SUMMARY_REPORT_MESSAGE));
-		} catch (Exception e) {
-			// Handle other general exceptions
-			e.printStackTrace();
-			throw new InternalServerException(
-					messageResourceBundle.getExMessage(ConstantMessages.ERROR_PROCESSING_DLR_SUMMARY_REPORT_MESSAGE));
-
-		}
-		// return ResponseEntity.ok(target);
-	}
-
-	@Override
-	public ResponseEntity<?> DlrSummaryReportdxls(String username, DlrSummaryReport customReportForm,
-			HttpServletResponse response) {
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-
-		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
-				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
-
-		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
-					new Object[] { username }));
-		}
-
-		String target = IConstants.SUCCESS_KEY;
-
-		try {
-			List<DeliveryDTO> reportList = getDlrReportList(customReportForm, username);
-			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("xls.report.size.message"), username,
-						reportList.size());
-
-				JasperPrint print = getdlrSummaryJasperPrint(reportList, false, username);
-				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), username);
-
-				// Generate a unique filename based on the current timestamp
-				String reportName = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".xls";
-
-				// Set response headers
-				response.setContentType("application/vnd.ms-excel");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-
-				logger.info(messageResourceBundle.getLogMessage("creating.xls.message"), username);
-
-				// Create the XLS file and write it to the response output stream
-				OutputStream out = response.getOutputStream();
-				JRXlsExporter exporter = new JRXlsExporter();
-				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-				exporter.exportReport();
-
-				// Close the output stream
-				if (out != null) {
-					try {
-						out.close();
-					} catch (IOException ioe) {
-						logger.info(messageResourceBundle.getLogMessage("xls.outputstream.error.message"), username);
-
-					}
-				}
-
-				logger.info(messageResourceBundle.getLogMessage("xls.report.finished.message"), username);
-
-				return ResponseEntity.ok().build();
-			} else {
-				throw new Exception(
-						messageResourceBundle.getExMessage(ConstantMessages.NO_DATA_FOUND_DLR_SUMMARY_REPORT));
-
-			}
-		} catch (UnauthorizedException e) {
-			// Handle unauthorized exception
-			e.printStackTrace();
-			throw new InternalServerException(
-					messageResourceBundle.getExMessage(ConstantMessages.ERROR_PROCESSING_DLR_SUMMARY_REPORT_MESSAGE));
-
-		} catch (Exception e) {
-			// Handle other general exceptions
-			e.printStackTrace();
-			throw new InternalServerException(
-					messageResourceBundle.getExMessage(ConstantMessages.ERROR_PROCESSING_DLR_SUMMARY_REPORT_MESSAGE));
-
-		}
-		// return ResponseEntity.ok(target);
 	}
 
 	public List<DeliveryDTO> getDlrReportList(DlrSummaryReport customReportForm, String username) throws Exception {
@@ -397,13 +184,8 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 		BeanUtils.copyProperties(customReportForm, customReportDTO);
 		String startDate = customReportForm.getStartDate();
 		String endDate = customReportForm.getEndDate();
-//			IDatabaseService dbService = HtiSmsDB.getInstance();
-//			reportUser = customReportDTO.getClientId();
 		String campaign = customReportForm.getCampaign();
-		// String messageStatus = customReportDTO.getMessageStatus();// "PENDING";
-		// //customReportDTO.getMessageStatus();
 		String destination = customReportDTO.getDestinationNumber();// "9926870493";
-																	// //customReportDTO.getDestinationNumber();
 		String senderId = customReportDTO.getSenderId();// "%"; //customReportDTO.getSenderId();
 		String country = customReportDTO.getCountry();
 		String operator = customReportDTO.getOperator();
@@ -645,10 +427,10 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 		DeliveryDTO report = null;
 		System.out.println("UnprocessedSummary:" + query);
 		try {
-			//Connection connection = jdbcTemplate.getDataSource().getConnection();
+			// Connection connection = jdbcTemplate.getDataSource().getConnection();
 
 			con = getConnection();
-			
+
 			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
 					java.sql.ResultSet.CONCUR_READ_ONLY);
 			pStmt.setFetchSize(Integer.MIN_VALUE);
@@ -758,8 +540,7 @@ public class DlrSummaryReportImpl implements DlrSummaryReportService {
 				if (con != null) {
 					con.close();
 				}
-				
-				
+
 			} catch (SQLException sqle) {
 			}
 		}

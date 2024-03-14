@@ -48,14 +48,10 @@ public class ReportDAOImpl implements ReportDAO {
 	        Root<ProfitReportEntry> root = criteriaQuery.from(ProfitReportEntry.class);
 
 	        List<Predicate> predicates = new ArrayList<>();
-	        // Your existing predicate logic here...
 
 	        criteriaQuery.select(root).where(predicates.toArray(new Predicate[0]));
 
-	        // Apply sorting and pagination
 	        Query query = session.createQuery(criteriaQuery);
-
-	        // Apply pagination
 	        int totalRows = query.getResultList().size(); // Get total rows without pagination
 	        query.setFirstResult((int) pageable.getOffset());
 	        query.setMaxResults(pageable.getPageSize());

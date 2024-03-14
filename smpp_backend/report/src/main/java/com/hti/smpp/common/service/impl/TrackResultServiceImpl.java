@@ -403,6 +403,9 @@ public class TrackResultServiceImpl implements TrackResultService {
 				if (con != null) {
 					con.close();
 				}
+				if(rs !=null) {
+					rs.close();
+				}
 			} catch (SQLException sqle) {
 			}
 		}
@@ -453,6 +456,9 @@ public class TrackResultServiceImpl implements TrackResultService {
 				}
 				if (con != null) {
 					con.close();
+				}
+				if (rs != null) {
+					rs.close();
 				}
 			} catch (SQLException sqle) {
 			}
