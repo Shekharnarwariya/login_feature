@@ -29,11 +29,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-<<<<<<< HEAD
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-=======
->>>>>>> 940067b39378e19add16f5b6e3d7bc4b665f53e3
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
