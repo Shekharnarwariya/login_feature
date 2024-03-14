@@ -84,24 +84,13 @@ public class ScheduleReportServiceImpl implements ScheduleReportService {
 				throw new NotFoundException(messageResourceBundle
 						.getExMessage(ConstantMessages.SCHEDULE_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
 			}
-<<<<<<< HEAD
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getMessage());
-		} catch (IllegalArgumentException e) {
-=======
 		} catch (Exception ex) {
 			logger.error(user.getSystemId(), ex.fillInStackTrace());
 			target = IConstants.FAILURE_KEY;
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SCHEDULE_REPORT_NOT_FOUND_MESSAGE,new Object[] {username}));
->>>>>>> d2ab55dce9146e612429ba4dd1a4ac770dfcf126
-
-			logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
-			throw new BadRequestException(messageResourceBundle
-					.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] { e.getMessage() }));
-
-		} catch (Exception e) {
-			logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
-			throw new InternalServerException(e.getMessage());
+			throw new InternalServerException(messageResourceBundle
+					.getExMessage(ConstantMessages.SCHEDULE_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
 		}
 	}
 
@@ -139,12 +128,13 @@ public class ScheduleReportServiceImpl implements ScheduleReportService {
 		logger.info("Schedule History sql: " + sql);
 		List<ScheduleEntryExt> scheduleList = new ArrayList<>();
 		ScheduleEntryExt entryExt = null;
-		Connection con=null;
-		ResultSet rs=null;
-		PreparedStatement pStmt=null;
-		try { con = getConnection();
-				 pStmt = con.prepareStatement(sql);
-				 rs = pStmt.executeQuery(); 
+		Connection con = null;
+		ResultSet rs = null;
+		PreparedStatement pStmt = null;
+		try {
+			con = getConnection();
+			pStmt = con.prepareStatement(sql);
+			rs = pStmt.executeQuery();
 
 			while (rs.next()) {
 				int id = rs.getInt("id");
