@@ -41,8 +41,6 @@ import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.service.MediaUploadService;
 import com.hti.smpp.common.util.IConstants;
 
-import net.bytebuddy.asm.Advice.Local;
-
 @Service
 public class MediaUploadServiceImpl implements MediaUploadService {
 	private Logger logger = org.slf4j.LoggerFactory.getLogger(MediaUploadServiceImpl.class);

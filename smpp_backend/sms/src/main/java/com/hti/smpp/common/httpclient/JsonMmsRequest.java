@@ -31,6 +31,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.hazelcast.query.impl.PredicateBuilderImpl;
 import com.hti.smpp.common.contacts.dto.ContactEntry;
@@ -45,9 +47,13 @@ import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MultiUtility;
 import com.hti.smpp.common.util.WriteLogThread;
 
+@Service
 public class JsonMmsRequest extends HttpServlet {
 	private Logger logger = LoggerFactory.getLogger(JsonMmsRequest.class);
 	private String batch_id = null;
+
+	@Autowired
+	private IDatabaseService dbService;
 
 	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		processRequest(request, response);
@@ -177,7 +183,6 @@ public class JsonMmsRequest extends HttpServlet {
 										jsonDTO.setGmt(gmt);
 										String scheduleFile = jsonDTO.getUsername() + "_" + batch_id + ".ser";
 										jsonDTO.setScheduleFile(scheduleFile);
-										IDatabaseService dbService = new IDatabaseService();
 										int scheduleId = dbService.createApiSchedule(jsonDTO);
 										jsonDTO.setScheduleId(scheduleId);
 										MultiUtility.writeObject(

@@ -23,6 +23,8 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -32,9 +34,11 @@ import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.WriteXmlLogThread;
 
+@Service
 public class XmlResultAction extends HttpServlet {
 	private Logger logger = LoggerFactory.getLogger(XmlResultAction.class);
-	private IDatabaseService dbService = new IDatabaseService();
+	@Autowired
+	private IDatabaseService dbService;
 
 	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		processRequest(request, response);

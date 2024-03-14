@@ -6,17 +6,24 @@ import java.util.Calendar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.logica.smpp.util.Queue;
 
+@Service
 public class ApiStatusInsertThread implements Runnable {
 	private Logger logger = LoggerFactory.getLogger(ApiStatusInsertThread.class);
+
 	private Queue procQueue = null;
+
 	private boolean stop;
-	@Autowired
-	private IDatabaseService dbService ;
+
 	private int process_day = 0;
+
 	private boolean clear = false;
+
+	private IDatabaseService dbService;
+
 	private long waitForQueueInterval = 1000; // in ms
 
 	public ApiStatusInsertThread(Queue procQueue) {
@@ -26,7 +33,16 @@ public class ApiStatusInsertThread implements Runnable {
 
 	@Override
 	public void run() {
+		dbService = new IDatabaseService();
 		while (!stop) {
+			if (procQueue.isEmpty()) {
+				try {
+					synchronized (procQueue) {
+						procQueue.wait(waitForQueueInterval);
+					}
+				} catch (InterruptedException e) {
+				}
+			}
 			try {
 				if (procQueue.isEmpty()) {
 					if (process_day != Calendar.getInstance().get(Calendar.DAY_OF_MONTH)) {
@@ -43,12 +59,7 @@ public class ApiStatusInsertThread implements Runnable {
 							clear = false;
 						}
 					}
-					try {
-						synchronized (procQueue) {
-							procQueue.wait(waitForQueueInterval);
-						}
-					} catch (InterruptedException e) {
-					}
+
 				} else {
 					ApiRequestDTO requestDTO = null;
 					while (!procQueue.isEmpty()) {

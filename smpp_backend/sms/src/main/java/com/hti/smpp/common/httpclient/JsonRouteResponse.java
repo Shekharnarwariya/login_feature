@@ -15,11 +15,16 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.util.WriteLogThread;
 
+@Service
 public class JsonRouteResponse extends HttpServlet {
 	private Logger logger = LoggerFactory.getLogger(JsonRouteResponse.class);
+	@Autowired
+	private IDatabaseService dbService;
 
 	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		processRequest(request, response);
@@ -86,7 +91,6 @@ public class JsonRouteResponse extends HttpServlet {
 								remarks = error.getString("detail");
 							}
 						}
-						IDatabaseService dbService =new IDatabaseService();
 						dbService.updateVngStatus(responseId, status, statusCode, remarks);
 					}
 				}
