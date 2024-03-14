@@ -14,6 +14,8 @@ import java.util.Date;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.impl.PredicateBuilderImpl;
@@ -28,9 +30,11 @@ import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MultiUtility;
 
+@Service
 public class WebApiService {
 	private Logger logger = LoggerFactory.getLogger(WebApiService.class);
-	IDatabaseService dbService = new IDatabaseService();
+	@Autowired
+	private IDatabaseService dbService;
 
 	public String getUrlUserBalance(String systemId, String password) throws Exception {
 		UserService userService = new UserService();

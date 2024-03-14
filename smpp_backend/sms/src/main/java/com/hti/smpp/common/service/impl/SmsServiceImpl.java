@@ -198,6 +198,7 @@ public class SmsServiceImpl implements SmsService {
 	@Autowired
 	private MessageResourceBundle messageResourceBundle;
 
+	
 	public SmsResponse sendSms(SmsRequest smsRequest, String username) {
 		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
 		UserEntry userEntry = null;
@@ -930,7 +931,7 @@ public class SmsServiceImpl implements SmsService {
 		return ret;
 	}
 
-	private static synchronized UserSession getUserSession(String user, String pwd) {
+	public static synchronized UserSession getUserSession(String user, String pwd) {
 		UserSession userSession = null;
 		if (GlobalVarsSms.UserSessionHandler.containsKey(user + "#" + pwd)) {
 			userSession = ((SessionHandler) GlobalVarsSms.UserSessionHandler.get(user + "#" + pwd)).getUserSession();
@@ -1176,7 +1177,7 @@ public class SmsServiceImpl implements SmsService {
 		return ret;
 	}
 
-	private static synchronized void putUserSession(UserSession userSession) {
+	public static synchronized void putUserSession(UserSession userSession) {
 		if (GlobalVarsSms.UserSessionHandler.containsKey(userSession.getUsername() + "#" + userSession.getPassword())) {
 			((SessionHandler) GlobalVarsSms.UserSessionHandler
 					.get(userSession.getUsername() + "#" + userSession.getPassword())).putUserSession(userSession);

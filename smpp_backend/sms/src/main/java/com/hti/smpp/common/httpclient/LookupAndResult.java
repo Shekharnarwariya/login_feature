@@ -27,6 +27,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.hti.rmi.LookupReport;
 import com.hti.smpp.common.user.dto.UserEntry;
@@ -35,8 +37,11 @@ import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MultiUtility;
 
+@Service
 public class LookupAndResult extends HttpServlet {
 	private Logger logger = LoggerFactory.getLogger("hlrLogger");
+	@Autowired
+	private IDatabaseService dbService;
 
 	@Override
 	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -266,7 +271,6 @@ public class LookupAndResult extends HttpServlet {
 				} else {
 					summary.setNumberCount(0);
 				}
-				IDatabaseService dbService = new IDatabaseService();
 				try {
 					dbService.addLookupSummaryReport(summary);
 				} catch (Exception ex) {

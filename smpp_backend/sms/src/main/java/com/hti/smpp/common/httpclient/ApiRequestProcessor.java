@@ -11,12 +11,16 @@ import java.util.TimerTask;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MultiUtility;
 import com.logica.smpp.util.Queue;
 
+@Service
 public class ApiRequestProcessor implements Runnable {
+
+	private static IDatabaseService dbService;
 	private static Logger logger = LoggerFactory.getLogger(ApiRequestProcessor.class);
 	public static Queue procQueue = new Queue();
 	private boolean stop;
@@ -35,8 +39,8 @@ public class ApiRequestProcessor implements Runnable {
 	}
 
 	private void listSchedules() {
-		IDatabaseService dbService = new IDatabaseService();
 		try {
+			dbService = new IDatabaseService();
 			List<BaseApiDTO> list = dbService.listApiSchedule();
 			for (BaseApiDTO entry : list) {
 				logger.info(
@@ -66,8 +70,7 @@ public class ApiRequestProcessor implements Runnable {
 						+ scheduledEntry.getScheduleFile());
 				try {
 					ApiRequestProcessor.procQueue.enqueue(scheduledEntry);
-					IDatabaseService db =new IDatabaseService();
-					db.removeApiSchedule(scheduledEntry.getScheduleId());
+					dbService.removeApiSchedule(scheduledEntry.getScheduleId());
 					File schedulefile = new File(
 							IConstants.WEBSMPP_EXT_DIR + "schedule//" + scheduledEntry.getScheduleFile());
 					if (schedulefile.exists()) {
