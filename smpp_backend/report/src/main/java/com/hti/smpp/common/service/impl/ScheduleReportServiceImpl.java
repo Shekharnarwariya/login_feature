@@ -87,7 +87,7 @@ public class ScheduleReportServiceImpl implements ScheduleReportService {
 		} catch (Exception ex) {
 			logger.error(user.getSystemId(), ex.fillInStackTrace());
 			target = IConstants.FAILURE_KEY;
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_PROFIT_REPORT_MESSAGE,new Object[] {username}));
+			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SCHEDULE_REPORT_NOT_FOUND_MESSAGE,new Object[] {username}));
 
 		}
 	}

@@ -13,12 +13,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.hti.smpp.common.exception.ExceptionResponse;
 import com.hti.smpp.common.request.LoginRequest;
 import com.hti.smpp.common.request.PasswordUpdateRequest;
-import com.hti.smpp.common.request.ProfileUpdateRequest;
 import com.hti.smpp.common.request.SignupRequest;
 import com.hti.smpp.common.response.JwtResponse;
 import com.hti.smpp.common.response.LoginResponse;
@@ -212,7 +210,7 @@ public class LoginController {
 	 * @param profileUpdateRequest
 	 * @return
 	 */
-	@PutMapping(value="/updateProfile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PutMapping(value = "/updateProfile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	@Operation(summary = "Update User Profile", description = "Endpoint to update the profile information for a user.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "204", description = "User profile updated successfully. No content returned."),
@@ -220,37 +218,36 @@ public class LoginController {
 			@ApiResponse(responseCode = "401", description = "Unauthorized. User profile update failed.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "500", description = "Internal server error during user profile update process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
 	public ResponseEntity<?> updateUserProfile(@RequestHeader(value = "username", required = true) String username,
-		@RequestParam(value="email",required = false)String email,@RequestParam(value="firstName",required = false)String firstName,
-		@RequestParam(value="lastName",required = false)String lastName,@RequestParam(value="contact",required = false)String contact,
-		@RequestParam(value="image",required = false) MultipartFile image) {
-		//System.out.println(ServletUriComponentsBuilder.fromCurrentContextPath().path("/images/").path(image.getOriginalFilename()).toUriString());
-		return loginService.updateUserProfile(username,email,firstName,lastName,contact,image);
+			@RequestParam(value = "email", required = false) String email,
+			@RequestParam(value = "firstName", required = false) String firstName,
+			@RequestParam(value = "lastName", required = false) String lastName,
+			@RequestParam(value = "contact", required = false) String contact,
+			@RequestParam(value = "image", required = false) MultipartFile image) {
+		return loginService.updateUserProfile(username, email, firstName, lastName, contact, image);
 	}
-	
+
 	@PostMapping("/validate/user-ip")
 	@Operation(summary = "Validate User Ip", description = "Endpoint to validate user ip address and send otp in sms and email if user is enabled to get otp else the user will be notified by email alert when the user logged in.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "User ip authenticated successfully. JWT token generated.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponse.class))),
 			@ApiResponse(responseCode = "400", description = "Invalid or malformed request. Unable to authenticate user.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
-			@ApiResponse(responseCode = "500", description = "Internal server error during authentication process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class)))
-	})
-	public ResponseEntity<?> validateIpAccess(@Valid @RequestBody LoginRequest loginRequest,@RequestParam(value = "language") String language){
+			@ApiResponse(responseCode = "500", description = "Internal server error during authentication process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
+	public ResponseEntity<?> validateIpAccess(@Valid @RequestBody LoginRequest loginRequest,
+			@RequestParam(value = "language") String language) {
 		return this.loginService.validateUserIpAccess(loginRequest, language);
 	}
-	
+
 	@PostMapping("/validate/otp-user-ip")
 	@Operation(summary = "Validate OTP User Ip", description = "Endpoint to validate user ip address and send otp in sms and email if user is enabled to get otp else the user will be notified by email alert when the user logged in.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "OTP authenticated successfully. JWT token generated.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponse.class))),
 			@ApiResponse(responseCode = "504", description = "Invalid or malformed request. Unable to authenticate user.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
-			@ApiResponse(responseCode = "500", description = "Internal server error during authentication process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class)))
-	})
-	public ResponseEntity<?> userIpOtpValidate(@Valid @RequestBody LoginRequest loginRequest,@RequestParam(value = "OTP") int otp){
+			@ApiResponse(responseCode = "500", description = "Internal server error during authentication process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
+	public ResponseEntity<?> userIpOtpValidate(@Valid @RequestBody LoginRequest loginRequest,
+			@RequestParam(value = "OTP") int otp) {
 		return this.loginService.userIpOtpValidate(loginRequest, otp);
 	}
-	
-	
 
 }
