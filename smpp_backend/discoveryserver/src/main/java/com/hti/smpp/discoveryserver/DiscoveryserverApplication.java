@@ -12,6 +12,7 @@ import jakarta.annotation.PreDestroy;
 @EnableEurekaServer
 @SpringBootApplication
 public class DiscoveryserverApplication {
+
 	private final static Logger logger = LoggerFactory.getLogger(DiscoveryserverApplication.class);
 
 	@PostConstruct
