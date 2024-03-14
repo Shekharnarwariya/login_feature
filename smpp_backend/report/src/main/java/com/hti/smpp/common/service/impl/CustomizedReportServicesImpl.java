@@ -79,7 +79,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.BadRequestException;
 import net.sf.jasperreports.engine.JRException;
 
-import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.export.ooxml.JRDocxExporter;
@@ -145,8 +144,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			System.out.println(isSummary);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(user.getSystemId() + " ReportSize[View]:" + reportList.size());
-				List<DeliveryDTO> print = isSummary ? getSummaryJasperPrint(reportList, username)
-						: getCustomizedJasperPrint(reportList, false, username);
 				logger.info(user.getSystemId() + " <-- Report Finished --> ");
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 
@@ -160,12 +157,10 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		} catch (IllegalArgumentException e) {
 
 			logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
-
 			throw new BadRequestException(messageResourceBundle
 					.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] { e.getMessage() }));
 
 		} catch (Exception e) {
-			// Log other exceptions
 			logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
 			throw new InternalServerException(e.getMessage());
 		}
@@ -288,160 +283,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		return reportList;
 	}
 
-	private List<DeliveryDTO> getCustomizedJasperPrint(List<DeliveryDTO> reportList, boolean b, String username) {
-
-		final String template_file = IConstants.FORMAT_DIR + "report//dlrReport.jrxml";
-		String template_sender_file = IConstants.FORMAT_DIR + "report//dlrReportSender.jrxml";
-		String template_content_file = IConstants.FORMAT_DIR + "report//dlrContentReport.jrxml";
-		String template_content_sender_file = IConstants.FORMAT_DIR + "report//dlrContentWithSender.jrxml";
-		String summary_template_file = IConstants.FORMAT_DIR + "report//dlrSummaryReport.jrxml";
-		String summary_sender_file = IConstants.FORMAT_DIR + "report//dlrSummarySender.jrxml";
-
-		List<DeliveryDTO> print = null;
-		List<DeliveryDTO> report = null;
-		List<DeliveryDTO> design = null;
-		String groupby = "country";
-
-		boolean isContent = false;
-
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
-
-		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
-		}
-		// boolean isContent;
-		Map parameters = new HashMap();
-//		if (groupby.equalsIgnoreCase("country")) {
-//
-//			if (isContent) {
-//				design = JRXmlLoader.load(template_content_file);
-//			} else {
-//				design = JRXmlLoader.load(template_file);
-//			}
-//		} else {
-//			if (isContent) {
-//				design = JRXmlLoader.load(template_content_sender_file);
-//			} else {
-//				design = JRXmlLoader.load(template_sender_file);
-//			}
-//		}
-//		report = JasperCompileManager.compileReport(design);
-		// ---------- Sorting list ----------------------------
-		if (groupby.equalsIgnoreCase("country")) {
-			reportList = sortListByCountry(reportList);
-		} else {
-			reportList = sortListBySender(reportList);
-		}
-		// ------------- Preparing databeancollection for chart ------------------
-		logger.info(user.getSystemId() + " <-- Preparing Charts --> ");
-		// Iterator itr = reportList.iterator();
-		Map<String, Integer> temp_chart = new HashMap<String, Integer>();
-		Map<String, Integer> deliv_map = new LinkedHashMap<String, Integer>();
-		Map<String, Integer> total_map = new HashMap<String, Integer>();
-		for (DeliveryDTO chartDTO : reportList) {
-			// System.out.println("Cost: " + chartDTO.getCost());
-			String status = chartDTO.getStatus();
-			int counter = 0;
-			if (temp_chart.containsKey(status)) {
-				counter = temp_chart.get(status);
-			}
-			temp_chart.put(status, ++counter);
-			// --------- bar Chart ------------
-			if (groupby.equalsIgnoreCase("country")) {
-				if (status.startsWith("DELIV")) {
-					int delivCounter = 0;
-					if (deliv_map.containsKey(chartDTO.getCountry())) {
-						delivCounter = deliv_map.get(chartDTO.getCountry());
-					}
-					deliv_map.put(chartDTO.getCountry(), ++delivCounter);
-				}
-				int total_counter = 0;
-				if (total_map.containsKey(chartDTO.getCountry())) {
-					total_counter = total_map.get(chartDTO.getCountry());
-				}
-				total_map.put(chartDTO.getCountry(), ++total_counter);
-			} else {
-				if (status.startsWith("DELIV")) {
-					int delivCounter = 0;
-					if (deliv_map.containsKey(chartDTO.getSender())) {
-						delivCounter = deliv_map.get(chartDTO.getSender());
-					}
-					deliv_map.put(chartDTO.getSender(), ++delivCounter);
-				}
-				int total_counter = 0;
-				if (total_map.containsKey(chartDTO.getSender())) {
-					total_counter = total_map.get(chartDTO.getSender());
-				}
-				total_map.put(chartDTO.getSender(), ++total_counter);
-			}
-			// --------------------------------
-		}
-		List<DeliveryDTO> chart_list = new ArrayList<DeliveryDTO>();
-		if (!temp_chart.isEmpty()) {
-			for (Map.Entry<String, Integer> entry : temp_chart.entrySet()) {
-				chart_list.add(new DeliveryDTO((String) entry.getKey(), (Integer) entry.getValue()));
-			}
-		}
-		List<DeliveryDTO> bar_chart_list = new ArrayList<DeliveryDTO>();
-		total_map = sortMapByDscValue(total_map, 5);
-		DeliveryDTO chartDTO = null;
-		for (Map.Entry<String, Integer> entry : total_map.entrySet()) {
-			if (groupby.equalsIgnoreCase("country")) {
-				chartDTO = new DeliveryDTO("SUBMITTED", entry.getValue());
-				chartDTO.setCountry(entry.getKey());
-				bar_chart_list.add(chartDTO);
-				int delivered = 0;
-				if (deliv_map.containsKey(entry.getKey())) {
-					delivered = (Integer) deliv_map.get(entry.getKey());
-				}
-				chartDTO = new DeliveryDTO("DELIVRD", delivered);
-				chartDTO.setCountry(entry.getKey());
-				bar_chart_list.add(chartDTO);
-			} else {
-				chartDTO = new DeliveryDTO("SUBMITTED", entry.getValue());
-				chartDTO.setSender(entry.getKey());
-				bar_chart_list.add(chartDTO);
-				int delivered = 0;
-				if (deliv_map.containsKey(entry.getKey())) {
-					delivered = (Integer) deliv_map.get(entry.getKey());
-				}
-				chartDTO = new DeliveryDTO("DELIVRD", delivered);
-				chartDTO.setSender(entry.getKey());
-				bar_chart_list.add(chartDTO);
-			}
-		}
-
-//		JRBeanCollectionDataSource piechartDataSource = new JRBeanCollectionDataSource(chart_list);
-//		JRBeanCollectionDataSource barchart1DataSource = new JRBeanCollectionDataSource(bar_chart_list);
-//		parameters.put("piechartDataSource", piechartDataSource);
-//		parameters.put("barchart1DataSource", barchart1DataSource);
-//		logger.info(user.getSystemId() + " <-- Finished Charts --> ");
-//		// -----------------------------------------------------------------------
-//		JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(reportList);
-//		if (reportList.size() > 20000) {
-//			logger.info(user.getSystemId() + " <-- Creating Virtualizer --> ");
-//			JRSwapFileVirtualizer virtualizer = new JRSwapFileVirtualizer(100,
-//					new JRSwapFile(IConstants.WEBAPP_DIR + "temp//", 1024, 512));
-//			parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);FuserEnrty
-
-//		}
-//		parameters.put(JRParameter.IS_IGNORE_PAGINATION, paging);
-//		ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);
-//		parameters.put("REPORT_RESOURCE_BUNDLE", bundle);
-//		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(userOptional.get().getId());
-//
-//		logger.info(user.getSystemId() + " DisplayCost: " + webMasterEntry.isDisplayCost());
-//		parameters.put("displayCost", webMasterEntry.isDisplayCost());
-//		logger.info(user.getSystemId() + " <-- Filling Report Data --> ");
-//		print = JasperFillManager.fillReport(report, parameters, beanColDataSource);
-//		logger.info(user.getSystemId() + " <-- Filling Completed --> ");
-		return report;
-
-	}
-
 	private <K, V extends Comparable<? super V>> Map<K, V> sortMapByDscValue(Map<K, V> map, int limit) {
 		Map<K, V> result = new LinkedHashMap<>();
 		Stream<Map.Entry<K, V>> st = map.entrySet().stream();
@@ -468,17 +309,19 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	public List sortListByCountry(List reportList) {
 		boolean isSummary = false;
 
-		// logger.info(user.getSystemId() + " sortListByCountry ");
-		Comparator<DeliveryDTO> comparator = null;
-		if (isSummary) {
-			comparator = Comparator.comparing(DeliveryDTO::getDate).thenComparing(DeliveryDTO::getCountry);
-		} else {
-			comparator = Comparator.comparing(DeliveryDTO::getDate).thenComparing(DeliveryDTO::getCountry)
-					.thenComparing(DeliveryDTO::getMsgid);
+		Comparator<DeliveryDTO> comparator = Comparator
+				.comparing(DeliveryDTO::getDate, Comparator.nullsLast(Comparator.naturalOrder()))
+				.thenComparing(DeliveryDTO::getCountry, Comparator.nullsLast(Comparator.naturalOrder()));
+
+		if (!isSummary) {
+			comparator = comparator.thenComparing(DeliveryDTO::getMsgid,
+					Comparator.nullsLast(Comparator.naturalOrder()));
 		}
-		Stream<DeliveryDTO> personStream = reportList.stream().sorted(comparator);
-		List<DeliveryDTO> sortedlist = personStream.collect(Collectors.toList());
-		return sortedlist;
+
+		List<DeliveryDTO> sortedList = (List<DeliveryDTO>) reportList.stream().sorted(comparator)
+				.collect(Collectors.toList());
+		System.out.println(sortedList);
+		return sortedList;
 	}
 
 	private List<DeliveryDTO> getCustomizedReportList(CustomizedReportRequest customReportForm, String username) {
@@ -830,7 +673,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 						String hexmsg = "";
 						if (customReportForm.getContentType().equalsIgnoreCase("7bit")) {
 							hexmsg = SevenBitChar.getHexValue(customReportForm.getContent());
-							// System.out.println("Hex: " + hexmsg);
+							System.out.println("Hex: " + hexmsg);
 							hexmsg = Converter.getContent(hexmsg.toCharArray());
 							// System.out.println("content: " + hexmsg);
 							hexmsg = new Converters().UTF16(hexmsg);
@@ -1571,7 +1414,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					rs.close();
 				}
 				if (con != null) {
-
 					con.close();
 				}
 			} catch (SQLException sqle) {
@@ -1716,271 +1558,22 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		} catch (Exception e) {
 			e.printStackTrace(); // Log or handle other exceptions
 		} finally {
-			if (rs != null) {
-				try {
+			try {
+				if (rs != null) {
 					rs.close();
-				} catch (SQLException sqle) {
-					sqle.printStackTrace(); // Log or handle the closing exception
+					rs = null;
 				}
-			}
-			if (pStmt != null) {
-				try {
+				if (pStmt != null) {
 					pStmt.close();
-				} catch (SQLException sqle) {
-					sqle.printStackTrace(); // Log or handle the closing exception
+					pStmt = null;
 				}
-			}
-			if (con != null) {
-				try {
-					// Assuming con.close connection is your method to close/release the connection
+				if (con != null) {
 					con.close();
-				} catch (Exception e) {
-					e.printStackTrace(); // Log or handle the closing/release exception
 				}
+			} catch (SQLException sqle) {
 			}
 		}
 		return userSet;
-	}
-
-	@Override
-	public String CustomizedReportxls(String username, CustomizedReportRequest customReportForm,
-			HttpServletResponse response) {
-		String target = IConstants.SUCCESS_KEY;
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
-		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
-		}
-		try {
-			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username);
-			if (reportList != null && !reportList.isEmpty()) {
-				int total_rec = reportList.size();
-				logger.info(user.getSystemId() + " ReportSize[xls]:" + total_rec);
-				// ---------- Sorting list ----------------------------
-				if (groupby.equalsIgnoreCase("country")) {
-					reportList = dataBase.sortListByCountry(reportList);
-				} else {
-					reportList = dataBase.sortListBySender(reportList);
-				}
-				Workbook workbook = null;
-				if (isSummary) {
-					if (groupby.equalsIgnoreCase("country")) {
-						workbook = dataBase.getCustomizedSummaryWorkBook(reportList, username);
-					} else {
-						Map<String, DeliveryDTO> map = new LinkedHashMap<String, DeliveryDTO>();
-						Iterator itr = reportList.iterator();
-						DeliveryDTO reportDTO = null;
-						DeliveryDTO tempDTO = null;
-						while (itr.hasNext()) {
-							reportDTO = (DeliveryDTO) itr.next();
-							String key = reportDTO.getDate() + "#" + reportDTO.getSender().toLowerCase() + "#"
-									+ reportDTO.getCountry() + "#" + reportDTO.getOperator();
-							if (map.containsKey(key)) {
-								tempDTO = map.get(key);
-							} else {
-								tempDTO = new DeliveryDTO();
-								tempDTO.setDate(reportDTO.getDate());
-								tempDTO.setCountry(reportDTO.getCountry());
-								tempDTO.setOperator(reportDTO.getOperator());
-								tempDTO.setSender(reportDTO.getSender());
-							}
-							if (reportDTO.getStatus().startsWith("DELIV")) {
-								tempDTO.setDelivered(tempDTO.getDelivered() + reportDTO.getStatusCount());
-							}
-							tempDTO.setSubmitted(tempDTO.getSubmitted() + reportDTO.getStatusCount());
-							System.out.println(key + " :-> " + " Submit: " + tempDTO.getSubmitted() + " Delivered: "
-									+ tempDTO.getDelivered());
-							map.put(key, tempDTO);
-						}
-						reportList.clear();
-						reportList.addAll(map.values());
-						workbook = dataBase.getCustomizedSummaryWorkBook(reportList, username);
-					}
-				} else {
-					workbook = dataBase.getCustomizedWorkBook(reportList, username);
-				}
-				if (total_rec > 100000) {
-					logger.info(user.getSystemId() + "<-- Creating Zip Folder --> ");
-					response.setContentType("application/zip");
-					response.setHeader("Content-Disposition", "attachment; filename=" + "delivery_"
-							+ new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".zip");
-					ZipOutputStream zos = new ZipOutputStream(response.getOutputStream()); // create a ZipOutputStream
-																							// from servletOutputStream
-					String reportName = "delivery.xlsx";
-					ZipEntry entry = new ZipEntry(reportName); // create a zip entry and add it to ZipOutputStream
-					zos.putNextEntry(entry);
-					logger.info(user.getSystemId() + "<-- Starting Zip Download --> ");
-					workbook.write(zos);
-					zos.close();
-				} else {
-					logger.info(user.getSystemId() + " <---- Creating XLS -----> ");
-					String filename = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())
-							+ ".xlsx";
-					// response.setContentType("text/html; charset=utf-8");
-					response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\";");
-					// response.setHeader("Content-Disposition", "attachment; filename=" +
-					// filename);
-					ByteArrayOutputStream bos = new ByteArrayOutputStream();
-					workbook.write(bos);
-					logger.info(user.getSystemId() + " <---- Reading XLS -----> ");
-					ByteArrayInputStream is = null;
-					ServletOutputStream out = null;
-					try {
-						is = new ByteArrayInputStream(bos.toByteArray());
-						// byte[] buffer = new byte[8789];
-						int curByte = -1;
-						out = response.getOutputStream();
-						logger.info(user.getSystemId() + " <---- Starting xls Download -----> ");
-						while ((curByte = is.read()) != -1) {
-							out.write(curByte);
-						}
-						out.flush();
-					} catch (Exception ex) {
-						logger.error(user.getSystemId() + " DLR XLSReport Error ", ex.fillInStackTrace());
-						// ex.printStackTrace();
-					} finally {
-						try {
-							if (is != null) {
-								is.close();
-							}
-							if (out != null) {
-								out.close();
-							}
-						} catch (Exception ex) {
-						}
-					}
-				}
-				workbook.close();
-				reportList.clear();
-				logger.info(user.getSystemId() + "<--XLS Report Finished --> ");
-			} else {
-				logger.info(user.getSystemId() + "<-- No Records Found --> ");
-			}
-		} catch (Exception e) {
-			logger.error(user.getSystemId(), e.fillInStackTrace());
-		}
-		return target;
-	}
-
-	@Override
-	public ResponseEntity<?> CustomizedReportpdf(String username, CustomizedReportRequest customReportForm,
-			HttpServletResponse response) {
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
-
-		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
-		}
-		try {
-
-			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username);
-			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(username + " ReportSize[pdf]:" + reportList.size());
-				JasperPrint print = null;
-				if (customReportForm.getReportType().equalsIgnoreCase("Summary")) {
-					isSummary = true;
-				} else {
-					isSummary = false;
-				}
-				if (isSummary) {
-					print = dataBase.getSummaryJasperPrint(reportList, false, username);
-				} else {
-					// Uncomment this line if you have a method for customized JasperPrint
-					print = dataBase.getCustomizedJasperPrint(reportList, false, username);
-				}
-
-				if (print != null) {
-
-					logger.info(username + " <-- Preparing Outputstream --> ");
-					String reportName = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())
-							+ ".pdf";
-
-					byte[] pdfReport = JasperExportManager.exportReportToPdf(print);
-
-					HttpHeaders headers = new HttpHeaders();
-					headers.setContentType(MediaType.APPLICATION_PDF);
-					headers.setContentDispositionFormData("attachment", reportName);
-
-					// Return the file in the ResponseEntity
-					return new ResponseEntity<>(pdfReport, headers, HttpStatus.OK);
-				} else {
-					throw new InternalServerException("Failed to generate JasperPrint");
-				}
-			} else {
-				throw new InternalServerException("No data found for the report");
-			}
-		} catch (Exception e) {
-			logger.error(username, e.fillInStackTrace());
-			// Handle exceptions and return an appropriate response
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating the PDF report");
-		}
-	}
-
-	@Override
-	public ResponseEntity<?> CustomizedReportdoc(String username, CustomizedReportRequest customReportForm,
-			HttpServletResponse response) {
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
-
-		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException("User does not have the required roles for this operation.");
-		}
-
-		String target = IConstants.SUCCESS_KEY;
-		try {
-
-			List<DeliveryDTO> reportList = dataBase.getCustomizedReportList(customReportForm, username);
-			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(user.getSystemId() + " ReportSize[doc]:" + reportList.size());
-				JasperPrint print = null;
-				if (customReportForm.getReportType().equalsIgnoreCase("Summary")) {
-					isSummary = true;
-				} else {
-					isSummary = false;
-				}
-				if (isSummary) {
-					print = dataBase.getSummaryJasperPrint(reportList, false, username);
-				} else {
-					// Uncomment this line if you have a method for customized JasperPrint
-					print = dataBase.getCustomizedJasperPrint(reportList, false, username);
-				}
-
-				logger.info(user.getSystemId() + " <-- Preparing Outputstream --> ");
-				String reportName = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".doc";
-				response.setContentType("text/html; charset=utf-8");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				logger.info(user.getSystemId() + " <-- Creating DOC --> ");
-
-				// String reportName = "delivery_" + new
-				// SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".docx";
-				response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-
-				ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-				JRExporterParameter exporterParameter = JRExporterParameter.JASPER_PRINT;
-				JRDocxExporter exporter = new JRDocxExporter();
-				exporter.setParameter(exporterParameter, print);
-				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, byteArrayOutputStream);
-				exporter.exportReport();
-
-				return ResponseEntity.ok()
-						.header("Content-Type",
-								"application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-						.body(byteArrayOutputStream.toByteArray());
-			} else {
-				throw new InternalServerException("Failed to generate JasperPrint");
-			}
-
-		} catch (Exception e) {
-			logger.error(username, e.fillInStackTrace());
-			// Handle exceptions and return an appropriate response
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating the doc report");
-		}
 	}
 
 	@Override
@@ -2301,7 +1894,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				}
 				if (con != null) {
 					con.close();
-					;
+					
 				}
 			} catch (SQLException sqle) {
 			}

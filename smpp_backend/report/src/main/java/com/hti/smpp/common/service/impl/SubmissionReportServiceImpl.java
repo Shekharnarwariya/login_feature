@@ -54,6 +54,7 @@ import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MessageResourceBundle;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.BadRequestException;
 
 @Service
 public class SubmissionReportServiceImpl implements SubmissionReportService {
@@ -65,7 +66,7 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 
 	@Autowired
 	private UserDAService userService;
-	
+
 	@Autowired
 	private MessageResourceBundle messageResourceBundle;
 
@@ -92,11 +93,12 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 		String target = IConstants.SUCCESS_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
+					new Object[] { username }));
 		}
 
 		boolean mis = true;
@@ -113,7 +115,8 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 			String sender = customReportDTO.getSenderId();
 			String status = customReportDTO.getMessageStatus();
 			String reportType = customReportDTO.getReportType();
-			logger.info(messageResourceBundle.getLogMessage("report.info.message"), username, reportType, username, smsc, country, sender, status);
+			logger.info(messageResourceBundle.getLogMessage("report.info.message"), username, reportType, username,
+					smsc, country, sender, status);
 
 			if (status != null && !status.equals("%") && !status.equalsIgnoreCase("T")) {
 				mis = false;
@@ -198,7 +201,8 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 				}
 				if (user.getRole().equalsIgnoreCase("superadmin") || user.getRole().equalsIgnoreCase("system")) {
 					if (username.equals("%")) {
-						logger.info(messageResourceBundle.getLogMessage("checking.mis.records.all.users.message"), username);
+						logger.info(messageResourceBundle.getLogMessage("checking.mis.records.all.users.message"),
+								username);
 
 						// Check Users From mis_table
 						String check_user_sql = "select distinct(username) from mis_table " + mis_conditionStr;
@@ -219,7 +223,8 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 							}
 						}
 					} else {
-						logger.info(messageResourceBundle.getLogMessage("checking.mis.records.for.user.message"),username ,username);
+						logger.info(messageResourceBundle.getLogMessage("checking.mis.records.for.user.message"),
+								username, username);
 
 						// Query from User's relative mis
 						mis_sql = mis_select + " from mis_" + username + mis_conditionStr + mis_condition_opt
@@ -229,7 +234,8 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 				} else if (user.getRole().equalsIgnoreCase("admin") || user.getRole().equalsIgnoreCase("manager")
 						|| user.getRole().equalsIgnoreCase("seller")) {
 					if (username.equals("%")) {
-						logger.info(messageResourceBundle.getLogMessage("checking.mis.records.all.users.message"), username);
+						logger.info(messageResourceBundle.getLogMessage("checking.mis.records.all.users.message"),
+								username);
 						// Get Users List From Usermaster Under this admin
 						List<String> users = null;
 						if (user.getRole().equalsIgnoreCase("admin")) {
@@ -257,20 +263,25 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 								mis_sql_list.put(underuserinfo, mis_sql);
 							}
 						} else {
-							logger.error(messageResourceBundle.getLogMessage("no.users.found.error"), user.getSystemId(), user.getRole());
+							logger.error(messageResourceBundle.getLogMessage("no.users.found.error"),
+									user.getSystemId(), user.getRole());
 
-							throw new EntryNotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NO_USERS_FOUND_UNDER_MESSAGE, new Object[] {user.getSystemId(),user.getRole()})) ;
+							throw new EntryNotFoundException(
+									messageResourceBundle.getExMessage(ConstantMessages.NO_USERS_FOUND_UNDER_MESSAGE,
+											new Object[] { user.getSystemId(), user.getRole() }));
 
 						}
 					} else {
-						logger.info(messageResourceBundle.getLogMessage("checking.mis.records.for.user.message"),user.getSystemId() ,username);
+						logger.info(messageResourceBundle.getLogMessage("checking.mis.records.for.user.message"),
+								user.getSystemId(), username);
 						// Query from User's relative mis
 						mis_sql = mis_select + " from mis_" + username + mis_conditionStr + mis_condition_opt
 								+ mis_groupbyStr + mis_orderbyStr;
 						mis_sql_list.put(username, mis_sql);
 					}
 				} else {
-					logger.info(messageResourceBundle.getLogMessage("checking.mis.records.for.user.message"),user.getSystemId() ,username);
+					logger.info(messageResourceBundle.getLogMessage("checking.mis.records.for.user.message"),
+							user.getSystemId(), username);
 					// Query from User's relative mis
 					mis_sql = mis_select + " from mis_" + user.getSystemId() + mis_conditionStr + mis_condition_opt
 							+ mis_groupbyStr + mis_orderbyStr;
@@ -325,7 +336,8 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 					if (users != null) {
 						conditionStr += "username in('" + String.join("','", users) + "') and ";
 					} else {
-						logger.error(messageResourceBundle.getLogMessage("no.users.found.message"), user.getSystemId(), user.getRole());
+						logger.error(messageResourceBundle.getLogMessage("no.users.found.message"), user.getSystemId(),
+								user.getRole());
 
 						throw new EntryNotFoundException(
 								"No Users Found Under " + user.getSystemId() + " [" + user.getRole() + "]");
@@ -671,25 +683,29 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 				reportList.add(totalDTO);
 			}
 			logger.info(username + " reportList: " + reportList.size());
-			if (reportList.isEmpty()) {
-				target = IConstants.FAILURE_KEY;
-				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_SUBMISSION_REPORT_NOT_FOUND_MESSAGE, new Object[] {username}));
+			if (reportList != null && !reportList.isEmpty()) {
 
-				// message = new ActionMessage("error.record.unavailable");
+				return new ResponseEntity<>(reportList, HttpStatus.OK);
+				// target = IConstants.FAILURE_KEY;
+
 			} else {
 				System.out.println("Report Size: " + reportList.size());
 				target = IConstants.SUCCESS_KEY;
-				return new ResponseEntity<>(reportList, HttpStatus.OK);
+				throw new NotFoundException(messageResourceBundle.getExMessage(
+						ConstantMessages.USER_SUBMISSION_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
 				// request.setAttribute("reportList", reportList);
 			}
-		} catch (Exception ex) {
-			// logger.error(user.getSystemId(), ex.fillInStackTrace());
-			ex.printStackTrace();
-			target = IConstants.FAILURE_KEY;
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_SUBMISSION_REPORT_MESSAGE, new Object[] {username}));
+		} catch (NotFoundException e) {
+			throw new NotFoundException(e.getMessage());
+		} catch (IllegalArgumentException e) {
+			logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
+			throw new BadRequestException(messageResourceBundle
+					.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] { e.getMessage() }));
 
+		} catch (Exception e) {
+			logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(e.getMessage());
 		}
-
 	}
 
 	public Map<String, List<CustomReportDTO>> getSubmissionReport(List sql_list, Set paramSet) throws Exception {
@@ -707,7 +723,6 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 			while (!sql_list.isEmpty()) {
 				String sql = (String) sql_list.remove(0);
 				logger.info(messageResourceBundle.getLogMessage("sql.get.submission.report.message"), sql);
-
 
 				rs = pStmt.executeQuery(sql);
 				while (rs.next()) {
@@ -791,6 +806,7 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 		}
 		return reportmap;
 	}
+
 	////////////////
 	private Map<String, List<CustomReportDTO>> getSubmissionReport(Map<String, String> sql_list, Set<String> paramSet)
 			throws SQLException {
@@ -815,7 +831,7 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 						report = new CustomReportDTO();
 						report.setTotalSmsSend(rs.getString("count"));
 						report.setStartdate(timing);
-						
+
 						if (paramSet.contains("sflag")) {
 							String sflag = rs.getString("s_flag");
 							String status = "Processed";
@@ -876,7 +892,7 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 					rs.close();
 				}
 				if (con != null) {
-				
+
 					con.close();
 				}
 			} catch (SQLException sqle) {
@@ -884,6 +900,7 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 		}
 		return reportmap;
 	}
+
 	public Map<Integer, String> listUsernamesUnderManager(String mgrId) {
 		Map<Integer, String> map = listNamesUnderManager(mgrId);
 		Map<Integer, String> users = new HashMap<Integer, String>();
@@ -931,6 +948,9 @@ public class SubmissionReportServiceImpl implements SubmissionReportService {
 				}
 				if (con != null) {
 					con.close();
+				}
+				if (rs != null) {
+					rs.close();
 				}
 			} catch (SQLException sqle) {
 			}

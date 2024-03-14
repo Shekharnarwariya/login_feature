@@ -17,14 +17,6 @@ public interface PerformanceReportService {
 	
 	public ResponseEntity<?> PerformanceReportview(String username, PerformanceReportRequest customReportForm);
 
-	public ResponseEntity<?> PerformanceReportxls(String username, PerformanceReportRequest customReportForm,
-			HttpServletResponse response);
-
-	public ResponseEntity<?> PerformanceReportPdf(String username, PerformanceReportRequest customReportForm,
-			HttpServletResponse response);
-
-	public ResponseEntity<?> PerformanceReportDoc(String username, PerformanceReportRequest customReportForm,
-			HttpServletResponse response);
 	
 
 	

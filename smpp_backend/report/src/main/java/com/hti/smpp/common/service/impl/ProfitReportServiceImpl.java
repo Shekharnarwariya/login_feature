@@ -90,170 +90,7 @@ public class ProfitReportServiceImpl implements ProfitReportService {
         }
     }
 
-	@Override
-	public ResponseEntity<?> ProfitReportxls(String username, ProfitReportRequest customReportForm,
-			HttpServletResponse response) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ResponseEntity<?> ProfitReportpdf(String username, ProfitReportRequest customReportForm,
-			HttpServletResponse response) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ResponseEntity<?> ProfitReportdoc(String username, ProfitReportRequest customReportForm, 
-			HttpServletResponse response) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-//	@Override
-//	public ResponseEntity<?> ProfitReportxls(String username, ProfitReportRequest customReportForm, String lang,
-//			HttpServletResponse response) {
-//
-//		String target = IConstants.FAILURE_KEY;
-//		try {
-//			locale = Customlocale.getLocaleByLanguage(lang);
-//			JasperPrint print = null;// getProfitReportList(customReportForm, false, lang, username);
-//			if (print != null) {
-//				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), username);
-//
-//				String reportName = "Profit_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".xlsx";
-//				response.setContentType("text/html; charset=utf-8");
-//				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-//
-//				logger.info(messageResourceBundle.getLogMessage("creating.xls.message"), username);
-//
-//				// OutputStream out = response.getOutputStream();
-//				ByteArrayOutputStream out = new ByteArrayOutputStream();
-//				JRExporter exporter = new JRXlsxExporter();
-//				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-//				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-//				exporter.setParameter(JRXlsExporterParameter.IS_ONE_PAGE_PER_SHEET, Boolean.FALSE);
-//				exporter.setParameter(JRXlsExporterParameter.MAXIMUM_ROWS_PER_SHEET, 60000);
-//				exporter.exportReport();
-//				if (out != null) {
-//					try {
-//						out.close();
-//					} catch (Exception ioe) {
-//						logger.error(messageResourceBundle.getLogMessage("xls.outputstream.error.message"), username);
-//
-//					}
-//				}
-//				logger.error(messageResourceBundle.getLogMessage("finish.message"));
-//				target = IConstants.SUCCESS_KEY;
-//				return ResponseEntity.ok().body(out.toByteArray());
-//			} else {
-//				throw new NotFoundException(messageResourceBundle
-//						.getExMessage(ConstantMessages.PROFIT_REPORT_XLS_NOT_FOUND_MESSAGE, new Object[] { username }));
-//
-//			}
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//			throw new InternalServerException(messageResourceBundle
-//					.getExMessage(ConstantMessages.ERROR_GETTING_PROFIT_REPORT_XLS_MESSAGE, new Object[] { username }));
-//
-//		}
-////		return target;
-//	}
-//
-//	@Override
-//	public ResponseEntity<?> ProfitReportpdf(String username, ProfitReportRequest customReportForm, String lang,
-//			HttpServletResponse response) {
-//		String target = IConstants.FAILURE_KEY;
-//
-//		try {
-//			locale = Customlocale.getLocaleByLanguage(lang);
-//
-//			JasperPrint print = null;// getProfitReportList(customReportForm, false, lang, username);
-//			if (print != null) {
-//				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), username);
-//				String reportName = "profit_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".pdf";
-//				response.setContentType("text/html; charset=utf-8");
-//				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-//				logger.info(messageResourceBundle.getLogMessage("creating.pdf.message"));
-//
-//				OutputStream out = response.getOutputStream();
-//				JRExporter exporter = new JRPdfExporter();
-//				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-//				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-//				exporter.exportReport();
-//				if (out != null) {
-//					try {
-//						out.close();
-//					} catch (Exception e) {
-//						logger.error(messageResourceBundle.getLogMessage("pdf.outputstream.closing.error.message"),
-//								username);
-//
-//					}
-//				}
-//				logger.error(messageResourceBundle.getLogMessage("finish.message"));
-//				target = IConstants.SUCCESS_KEY;
-//				// return new ResponseEntity<>(response, out, HttpStatus.OK);
-//			} else {
-//				throw new NotFoundException(messageResourceBundle
-//						.getExMessage(ConstantMessages.PROFIT_REPORT_PDF_NOT_FOUND_MESSAGE, new Object[] { username }));
-//
-//			}
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//			throw new InternalServerException(messageResourceBundle
-//					.getExMessage(ConstantMessages.ERROR_GETTING_PROFIT_REPORT_PDF_MESSAGE, new Object[] { username }));
-//
-//		}
-//		return null;
-//	}
-//
-//	@Override
-//	public ResponseEntity<?> ProfitReportdoc(String username, ProfitReportRequest customReportForm, String lang,
-//			HttpServletResponse response) {
-//		String target = IConstants.FAILURE_KEY;
-//
-//		try {
-//			locale = Customlocale.getLocaleByLanguage(lang);
-//			JasperPrint print = null;// getProfitReportList(customReportForm, false, lang, username);
-//			if (print != null) {
-//				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), username);
-//				String reportName = "profit_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".doc";
-//				response.setContentType("text/html; charset=utf-8");
-//				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-//				logger.info(messageResourceBundle.getLogMessage("creating.doc.message"));
-//
-//				OutputStream out = response.getOutputStream();
-//				JRExporter exporter = new JRDocxExporter();
-//				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-//				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-//				exporter.exportReport();
-//				if (out != null) {
-//					try {
-//						out.close();
-//					} catch (Exception ioe) {
-//						logger.error(messageResourceBundle.getLogMessage("doc.outputstream.closing.error.message"),
-//								username);
-//
-//					}
-//				}
-//				logger.error(messageResourceBundle.getLogMessage("finish.message"));
-//				target = IConstants.SUCCESS_KEY;
-//			} else {
-//				throw new NotFoundException(messageResourceBundle
-//						.getExMessage(ConstantMessages.PROFIT_REPORT_DOC_NOT_FOUND_MESSAGE, new Object[] { username }));
-//
-//			}
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//			throw new InternalServerException(messageResourceBundle
-//					.getExMessage(ConstantMessages.ERROR_GETTING_PROFIT_REPORT_PDF_MESSAGE, new Object[] { username }));
-//
-//		}
-//
-//		return null;
-//	}
-//
+	
 	private Page<ProfitReportEntry> getProfitReportList(ProfitReportRequest reportRequest, Pageable pageable, UserEntry user) {
 	    LocalDate startDate = LocalDate.parse(reportRequest.getStartDate());
 	    LocalDate endDate = LocalDate.parse(reportRequest.getEndDate()).plusDays(1); // Include the end day in the range
@@ -290,63 +127,22 @@ public class ProfitReportServiceImpl implements ProfitReportService {
 
 
 
-//	private static boolean isValidDate(int year, int month, int day) {
-//		try {
-//			LocalDate.of(year, month, day);
-//			return true;
-//		} catch (DateTimeException e) {
-//			return false;
-//		}
-//	}
-//
-//	private <K, V extends Comparable<? super V>> Map<K, V> sortByDscValue(Map<K, V> map, int limit) {
-//		Map<K, V> result = new LinkedHashMap<>();
-//		Stream<Map.Entry<K, V>> st = map.entrySet().stream();
-//		st.sorted(Collections.reverseOrder(Map.Entry.comparingByValue())).limit(limit)
-//				.forEachOrdered(e -> result.put(e.getKey(), e.getValue()));
-//		return result;
-//	}
-//
-//	private List<ProfitReportEntry> sortListByUser(List<ProfitReportEntry> list) {
-//		// logger.info(userSessionObject.getSystemId() + " sortListByUser ");
-//		Comparator<ProfitReportEntry> comparator = null;
-//		comparator = Comparator.comparing(ProfitReportEntry::getUsername);
-//		Stream<ProfitReportEntry> personStream = list.stream().sorted(comparator);
-//		List<ProfitReportEntry> sortedlist = personStream.collect(Collectors.toList());
-//		return sortedlist;
-//	}
-//
-//	private List<ProfitReportEntry> sortListByNetwork(List<ProfitReportEntry> list) {
-//
-//		System.out.println(list);
-//		Comparator<ProfitReportEntry> comparator = null;
-//		comparator = Comparator.comparing(ProfitReportEntry::getCountry).thenComparing(ProfitReportEntry::getOperator);
-//		Stream<ProfitReportEntry> personStream = list.stream().sorted(comparator);
-//		List<ProfitReportEntry> sortedlist = personStream.collect(Collectors.toList());
-//		System.out.println("sortedlist" + sortedlist);
-//
-//		return sortedlist;
-//	}
 
 	public Page<ProfitReportEntry> listProfitReport(ReportCriteria rc, Pageable pageable) {
-	    // Retrieve the list of profit report entries from the DAO
 	    Page<ProfitReportEntry> list = reportDAOImpl.listProfitReport(rc,  pageable);
 
-	    // Enhanced loop with more robust null handling and leveraging Java 8 features
 	    list.forEach(entry -> {
-	        // Update country and operator based on network ID, if available
 	        Optional.ofNullable(GlobalVars.NetworkEntries.get(entry.getNetworkId()))
 	                .ifPresent(networkEntry -> {
 	                    entry.setCountry(networkEntry.getCountry());
 	                    entry.setOperator(networkEntry.getOperator());
 	                });
 
-	        // Attempt to set the username from the UserEntry if present; otherwise, use a removed username or default to "-"
 	        userRepository.findById(entry.getUserId())
 	                .map(UserEntry::getSystemId)  // If UserEntry is present, get the system ID
 	                .or(() -> Optional.ofNullable(getRemovedUsername(entry.getUserId()))) // If not, try getting removed username
 	                .ifPresentOrElse(
-	                        entry::setUsername, // If a username is found, set it
+	                        entry::setUsername,
 	                        () -> entry.setUsername("-") // Otherwise, set username to "-"
 	                );
 	    });

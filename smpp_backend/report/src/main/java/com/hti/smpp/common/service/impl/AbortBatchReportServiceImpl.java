@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -52,7 +53,7 @@ public class AbortBatchReportServiceImpl implements AbortBatchReportService {
 
 	@Autowired
 	private EntityManager entityManager;
-	
+
 	@Autowired
 	private MessageResourceBundle messageResourceBundle;
 
@@ -65,59 +66,51 @@ public class AbortBatchReportServiceImpl implements AbortBatchReportService {
 
 	@Override
 	public List<BulkEntry> abortBatchReport(String username, AbortBatchReportRequest customReportForm) {
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+	    Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+	    UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+	            messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[]{username})));
 
-		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+	    if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+	        throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
+	                new Object[]{username}));
+	    }
+
+	    try {
+	        List<BulkEntry> reportList = getReportList(customReportForm, user.getId());
+
+	        if (!reportList.isEmpty()) {
+	            System.out.println("Report Size: " + reportList.size());
+	            return reportList;
+	        } else {
+				throw new NotFoundException(
+						messageResourceBundle.getExMessage(ConstantMessages.NO_DATA_FOUND_ABORT_REPORT));
+ }
+	    } 
+	    catch (NotFoundException e) {
+			// Log NotFoundException
+			throw new NotFoundException(e.getMessage());
 			
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
-		}
-
-		String target = IConstants.SUCCESS_KEY;
-
-		try {
-		
-
-			List<BulkEntry> reportList = getReportList(customReportForm, user.getId());
-
-			if (!reportList.isEmpty()) {
-				System.out.println("Report Size: " + reportList.size());
-				return reportList;
-			} else {
-				target = IConstants.FAILURE_KEY;
-				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
-
-				
-			}
-		} catch (NotFoundException e) {
-	        // Log NotFoundException
-			
-			logger.error(messageResourceBundle.getLogMessage("auth.failed.userNotFound"), username, e);
-
-	        throw new NotFoundException(e.getMessage());
-	        } catch (IllegalArgumentException e) {
+	    }catch (IllegalArgumentException e) {
 	        // Log IllegalArgumentException
 	        logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
-
-	        
-	        throw new BadRequestException(messageResourceBundle.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] {e.getMessage()}));
-	        } catch (Exception e) {
+	        throw new BadRequestException(messageResourceBundle
+	                .getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[]{e.getMessage()}));
+	    } catch (Exception e) {
 	        // Log other exceptions
 	        logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
-
-	        throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_EXCEPTION_MESSAGE,new Object[] {username}));
-
-	        }
-
+	        throw new InternalServerException(messageResourceBundle
+	                .getExMessage(ConstantMessages.INTERNAL_SERVER_EXCEPTION_MESSAGE, new Object[]{username}));
+	    }
 	}
+
 
 	private List<BulkEntry> getReportList(AbortBatchReportRequest customReportForm, int id) throws SQLException {
 		UserDAService userDAService = new UserDAServiceImpl();
 		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(id);
 		if (webMasterEntry == null) {
-			 throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND_EXCEPTION_MESSAGE,new Object[] {id}));
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND_EXCEPTION_MESSAGE,
+					new Object[] { id }));
 
 		}
 

@@ -94,10 +94,6 @@ public class LookupReportServiceImpl implements LookupReportService {
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
 
-//				JasperPrint print = null;
-//				print = getJasperPrint(reportList, false);
-//
-//				target = IConstants.SUCCESS_KEY;
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
 				throw new InternalServerException(messageResourceBundle

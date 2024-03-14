@@ -37,6 +37,7 @@ import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MessageResourceBundle;
 
 import jakarta.servlet.http.HttpServlet;
+import jakarta.ws.rs.BadRequestException;
 
 @Service
 public class ScheduleReportServiceImpl implements ScheduleReportService {
@@ -47,7 +48,7 @@ public class ScheduleReportServiceImpl implements ScheduleReportService {
 	private UserEntryRepository userRepository;
 	@Autowired
 	private MessageResourceBundle messageResourceBundle;
-	
+
 	@Autowired
 	private UserDAService userService;
 	private Logger logger = LoggerFactory.getLogger(ScheduleReportServiceImpl.class);
@@ -68,32 +69,32 @@ public class ScheduleReportServiceImpl implements ScheduleReportService {
 	public ResponseEntity<?> ScheduleReport(String username, ScheduleReportRequest customReportForm) {
 		String target = IConstants.SUCCESS_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
+		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
+					new Object[] { username }));
 		}
 		try {
 			List<ScheduleEntryExt> reportList = getReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				System.out.println("Report Size: " + reportList.size());
-				// request.setAttribute("report", reportList);
-				return ResponseEntity.ok(reportList); // Add this return statement
+				return ResponseEntity.ok(reportList);
 			} else {
-				target = IConstants.FAILURE_KEY;
-				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.SCHEDULE_REPORT_NOT_FOUND_MESSAGE,new Object[] {username}));
-
+				throw new NotFoundException(messageResourceBundle
+						.getExMessage(ConstantMessages.SCHEDULE_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
 			}
+		} catch (NotFoundException e) {
+			throw new NotFoundException(e.getMessage());
 		} catch (Exception ex) {
 			logger.error(user.getSystemId(), ex.fillInStackTrace());
 			target = IConstants.FAILURE_KEY;
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.SCHEDULE_REPORT_NOT_FOUND_MESSAGE,new Object[] {username}));
-
+			throw new InternalServerException(messageResourceBundle
+					.getExMessage(ConstantMessages.SCHEDULE_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
 		}
 	}
 
-	private List<ScheduleEntryExt> getReportList(ScheduleReportRequest customReportForm, String username
-			)
+	private List<ScheduleEntryExt> getReportList(ScheduleReportRequest customReportForm, String username)
 			throws SQLException {
 		List<ScheduleEntryExt> list = new ArrayList<ScheduleEntryExt>();
 		String sql = "select * from schedule_history where client_time between '" + customReportForm.getStartDate()
@@ -127,10 +128,13 @@ public class ScheduleReportServiceImpl implements ScheduleReportService {
 		logger.info("Schedule History sql: " + sql);
 		List<ScheduleEntryExt> scheduleList = new ArrayList<>();
 		ScheduleEntryExt entryExt = null;
-
-		try (Connection con = getConnection();
-				PreparedStatement pStmt = con.prepareStatement(sql);
-				ResultSet rs = pStmt.executeQuery()) {
+		Connection con = null;
+		ResultSet rs = null;
+		PreparedStatement pStmt = null;
+		try {
+			con = getConnection();
+			pStmt = con.prepareStatement(sql);
+			rs = pStmt.executeQuery();
 
 			while (rs.next()) {
 				int id = rs.getInt("id");
@@ -154,6 +158,19 @@ public class ScheduleReportServiceImpl implements ScheduleReportService {
 		} catch (SQLException sqle) {
 			logger.error(messageResourceBundle.getLogMessage("sql.query.error.message"), sqle);
 
+		} finally {
+			try {
+				if (pStmt != null) {
+					pStmt.close();
+				}
+				if (rs != null) {
+					rs.close();
+				}
+				if (con != null) {
+					con.close();
+				}
+			} catch (SQLException sqle) {
+			}
 		}
 
 		return scheduleList;

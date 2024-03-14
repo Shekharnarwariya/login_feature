@@ -16,14 +16,7 @@ public interface SummaryReportService {
 	
 	public ResponseEntity<?> SummaryReportview(String username, SummaryReportForm customReportForm);
 	
-	public ResponseEntity<?>  SummaryReportxls(String username, SummaryReportForm customReportForm,
-			HttpServletResponse respons);
 	
-	public ResponseEntity<?>  SummaryReportpdf(String username, SummaryReportForm customReportForm,
-			HttpServletResponse response);
-	
-	public ResponseEntity<?>  SummaryReportdoc(String username, SummaryReportForm customReportForm,
-			HttpServletResponse response);
 	
 	
 

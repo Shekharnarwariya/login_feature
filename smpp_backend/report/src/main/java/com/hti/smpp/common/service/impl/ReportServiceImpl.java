@@ -73,6 +73,7 @@ import com.hti.smpp.common.util.MessageResourceBundle;
 import com.logica.smpp.Data;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.BadRequestException;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRExporter;
 import net.sf.jasperreports.engine.JRExporterParameter;
@@ -133,164 +134,30 @@ public class ReportServiceImpl implements ReportService {
 				System.out.println("Report Size: " + reportList.size());
 				target = IConstants.SUCCESS_KEY;
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
-			} else {
-				throw new NoDataFoundException(messageResourceBundle.getExMessage(
-						ConstantMessages.NO_BALANCE_REPORT_DATA_FOUND_MESSAGE, new Object[] { username }));
+			}
 
+			else {
+				throw new NotFoundException(messageResourceBundle.getExMessage(
+						ConstantMessages.NO_BALANCE_REPORT_DATA_FOUND_MESSAGE, new Object[] { username }));
 			}
 		} catch (NotFoundException e) {
-			throw new NoDataFoundException(e.getMessage());
-		} catch (UnauthorizedException e) {
-			throw new UnauthorizedException(e.getMessage());
+			// Log NotFoundException
+			throw new NotFoundException(e.getMessage());
+		} catch (IllegalArgumentException e) {
+
+			logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
+			throw new BadRequestException(messageResourceBundle
+					.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] { e.getMessage() }));
 		} catch (Exception e) {
-			e.printStackTrace();
-			throw new InternalServerException(messageResourceBundle.getExMessage(
-					ConstantMessages.ERROR_PROCESSING_BALANCE_REPORT_MESSAGE, new Object[] { e.getMessage() }));
-
-		}
-	}
-
-	@Override
-	public ResponseEntity<?> BalanceReportxls(String username, BalanceReportRequest customReportForm,
-			HttpServletResponse response) {
-		String target = IConstants.FAILURE_KEY;
-		PaginationRequest paginationRequest = customReportForm.getPaginationRequest();
-		Pageable p = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
-		try {
-
-			Map<String, List<DeliveryDTO>> reportList = dataBase.getBalanceReportList(customReportForm, username);
-			if (!reportList.isEmpty()) {
-				JasperPrint print = dataBase.getJasperPrint(reportList, false);
-				String reportName = "Consumption_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())
-						+ ".xlsx";
-				response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-					JRExporter exporter = new JRXlsxExporter();
-					exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-					exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-					exporter.setParameter(JRXlsExporterParameter.IS_ONE_PAGE_PER_SHEET, Boolean.FALSE);
-					exporter.setParameter(JRXlsExporterParameter.MAXIMUM_ROWS_PER_SHEET, 60000);
-					exporter.exportReport();
-					byte[] content = out.toByteArray();
-					if (content.length > 0) {
-						return new ResponseEntity<>(content, HttpStatus.OK);
-					} else {
-
-						throw new InternalServerException(
-								messageResourceBundle.getExMessage(ConstantMessages.EMPTY_XLS_CONTENT_ERROR_MESSAGE));
-
-					}
-				} catch (IOException ioe) {
-					throw new InternalServerException(
-							messageResourceBundle.getExMessage(ConstantMessages.ERROR_CLOSING_XLS_OUTPUTSTREAM_MESSAGE,
-									new Object[] { ioe.getMessage() }));
-
-				}
-			} else {
-				throw new InternalServerException(
-						messageResourceBundle.getExMessage(ConstantMessages.ERROR_GENERATING_REPORT_MESSAGE));
-
-			}
-		} catch (Exception e) {
-			throw new InternalServerException(
-					messageResourceBundle.getExMessage(ConstantMessages.ERROR_MESSAGE, new Object[] { username }));
-
-		}
-	}
-
-	@Override
-	public ResponseEntity<?> balanceReportPdf(String username, BalanceReportRequest customReportForm,
-			HttpServletResponse response) {
-		String target = IConstants.FAILURE_KEY;
-		PaginationRequest paginationRequest = customReportForm.getPaginationRequest();
-		Pageable p = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
-		try {
-
-			Map<String, List<DeliveryDTO>> reportList = dataBase.getBalanceReportList(customReportForm, username);
-			if (!reportList.isEmpty()) {
-				System.out.println("Report Size: " + reportList.size());
-				JasperPrint print = dataBase.getJasperPrint(reportList, false);
-				System.out.println("<-- Preparing OutputStream --> ");
-				String reportName = "Consumption_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())
-						+ ".pdf";
-				response.setContentType("application/pdf");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				System.out.println("<-- Creating PDF --> ");
-				try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-					JRExporter exporter = new JRPdfExporter();
-					exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-					exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-					exporter.exportReport();
-					byte[] content = out.toByteArray();
-					if (content.length > 0) {
-						return new ResponseEntity<>(content, HttpStatus.OK);
-					} else {
-						throw new InternalServerException(
-								messageResourceBundle.getExMessage(ConstantMessages.EMPTY_PDF_CONTENT_ERROR_MESSAGE));
-
-					}
-				}
-			} else {
-				throw new InternalServerException(messageResourceBundle
-						.getExMessage(ConstantMessages.ERROR_GENERATING_BALANCE_REPORT_PDF_MESSAGE));
-
-			}
-		} catch (Exception e) {
-			throw new InternalServerException("Error: " + e.getMessage());
-		}
-	}
-
-	@Override
-	public ResponseEntity<?> BalanceReportDoc(String username, BalanceReportRequest customReportForm,
-			HttpServletResponse response) {
-		String target = IConstants.FAILURE_KEY;
-		PaginationRequest paginationRequest = customReportForm.getPaginationRequest();
-		Pageable p = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
-
-		try {
-
-			Map<String, List<DeliveryDTO>> reportList = dataBase.getBalanceReportList(customReportForm, username);
-			if (!reportList.isEmpty()) {
-				System.out.println("Report Size: " + reportList.size());
-				JasperPrint print = dataBase.getJasperPrint(reportList, false);
-				System.out.println("<-- Preparing Outputstream --> ");
-				String reportName = "Consumption_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())
-						+ ".doc";
-				response.setContentType("application/msword");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				System.out.println("<-- Creating DOC --> ");
-
-				try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-					JRExporter exporter = new JRDocxExporter();
-					exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-					exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-					exporter.exportReport();
-
-					byte[] content = out.toByteArray();
-
-					if (content.length > 0) {
-						return new ResponseEntity<>(content, HttpStatus.OK);
-					} else {
-						throw new InternalServerException(
-								messageResourceBundle.getExMessage(ConstantMessages.EMPTY_DOC_CONTENT_ERROR_MESSAGE));
-
-					}
-				}
-			} else {
-				throw new InternalServerException(messageResourceBundle
-						.getExMessage(ConstantMessages.ERROR_GENERATING_BALANCE_REPORT_DOC_MESSAGE));
-
-			}
-		} catch (Exception e) {
-			throw new InternalServerException("Error: " + e.getMessage());
+			logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(e.getMessage());
 		}
 	}
 
 	@Override
 	public ResponseEntity<?> BlockedReportView(String username, BlockedReportRequest customReportForm) {
 		String target = IConstants.FAILURE_KEY;
-		
+
 		PaginationRequest paginationRequest = customReportForm.getPaginationRequest();
 		Pageable p = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
 		try {
@@ -298,169 +165,25 @@ public class ReportServiceImpl implements ReportService {
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info("{} ReportSize[View]: {}", username, reportList.size());
-//				JasperPrint print = getJasperPrint(reportList, false, username);
-//				byte[] pdfReport = JasperExportManager.exportReportToPdf(print);
-//
-//				HttpHeaders headers = new HttpHeaders();
-//				headers.setContentType(MediaType.APPLICATION_PDF);
-//				headers.setContentDispositionFormData("attachment", "blocked.pdf");
-//				logger.info("{} <-- Report Finished -->", username);
-//				// Return the file in the ResponseEntity
-//				return new ResponseEntity<>(pdfReport, headers, HttpStatus.OK);
 				target = IConstants.SUCCESS_KEY;
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NO_DATA_FOUND));
+				throw new NotFoundException(
+						messageResourceBundle.getExMessage(ConstantMessages.NO_DATA_FOUND_BLOCKED_REPORT));
 			}
+		} catch (NotFoundException e) {
+			// Log NotFoundException
+			throw new NotFoundException(e.getMessage());
+		} catch (IllegalArgumentException e) {
+
+			logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
+			throw new BadRequestException(messageResourceBundle
+					.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] { e.getMessage() }));
+
 		} catch (Exception e) {
-			logger.error("{} Unexpected error generating report", username, e);
-			throw new InternalServerException(
-					messageResourceBundle.getExMessage(ConstantMessages.UNEXPECTED_ERROR_GENERATING_REPORT_MESSAGE));
-
+			logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(e.getMessage());
 		}
-	}
-
-	@Override
-	public ResponseEntity<?> BlockedReportPdf(String username, BlockedReportRequest customReportForm,
-			HttpServletResponse response) {
-		String target = IConstants.FAILURE_KEY;
-
-		try {
-
-			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
-			if (reportList != null && !reportList.isEmpty()) {
-				logger.info("{} ReportSize[pdf]: {}", username, reportList.size());
-				JasperPrint print = getJasperPrint(reportList, false, username);
-				logger.info("{} <-- Preparing OutputStream -->", username);
-				String reportName = "blocked_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".pdf";
-				response.setContentType("application/pdf");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				logger.info("{} <-- Creating PDF -->", username);
-				try (OutputStream out = response.getOutputStream()) {
-					JRExporter exporter = new JRPdfExporter();
-					exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-					exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-					exporter.exportReport();
-					logger.info("{} <-- PDF Report Finished -->", username);
-					target = IConstants.SUCCESS_KEY;
-				} catch (IOException ioe) {
-					logger.error("{} PDF OutputStream Closing Error", username, ioe);
-					throw new InternalServerException(ioe.getMessage());
-				}
-			} else {
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NO_DATA_FOUND));
-			}
-		} catch (Exception e) {
-			logger.error("{} Unexpected error generating PDF report", username, e);
-			throw new InternalServerException(messageResourceBundle
-					.getExMessage(ConstantMessages.UNEXPECTED_ERROR_GENERATING_PDF_REPORT_MESSAGE));
-
-		}
-
-		return null;
-	}
-
-	@Override
-	public ResponseEntity<?> BlockedReportxls(String username, BlockedReportRequest customReportForm,
-			HttpServletResponse response) {
-		String target = IConstants.FAILURE_KEY;
-		try {
-
-			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
-			if (reportList != null && !reportList.isEmpty()) {
-				int totalRec = reportList.size();
-				logger.info("{} ReportSize[xls]: {}", username, totalRec);
-				Workbook workbook = dataBase.getWorkBook(reportList, username);
-				if (totalRec > 100000) {
-					logger.info("{} <-- Creating Zip Folder -->", username);
-					response.setContentType("application/zip");
-					String zipFileName = "blocked_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())
-							+ ".zip";
-					response.setHeader("Content-Disposition", "attachment; filename=" + zipFileName);
-					try (ZipOutputStream zos = new ZipOutputStream(response.getOutputStream())) {
-						String reportName = "blocked.xlsx";
-						ZipEntry entry = new ZipEntry(reportName);
-						zos.putNextEntry(entry);
-						logger.info("{} <-- Starting Zip Download -->", username);
-						workbook.write(zos);
-					}
-				} else {
-					logger.info("{} <---- Creating XLS ----->", username);
-					String filename = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())
-							+ ".xlsx";
-					response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\";");
-					try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-							InputStream is = new ByteArrayInputStream(bos.toByteArray());
-							OutputStream out = response.getOutputStream()) {
-						logger.info("{} <---- Starting XLS Download ----->", username);
-						workbook.write(bos);
-						is.transferTo(out);
-						out.flush();
-					}
-				}
-
-				workbook.close();
-				reportList.clear();
-				logger.info("{} <-- XLS Report Finished -->", username);
-				target = IConstants.SUCCESS_KEY;
-			} else {
-				logger.info("{} <-- No Records Found -->", username);
-				throw new InternalServerException(messageResourceBundle
-						.getExMessage(ConstantMessages.NO_RECORDS_FOUND_MESSAGE, new Object[] { username }));
-
-			}
-		} catch (Exception e) {
-			logger.error("{} Unexpected error generating XLS report", username, e);
-			throw new InternalServerException(messageResourceBundle
-					.getExMessage(ConstantMessages.UNEXPECTED_ERROR_GENERATING_XLS_REPORT_MESSAGE));
-
-		}
-
-		return null;
-	}
-
-	@Override
-	public ResponseEntity<?> BlockedReportDoc(String username, BlockedReportRequest customReportForm,
-			HttpServletResponse response) {
-		String target = IConstants.FAILURE_KEY;
-		try {
-
-			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
-			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(username + " ReportSize[doc]:" + reportList.size());
-				JasperPrint print = null;
-				print = getJasperPrint(reportList, false, username);
-				logger.info(username + " <-- Preparing Outputstream --> ");
-				String reportName = "blocked_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".doc";
-				response.setContentType("text/html; charset=utf-8");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + reportName + "\";");
-				logger.info(username + " <-- Creating DOC --> ");
-				OutputStream out = response.getOutputStream();
-				JRExporter exporter = new JRDocxExporter();
-				exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-				exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-				exporter.exportReport();
-				if (out != null) {
-					try {
-						out.close();
-					} catch (IOException ioe) {
-						logger.info(username + " DOC OutPutSream Closing Error");
-					}
-				}
-				logger.info(username + " <-- doc Report Finished --> ");
-				target = IConstants.SUCCESS_KEY;
-			} else {
-				throw new InternalServerException(messageResourceBundle
-						.getExMessage(ConstantMessages.NO_RECORDS_FOUND_MESSAGE, new Object[] { username }));
-			}
-		} catch (Exception e) {
-			logger.error(username, e.fillInStackTrace());
-			throw new InternalServerException(
-					messageResourceBundle.getExMessage(ConstantMessages.ERROR_GENERATING_DOC_REPORT_MESSAGE));
-
-		}
-
-		return null;
 	}
 
 	public JasperPrint getJasperPrint(List<DeliveryDTO> reportList, boolean paging, String username)
@@ -479,10 +202,8 @@ public class ReportServiceImpl implements ReportService {
 		reportList = dataBase.sortListByMessageId(reportList);
 		// ------------- Preparing databeancollection for chart ------------------
 		logger.info(username + " <-- Preparing Charts --> ");
-		// Iterator itr = reportList.iterator();
 		Map<String, Integer> temp_chart = new HashMap<String, Integer>();
 		for (DeliveryDTO chartDTO : reportList) {
-			// System.out.println("Cost: " + chartDTO.getCost());
 			String bsfmRule = chartDTO.getBsfmRule();
 			int counter = 0;
 			if (temp_chart.containsKey(bsfmRule)) {
@@ -527,7 +248,6 @@ public class ReportServiceImpl implements ReportService {
 		logger.info(username + " Creating Report list");
 
 		CustomReportDTO customReportDTO = new CustomReportDTO();
-//		Bean Utils.copyProperties(customReportForm, customReportDTO);
 
 		org.springframework.beans.BeanUtils.copyProperties(customReportForm, customReportDTO);
 

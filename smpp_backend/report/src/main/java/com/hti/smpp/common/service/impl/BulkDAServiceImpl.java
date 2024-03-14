@@ -30,61 +30,12 @@ public class BulkDAServiceImpl implements BulkDAService {
 		this.sessionFactory = sessionFactory;
 	}
 
-//	public BulkDAServiceImpl() {
-//		this.bulkDAO = GlobalVars.context.getBean(BulkDAO.class);
-//	}
-//
-//	@Override
-//	public BulkEntry getEntry(int id) {
-//		return bulkDAO.getEntry(id);
-//	}
-//
-//	@Override
-//	public int save(BulkEntry entry) throws DuplicateEntryException, Exception {
-//		return bulkDAO.save(entry);
-//	}
-//
-//	@Override
-//	public void update(BulkEntry entry) throws Exception {
-//		bulkDAO.update(entry);
-//	}
-//
-//	@Override
-//	public void saveContent(int batch_id, List<BulkContentEntry> list) throws Exception {
-//		bulkDAO.saveContent(batch_id, list);
-//	}
-//
-//	@Override
-//	public void saveContent(int batch_id, List<BulkContentEntry> list, ProgressEvent progressEvent) throws Exception {
-//		bulkDAO.saveContent(batch_id, list, progressEvent);
-//	}
-//
-//	@Override
-//	public void updateContent(int batch_id, List<BulkContentEntry> list) {
-//		bulkDAO.updateContent(batch_id, list);
-//	}
-
-//	@Override
-//	public List<BulkContentEntry> listContent(int batch_id) {
-//		return bulkDAO.listContent(batch_id);
-//	}
-//
-//	@Override
-//	public long rowCount(int batch_id) {
-//		return bulkDAO.rowCount(batch_id);
-//	}
-
 	@Override
 	public List<BulkEntry> listBatches() {
 		return listBatches();
 	}
 
-//	@Override
-//	public List<BulkMapEntry> listDistinctEntry() {
-//		logger.info("listing distinct campaigns");
-//		IDatabaseService dbService = HtiSmsDB.getInstance();
-//		return dbService.listDistinctCampaign();
-//	}
+
 
 	@Override
 	public List<BulkMapEntry> list(String campaign, String[] systemId) {

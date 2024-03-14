@@ -63,6 +63,7 @@ import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MessageResourceBundle;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.BadRequestException;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRExporter;
 import net.sf.jasperreports.engine.JRExporterParameter;
@@ -134,123 +135,28 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(), reportList.size());
-
-//				JasperPrint print = getJasperPrint(reportList, username, false, lang);
-//				logger.info(user.getSystemId() + " <-- Report Finished --> ");
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 
 			} else {
-				throw new Exception("No data found for the CustomizedReport report");
+				throw new NotFoundException(
+						messageResourceBundle.getExMessage(ConstantMessages.SUMMARY_REPORT_NOT_FOUND_MESSAGE));
 			}
-		} catch (UnauthorizedException e) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
 		} catch (NotFoundException e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+			// Log NotFoundException
+			throw new NotFoundException(e.getMessage());
+		} catch (IllegalArgumentException e) {
+
+			logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
+			throw new BadRequestException(messageResourceBundle
+					.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] { e.getMessage() }));
+
 		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+			logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(e.getMessage());
 		}
 	}
 
-	@Override
-	public ResponseEntity<?> SummaryReportxls(String username, SummaryReportForm customReportForm,
-			HttpServletResponse response) {
-		try {
-			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-			UserEntry user = userOptional
-					.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
-
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
-			}
-
-			WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
-			if (webMasterEntry == null) {
-				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE, new Object[] {user.getId()}));
-			}
-
-		
-			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry);
-
-			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("xls.report.size.message"), user.getSystemId(), reportList.size());
-
-
-				JasperPrint print = getJasperPrint(reportList, username, false);
-				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
-
-				byte[] xlsReport = generateXLSReport(print);
-
-				HttpHeaders headers = new HttpHeaders();
-				headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-				headers.setContentDispositionFormData("attachment", "summary_report.xlsx");
-
-				// Return the file in the ResponseEntity
-				return new ResponseEntity<>(xlsReport, headers, HttpStatus.OK);
-			} else {
-				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_SUMMARY_REPORT_NOT_FOUND_MESSAGE,new Object[] {username}));
-
-			}
-
-		} catch (UnauthorizedException e) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-		} catch (NotFoundException e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-		}
-	}
-
-	private byte[] generateXLSReport(JasperPrint print) throws JRException {
-		JRXlsxExporter exporter = new JRXlsxExporter();
-		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-		exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, byteArrayOutputStream);
-		exporter.exportReport();
-		return byteArrayOutputStream.toByteArray();
-	}
-
-	public ResponseEntity<?> SummaryReportpdf(String username, SummaryReportForm customReportForm,
-			HttpServletResponse response) {
-		Locale locale = null;
-		try {
-			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-			UserEntry user = userOptional
-					.orElseThrow(() ->  new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_SUMMARY_REPORT_NOT_FOUND_MESSAGE,new Object[] {username})));
-
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
-			}
-
-			WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
-			if (webMasterEntry == null) {
-				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.WEBMASTER_ENTRY_NOT_FOUND_MESSAGE, new Object[] {user.getId()}));
-			}
-			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry);
-
-			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("xls.report.size.message"), user.getSystemId(), reportList.size());
-
-				JasperPrint print = getJasperPrint(reportList, username, false);
-				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
-				byte[] pdfReport = generatePDFReport(print);
-
-				HttpHeaders headers = new HttpHeaders();
-				headers.setContentType(MediaType.APPLICATION_PDF);
-				headers.setContentDispositionFormData("attachment", "summary_report.pdf");
-
-				// Return the file in the ResponseEntity
-				return new ResponseEntity<>(pdfReport, headers, HttpStatus.OK);
-			} else {
-				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_SUMMARY_REPORT_NOT_FOUND_MESSAGE,new Object[] {username}));
-			}
-	} catch (Exception ex) {
-		target = IConstants.FAILURE_KEY;
-		throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.ERROR_GETTING_DLR_CONTENT_REPORT_MESSAGE));
-
-	}
-}
+	
 
 	private byte[] generatePDFReport(JasperPrint print) throws JRException {
 		JRExporter exporter = new JRPdfExporter();
@@ -259,56 +165,6 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 		exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, byteArrayOutputStream);
 		exporter.exportReport();
 		return byteArrayOutputStream.toByteArray();
-	}
-
-	@Override
-	public ResponseEntity<byte[]> SummaryReportdoc(String username, SummaryReportForm customReportForm,
-			HttpServletResponse response) {
-		try {
-			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-			UserEntry user = userOptional
-					.orElseThrow(() -> new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username})));
-
-			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
-			}
-
-			WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
-			if (webMasterEntry == null) {
-				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
-			}
-
-	
-			List<BatchDTO> reportList = getSummaryReportList(customReportForm, username, webMasterEntry);
-
-			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("report.size.doc.message"), user.getSystemId(), reportList.size());
-
-
-				JasperPrint print = getJasperPrint(reportList, username, false);
-				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
-
-				byte[] docReport = generateDocReport(print);
-
-				HttpHeaders headers = new HttpHeaders();
-				headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-				headers.setContentDispositionFormData("attachment",
-						"batch_summary_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date(0)) + ".doc");
-
-				// Return the file in the ResponseEntity
-				return new ResponseEntity<>(docReport, headers, HttpStatus.OK);
-			} else {
-				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_SUMMARY_REPORT_NOT_FOUND_MESSAGE,new Object[] {username}));
-			}
-
-		} catch (UnauthorizedException e) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-		} catch (NotFoundException e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-		}
 	}
 
 	private byte[] generateDocReport(JasperPrint print) throws JRException {
@@ -527,16 +383,7 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 				}
 			}
 			System.out.println(sql);
-			// String startdate = customReportForm.getSyear() + "-" +
-			// customReportForm.getSmonth() + "-" + customReportForm.getSday() + " " +
-			// customReportForm.getShour() + ":" +
-			// customReportForm.getSmin();
-			// String enddate = customReportForm.getEyear() + "-" +
-			// customReportForm.getEmonth() + "-" + customReportForm.getEday() + " " +
-			// customReportForm.getEhour() + ":" +
-			// customReportForm.getEmin();
 		}
-		// sql += " order by date DESC";
 		System.out.println("SQL: " + sql);
 		List<BatchDTO> reportList = getSummaryReport(sql);
 		return reportList;
@@ -573,8 +420,10 @@ public class SummaryReportServiceImpl implements SummaryReportService {
 					pStmt = null;
 				}
 				if (con != null) {
-					// LogDBConnection.releaseConnection(con);
 					con.close();
+				}
+				if (rs != null) {
+					rs.close();
 				}
 			} catch (SQLException sqle) {
 			}

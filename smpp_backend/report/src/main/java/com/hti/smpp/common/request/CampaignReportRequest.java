@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 public class CampaignReportRequest {
+	private PaginationRequest page;
 	private String senderId;
 
 	private String destinationNumber;
@@ -58,6 +59,14 @@ public class CampaignReportRequest {
 	private String shour;
 
 	private String ehour;
+
+	public PaginationRequest getPage() {
+		return page;
+	}
+
+	public void setPage(PaginationRequest page) {
+		this.page = page;
+	}
 
 	public String getSmin() {
 		return smin;

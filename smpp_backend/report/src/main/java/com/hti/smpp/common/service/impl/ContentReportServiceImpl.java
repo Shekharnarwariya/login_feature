@@ -118,225 +118,37 @@ public class ContentReportServiceImpl implements ContentReportService {
 
 		}
 
-		PaginationRequest paginationRequest = customReportForm.getPaginationRequest();
-		Pageable p = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
-
 		try {
 
-			List<DeliveryDTO> reportList = getContentReportList(customReportForm, username, p);
+			List<DeliveryDTO> reportList = getContentReportList(customReportForm, username);
 			System.out.println(reportList);
-
-			if (reportList != null && !reportList.isEmpty()) {
-				int totalPages = 0;
-				String tableName = "mis_" + username.toLowerCase();
-				long totalElements = 0l;
-				String countSql = "SELECT (" + "SELECT COUNT(*) FROM " + tableName + ") + ("
-						+ "SELECT COUNT(DISTINCT msg_id) " + "FROM (" + "SELECT msg_id FROM smsc_in WHERE username = ? "
-						+ "UNION " + "SELECT msg_id FROM unprocessed WHERE username = ?"
-						+ ") AS combined_unique_msg_ids" + ") AS total_count";
-				try (Connection connection = getConnection();
-						PreparedStatement pStmt = connection.prepareStatement(countSql)) {
-					pStmt.setString(1, username);
-					pStmt.setString(2, username);
-					try (ResultSet rs = pStmt.executeQuery()) {
-						if (rs.next()) {
-							totalElements = rs.getLong(1);
-							totalPages = (int) Math.ceil((double) totalElements / p.getPageSize());
-						}
+				if (reportList != null && !reportList.isEmpty()) {
+					logger.info(user.getSystemId() + " ReportSize[View]:" + reportList.size());
+					
+					return ResponseEntity.ok(reportList);
+					} else {
+						throw new NotFoundException(
+								messageResourceBundle.getExMessage(ConstantMessages.DATA_NOT_FOUND_CONTENT));
+		
 					}
-				} catch (SQLException e) {
-					e.printStackTrace();
+				} catch (NotFoundException e) {
+					// Log NotFoundException
+					throw new NotFoundException(e.getMessage());
+				} catch (IllegalArgumentException e) {
+					logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
+		
+					throw new BadRequestException(messageResourceBundle
+							.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] { e.getMessage() }));
+		
+				} catch (Exception e) {
+					logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
+					throw new InternalServerException(e.getMessage());
 				}
-				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(),
-						reportList.size());
-				logger.info(messageResourceBundle.getLogMessage("report.size.view.message"), user.getSystemId(),
-						reportList.size());
-				logger.info(messageResourceBundle.getLogMessage("report.view.size.message"), user.getSystemId(),
-						reportList.size());
-
-				// JasperPrint print = dataBase.getJasperPrint(reportList, false, username);
-				logger.info(messageResourceBundle.getLogMessage("report.finished.message"), user.getSystemId());
-				PaginatedResponse<DeliveryDTO> paginatedResponse = new PaginatedResponse<>(reportList,
-						p.getPageNumber(), p.getPageSize(), totalElements, totalPages-1);
-				return ResponseEntity.ok(paginatedResponse);
-			} else {
-				throw new NotFoundException(
-						messageResourceBundle.getExMessage(ConstantMessages.DATA_NOT_FOUND_CONTENT));
-
 			}
-		} catch (NotFoundException e) {
-			// Log NotFoundException
-			throw new NotFoundException(e.getMessage());
-		} catch (IllegalArgumentException e) {
-			logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
 
-			throw new BadRequestException(messageResourceBundle
-					.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] { e.getMessage() }));
 
-		} catch (Exception e) {
-			// Log other exceptions
-			logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
-			throw new InternalServerException(e.getMessage());
-		}
-	}
 
-	@Override
-	public ResponseEntity<?> ContentReportxls(String username, ContentReportRequest customReportForm,
-			HttpServletResponse response) {
-		String target = IConstants.FAILURE_KEY;
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
-				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 
-		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
-					new Object[] { username }));
-		}
-
-		try {
-
-			List<DeliveryDTO> reportList = null;// getContentReportList(customReportForm, username);
-			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("report.size.doc.message"), user.getSystemId(),
-						reportList.size());
-
-				JasperPrint print = getJasperPrint(reportList, false, username);
-				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), user.getSystemId());
-
-				byte[] xlsBytes;
-				try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-					JRExporter exporter = new JRXlsExporter(); // or JRXlsxExporter for Excel 2007 and above
-					exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-					exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-					exporter.exportReport();
-					xlsBytes = out.toByteArray();
-				}
-
-				HttpHeaders headers = new HttpHeaders();
-				headers.setContentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
-				String reportName = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".xls";
-				headers.setContentDispositionFormData(reportName, reportName);
-
-				logger.info(messageResourceBundle.getLogMessage("xls.report.finished.message"), user.getSystemId());
-
-				target = IConstants.SUCCESS_KEY;
-
-				return new ResponseEntity<>(xlsBytes, headers, HttpStatus.OK);
-			} else {
-// Handle case where no data is found for the report
-				throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.NO_DATA_FOUND));
-
-			}
-		} catch (Exception e) {
-// Log the error
-			logger.error(messageResourceBundle.getLogMessage("error.message"), user.getSystemId(), e.getMessage());
-
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.XLS_GENERATING_ERROR,
-					new Object[] { e.getMessage() }));
-
-		}
-
-	}
-
-	private JasperPrint getJasperPrint(List<DeliveryDTO> reportList, boolean paging, String username)
-			throws JRException {
-
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
-				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
-
-		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
-					new Object[] { username }));
-		}
-		WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(userOptional.get().getId());
-		JasperPrint print = null;
-		JasperReport report = null;
-		Map parameters = new HashMap();
-		JasperDesign design = JRXmlLoader.load(template_file);
-		report = JasperCompileManager.compileReport(design);
-		// ---------- Sorting list ----------------------------
-		reportList = sortListBySender(reportList);
-		// ------------- Preparing databeancollection for chart ------------------
-		logger.info(messageResourceBundle.getLogMessage("preparing.charts.message"), user.getSystemId());
-
-		// Iterator itr = reportList.iterator();
-		Map<String, Integer> temp_chart = new HashMap<String, Integer>();
-		Map<String, Integer> deliv_map = new LinkedHashMap<String, Integer>();
-		Map<String, Integer> total_map = new HashMap<String, Integer>();
-		for (DeliveryDTO chartDTO : reportList) {
-			// System.out.println("Cost: " + chartDTO.getCost());
-			String status = chartDTO.getStatus();
-			int counter = 0;
-			if (temp_chart.containsKey(status)) {
-				counter = temp_chart.get(status);
-			}
-			temp_chart.put(status, ++counter);
-			// --------- bar Chart ------------
-			if (status.startsWith("DELIV")) {
-				int delivCounter = 0;
-				if (deliv_map.containsKey(chartDTO.getSender())) {
-					delivCounter = deliv_map.get(chartDTO.getSender());
-				}
-				deliv_map.put(chartDTO.getSender(), ++delivCounter);
-			}
-			int total_counter = 0;
-			if (total_map.containsKey(chartDTO.getSender())) {
-				total_counter = total_map.get(chartDTO.getSender());
-			}
-			total_map.put(chartDTO.getSender(), ++total_counter);
-			// --------------------------------
-		}
-		List<DeliveryDTO> chart_list = new ArrayList<DeliveryDTO>();
-		if (!temp_chart.isEmpty()) {
-			for (Map.Entry<String, Integer> entry : temp_chart.entrySet()) {
-				chart_list.add(new DeliveryDTO((String) entry.getKey(), (Integer) entry.getValue()));
-			}
-		}
-		List<DeliveryDTO> bar_chart_list = new ArrayList<DeliveryDTO>();
-		total_map = sortMapByDscValue(total_map, 5);
-		DeliveryDTO chartDTO = null;
-		for (Map.Entry<String, Integer> entry : total_map.entrySet()) {
-			chartDTO = new DeliveryDTO("SUBMITTED", entry.getValue());
-			chartDTO.setSender(entry.getKey());
-			bar_chart_list.add(chartDTO);
-			int delivered = 0;
-			if (deliv_map.containsKey(entry.getKey())) {
-				delivered = (Integer) deliv_map.get(entry.getKey());
-			}
-			chartDTO = new DeliveryDTO("DELIVRD", delivered);
-			chartDTO.setSender(entry.getKey());
-			bar_chart_list.add(chartDTO);
-		}
-		JRBeanCollectionDataSource piechartDataSource = new JRBeanCollectionDataSource(chart_list);
-		JRBeanCollectionDataSource barchart1DataSource = new JRBeanCollectionDataSource(bar_chart_list);
-		parameters.put("piechartDataSource", piechartDataSource);
-		parameters.put("barchart1DataSource", barchart1DataSource);
-		logger.info(messageResourceBundle.getLogMessage("finished.charts.message"), user.getSystemId());
-
-		// -----------------------------------------------------------------------
-		JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(reportList);
-		if (reportList.size() > 20000) {
-			logger.info(messageResourceBundle.getLogMessage("creating.virtualizer.message"), user.getSystemId());
-
-			JRSwapFileVirtualizer virtualizer = new JRSwapFileVirtualizer(100,
-					new JRSwapFile(IConstants.WEBAPP_DIR + "temp//", 1024, 512));
-			parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
-		}
-		logger.info(messageResourceBundle.getLogMessage("display.cost.message"), user.getSystemId(),
-				webMasterEntry.isDisplayCost());
-
-		parameters.put("displayCost", webMasterEntry.isDisplayCost());
-		parameters.put(JRParameter.IS_IGNORE_PAGINATION, paging);
-		ResourceBundle bundle = ResourceBundle.getBundle("JSReportLabels", locale);
-		parameters.put("REPORT_RESOURCE_BUNDLE", bundle);
-		logger.info(messageResourceBundle.getLogMessage("filling.report.data.message"), user.getSystemId());
-
-		print = JasperFillManager.fillReport(report, parameters, beanColDataSource);
-		logger.info(messageResourceBundle.getLogMessage("filling.completed.message"), user.getSystemId());
-
-		return print;
-	}
 
 	private <K, V extends Comparable<? super V>> Map<K, V> sortMapByDscValue(Map<K, V> map, int limit) {
 		Map<K, V> result = new LinkedHashMap<>();
@@ -354,155 +166,11 @@ public class ContentReportServiceImpl implements ContentReportService {
 		return sortedlist;
 	}
 
-	@Override
-	public ResponseEntity<?> ContentReportPdf(String username, ContentReportRequest customReportForm,
-			HttpServletResponse response) {
-		String target = IConstants.FAILURE_KEY;
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
-				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
+	
 
-		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
-					new Object[] { username }));
-		}
 
-		try {
 
-			List<DeliveryDTO> reportList = null;// getContentReportList(customReportForm, username,pageable);
-			if (reportList != null && !reportList.isEmpty()) {
-				logger.info(messageResourceBundle.getLogMessage("report.size.pdf.message"), user.getSystemId(),
-						reportList.size());
-
-				JasperPrint print = getJasperPrint(reportList, false, username);
-				logger.info(messageResourceBundle.getLogMessage("preparing.outputstream.message"), user.getSystemId());
-
-				byte[] pdfBytes;
-				try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-					JRExporter exporter = new JRPdfExporter();
-					exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
-					exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, out);
-					exporter.exportReport();
-					pdfBytes = out.toByteArray();
-				}
-
-				HttpHeaders headers = new HttpHeaders();
-				headers.setContentType(org.springframework.http.MediaType.APPLICATION_PDF);
-				String reportName = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()) + ".pdf";
-				headers.setContentDispositionFormData(reportName, reportName);
-
-				logger.info(messageResourceBundle.getLogMessage("pdf.report.finished.message"), user.getSystemId());
-
-				target = IConstants.SUCCESS_KEY;
-
-				return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
-			} else {
-// Handle case where no data is found for the report
-				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NO_DATA_FOUND));
-
-			}
-		} catch (UnauthorizedException | NotFoundException e) {
-// Log the specific exception
-
-			logger.error(messageResourceBundle.getLogMessage("error.message"), user.getSystemId(), e.getMessage());
-
-			throw e; // Re-throw the specific exception
-		} catch (Exception e) {
-// Log a general exception
-
-			logger.error(messageResourceBundle.getLogMessage("error.message"), user.getSystemId(), e.getMessage());
-
-			throw new InternalServerException(messageResourceBundle.getExMessage(ConstantMessages.PDF_GENERATION_ERROR,
-					new Object[] { e.getMessage() }));
-
-		}
-	}
-
-	@Override
-	public ResponseEntity<?> ContentReportDoc(String username, ContentReportRequest customReportForm,
-			HttpServletResponse response) {
-		String target = IConstants.FAILURE_KEY;
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
-				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
-
-		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
-					new Object[] { username }));
-		}
-
-		try {
-
-			List<DeliveryDTO> reportList = null;// getContentReportList(customReportForm, username,pageable);
-			if (reportList != null && !reportList.isEmpty()) {
-				int total_rec = reportList.size();
-				logger.info(messageResourceBundle.getLogMessage("xls.report.size.message"), user.getSystemId(),
-						total_rec);
-
-				Workbook workbook = dataBase.getContentWorkBook(reportList, username);
-				HttpHeaders headers = new HttpHeaders();
-
-				if (total_rec > 100000) {
-					logger.info(messageResourceBundle.getLogMessage("creating.zip.folder.message"), user.getSystemId());
-
-					ByteArrayOutputStream zipBaos = new ByteArrayOutputStream();
-					try (ZipOutputStream zos = new ZipOutputStream(zipBaos)) {
-						String reportName = "delivery.xlsx";
-						ZipEntry entry = new ZipEntry(reportName);
-						zos.putNextEntry(entry);
-						logger.info(messageResourceBundle.getLogMessage("starting.zip.download.message"),
-								user.getSystemId());
-
-						workbook.write(zos);
-						zos.closeEntry();
-					}
-
-					headers.setContentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
-					String zipFileName = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())
-							+ ".zip";
-					headers.setContentDispositionFormData(zipFileName, zipFileName);
-
-					logger.info(messageResourceBundle.getLogMessage("zip.report.finished.message"), user.getSystemId());
-
-					target = IConstants.SUCCESS_KEY;
-
-					return new ResponseEntity<>(zipBaos.toByteArray(), headers, HttpStatus.OK);
-				} else {
-					logger.info(messageResourceBundle.getLogMessage("creating.xls.message"), user.getSystemId());
-
-					headers.setContentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
-					String filename = "delivery_" + new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())
-							+ ".xlsx";
-					headers.setContentDispositionFormData(filename, filename);
-
-					ByteArrayOutputStream xlsBaos = new ByteArrayOutputStream();
-					workbook.write(xlsBaos);
-
-					logger.info(messageResourceBundle.getLogMessage("reading.xls.message"), user.getSystemId());
-					target = IConstants.SUCCESS_KEY;
-
-					return new ResponseEntity<>(xlsBaos.toByteArray(), headers, HttpStatus.OK);
-				}
-			} else {
-// Handle case where no data is found for the report
-				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NO_DATA_FOUND));
-			}
-		} catch (UnauthorizedException | NotFoundException e) {
-// Log the specific exception
-			logger.error(messageResourceBundle.getLogMessage("error.message"), user.getSystemId(), e.getMessage());
-
-			throw e; // Re-throw the specific exception
-		} catch (Exception e) {
-// Log a general exception
-			logger.error(messageResourceBundle.getLogMessage("error.message"), user.getSystemId(), e.getMessage());
-			throw new InternalServerException(messageResourceBundle
-					.getExMessage(ConstantMessages.REPORT_DOCUMENT_GENERATING_ERROR, new Object[] { e.getMessage() }));
-
-		}
-	}
-
-	public List<DeliveryDTO> getContentReportList(ContentReportRequest customReportForm, String username,
-			Pageable pageable) {
+	public List<DeliveryDTO> getContentReportList(ContentReportRequest customReportForm, String username) {
 		if (customReportForm.getClientId() == null) {
 			return null;
 		}
@@ -653,55 +321,22 @@ public class ContentReportServiceImpl implements ContentReportService {
 			}
 		}
 
-		int remainingSize = pageable.getPageSize();
-		int currentOffset = pageable.getPageNumber() * pageable.getPageSize();
-		List<DeliveryDTO> combinedList = new ArrayList<>();
-		List<DeliveryDTO> list = contentWiseDlrReport(query + " LIMIT " + remainingSize + " OFFSET " + currentOffset,
-				report_user, webMasterEntry.isHideNum());
-		combinedList.addAll(list);
-		remainingSize -= list.size();
-		currentOffset = Math.max(0, currentOffset - list.size());
-		System.out.println("currentOffset" + currentOffset);
+		logger.info(user.getSystemId() + " ReportSQL:" + query);
+		List<DeliveryDTO> list = contentWiseDlrReport(query, report_user,
+				webMasterEntry.isHideNum());
 		logger.info(messageResourceBundle.getLogMessage("report.sql.message"), user.getSystemId(), query);
-
-		if (remainingSize > 0) {
-			List<DeliveryDTO> unproc_list_1 = contentWiseUprocessedReport(
-					unproc_query.replaceAll("table_name", "smsc_in") + " LIMIT " + remainingSize + " OFFSET "
-							+ currentOffset,
-					report_user, webMasterEntry.isHideNum());
-			combinedList.addAll(unproc_list_1);
-			remainingSize -= unproc_list_1.size();
-			currentOffset = Math.max(0, currentOffset - unproc_list_1.size());
-		}
+		List<DeliveryDTO> unproc_list_1 = contentWiseUprocessedReport(
+				unproc_query.replaceAll("table_name", "smsc_in"), report_user,
+				 webMasterEntry.isHideNum());
+		list.addAll(unproc_list_1);
 		logger.info(messageResourceBundle.getLogMessage("report.sql.message"), user.getSystemId(), query);
-
-		if (remainingSize > 0) {
-			List<DeliveryDTO> unproc_list_2 = contentWiseUprocessedReport(
-					unproc_query.replaceAll("table_name", "unprocessed") + " LIMIT " + remainingSize + " OFFSET "
-							+ currentOffset,
-					report_user, webMasterEntry.isHideNum());
-			combinedList.addAll(unproc_list_2);
-		}
+		List<DeliveryDTO> unproc_list_2 = contentWiseUprocessedReport(
+				unproc_query.replaceAll("table_name", "unprocessed"), report_user,
+				 webMasterEntry.isHideNum());
+		list.addAll(unproc_list_2);
 		logger.info(messageResourceBundle.getLogMessage("end.criteria.report.message"), user.getSystemId(),
-				combinedList.size());
-		return combinedList;
-//		logger.info(user.getSystemId() + " ReportSQL:" + query);
-//		System.out.println("this is line run 455");
-//		List<DeliveryDTO> list = contentWiseDlrReport(query, report_user, webMasterEntry.isHideNum());
-//		logger.info(messageResourceBundle.getLogMessage("report.sql.message"), user.getSystemId(), query);
-//
-//		List<DeliveryDTO> unproc_list_1 = contentWiseUprocessedReport(unproc_query.replaceAll("table_name", "smsc_in"),
-//				report_user, webMasterEntry.isHideNum());
-//		list.addAll(unproc_list_1);
-//		logger.info(messageResourceBundle.getLogMessage("report.sql.message"), user.getSystemId(), query);
-//
-//		List<DeliveryDTO> unproc_list_2 = contentWiseUprocessedReport(
-//				unproc_query.replaceAll("table_name", "unprocessed"), report_user, webMasterEntry.isHideNum());
-//		list.addAll(unproc_list_2);
-//		logger.info(messageResourceBundle.getLogMessage("end.criteria.report.message"), user.getSystemId(),
-//				list.size());
-//
-//		return list;
+			list.size());
+		return list;
 	}
 
 	@Transactional

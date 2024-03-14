@@ -15,10 +15,5 @@ public interface DlrSummaryReportService {
 
 	public ResponseEntity<?> DlrSummaryReportview(String username, DlrSummaryReport  customReportForm);
 
-	public ResponseEntity<?> DlrSummaryReportdoc(String username, DlrSummaryReport customReportForm, HttpServletResponse response);
-
-	public ResponseEntity<?> DlrSummaryReportdpdf(String username, DlrSummaryReport customReportForm, HttpServletResponse response);
-
-	public ResponseEntity<?> DlrSummaryReportdxls(String username, DlrSummaryReport customReportForm, HttpServletResponse response);
-
+	
 }
