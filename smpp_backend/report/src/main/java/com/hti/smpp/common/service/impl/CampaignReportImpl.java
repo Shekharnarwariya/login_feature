@@ -1,6 +1,5 @@
 package com.hti.smpp.common.service.impl;
 
-import java.io.ByteArrayOutputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -9,13 +8,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -24,9 +21,7 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -50,7 +45,6 @@ import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.ConstantMessages;
-import com.hti.smpp.common.util.Customlocale;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MessageResourceBundle;
@@ -59,6 +53,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+<<<<<<< HEAD
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.BadRequestException;
 import net.sf.jasperreports.engine.JRException;
@@ -79,6 +74,8 @@ import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
 import net.sf.jasperreports.engine.fill.JRSwapFileVirtualizer;
 import net.sf.jasperreports.engine.util.JRSwapFile;
 import net.sf.jasperreports.engine.xml.JRXmlLoader;
+=======
+>>>>>>> d2ab55dce9146e612429ba4dd1a4ac770dfcf126
 
 @Service
 public class CampaignReportImpl implements CampaignReportService {

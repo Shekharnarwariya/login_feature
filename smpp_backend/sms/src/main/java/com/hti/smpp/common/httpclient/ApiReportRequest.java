@@ -38,6 +38,8 @@ import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.hazelcast.query.impl.PredicateBuilderImpl;
 import com.hti.smpp.common.user.dto.UserEntry;
@@ -47,8 +49,11 @@ import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MultiUtility;
 
+@Service
 public class ApiReportRequest extends HttpServlet {
 	private Logger logger = LoggerFactory.getLogger(ApiReportRequest.class);
+	@Autowired
+	private IDatabaseService dbService;
 
 	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		processRequest(request, response);
@@ -239,7 +244,6 @@ public class ApiReportRequest extends HttpServlet {
 		logger.info(username + " Creating Report list");
 		List list = null;
 		List final_list = new ArrayList();
-		IDatabaseService dbService = new IDatabaseService();
 		String query = null;
 		String to_gmt = null, from_gmt = null;
 		if (gmt != null && !gmt.equalsIgnoreCase(IConstants.DEFAULT_GMT)) {

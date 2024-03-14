@@ -6,13 +6,17 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.logica.smpp.util.Queue;
 
+@Service
 public class HttpRequestLog implements Runnable {
 	public static Queue logQueue = new Queue();
 	private boolean isStop = false;
-	private IDatabaseService dbService = new IDatabaseService();
+	@Autowired
+	private IDatabaseService dbService;
 	public static boolean clear = false;
 	private Logger logger = LoggerFactory.getLogger(HttpRequestLog.class);
 

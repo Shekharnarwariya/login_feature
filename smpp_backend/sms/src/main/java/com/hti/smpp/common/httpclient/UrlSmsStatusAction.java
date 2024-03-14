@@ -17,13 +17,17 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.WriteLogThread;
 
+@Service
 public class UrlSmsStatusAction extends HttpServlet {
 	private Logger logger = LoggerFactory.getLogger(UrlSmsStatusAction.class);
-	private IDatabaseService dbService =new IDatabaseService();
+	@Autowired
+	private IDatabaseService dbService;
 
 	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		processRequest(request, response);

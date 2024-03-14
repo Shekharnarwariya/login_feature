@@ -21,6 +21,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.hazelcast.query.impl.PredicateBuilderImpl;
 import com.hti.smpp.common.user.dto.UserEntry;
@@ -29,9 +31,11 @@ import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.WriteLogThread;
 
+@Service
 public class JsonScheduleRemove extends HttpServlet {
 	private Logger logger = LoggerFactory.getLogger(JsonScheduleRemove.class);
-	private IDatabaseService dbService = new IDatabaseService();
+	@Autowired
+	private IDatabaseService dbService;
 
 	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		processRequest(request, response);

@@ -18,6 +18,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.hazelcast.query.impl.PredicateBuilderImpl;
 import com.hti.smpp.common.user.dto.UserEntry;
@@ -28,8 +30,11 @@ import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MultiUtility;
 import com.hti.smpp.common.util.WriteLogThread;
 
+@Service
 public class RemoveSchedule extends HttpServlet {
 	private Logger logger = LoggerFactory.getLogger(UrlUserBalanceAction.class);
+	@Autowired
+	private IDatabaseService dbService;
 
 	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String decodeUrl = URLDecoder.decode(request.getQueryString(), "UTF-8");
@@ -178,7 +183,6 @@ public class RemoveSchedule extends HttpServlet {
 						System.out.println(user + " Access Denied :: " + msg);
 					} else {
 						if (pass.equals(entry.getUserEntry().getPassword())) {
-							IDatabaseService dbService = new IDatabaseService();
 							if (dbService.deleteschedule(scheduleid, user)) {
 								msg = "Schedule Removed: " + scheduleid;
 								System.out.println(user + " Schedule Removed: " + scheduleid);

@@ -42,19 +42,23 @@ public class MultiUtility {
 		}
 		return true;
 	}
-	  public static void sendOtpSms(String systemId, BulkSmsDTO smsDTO, RestTemplate restTemplate) {
-	        try {
-	            final String url = IConstants.SMS_URL;
-	            System.out.println("Hello Url------>"+url);
-	            HttpHeaders headers = new HttpHeaders();
-	            headers.set("username", systemId);
-	            HttpEntity<BulkSmsDTO> requestEntity = new HttpEntity<>(smsDTO, headers);
-	            ResponseEntity<?> response = restTemplate.postForEntity(url, requestEntity, String.class);
 
-	            logger.info("<OTP SMS: " + response.getBody().toString() + ">" + systemId);
-	        } catch (Exception e) {
-	            logger.error("Error sending OTP SMS for user: " + systemId, e);
-	        }}
+	public static ResponseEntity<?> sendOtpSms(String systemId, BulkSmsDTO smsDTO, RestTemplate restTemplate) {
+		ResponseEntity<?> response = null;
+		try {
+			final String url = IConstants.SMS_URL;
+			System.out.println("Hello Url------>" + url);
+			HttpHeaders headers = new HttpHeaders();
+			headers.set("username", systemId);
+			HttpEntity<BulkSmsDTO> requestEntity = new HttpEntity<>(smsDTO, headers);
+			response = restTemplate.postForEntity(url, requestEntity, String.class);
+
+			logger.info("<OTP SMS: " + response.getBody().toString() + ">" + systemId);
+		} catch (Exception e) {
+			logger.error("Error sending OTP SMS for user: " + systemId, e);
+		}
+		return response;
+	}
 
 	public static boolean changeFlag(String path, String flagValue) {
 		String writeData = "FLAG = " + flagValue;

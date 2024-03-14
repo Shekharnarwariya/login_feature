@@ -21,6 +21,12 @@
 	</properties>
 
 	<dependencies>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
 		<!-- JavaMail API -->
 		<dependency>
 			<groupId>com.sun.mail</groupId>
@@ -50,6 +56,11 @@
 			<version>1.0</version>
 			<systemPath>${basedir}/lib/smpp.jar</systemPath>
 		</dependency>
+		<!--<dependency>
+			<groupId>smpp</groupId>
+			<artifactId>smpp</artifactId>
+			<version>1.0</version>
+		</dependency>-->
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
@@ -131,6 +142,11 @@
 			<version>1.0.0.Final</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>5.5.6.Final</version>
+		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
