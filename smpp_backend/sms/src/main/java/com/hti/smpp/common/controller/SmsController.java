@@ -78,8 +78,7 @@ public class SmsController {
 			@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
 	@PostMapping(value = "/sendbulk", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<BulkResponse> sendBulk(
-			@RequestParam("destinationNumberFile") List<MultipartFile> destinationNumberFile,
+	public ResponseEntity<?> sendBulk(@RequestParam("destinationNumberFile") List<MultipartFile> destinationNumberFile,
 			@RequestHeader("username") String username,
 			@RequestParam(name = "bulkRequest", required = true, defaultValue = "{\r\n"
 					+ "  \"senderId\": \"YourSenderId\",\r\n" + "  \"message\": \"YourMessage\",\r\n"
@@ -97,6 +96,7 @@ public class SmsController {
 			HttpSession session) {
 		BulkResponse bulkResponse = smsService.sendBulkSms(ObjectConverter.jsonMapperBulkRequest(jsonBulkRequest),
 				username, destinationNumberFile, session);
+
 		return ResponseEntity.ok(bulkResponse);
 	}
 
