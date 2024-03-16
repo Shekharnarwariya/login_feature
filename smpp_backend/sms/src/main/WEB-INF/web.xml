@@ -18,25 +18,6 @@
 		<filter-name>SetCharacterEncoding</filter-name>
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
-
-	<!--	<servlet>
-		<servlet-name>action</servlet-name>
-		<servlet-class>org.apache.struts.action.ActionServlet</servlet-class>
-		<init-param>
-			<param-name>config</param-name>
-			<param-value>/WEB-INF/struts-config.xml</param-value>
-		</init-param>
-		<init-param>
-			<param-name>debug</param-name>
-			<param-value>3</param-value>
-		</init-param>
-		<init-param>
-			<param-name>detail</param-name>
-			<param-value>3</param-value>
-		</init-param>
-		<load-on-startup>1</load-on-startup>
-	</servlet>-->
-
 	<servlet>
 		<servlet-name>removeschedule</servlet-name>
 		<servlet-class>com.hti.webems.url.RemoveSchedule</servlet-class>
@@ -125,42 +106,6 @@
 		<servlet-class>com.hti.webems.url.UrlSmsStatusAction</servlet-class>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
-
-	<!--<servlet>
-		<servlet-name>dashboard</servlet-name>
-		<servlet-class>com.hti.webems.report.Dashboard</servlet-class>
-	</servlet>
-
-	<servlet>
-		<servlet-name>login</servlet-name>
-		<servlet-class>com.hti.webems.login.RefLogin</servlet-class>
-	</servlet>
-
-	<servlet>
-		<servlet-name>locale</servlet-name>
-		<servlet-class>com.hti.webems.login.localeAction</servlet-class>
-	</servlet>
-
-	<servlet>
-		<servlet-name>subscrLogin</servlet-name>
-		<servlet-class>com.hti.webems.util.SubscriberLogin</servlet-class>
-	</servlet>
-
-	<servlet>
-		<servlet-name>subscrLogout</servlet-name>
-		<servlet-class>com.hti.webems.util.SubscriberLogout</servlet-class>
-	</servlet>
-
-	<servlet>
-		<servlet-name>addnumber</servlet-name>
-		<servlet-class>com.hti.webems.util.AddSubscrNumber</servlet-class>
-	</servlet>
-
-	<servlet>
-		<servlet-name>MediaUploadServlet</servlet-name>
-		<servlet-class>com.hti.webems.sms.MediaUploadServlet</servlet-class>
-	</servlet>
--->
 	<servlet>
 		<servlet-name>FileNumberCountServlet</servlet-name>
 		<servlet-class>com.hti.webems.sms.FileNumberCountServlet</servlet-class>
@@ -171,20 +116,7 @@
 		<servlet-class>com.hti.webems.sms.GetContactUpload</servlet-class>
 	</servlet>
 
-	<servlet>
-		<servlet-name>fileformat</servlet-name>
-		<jsp-file>/jsp/UtilityJsp/fileformat.jsp</jsp-file>
-	</servlet>
 
-	<servlet>
-		<servlet-name>fileformatByName</servlet-name>
-		<jsp-file>/jsp/UtilityJsp/fileformatByName.jsp</jsp-file>
-	</servlet>
-
-	<servlet>
-		<servlet-name>subscriberlogin</servlet-name>
-		<jsp-file>/jsp/UtilityJsp/SubscriberLogin.jsp</jsp-file>
-	</servlet>
 
 	<servlet>
 		<servlet-name>showBalance</servlet-name>
@@ -248,10 +180,6 @@
 		<load-on-startup>2</load-on-startup>
 	</servlet>
 
-	<servlet>
-		<servlet-name>ConvertCode</servlet-name>
-		<servlet-class>com.hti.webems.util.ConvertCode</servlet-class>
-	</servlet>
 	<servlet>
 		<servlet-name>webDLR</servlet-name>
 		<servlet-class>com.hti.webems.url.WebDLRAction</servlet-class>
@@ -467,11 +395,6 @@
 		<servlet-name>MediaUploadServlet</servlet-name>
 		<url-pattern>/mediaUpload</url-pattern>
 	</servlet-mapping>
-	<servlet-mapping>
-		<servlet-name>dashboard</servlet-name>
-		<url-pattern>/dashboard</url-pattern>
-	</servlet-mapping>
-
 
 	<servlet-mapping>
 		<servlet-name>downloadcoverage</servlet-name>
@@ -483,35 +406,4 @@
 		<url-pattern>/GetSubareaClass</url-pattern>
 	</servlet-mapping>
 
-	<!--	<servlet-mapping>
-		<servlet-name>ConvertCode</servlet-name>
-		<url-pattern>/Converter</url-pattern>
-	</servlet-mapping>
-	<session-config>
-		<session-timeout>3600</session-timeout>
-	</session-config>
-	<welcome-file-list>
-		<welcome-file>/jsp/LoginJsp/index.jsp</welcome-file>
-	</welcome-file-list>-->
-
-	<!--<taglib>
-		<taglib-uri>struts/html-el</taglib-uri>
-		<taglib-location>/WEB-INF/tld/struts-html-el.tld</taglib-location>
-	</taglib>
-	<taglib>
-		<taglib-uri>struts/bean-el</taglib-uri>
-		<taglib-location>/WEB-INF/tld/struts-bean-el.tld</taglib-location>
-	</taglib>
-	<taglib>
-		<taglib-uri>struts/logic-el</taglib-uri>
-		<taglib-location>/WEB-INF/tld/struts-logic-el.tld</taglib-location>
-	</taglib>
-	<taglib>
-		<taglib-uri>struts/tablib</taglib-uri>
-		<taglib-location>/WEB-INF/tld/taglib.tld</taglib-location>
-	</taglib>
-	<taglib>
-		<taglib-uri>jstl/c</taglib-uri>
-		<taglib-location>/WEB-INF/tld/c.tld</taglib-location>
-	</taglib>-->
 </web-app>

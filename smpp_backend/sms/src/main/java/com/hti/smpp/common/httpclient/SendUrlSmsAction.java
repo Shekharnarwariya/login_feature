@@ -30,11 +30,6 @@ import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.regex.Pattern;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +49,13 @@ import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MultiUtility;
 import com.hti.smpp.common.util.WriteLogThread;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+@WebServlet(name = "SendUrlSmsAction", urlPatterns = { "/websms/*" })
 public class SendUrlSmsAction extends HttpServlet {
 	// private static long counter = 0;
 	private String webresp = null;
