@@ -352,8 +352,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		reportUser = customReportDTO.getClientId();
 		String campaign = customReportForm.getCampaign();
 		String messageId = customReportDTO.getMessageId(); // null; //customReportDTO.getMessageId();
-		// String messageStatus = customReportDTO.getMessageStatus();// "PENDING";
-		// //customReportDTO.getMessageStatus();
 		String destination = customReportDTO.getDestinationNumber();// "9926870493";
 																	// //customReportDTO.getDestinationNumber();
 		String senderId = customReportDTO.getSenderId();// "%"; //customReportDTO.getSenderId();

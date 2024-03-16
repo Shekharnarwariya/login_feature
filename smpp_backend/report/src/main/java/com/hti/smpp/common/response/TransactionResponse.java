@@ -9,15 +9,11 @@ import com.hti.smpp.common.user.dto.UserEntry;
 
 public class TransactionResponse {
 
-	private UserEntry userEntry;
-
 	private BalanceEntry balanceEntry;
-
-	private UserEntryExt userEntryExt;
-
 	private List<RechargeEntry> rechargeEntries;
 	private double totalCreditAmount;
 	private double totalDebitAmount;
+	
 
 	public double getTotalCreditAmount() {
 		return totalCreditAmount;
@@ -43,13 +39,8 @@ public class TransactionResponse {
 		this.rechargeEntries = rechargeEntries;
 	}
 
-	public UserEntry getUserEntry() {
-		return userEntry;
-	}
+	
 
-	public void setUserEntry(UserEntry userEntry) {
-		this.userEntry = userEntry;
-	}
 
 	public BalanceEntry getBalanceEntry() {
 		return balanceEntry;
@@ -59,12 +50,7 @@ public class TransactionResponse {
 		this.balanceEntry = balanceEntry;
 	}
 
-	public UserEntryExt getUserEntryExt() {
-		return userEntryExt;
-	}
 
-	public void setUserEntryExt(UserEntryExt userEntryExt) {
-		this.userEntryExt = userEntryExt;
-	}
+
 
 }

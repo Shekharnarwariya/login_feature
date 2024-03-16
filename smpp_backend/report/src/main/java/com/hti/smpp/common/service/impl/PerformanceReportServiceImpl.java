@@ -103,7 +103,6 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 		}
 		try {
 
-
 			List<DeliveryDTO> reportList = getReportList(customReportForm, username);
 			if (!reportList.isEmpty()) {
 				logger.info(messageResourceBundle.getLogMessage("report.size"), reportList.size());
@@ -111,8 +110,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 				// JasperPrint print = getJasperPrint(reportList, false,
 				// customReportForm.getGroupBy());
 				System.out.println("Report Size: " + reportList.size());
-				// List<DeliveryDTO> print = getJasperPrint(reportList, false,
-				// customReportForm.getGroupBy());
+
 				target = IConstants.SUCCESS_KEY;
 				return new ResponseEntity<>(reportList, HttpStatus.OK);
 			} else {
@@ -120,14 +118,24 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 						ConstantMessages.PERFORMANCE_REPORT_NOT_FOUND_MESSAGE, new Object[] { username }));
 
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new InternalServerException(messageResourceBundle.getExMessage(
-					ConstantMessages.ERROR_GETTING_PERFORMANCE_REPORT_MESSAGE, new Object[] { username }));
-
+//		} catch (Exception e) {
+//			throw new InternalServerException(messageResourceBundle.getExMessage(
+//					ConstantMessages.ERROR_GETTING_PERFORMANCE_REPORT_MESSAGE, new Object[] { username }));
+//
+//		}
+			
+		}catch (NotFoundException e) {
+				throw new NotFoundException(e.getMessage());
+			} catch (Exception ex) {
+				logger.error(user.getSystemId(), ex.fillInStackTrace());
+				target = IConstants.FAILURE_KEY;
+				throw new InternalServerException(messageResourceBundle
+						.getExMessage(ConstantMessages.ERROR_GETTING_PERFORMANCE_REPORT_MESSAGE, new Object[] { username }));
+			}
 		}
 
-	}
+	
+
 	private List<DeliveryDTO> getReportList(PerformanceReportRequest customReportForm, String username)
 			throws Exception {
 		List<DeliveryDTO> list = null;
@@ -214,7 +222,7 @@ public class PerformanceReportServiceImpl implements PerformanceReportService {
 				list.add(report);
 			}
 		} catch (SQLException sqle) {
-			logger.error(" ", sqle.fillInStackTrace());
+
 		} finally {
 			try {
 				if (pStmt != null) {

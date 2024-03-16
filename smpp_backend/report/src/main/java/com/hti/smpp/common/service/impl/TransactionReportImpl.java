@@ -35,6 +35,7 @@ import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MessageResourceBundle;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.ws.rs.BadRequestException;
 
 @Service
 public class TransactionReportImpl implements TransactionReportService {
@@ -53,7 +54,6 @@ public class TransactionReportImpl implements TransactionReportService {
 	public ResponseEntity<?> executeTransaction(String username) {
 		try {
 			final Logger logger = LoggerFactory.getLogger(ReportServiceImpl.class);
-
 			String target = IConstants.FAILURE_KEY;
 			Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 			UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
@@ -62,7 +62,6 @@ public class TransactionReportImpl implements TransactionReportService {
 				throw new UnauthorizedException(messageResourceBundle
 						.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 			}
-
 			String accessRole = user.getRole();
 			Integer[] userid = null;
 			boolean proceed = true;
@@ -109,9 +108,9 @@ public class TransactionReportImpl implements TransactionReportService {
 				Collection<List<RechargeEntry>> transactions = userService.listTransactions(userid).values();
 
 				TransactionResponse response = new TransactionResponse();
+
 				if (userid.length == 1) {
 					UserEntry userEntry = userRepository.findById(userid[0]).get();
-					// BalanceEntry balance = balanceEntryRepository.findById(userid[0]).get();
 
 					Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findByUserId(userid[0]);
 
@@ -148,10 +147,10 @@ public class TransactionReportImpl implements TransactionReportService {
 						}
 						txnlist.addAll(list);
 					}
-					response.setUserEntryExt(entry);
+					response.setRechargeEntries(txnlist);
+					response.setBalanceEntry(balance);
 					response.setTotalCreditAmount(totalCreditAmount);
 					response.setTotalDebitAmount(totalDebitAmount);
-
 				} else {
 					for (List<RechargeEntry> list : transactions) {
 						txnlist.addAll(list);
@@ -161,15 +160,19 @@ public class TransactionReportImpl implements TransactionReportService {
 				logger.info(user.getSystemId() + " View Transaction list: " + txnlist.size());
 				target = IConstants.SUCCESS_KEY;
 				return ResponseEntity.ok(response);
+			} else {
+				throw new NotFoundException(
+						messageResourceBundle.getExMessage(ConstantMessages.TRASACTION_DATA_NOT_FOUND));
 			}
-			String message = messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND,
-					new Object[] { "Additional context or user identifier" });
-			throw new NotFoundException(message);
+		} catch (NotFoundException e) {
+
+			throw new NotFoundException(e.getMessage());
+		} catch (IllegalArgumentException e) {
+			throw new BadRequestException(messageResourceBundle
+					.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] { e.getMessage() }));
+
 		} catch (Exception e) {
-			
-			throw new InternalServerException(
-					messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_MESSAGE));
+			throw new InternalServerException(e.getMessage());
 		}
 	}
-
 }

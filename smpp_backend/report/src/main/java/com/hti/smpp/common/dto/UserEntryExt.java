@@ -23,8 +23,7 @@ public class UserEntryExt {
 	private SessionEntry sessionEntry;
 	private BindErrorEntry bindErrorEntry;
 	private String walletAmount;
-
-//Getter and Setter
+  //Getter and Setter
 	public UserEntryExt(UserEntry userEntry) {
 		this.userEntry = userEntry;
 	}
