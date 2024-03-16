@@ -23,7 +23,17 @@ public class ProfileResponse {
 	private String currency;
 	
 	private byte[] profilePath;
+	
+	private String profileName;
+	
+	
 
+	public String getProfileName() {
+		return profileName;
+	}
+	public void setProfileName(String profileName) {
+		this.profileName = profileName;
+	}
 	public String getCurrency() {
 		return currency;
 	}

@@ -242,6 +242,9 @@ public class LoginServiceImpl implements LoginService {
 			profileResponse.setRoles(userEntry.getRole());
 			profileResponse.setContactNo(professionEntry.getMobile());
 			profileResponse.setCurrency(userEntry.getCurrency());
+			String filePath = professionEntry.getImageFilePath().strip();
+			String fileExtension = filePath.substring(filePath.lastIndexOf(".") + 1);
+			profileResponse.setProfileName(fileExtension);
 			String profileImagePath = professionEntry.getImageFilePath();
 			if (profileImagePath != null && !profileImagePath.isEmpty()) {
 				try {
