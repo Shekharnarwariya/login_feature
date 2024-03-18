@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hti.smpp.common.exception.ExceptionResponse;
@@ -49,8 +50,7 @@ public class HlrSmscController {
 	// Endpoint to save a new HLR SMS entry
 	@PostMapping("/save-hlr-smsc")
 	@Operation(summary = "Save HLR SMSC Entry", description = "Save a new HLR SMSC entry")
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "201", description = "HLR SMSC Entry Saved Successfully."),
+	@ApiResponses(value = { @ApiResponse(responseCode = "201", description = "HLR SMSC Entry Saved Successfully."),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
@@ -62,8 +62,7 @@ public class HlrSmscController {
 	// Endpoint to update an existing HLR SMS entry
 	@PutMapping("/update-hlr-smsc/{id}")
 	@Operation(summary = "Update HLR SMSC Entry", description = "Update an existing HLR SMSC entry")
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "201", description = "HLR SMSC Entry Updated Successfully."),
+	@ApiResponses(value = { @ApiResponse(responseCode = "201", description = "HLR SMSC Entry Updated Successfully."),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
@@ -75,8 +74,7 @@ public class HlrSmscController {
 	// Endpoint to delete an existing HLR SMS entry
 	@DeleteMapping("/delete-hlr-smsc/{id}")
 	@Operation(summary = "Delete HLR SMSC Entry", description = "Delete an existing HLR SMSC entry")
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "HLR SMSC Entry Deleted Successfully."),
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "HLR SMSC Entry Deleted Successfully."),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
@@ -105,7 +103,8 @@ public class HlrSmscController {
 			@ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "404", description = "Content Not Found.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
-	public ResponseEntity<List<HlrSmscEntry>> listHlrSmscEntries(@RequestHeader("username") String username) {
-		return ResponseEntity.ok(hlrSmscService.list(username));
+	public ResponseEntity<List<HlrSmscEntry>> listHlrSmscEntries(@RequestHeader("username") String username,
+			@RequestParam String purpose) {
+		return ResponseEntity.ok(hlrSmscService.list(username, purpose));
 	}
 }

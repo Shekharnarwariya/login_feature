@@ -23,7 +23,11 @@ import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.repository.UserEntryRepository;
 import com.hti.smpp.common.util.Access;
 import com.hti.smpp.common.util.ConstantMessages;
+import com.hti.smpp.common.util.Constants;
+import com.hti.smpp.common.util.FlagStatus;
+import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MessageResourceBundle;
+import com.hti.smpp.common.util.MultiUtility;
 
 @Service
 public class HlrSmscServiceImpl implements HlrSmscService {
@@ -65,6 +69,8 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 
 			HlrSmscEntry savedEntry = hlrSmscRepository.save(entry);
 			logger.info(messageResourceBundle.getLogMessage("hlr.smsc.saved.successfully.info"), savedEntry.getId());
+			MultiUtility.changeFlag(Constants.HLR_SMSC_FLAG_FILE, "707");
+
 			return new ResponseEntity<>(messageResourceBundle.getMessage(ConstantMessages.HLR_SMSC_SAVED_SUCCESS,
 					new Object[] { savedEntry.getId() }), HttpStatus.CREATED);
 		} catch (Exception e) {
@@ -108,6 +114,8 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 
 			hlrSmscRepository.save(updatedEntry);
 			logger.info(messageResourceBundle.getMessage("update.success.message"), username);
+			MultiUtility.changeFlag(Constants.HLR_SMSC_FLAG_DIR + "" + updatedEntry.getName() + ".txt", "505");
+			MultiUtility.changeFlag(Constants.HLR_SMSC_FLAG_FILE, "707");
 
 			return ResponseEntity.ok(updatedEntry);
 		} catch (DataAccessException e) {
@@ -155,6 +163,7 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 			// Delete the HLR SMS entry
 			hlrSmscRepository.deleteById(id);
 			logger.info(messageResourceBundle.getMessage("delete.success.message"), username);
+			MultiUtility.changeFlag(Constants.HLR_SMSC_FLAG_FILE, "707");
 
 			return ResponseEntity.noContent().build();
 		} catch (DataAccessException e) {
@@ -211,8 +220,8 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 	// Method to list all HLR SMS entries for a user
 
 	@Override
-	public List<HlrSmscEntry> list(String username) {
-
+	public List<HlrSmscEntry> list(String username, String purpose) {
+		String target = IConstants.FAILURE_KEY;
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -233,10 +242,27 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 						
 			List<HlrSmscEntry> existingEntries = hlrSmscRepository.findBySystemId(systemId);
 			if (!existingEntries.isEmpty()) {
-				return existingEntries;
+
+				if (purpose.equalsIgnoreCase("status")) {
+					target = "status";
+				} else if (purpose.equalsIgnoreCase("flag")) {
+					for (HlrSmscEntry entry : existingEntries) {
+						String Flag = MultiUtility.readFlag(Constants.HLR_SMSC_FLAG_DIR + entry.getName() + ".txt");
+						if (Flag.equalsIgnoreCase(FlagStatus.BLOCKED)) {
+							entry.setFlag("BLOCKED");
+						} else {
+							entry.setFlag("DEFAULT");
+						}
+					}
+					target = "flag";
+				} else if (purpose.equalsIgnoreCase("edit")) {
+					target = "edit";
+				}
+
 			} else {
 				throw new NotFoundException("No HLR SMSC Found!");
 			}
+			return existingEntries;
 
 		} catch (NotFoundException e) {
 			throw new NotFoundException(e.getLocalizedMessage());
