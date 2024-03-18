@@ -400,10 +400,10 @@ public class ConstantMessages {
     public static final String ALERT_ENTRIES_NOT_FOUND = "alert.entries.not.found";
     public static final String UPDATE_ALERT_ENTITY_FAILED = "update.alert.entity.failed";
 	public static final String CAMPAIGN_REPORT_NOT_FOUND_MESSAGE = "campaign.report.not.found";
-<<<<<<< HEAD
+
 	public static final String TRASACTION_DATA_NOT_FOUND = "trasaction.data.not.found";
-=======
->>>>>>> d4f1ac52cbadefe483f9c9ff19ea9737033e4737
+
+
 
     
 }
