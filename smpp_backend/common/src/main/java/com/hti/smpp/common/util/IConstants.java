@@ -68,7 +68,8 @@ public final class IConstants {
 	public static int SMPP_PORT = Integer.parseInt(ContextListener.property.getProperty("load.port"));
 	public static int SMPP_USER_PORT = Integer.parseInt(ContextListener.property.getProperty("load.smpp.port"));
 	public static final String HLR_IP = ContextListener.property.getProperty("load.hlrip");
-	public static int HLR_PORT = Integer.parseInt(ContextListener.property.getProperty("load.hlrport"));
+	public static int HLR_PORT = Integer.parseInt(ContextListener.property.getProperty("hlr.rmi.port"));
+	public static int HLR_RMI_PORT = Integer.parseInt(ContextListener.property.getProperty("load.hlrport"));
 	public static final String WebUrl = ContextListener.property.getProperty("mail.sitename");
 	public static final String applicationName = ContextListener.property.getProperty("load.applicationName");
 	public static final String admin = ContextListener.property.getProperty("load.admin");
