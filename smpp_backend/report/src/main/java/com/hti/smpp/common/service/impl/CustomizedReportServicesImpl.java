@@ -47,6 +47,7 @@ import com.hazelcast.query.impl.PredicateBuilderImpl;
 import com.hti.smpp.common.database.DBException;
 import com.hti.smpp.common.database.DataBase;
 import com.hti.smpp.common.exception.InternalServerException;
+import com.hti.smpp.common.exception.MessageIdNotFoundException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.UnauthorizedException;
 import com.hti.smpp.common.messages.dto.BulkMapEntry;
@@ -167,130 +168,9 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		}
 	}
 
-	public List<DeliveryDTO> getSummaryJasperPrint(List reportList, String username) {
+	
 
-		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
-		UserEntry user = userOptional
-				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
-
-		List<DeliveryDTO> print = null;
-		List<DeliveryDTO> report = null;
-		List<DeliveryDTO> design = null;
-
-		String groupby = "country";
-		String reportUser = null;
-		if (groupby.equalsIgnoreCase("country")) {
-			reportList = sortListByCountry(reportList);
-			logger.info(user.getSystemId() + " <-- Preparing Charts --> ");
-			// ------------- Preparing databeancollection for chart ------------------
-			Iterator itr = reportList.iterator();
-			Map temp_chart = new HashMap();
-			Map deliv_map = new LinkedHashMap();
-			Map total_map = new HashMap();
-			while (itr.hasNext()) {
-				DeliveryDTO chartDTO = (DeliveryDTO) itr.next();
-				String status = chartDTO.getStatus();
-				int counter = 0;
-				if (temp_chart.containsKey(status)) {
-					counter = (Integer) temp_chart.get(status);
-				}
-				counter = counter + chartDTO.getStatusCount();
-				temp_chart.put(status, counter);
-				// --------------- Bar Chart -------------------
-				if (status.startsWith("DELIV")) {
-					int delivCounter = 0;
-					if (deliv_map.containsKey(chartDTO.getCountry())) {
-						delivCounter = (Integer) deliv_map.get(chartDTO.getCountry());
-					}
-					delivCounter = delivCounter + chartDTO.getStatusCount();
-					deliv_map.put(chartDTO.getCountry(), delivCounter);
-				}
-				int total_counter = 0;
-				if (total_map.containsKey(chartDTO.getCountry())) {
-					total_counter = (Integer) total_map.get(chartDTO.getCountry());
-				}
-				total_counter = total_counter + chartDTO.getStatusCount();
-				total_map.put(chartDTO.getCountry(), total_counter);
-			}
-			List<DeliveryDTO> chart_list = new ArrayList();
-			if (!temp_chart.isEmpty()) {
-				itr = temp_chart.entrySet().iterator();
-				while (itr.hasNext()) {
-					Map.Entry entry = (Map.Entry) itr.next();
-					DeliveryDTO chartDTO = new DeliveryDTO((String) entry.getKey(), (Integer) entry.getValue());
-					chart_list.add(chartDTO);
-				}
-			}
-			List<DeliveryDTO> bar_chart_list = new ArrayList();
-			total_map = sortMapByDscValue(total_map, 10);
-			DeliveryDTO chartDTO = null;
-			itr = total_map.entrySet().iterator();
-			while (itr.hasNext()) {
-				Map.Entry entry = (Map.Entry) itr.next();
-				String country = (String) entry.getKey();
-				int total = (Integer) entry.getValue();
-				chartDTO = new DeliveryDTO("SUBMITTED", total);
-				chartDTO.setCountry(country);
-				bar_chart_list.add(chartDTO);
-				int delivered = 0;
-				if (deliv_map.containsKey(country)) {
-					delivered = (Integer) deliv_map.get(country);
-				}
-				chartDTO = new DeliveryDTO("DELIVRD", delivered);
-				chartDTO.setCountry(country);
-				bar_chart_list.add(chartDTO);
-			}
-		} else {
-			Map<String, DeliveryDTO> map = new LinkedHashMap<String, DeliveryDTO>();
-			reportList = sortListBySender(reportList);
-			Iterator itr = reportList.iterator();
-			DeliveryDTO reportDTO = null;
-			DeliveryDTO tempDTO = null;
-			while (itr.hasNext()) {
-				reportDTO = (DeliveryDTO) itr.next();
-				String key = reportDTO.getDate() + "#" + reportDTO.getSender().toLowerCase() + "#"
-						+ reportDTO.getCountry() + "#" + reportDTO.getOperator();
-				if (map.containsKey(key)) {
-					tempDTO = map.get(key);
-				} else {
-					tempDTO = new DeliveryDTO();
-					tempDTO.setDate(reportDTO.getDate());
-					tempDTO.setCountry(reportDTO.getCountry());
-					tempDTO.setOperator(reportDTO.getOperator());
-					tempDTO.setSender(reportDTO.getSender());
-				}
-				if (reportDTO.getStatus().startsWith("DELIV")) {
-					tempDTO.setDelivered(tempDTO.getDelivered() + reportDTO.getStatusCount());
-				}
-				tempDTO.setSubmitted(tempDTO.getSubmitted() + reportDTO.getStatusCount());
-				System.out.println(
-						key + " :-> " + " Submit: " + tempDTO.getSubmitted() + " Delivered: " + tempDTO.getDelivered());
-				map.put(key, tempDTO);
-			}
-			reportList.clear();
-			reportList.addAll(map.values());
-		}
-		logger.info(user.getSystemId() + " <-- Preparing report --> ");
-		String time_interval = reportUser;
-		if (!reportList.isEmpty()) {
-			String first_date = ((DeliveryDTO) reportList.get(0)).getDate();
-			String last_date = ((DeliveryDTO) reportList.get((reportList.size() - 1))).getDate();
-			if (first_date.equalsIgnoreCase(last_date)) {
-				time_interval += " [ For " + first_date + " ]";
-			} else {
-				time_interval += " [ From " + first_date + " To " + last_date + " ]";
-			}
-		}
-		return reportList;
-	}
-
-	private <K, V extends Comparable<? super V>> Map<K, V> sortMapByDscValue(Map<K, V> map, int limit) {
-		Map<K, V> result = new LinkedHashMap<>();
-		Stream<Map.Entry<K, V>> st = map.entrySet().stream();
-		st.sorted(Collections.reverseOrder(Map.Entry.comparingByValue())).limit(limit)
-				.forEachOrdered(e -> result.put(e.getKey(), e.getValue()));
-		return result;
-	}
+	
 
 	public List sortListBySender(List list) {
 		// logger.info(userSessionObject.getSystemId() + " sortListBySender ");
@@ -326,7 +206,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	}
 
 	private List<DeliveryDTO> getCustomizedReportList(CustomizedReportRequest customReportForm, String username)
-			throws DBException {
+			throws DBException, MessageIdNotFoundException {
 		String target = IConstants.FAILURE_KEY;
 		String groupby = "country";
 		String reportUser = null;
@@ -385,6 +265,10 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				isSummary = false;
 				String userQuery = "select username from mis_table where msg_id ='" + messageId + "'";
 				List userSet = getDistinctMisUser(userQuery);
+				try {
+				if (userSet.isEmpty()) {
+				    throw new MessageIdNotFoundException(messageId);
+				}
 				if (!userSet.isEmpty()) {
 					reportUser = (String) userSet.remove(0);
 					if (to_gmt != null) {
@@ -407,9 +291,19 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				}
 				 final_list.addAll(list);
 				logger.info(user.getSystemId() + " End Based On MessageId. Final Report Size: " + final_list.size());
-			} else {
+			} 
+			 catch (MessageIdNotFoundException e) {
+			    logger.error(user.getSystemId() + " " + e.getMessage());
+			    // Handle the exception, such as returning an error message or null
+			    return null; // or any other appropriate response/action
+			} catch (Exception e) {
+			    // Handle any other exceptions that might occur
+			    logger.error(user.getSystemId() + " Unexpected error: " + e.getMessage());
+			    return null; // or any other appropriate response/action
+			}
+			}else {
 				logger.info(user.getSystemId() + " Invalid MessageId");
-				return null;
+				 return null;
 			}
 
 		} else if (criteria_type.equalsIgnoreCase("campaign")) {
@@ -1190,88 +1084,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		return users;
 	}
 
-//	public List getCustomizedReport(String username, String query, boolean hideNum) {
-//		System.out.println("query1" + query);
-//		List customReport = new ArrayList();
-//		Connection con = null;
-//		PreparedStatement pStmt = null;
-//		ResultSet rs = null;
-//		String dest = "";
-//		DeliveryDTO report = null;
-//		// int counter = 0;
-//		System.out.println("SQL: " + query);
-//		String msg_id = null;
-//		try {
-//			con = getConnection();
-//			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
-//					java.sql.ResultSet.CONCUR_READ_ONLY);
-//			pStmt.setFetchSize(Integer.MIN_VALUE);
-//			rs = pStmt.executeQuery();
-//			if (rs != null) {
-//				while (rs.next()) {
-//					msg_id = rs.getString("msg_id");
-//					try {
-//						dest = rs.getString("dest_no");
-//						if (hideNum) {
-//							String newDest = dest.substring(0, dest.length() - 2);
-//							dest = newDest + "**";
-//						}
-//						String[] time = rs.getString("submitted_time").split(" ");
-//						String oprCountry = rs.getString("oprCountry");
-//						int network_id = 0;
-//						try {
-//							network_id = Integer.parseInt(oprCountry);
-//						} catch (Exception ex) {
-//						}
-//						String country = null, operator = null;
-//						if (GlobalVars.NetworkEntries.containsKey(network_id)) {
-//							NetworkEntry network = GlobalVars.NetworkEntries.get(network_id);
-//							country = network.getCountry();
-//							operator = network.getOperator();
-//						} else {
-//							country = oprCountry;
-//							operator = oprCountry;
-//						}
-//						report = new DeliveryDTO(msg_id, country, operator, dest, rs.getString("source_no"),
-//								rs.getDouble("cost"), time[0], time[1], rs.getString("status"));
-//						report.setDeliverOn(rs.getString("deliver_time"));
-//						report.setUsername(username);
-//						report.setRoute(rs.getString("Route_to_SMSC"));
-//						report.setErrCode(rs.getString("err_code"));
-//						customReport.add(report);
-//						System.out.println(customReport +"  line number 1246");
-//						/*
-//						 * if (++counter > 1000) { counter = 0; logger.info(username +
-//						 * " Report List Counter:--> " + customReport.size()); }
-//						 */
-//					} catch (Exception sqle) {
-//						logger.error(msg_id, sqle.fillInStackTrace());
-//					}
-//				}
-//			
-//			}
-//		} catch (SQLException ex) {
-//			if (ex.getMessage().contains("Table") && ex.getMessage().contains("doesn't exist")) {
-//				logger.info("<-- " + username + " Mis & Content Table Doesn't Exist -->");
-//			} else {
-//				logger.error(" ", ex.fillInStackTrace());
-//			}
-//		} finally {
-//			try {
-//				if (pStmt != null) {
-//					pStmt.close();
-//				}
-//				if (rs != null) {
-//					rs.close();
-//				}
-//				if (con != null) {
-//					con.close();
-//				}
-//			} catch (SQLException sqle) {
-//			}
-//		}
-//		return customReport;
-//	}
 
 	public List getCustomizedReport(String username, String query, boolean hideNum) throws DBException {
 		List customReport = new ArrayList();
@@ -1624,20 +1436,19 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	public List<String> getDistinctMisUser(String userQuery) {
 		System.out.println(userQuery);
 		List<String> userSet = new ArrayList<>();
-		Connection con = null;
+		Connection con = null;																									
 		Statement pStmt = null;
 		ResultSet rs = null;
 		try {
-			con = getConnection(); // Ensure this method exists and returns a valid connection
+			con = getConnection(); 
 			pStmt = con.createStatement();
 			rs = pStmt.executeQuery(userQuery);
 			while (rs.next()) {
 				userSet.add(rs.getString("username"));
 			}
 		} catch (SQLException sqle) {
-			sqle.printStackTrace(); // Log or handle the SQLException
+			
 		} catch (Exception e) {
-			e.printStackTrace(); // Log or handle other exceptions
 		} finally {
 			try {
 				if (rs != null) {
