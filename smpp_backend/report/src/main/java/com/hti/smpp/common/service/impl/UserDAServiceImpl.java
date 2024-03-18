@@ -464,11 +464,11 @@ public class UserDAServiceImpl implements UserDAService {
 		}
 		return map;
 	}
-
 	@Override
 	public Map<Integer, List<RechargeEntry>> listTransactions(Integer[] userid) {
 		return listTransactions(userid, null, null, null);
 	}
+
 
 //	@Override
 //	public void saveAccessLogEntry(AccessLogEntry entry) {

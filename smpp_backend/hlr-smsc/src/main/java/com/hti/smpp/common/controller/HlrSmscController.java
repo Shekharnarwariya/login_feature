@@ -41,12 +41,12 @@ public class HlrSmscController {
 	private final HlrSmscService hlrSmscService;
 
 	// Constructor injection for HlrSmscService
-
+														
 	@Autowired
 	public HlrSmscController(HlrSmscService hlrSmscService) {
 		this.hlrSmscService = hlrSmscService;
 	}
-
+											
 	// Endpoint to save a new HLR SMS entry
 	@PostMapping("/save-hlr-smsc")
 	@Operation(summary = "Save HLR SMSC Entry", description = "Save a new HLR SMSC entry")
@@ -70,7 +70,7 @@ public class HlrSmscController {
 			@RequestBody @Valid HlrSmscEntryRequest hlrSmscEntryRequest, @RequestHeader("username") String username) {
 		return hlrSmscService.update(id, hlrSmscEntryRequest, username);
 	}
-
+														
 	// Endpoint to delete an existing HLR SMS entry
 	@DeleteMapping("/delete-hlr-smsc/{id}")
 	@Operation(summary = "Delete HLR SMSC Entry", description = "Delete an existing HLR SMSC entry")
@@ -81,7 +81,7 @@ public class HlrSmscController {
 	public ResponseEntity<?> deleteHlrSmscEntry(@PathVariable int id, @RequestHeader("username") String username) {
 		return hlrSmscService.delete(id, username);
 	}
-
+				
 	// Endpoint to get details of a specific HLR SMS entry
 	@GetMapping("/get-hlr-smsc/{id}")
 	@Operation(summary = "Get HLR SMSC Entry", description = "Get details of a specific HLR SMSC entry")

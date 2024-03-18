@@ -44,6 +44,7 @@ import org.springframework.stereotype.Service;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.PredicateBuilder.EntryObject;
 import com.hazelcast.query.impl.PredicateBuilderImpl;
+import com.hti.smpp.common.database.DBException;
 import com.hti.smpp.common.database.DataBase;
 import com.hti.smpp.common.exception.InternalServerException;
 import com.hti.smpp.common.exception.NotFoundException;
@@ -135,13 +136,13 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				throw new UnauthorizedException("User does not have the required roles for this operation.");
 			}
 
-			List<DeliveryDTO> reportList = getCustomizedReportList(customReportForm, username);
-			if (customReportForm.getReportType().equalsIgnoreCase("Summary")) {
+			String reportType = customReportForm.getReportType();
+			if (reportType != null && "Summary".equalsIgnoreCase(reportType)) {
 				isSummary = true;
 			} else {
 				isSummary = false;
 			}
-			System.out.println(isSummary);
+			List<DeliveryDTO> reportList = getCustomizedReportList(customReportForm, username);
 			if (reportList != null && !reportList.isEmpty()) {
 				logger.info(user.getSystemId() + " ReportSize[View]:" + reportList.size());
 				logger.info(user.getSystemId() + " <-- Report Finished --> ");
@@ -324,7 +325,8 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		return sortedList;
 	}
 
-	private List<DeliveryDTO> getCustomizedReportList(CustomizedReportRequest customReportForm, String username) {
+	private List<DeliveryDTO> getCustomizedReportList(CustomizedReportRequest customReportForm, String username)
+			throws DBException {
 		String target = IConstants.FAILURE_KEY;
 		String groupby = "country";
 		String reportUser = null;
@@ -352,8 +354,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		reportUser = customReportDTO.getClientId();
 		String campaign = customReportForm.getCampaign();
 		String messageId = customReportDTO.getMessageId(); // null; //customReportDTO.getMessageId();
-		// String messageStatus = customReportDTO.getMessageStatus();// "PENDING";
-		// //customReportDTO.getMessageStatus();
 		String destination = customReportDTO.getDestinationNumber();// "9926870493";
 																	// //customReportDTO.getDestinationNumber();
 		String senderId = customReportDTO.getSenderId();// "%"; //customReportDTO.getSenderId();
@@ -378,6 +378,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		}
 		logger.info(user.getSystemId() + " " + customReportDTO + ",isContent=" + isContent + ",GroupBy=" + groupby
 				+ ",Status=" + status);
+
 		if (criteria_type.equalsIgnoreCase("messageid")) {
 			logger.info(user.getSystemId() + " Report Based On MessageId: " + messageId);
 			if (messageId != null && messageId.trim().length() > 0) {
@@ -392,7 +393,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					} else {
 						query = "select submitted_time,";
 					}
-					query += "msg_id,oprCountry,source_no,dest_no,cost,status,deliver_time,err_code,Route_to_SMSC from mis_"
+					query += "msg_id,oprCountry,source_no,route_to_smsc,dest_no,cost,status,deliver_time,err_code from mis_"
 							+ reportUser + " where msg_id ='" + messageId + "'";
 					logger.info(user.getSystemId() + " ReportSQL:" + query);
 					if (isContent) {
@@ -401,15 +402,16 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 							list = getMessageContent(map, reportUser);
 						}
 					} else {
-						list = (List) getCustomizedReport(reportUser, query, webMasterEntry.isHideNum());
+						list = getCustomizedReport(reportUser, query, webMasterEntry.isHideNum());
 					}
 				}
-				final_list.addAll(list);
+				 final_list.addAll(list);
 				logger.info(user.getSystemId() + " End Based On MessageId. Final Report Size: " + final_list.size());
 			} else {
 				logger.info(user.getSystemId() + " Invalid MessageId");
 				return null;
 			}
+
 		} else if (criteria_type.equalsIgnoreCase("campaign")) {
 			logger.info(user.getSystemId() + " Report Based On Campaign: " + campaign);
 			if (campaign != null && campaign.length() > 1) {
@@ -1188,17 +1190,96 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		return users;
 	}
 
-	public List getCustomizedReport(String username, String query, boolean hideNum) {
-		System.out.println("query1" + query);
+//	public List getCustomizedReport(String username, String query, boolean hideNum) {
+//		System.out.println("query1" + query);
+//		List customReport = new ArrayList();
+//		Connection con = null;
+//		PreparedStatement pStmt = null;
+//		ResultSet rs = null;
+//		String dest = "";
+//		DeliveryDTO report = null;
+//		// int counter = 0;
+//		System.out.println("SQL: " + query);
+//		String msg_id = null;
+//		try {
+//			con = getConnection();
+//			pStmt = con.prepareStatement(query, java.sql.ResultSet.TYPE_FORWARD_ONLY,
+//					java.sql.ResultSet.CONCUR_READ_ONLY);
+//			pStmt.setFetchSize(Integer.MIN_VALUE);
+//			rs = pStmt.executeQuery();
+//			if (rs != null) {
+//				while (rs.next()) {
+//					msg_id = rs.getString("msg_id");
+//					try {
+//						dest = rs.getString("dest_no");
+//						if (hideNum) {
+//							String newDest = dest.substring(0, dest.length() - 2);
+//							dest = newDest + "**";
+//						}
+//						String[] time = rs.getString("submitted_time").split(" ");
+//						String oprCountry = rs.getString("oprCountry");
+//						int network_id = 0;
+//						try {
+//							network_id = Integer.parseInt(oprCountry);
+//						} catch (Exception ex) {
+//						}
+//						String country = null, operator = null;
+//						if (GlobalVars.NetworkEntries.containsKey(network_id)) {
+//							NetworkEntry network = GlobalVars.NetworkEntries.get(network_id);
+//							country = network.getCountry();
+//							operator = network.getOperator();
+//						} else {
+//							country = oprCountry;
+//							operator = oprCountry;
+//						}
+//						report = new DeliveryDTO(msg_id, country, operator, dest, rs.getString("source_no"),
+//								rs.getDouble("cost"), time[0], time[1], rs.getString("status"));
+//						report.setDeliverOn(rs.getString("deliver_time"));
+//						report.setUsername(username);
+//						report.setRoute(rs.getString("Route_to_SMSC"));
+//						report.setErrCode(rs.getString("err_code"));
+//						customReport.add(report);
+//						System.out.println(customReport +"  line number 1246");
+//						/*
+//						 * if (++counter > 1000) { counter = 0; logger.info(username +
+//						 * " Report List Counter:--> " + customReport.size()); }
+//						 */
+//					} catch (Exception sqle) {
+//						logger.error(msg_id, sqle.fillInStackTrace());
+//					}
+//				}
+//			
+//			}
+//		} catch (SQLException ex) {
+//			if (ex.getMessage().contains("Table") && ex.getMessage().contains("doesn't exist")) {
+//				logger.info("<-- " + username + " Mis & Content Table Doesn't Exist -->");
+//			} else {
+//				logger.error(" ", ex.fillInStackTrace());
+//			}
+//		} finally {
+//			try {
+//				if (pStmt != null) {
+//					pStmt.close();
+//				}
+//				if (rs != null) {
+//					rs.close();
+//				}
+//				if (con != null) {
+//					con.close();
+//				}
+//			} catch (SQLException sqle) {
+//			}
+//		}
+//		return customReport;
+//	}
+
+	public List getCustomizedReport(String username, String query, boolean hideNum) throws DBException {
 		List customReport = new ArrayList();
 		Connection con = null;
 		PreparedStatement pStmt = null;
 		ResultSet rs = null;
-		// DBMessage dbMsg = null;
-		// boolean replace = false;
 		String dest = "";
 		DeliveryDTO report = null;
-		// int counter = 0;
 		System.out.println("SQL: " + query);
 		String msg_id = null;
 		try {
@@ -1236,9 +1317,10 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 								rs.getDouble("cost"), time[0], time[1], rs.getString("status"));
 						report.setDeliverOn(rs.getString("deliver_time"));
 						report.setUsername(username);
-						report.setRoute(rs.getString("Route_to_SMSC"));
+						report.setRoute(rs.getString("route_to_smsc"));
 						report.setErrCode(rs.getString("err_code"));
 						customReport.add(report);
+						System.out.println(" customereport Data" + customReport);
 						/*
 						 * if (++counter > 1000) { counter = 0; logger.info(username +
 						 * " Report List Counter:--> " + customReport.size()); }
@@ -1247,14 +1329,12 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 						logger.error(msg_id, sqle.fillInStackTrace());
 					}
 				}
-				// logger.info(username + " Report List Final Count:--> " +
-				// customReport.size());
+
 			}
 		} catch (SQLException ex) {
 			if (ex.getMessage().contains("Table") && ex.getMessage().contains("doesn't exist")) {
 				logger.info("<-- " + username + " Mis & Content Table Doesn't Exist -->");
-				// createMisTable(username);
-				// createContentTable(username);
+
 			} else {
 				logger.error(" ", ex.fillInStackTrace());
 			}
@@ -1542,6 +1622,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	}
 
 	public List<String> getDistinctMisUser(String userQuery) {
+		System.out.println(userQuery);
 		List<String> userSet = new ArrayList<>();
 		Connection con = null;
 		Statement pStmt = null;
@@ -1894,7 +1975,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				}
 				if (con != null) {
 					con.close();
-					
+
 				}
 			} catch (SQLException sqle) {
 			}

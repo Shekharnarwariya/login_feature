@@ -239,7 +239,7 @@ public class HlrSmscServiceImpl implements HlrSmscService {
 
 		try {
 			String systemId = user.getSystemId();
-
+						
 			List<HlrSmscEntry> existingEntries = hlrSmscRepository.findBySystemId(systemId);
 			if (!existingEntries.isEmpty()) {
 
