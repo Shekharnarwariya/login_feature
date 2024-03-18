@@ -63,11 +63,12 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-				throw new UnauthorizedException(
-						messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
+				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
+				
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+			logger.error("User not found with system ID: {}", username);
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		logger.info(messageResourceBundle.getLogMessage("add.template.req"), user.getId(), request.getTitle(),
@@ -86,6 +87,7 @@ public class TemplatesServiceImpl implements TemplatesService {
 		try {
 			savedTemplate = templatesRepository.save(template);
 		} catch (Exception e) {
+			 logger.error("Error occurred while saving template for user: {}", userOptional.get().getId(), e);
 			logger.error(userOptional.get().getId() + " " + e.fillInStackTrace());
 			logger.error(messageResourceBundle.getLogMessage("process.error"), e.getMessage(), e.getCause());
 
@@ -120,11 +122,13 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+				   logger.error("Unauthorized operation attempted by user: {}", user.getId());
 				throw new UnauthorizedException(
-						messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
+						messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+			 logger.error("User not found with system ID: {}", username);
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		String system_id = user.getSystemId();
@@ -165,11 +169,13 @@ public class TemplatesServiceImpl implements TemplatesService {
 		if (userOptional.isPresent()) {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			    logger.error("Unauthorized operation attempted by user: {}", user.getId());
 				throw new UnauthorizedException(
-						messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
+						messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+			  logger.error("User not found with system ID: {}", username);
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		String system_id = user.getSystemId();
@@ -239,7 +245,8 @@ public class TemplatesServiceImpl implements TemplatesService {
 				throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+			logger.error("User not found with system ID: {}", username);
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		String system_id = user.getSystemId();
@@ -293,10 +300,11 @@ public class TemplatesServiceImpl implements TemplatesService {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException(
-						messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
+						messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+			logger.error("User not found with system ID: {}", username);
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		String system_id = user.getSystemId();
@@ -352,10 +360,11 @@ public class TemplatesServiceImpl implements TemplatesService {
 			user = userOptional.get();
 			if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
 				throw new UnauthorizedException(
-						messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION));
+						messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] {username}));
 			}
 		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+			logger.error("User not found with system ID: {}", username);
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] {username}));
 		}
 
 		try {
