@@ -1,5 +1,6 @@
 package com.hti.smpp.common.addressbook.services;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
 import com.hti.smpp.common.addressbook.request.GroupEntryRequest;
@@ -14,5 +15,5 @@ public interface GroupEntryService {
 
 	public ResponseEntity<?> modifyGroupEntryDelete(int id, String username);
 
-	public ResponseEntity<?> listGroup(String purpose, String groupData, String username);
+	public ResponseEntity<?> listGroup(String purpose, String groupData, String username,Pageable pageable);
 }
