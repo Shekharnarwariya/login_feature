@@ -63,47 +63,45 @@ public class AbortBatchReportServiceImpl implements AbortBatchReportService {
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
 	}
-
+		
 	@Override
 	public List<BulkEntry> abortBatchReport(String username, AbortBatchReportRequest customReportForm) {
-	    Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
+		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 
-	    UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
-	            messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[]{username})));
+		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
+				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
 
-	    if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-	        throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
-	                new Object[]{username}));
-	    }
+		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
+			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
+					new Object[] { username }));
+		}
 
-	    try {
-	        List<BulkEntry> reportList = getReportList(customReportForm, user.getId());
+		try {
+			List<BulkEntry> reportList = getReportList(customReportForm, user.getId());
 
-	        if (!reportList.isEmpty()) {
-	            System.out.println("Report Size: " + reportList.size());
-	            return reportList;
-	        } else {
+			if (!reportList.isEmpty()) {
+				System.out.println("Report Size: " + reportList.size());
+				return reportList;
+			} else {
 				throw new NotFoundException(
 						messageResourceBundle.getExMessage(ConstantMessages.NO_DATA_FOUND_ABORT_REPORT));
- }
-	    } 
-	    catch (NotFoundException e) {
+			}
+		} catch (NotFoundException e) {
 			// Log NotFoundException
 			throw new NotFoundException(e.getMessage());
-			
-	    }catch (IllegalArgumentException e) {
-	        // Log IllegalArgumentException
-	        logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
-	        throw new BadRequestException(messageResourceBundle
-	                .getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[]{e.getMessage()}));
-	    } catch (Exception e) {
-	        // Log other exceptions
-	        logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
-	        throw new InternalServerException(messageResourceBundle
-	                .getExMessage(ConstantMessages.INTERNAL_SERVER_EXCEPTION_MESSAGE, new Object[]{username}));
-	    }
-	}
 
+		} catch (IllegalArgumentException e) {
+			// Log IllegalArgumentException
+			logger.error(messageResourceBundle.getLogMessage("invalid.argument"), e.getMessage(), e);
+			throw new BadRequestException(messageResourceBundle
+					.getExMessage(ConstantMessages.BAD_REQUEST_EXCEPTION_MESSAGE, new Object[] { e.getMessage() }));
+		} catch (Exception e) {
+			// Log other exceptions
+			logger.error(messageResourceBundle.getLogMessage("unexpected.error"), e.getMessage(), e);
+			throw new InternalServerException(messageResourceBundle
+					.getExMessage(ConstantMessages.INTERNAL_SERVER_EXCEPTION_MESSAGE, new Object[] { username }));
+		}
+	}
 
 	private List<BulkEntry> getReportList(AbortBatchReportRequest customReportForm, int id) throws SQLException {
 		UserDAService userDAService = new UserDAServiceImpl();
@@ -200,6 +198,7 @@ public class AbortBatchReportServiceImpl implements AbortBatchReportService {
 					con.close();
 				}
 			} catch (SQLException sqle) {
+				
 			}
 		}
 		return list;

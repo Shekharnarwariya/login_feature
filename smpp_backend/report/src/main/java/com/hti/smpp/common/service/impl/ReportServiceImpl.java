@@ -138,7 +138,7 @@ public class ReportServiceImpl implements ReportService {
 
 			else {
 				throw new NotFoundException(messageResourceBundle.getExMessage(
-						ConstantMessages.NO_BALANCE_REPORT_DATA_FOUND_MESSAGE, new Object[] { username }));
+						ConstantMessages.NO_DATA_FOUND, new Object[] { username }));
 			}
 		} catch (NotFoundException e) {
 			// Log NotFoundException
