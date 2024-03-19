@@ -27,19 +27,28 @@ public class ListGroupResponse {
 	@Min(1)
 	private int pageSize;
 	
+	private int totalPages;
+	
+	private boolean firstPage;
+	
+	private boolean lastPage;
+	
 //Default constructor for ListGroupResponse.
 	public ListGroupResponse() {
 		super();
 	}
 	
 //Constructor for ListGroupResponse with parameters
-	public ListGroupResponse(List<GroupEntryDTO> list, String target, String criteria,int pageNumber,int pageSize) {
+	public ListGroupResponse(List<GroupEntryDTO> list, String target, String criteria,int pageNumber,int pageSize,int totalPages,boolean firstPage,boolean lastPage) {
 		super();
 		this.list = list;
 		this.target = target;
 		this.criteria = criteria;
 		this.pageNumber=pageNumber;
 		this.pageSize=pageSize;
+		this.firstPage=firstPage;
+		this.lastPage=lastPage;
+		this.totalPages=totalPages;
 	}
 	
 //Getter and setter
@@ -81,6 +90,30 @@ public class ListGroupResponse {
 
 	public void setPageSize(int pageSize) {
 		this.pageSize = pageSize;
+	}
+
+	public int getTotalPages() {
+		return totalPages;
+	}
+
+	public void setTotalPages(int totalPages) {
+		this.totalPages = totalPages;
+	}
+
+	public boolean isFirstPage() {
+		return firstPage;
+	}
+
+	public void setFirstPage(boolean firstPage) {
+		this.firstPage = firstPage;
+	}
+
+	public boolean isLastPage() {
+		return lastPage;
+	}
+
+	public void setLastPage(boolean lastPage) {
+		this.lastPage = lastPage;
 	}
 
 
