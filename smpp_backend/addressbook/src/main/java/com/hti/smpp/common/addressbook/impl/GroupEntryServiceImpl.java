@@ -476,6 +476,9 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 					response.setList(content);
 					response.setPageNumber(list.getNumber());
 					response.setPageSize(list.getSize());
+					response.setTotalPages(list.getTotalPages());
+					response.setFirstPage(list.isFirst());
+					response.setLastPage(list.isLast());
 				} else {
 					logger.info(messageResourceBundle.getLogMessage("addbook.no.record.found.error"));
 					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_NORECORD));
