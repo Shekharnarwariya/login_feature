@@ -1005,7 +1005,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				// logger.info(" Report List Count:--> " + customReport.size());
 			}
 		} catch (SQLException ex) {
-			logger.error(" ", ex.fillInStackTrace());
+			logger.error(" ");
 		} finally {
 			try {
 				if (pStmt != null) {
