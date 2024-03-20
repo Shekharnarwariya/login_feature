@@ -6,7 +6,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.hti.smpp.common.request.LoginRequest;
 import com.hti.smpp.common.request.PasswordUpdateRequest;
-import com.hti.smpp.common.request.ProfileUpdateRequest;
 import com.hti.smpp.common.request.SignupRequest;
 /**
  * Configures and provides a DaoAuthenticationProvider bean.

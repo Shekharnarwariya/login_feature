@@ -222,16 +222,13 @@ public class LoginServiceImpl implements LoginService {
 		System.out.println("get profile method call username" + username);
 		Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findBySystemId(username);
 		Optional<UserEntry> userEntityOptional = userEntryRepository.findBySystemId(username);
-
 		if (balanceOptional.isPresent() && userEntityOptional.isPresent()) {
 			BalanceEntry balanceEntry = balanceOptional.get();
 			UserEntry userEntry = userEntityOptional.get();
-
 			// Use map to simplify getting profession entry
 			ProfessionEntry professionEntry = professionEntryRepository.findById(userEntry.getId())
 					.orElseThrow(() -> new NotFoundException(
 							messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
-
 			ProfileResponse profileResponse = new ProfileResponse();
 			profileResponse.setUserName(userEntry.getSystemId());
 			profileResponse.setBalance(String.valueOf(balanceEntry.getWalletAmount()));
@@ -245,12 +242,13 @@ public class LoginServiceImpl implements LoginService {
 			String profileImagePath = professionEntry.getImageFilePath();
 			if (profileImagePath != null && !profileImagePath.isEmpty()) {
 				try {
+					String fileExtension = profileImagePath.substring(profileImagePath.lastIndexOf(".") + 1);
+					profileResponse.setProfileName(fileExtension);
 					Path imagePath = Paths.get(IConstants.PROFILE_DIR + "profile//" + profileImagePath);
 					byte[] imageBytes = Files.readAllBytes(imagePath);
 					profileResponse.setProfilePath(imageBytes);
-				} catch (IOException e) {
-					e.printStackTrace();
-					throw new InternalServerException("Error while reading the image file");
+				} catch (Exception e) {
+					logger.error("Error while reading the image file" + e.getMessage());
 				}
 			}
 

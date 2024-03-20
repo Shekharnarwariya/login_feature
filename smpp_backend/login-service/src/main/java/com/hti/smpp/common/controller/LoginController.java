@@ -214,9 +214,9 @@ public class LoginController {
 	@Operation(summary = "Update User Profile", description = "Endpoint to update the profile information for a user.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "204", description = "User profile updated successfully. No content returned."),
-			@ApiResponse(responseCode = "400", description = "Invalid or malformed request. Unable to update user profile.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
-			@ApiResponse(responseCode = "401", description = "Unauthorized. User profile update failed.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
-			@ApiResponse(responseCode = "500", description = "Internal server error during user profile update process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
+			@ApiResponse(responseCode = "400", description = "Invalid or malformed request. Unable to update user profile.", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "401", description = "Unauthorized. User profile update failed.", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "500", description = "Internal server error during user profile update process.", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, schema = @Schema(implementation = ExceptionResponse.class))) })
 	public ResponseEntity<?> updateUserProfile(@RequestHeader(value = "username", required = true) String username,
 			@RequestParam(value = "email", required = false) String email,
 			@RequestParam(value = "firstName", required = false) String firstName,
