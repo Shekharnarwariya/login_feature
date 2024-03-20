@@ -239,6 +239,20 @@ public class LoginServiceImpl implements LoginService {
 			profileResponse.setRoles(userEntry.getRole());
 			profileResponse.setContactNo(professionEntry.getMobile());
 			profileResponse.setCurrency(userEntry.getCurrency());
+			profileResponse.setCompanyName(professionEntry.getCompany()); 
+	        profileResponse.setDesignation(professionEntry.getDesignation()); 
+	        profileResponse.setCity(professionEntry.getCity()); 
+	        profileResponse.setState(professionEntry.getState()); 
+	        profileResponse.setKeepLogs(userEntry.getLogDays()); 
+	        profileResponse.setReferenceID(professionEntry.getReferenceId()); 
+	        profileResponse.setCompanyAddress(professionEntry.getCompanyAddress()); 
+	        profileResponse.setCompanyEmail(professionEntry.getCompanyEmail()); 
+	        profileResponse.setTaxID(professionEntry.getTaxID()); 
+	        profileResponse.setRegID(professionEntry.getRegID()); 
+	        profileResponse.setNotes(professionEntry.getNotes()); 
+	        
+	        
+	        
 			String profileImagePath = professionEntry.getImageFilePath();
 			if (profileImagePath != null && !profileImagePath.isEmpty()) {
 				try {
