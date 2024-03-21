@@ -2,11 +2,11 @@ package com.hti.dao;
 
 import java.util.List;
 
-import com.hti.user.dto.BalanceEntry;
-import com.hti.user.dto.DlrSettingEntry;
-import com.hti.user.dto.ProfessionEntry;
-import com.hti.user.dto.UserEntry;
-import com.hti.user.dto.WebMasterEntry;
+import com.hti.smpp.common.user.dto.BalanceEntry;
+import com.hti.smpp.common.user.dto.DlrSettingEntry;
+import com.hti.smpp.common.user.dto.ProfessionEntry;
+import com.hti.smpp.common.user.dto.UserEntry;
+import com.hti.smpp.common.user.dto.WebMasterEntry;
 
 public interface UserDAO {
 	public List<UserEntry> listUser();

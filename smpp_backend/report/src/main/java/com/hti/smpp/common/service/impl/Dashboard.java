@@ -1269,18 +1269,10 @@ public class Dashboard implements DashboardService {
 
 	private ResponseEntity<?> dashboard(String systemid, int days, DashboardRequest request, String username)
 			throws DBException, IOException {
-
-		System.out.println(" Dashboard methode -- line 1216");
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional.orElseThrow(() -> new NotFoundException(
 				messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username })));
-
-		if (!Access.isAuthorized(user.getRole(), "isAuthorizedAll")) {
-			throw new UnauthorizedException(messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION,
-					new Object[] { username }));
-		}
 		logger.info(messageResourceBundle.getLogMessage("dashboard.report.message"), user.getSystemId(), days);
-
 		boolean proceed = true;
 		Calendar calender = Calendar.getInstance();
 		String sql = "";
@@ -1307,7 +1299,6 @@ public class Dashboard implements DashboardService {
 					String users = "";
 					Map<Integer, String> map = null;
 					if (user.getRole().equalsIgnoreCase("manager")) {
-						// SalesDAService salesService = new SalesDAServiceImpl();
 						String seller = request.getSeller();
 						int seller_id = 0;
 						try {
@@ -1552,11 +1543,11 @@ public class Dashboard implements DashboardService {
 		list.clear();
 		// --------- first Chart -------------------
 		JSONArray responseObj = new JSONArray();
-		JSONObject jo = new JSONObject();
-		jo.put("counter", (Integer) received);
-		jo.put("processed", (Integer) processed);
-		jo.put("deliverd", (Integer) delivered);
-		responseObj.put(jo);
+		JSONObject jsonResponse = new JSONObject();
+		jsonResponse.put("counter", received);
+		jsonResponse.put("processed", processed);
+		jsonResponse.put("delivered", delivered);
+		responseObj.put(jsonResponse);
 		// ----------- 2nd Chart -----------------------
 		JSONObject json = new JSONObject();
 		JSONArray colsArr = new JSONArray();
@@ -1590,15 +1581,11 @@ public class Dashboard implements DashboardService {
 			}
 			temp_map.put(key, count);
 		}
-		// logger.info(userSessionObject.getSystemId()+" "+"temp_map: " +
-		// temp_map.size());
 		temp_map = sortByDscValue(temp_map, 10);
 		itr = temp_map.keySet().iterator();
 		while (itr.hasNext()) {
 			String key = (String) itr.next();
 			int count = (Integer) temp_map.get(key);
-			// logger.info(userSessionObject.getSystemId()+" "+"Key: "+key+" Count:
-			// "+count);
 			JSONObject rows = new JSONObject();
 			JSONArray rowValArr = new JSONArray();
 			JSONObject rowVal = new JSONObject();
@@ -1610,7 +1597,6 @@ public class Dashboard implements DashboardService {
 			rows.put("c", rowValArr);
 			rowsArr.put(rows);
 		}
-		// logger.info(userSessionObject.getSystemId()+" "+" <-- Added First ---> ");
 		json.put("cols", colsArr);
 		json.put("rows", rowsArr);
 		responseObj.put(json);
@@ -1622,7 +1608,6 @@ public class Dashboard implements DashboardService {
 		json = new JSONObject();
 		colsArr = new JSONArray();
 		cols = new JSONObject();
-		// rowsArr = new JSONArray();
 		cols.put("id", "");
 		cols.put("label", "SenderId");
 		cols.put("type", "string");
@@ -1637,7 +1622,6 @@ public class Dashboard implements DashboardService {
 		while (itr.hasNext()) {
 			String key = (String) itr.next();
 			int count = (Integer) sender_map.get(key);
-			// String costStr = new DecimalFormat("0.00000").format(cost);
 			JSONObject rows = new JSONObject();
 			JSONArray rowValArr = new JSONArray();
 			JSONObject rowVal = new JSONObject();
@@ -1703,11 +1687,8 @@ public class Dashboard implements DashboardService {
 			// ----------- 5th Chart -----------------------
 			smsc_count = sortByDscValue(smsc_count, 15);
 			logger.info(messageResourceBundle.getLogMessage("smsc.counter.message"), user.getSystemId(), smsc_count);
-
-			// Set dlr_set = smsc_count.keySet();
 			colsArr = new JSONArray();
 			cols = new JSONObject();
-			// rowsArr = new JSONArray();
 			cols.put("id", "");
 			cols.put("label", "Route");
 			cols.put("type", "string");
@@ -1722,7 +1703,6 @@ public class Dashboard implements DashboardService {
 			while (itr.hasNext()) {
 				String key = (String) itr.next();
 				int count = (Integer) smsc_count.get(key);
-				// String costStr = new DecimalFormat("0.00000").format(cost);
 				JSONObject rows = new JSONObject();
 				JSONArray rowValArr = new JSONArray();
 				JSONObject rowVal = new JSONObject();
@@ -1740,12 +1720,9 @@ public class Dashboard implements DashboardService {
 					smscCount.toString());
 
 			// ----------- 6th Chart -----------------------
-			// smsc_deliver = sortByDscValue(smsc_deliver, 10);
 			logger.info(messageResourceBundle.getLogMessage("smsc.deliver.message"), user.getSystemId(), smsc_deliver);
-
 			colsArr = new JSONArray();
 			cols = new JSONObject();
-			// rowsArr = new JSONArray();
 			cols.put("id", "");
 			cols.put("label", "Route");
 			cols.put("type", "string");
@@ -1790,11 +1767,8 @@ public class Dashboard implements DashboardService {
 			// ----------- 7th Chart -----------------------
 			smsc_spam = sortByDscValue(smsc_spam, 10);
 			logger.info(messageResourceBundle.getLogMessage("smsc.spam.message"), user.getSystemId(), smsc_spam);
-
-			// Set dlr_set = smsc_count.keySet();
 			colsArr = new JSONArray();
 			cols = new JSONObject();
-			// rowsArr = new JSONArray();
 			cols.put("id", "");
 			cols.put("label", "Route");
 			cols.put("type", "string");
@@ -1809,7 +1783,6 @@ public class Dashboard implements DashboardService {
 			while (itr.hasNext()) {
 				String key = (String) itr.next();
 				int count = (Integer) smsc_spam.get(key);
-				// String costStr = new DecimalFormat("0.00000").format(cost);
 				JSONObject rows = new JSONObject();
 				JSONArray rowValArr = new JSONArray();
 				JSONObject rowVal = new JSONObject();
@@ -1829,11 +1802,8 @@ public class Dashboard implements DashboardService {
 			// ----------- 8th Chart -----------------------
 			user_spam = sortByDscValue(user_spam, 10);
 			logger.info(messageResourceBundle.getLogMessage("user.spam.message"), user.getSystemId(), user_spam);
-
-			// Set dlr_set = smsc_count.keySet();
 			colsArr = new JSONArray();
 			cols = new JSONObject();
-			// rowsArr = new JSONArray();
 			cols.put("id", "");
 			cols.put("label", "User");
 			cols.put("type", "string");
@@ -1848,7 +1818,6 @@ public class Dashboard implements DashboardService {
 			while (itr.hasNext()) {
 				String key = (String) itr.next();
 				int count = (Integer) user_spam.get(key);
-				// String costStr = new DecimalFormat("0.00000").format(cost);
 				JSONObject rows = new JSONObject();
 				JSONArray rowValArr = new JSONArray();
 				JSONObject rowVal = new JSONObject();
@@ -1872,7 +1841,6 @@ public class Dashboard implements DashboardService {
 		responseObj.put(smscSpam);
 		responseObj.put(userSpam);
 		logger.info(messageResourceBundle.getLogMessage("finished.dashboard.message"), user.getSystemId());
-
 		return ResponseEntity.ok(responseObj.toString());
 
 	}

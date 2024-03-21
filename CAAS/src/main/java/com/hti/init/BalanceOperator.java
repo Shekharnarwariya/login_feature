@@ -6,10 +6,8 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hti.dao.UserDAService;
-import com.hti.dao.impl.UserDAServiceImpl;
 import com.hti.database.DBService;
-import com.hti.user.dto.BalanceEntry;
+import com.hti.smpp.common.user.dto.BalanceEntry;
 import com.hti.util.Constants;
 import com.hti.util.FileUtil;
 import com.hti.util.FlagStatus;

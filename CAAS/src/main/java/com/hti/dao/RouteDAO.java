@@ -2,10 +2,10 @@ package com.hti.dao;
 
 import java.util.List;
 
-import com.hti.route.dto.HlrRouteEntry;
-import com.hti.route.dto.MmsRouteEntry;
-import com.hti.route.dto.OptionalRouteEntry;
-import com.hti.route.dto.RouteEntry;
+import com.hti.smpp.common.route.dto.HlrRouteEntry;
+import com.hti.smpp.common.route.dto.MmsRouteEntry;
+import com.hti.smpp.common.route.dto.OptionalRouteEntry;
+import com.hti.smpp.common.route.dto.RouteEntry;
 
 public interface RouteDAO {
 	/*
