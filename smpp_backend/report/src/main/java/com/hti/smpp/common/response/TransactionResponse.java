@@ -13,6 +13,17 @@ public class TransactionResponse {
 	private List<RechargeEntry> rechargeEntries;
 	private double totalCreditAmount;
 	private double totalDebitAmount;
+	private String currency;
+	
+	
+	  public String getCurrency() {
+	        return currency;
+	    }
+
+	    public void setCurrency(String currency) {
+	        this.currency = currency;
+	    }
+	
 	
 
 	public double getTotalCreditAmount() {
