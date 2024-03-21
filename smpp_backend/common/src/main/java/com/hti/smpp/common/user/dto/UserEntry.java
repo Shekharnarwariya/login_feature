@@ -13,6 +13,7 @@ import jakarta.persistence.Transient;
 @Entity
 @Table(name = "usermaster")
 public class UserEntry implements Serializable, Comparable<UserEntry> {
+	private static final long serialVersionUID = -298003913904828483L;
 	@Id
 	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

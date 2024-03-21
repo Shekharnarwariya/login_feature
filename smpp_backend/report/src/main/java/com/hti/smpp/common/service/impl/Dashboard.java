@@ -109,7 +109,6 @@ public class Dashboard implements DashboardService {
 
 					String seller = request.getSeller();
 					int seller_id = 0;
-
 					try {
 						if (seller != null && Integer.parseInt(seller) > 0) {
 							seller_id = Integer.parseInt(seller);
@@ -117,7 +116,6 @@ public class Dashboard implements DashboardService {
 					} catch (Exception ex) {
 						logger.error(messageResourceBundle.getLogMessage("invalid.seller.id.message"),
 								user.getSystemId(), seller);
-
 					}
 					Map<Integer, String> map = null;
 					if (seller_id > 0) {

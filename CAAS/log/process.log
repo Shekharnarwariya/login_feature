@@ -717,3 +717,1127 @@ java.net.SocketException: Connection reset
 2024-03-21 12:55:15 [checkCpuCycle] INFO  - Memory Used:---> 142 MB. Max Available: 8184 MB
 2024-03-21 12:56:15 [checkCpuCycle] INFO  - Memory Used:---> 103 MB. Max Available: 8184 MB
 2024-03-21 12:57:15 [checkCpuCycle] INFO  - Memory Used:---> 64 MB. Max Available: 8184 MB
+2024-03-21 13:37:15 [main] INFO  - [LOCAL] [dev] [5.3.6] Interfaces is enabled, trying to pick one address matching to one of: [127.0.0.1, *.*.*.*]
+2024-03-21 13:37:15 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+	+       +  o    o     o     o---o o----o o      o---o     o     o----o o--o--o
+	+ +   + +  |    |    / \       /  |      |     /         / \    |         |   
+	+ + + + +  o----o   o   o     o   o----o |    o         o   o   o----o    |   
+	+ +   + +  |    |  /     \   /    |      |     \       /     \       |    |   
+	+       +  o    o o       o o---o o----o o----o o---o o       o o----o    o   
+2024-03-21 13:37:15 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+2024-03-21 13:37:15 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Hazelcast Platform 5.3.6 (20231109 - 9903dc9) starting at [127.0.0.1]:5701
+2024-03-21 13:37:15 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Cluster name: dev
+2024-03-21 13:37:15 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Integrity Checker is disabled. Fail-fast on corrupted executables will not be performed. For more information, see the documentation for Integrity Checker.
+2024-03-21 13:37:16 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] The Jet engine is disabled.
+To enable the Jet engine on the members, do one of the following:
+  - Change member config using Java API: config.getJetConfig().setEnabled(true)
+  - Change XML/YAML configuration property: Set hazelcast.jet.enabled to true
+  - Add system property: -Dhz.jet.enabled=true (for Hazelcast embedded, works only when loading config via Config.load)
+  - Add environment variable: HZ_JET_ENABLED=true (recommended when running container image. For Hazelcast embedded, works only when loading config via Config.load)
+2024-03-21 13:37:16 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] TPC: disabled
+2024-03-21 13:37:16 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Enable DEBUG/FINE log level for log category com.hazelcast.system.security  or use -Dhazelcast.security.recommendations system property to see security recommendations and the status of current config.
+2024-03-21 13:37:16 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Using TCP/IP discovery
+2024-03-21 13:37:16 [main] WARN  - [127.0.0.1]:5701 [dev] [5.3.6] CP Subsystem is not enabled. CP data structures will operate in UNSAFE mode! Please note that UNSAFE mode will not provide strong consistency guarantees.
+2024-03-21 13:37:17 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-21 13:37:17 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTING
+2024-03-21 13:37:17 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+
+Members {size:1, ver:1} [
+	Member [127.0.0.1]:5701 - 84282c03-7a87-4881-8049-0e32d95a2547 this
+]
+
+2024-03-21 13:37:17 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTED
+2024-03-21 13:37:17 [hz.keen_hodgkin.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=1, /127.0.0.1:5701->/127.0.0.1:63616, qualifier=null, endpoint=[127.0.0.1]:63616, remoteUuid=8f868763-ab5b-438a-a978-c85c503ba101, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 8f868763-ab5b-438a-a978-c85c503ba101, client name: hz.client_1, client version: 5.0.1
+2024-03-21 13:37:17 [hz.keen_hodgkin.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=2, /127.0.0.1:5701->/127.0.0.1:63623, qualifier=null, endpoint=[127.0.0.1]:63623, remoteUuid=1842dafa-c2ad-4469-9457-9698dc952943, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 1842dafa-c2ad-4469-9457-9698dc952943, client name: hz.client_1, client version: 5.2.4
+2024-03-21 13:37:17 [hz.keen_hodgkin.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=3, /127.0.0.1:5701->/127.0.0.1:63624, qualifier=null, endpoint=[127.0.0.1]:63624, remoteUuid=b07dd5df-78fd-4bae-9594-f41309f1f72b, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: b07dd5df-78fd-4bae-9594-f41309f1f72b, client name: hz.client_1, client version: 5.2.4
+2024-03-21 13:37:17 [hz.keen_hodgkin.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=4, /127.0.0.1:5701->/127.0.0.1:63625, qualifier=null, endpoint=[127.0.0.1]:63625, remoteUuid=0a55d2d7-1962-4f48-a6ee-57831f0d4beb, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 0a55d2d7-1962-4f48-a6ee-57831f0d4beb, client name: hz.client_1, client version: 5.2.4
+2024-03-21 13:37:17 [hz.keen_hodgkin.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=5, /127.0.0.1:5701->/127.0.0.1:63626, qualifier=null, endpoint=[127.0.0.1]:63626, remoteUuid=81500cdf-0853-43e5-9306-3b086ccdc43f, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 81500cdf-0853-43e5-9306-3b086ccdc43f, client name: hz.client_1, client version: 5.2.4
+2024-03-21 13:37:17 [hz.keen_hodgkin.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=6, /127.0.0.1:5701->/127.0.0.1:63627, qualifier=null, endpoint=[127.0.0.1]:63627, remoteUuid=a1c73b08-7df0-46b2-9f03-2aaba9a02a42, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: a1c73b08-7df0-46b2-9f03-2aaba9a02a42, client name: hz.client_1, client version: 5.2.4
+2024-03-21 13:37:17 [hz.keen_hodgkin.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=7, /127.0.0.1:5701->/127.0.0.1:63628, qualifier=null, endpoint=[127.0.0.1]:63628, remoteUuid=7b99554b-64be-4851-8d6d-81ece7902aa6, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 7b99554b-64be-4851-8d6d-81ece7902aa6, client name: hz.client_1, client version: 5.2.4
+2024-03-21 13:37:17 [hz.keen_hodgkin.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=8, /127.0.0.1:5701->/127.0.0.1:63629, qualifier=null, endpoint=[127.0.0.1]:63629, remoteUuid=deea5b81-0c4f-42ed-aba8-48bc3bce00a9, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: deea5b81-0c4f-42ed-aba8-48bc3bce00a9, client name: hz.client_1, client version: 5.2.4
+2024-03-21 13:37:17 [hz.keen_hodgkin.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=9, /127.0.0.1:5701->/127.0.0.1:63630, qualifier=null, endpoint=[127.0.0.1]:63630, remoteUuid=4a916756-b5ca-4a89-9fd1-d2ee8966b2fb, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 4a916756-b5ca-4a89-9fd1-d2ee8966b2fb, client name: hz.client_1, client version: 5.2.4
+2024-03-21 13:37:18 [hz.keen_hodgkin.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=10, /127.0.0.1:5701->/127.0.0.1:63631, qualifier=null, endpoint=[127.0.0.1]:63631, remoteUuid=3b1e44f4-a1f7-4278-a8d4-4b5702123afd, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 3b1e44f4-a1f7-4278-a8d4-4b5702123afd, client name: hz.client_1, client version: 5.0.1
+2024-03-21 13:37:18 [hz.keen_hodgkin.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=11, /127.0.0.1:5701->/127.0.0.1:63632, qualifier=null, endpoint=[127.0.0.1]:63632, remoteUuid=f50015ac-d7d1-453f-a07e-26b57884eabc, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: f50015ac-d7d1-453f-a07e-26b57884eabc, client name: hz.client_1, client version: 5.0.1
+2024-03-21 13:37:18 [hz.keen_hodgkin.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=12, /127.0.0.1:5701->/127.0.0.1:63633, qualifier=null, endpoint=[127.0.0.1]:63633, remoteUuid=1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0, client name: hz.client_1, client version: 5.0.1
+2024-03-21 13:37:18 [hz.keen_hodgkin.partition-operation.thread-3] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Initializing cluster partition table arrangement...
+2024-03-21 13:37:18 [hz.keen_hodgkin.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=13, /127.0.0.1:5701->/127.0.0.1:63634, qualifier=null, endpoint=[127.0.0.1]:63634, remoteUuid=3c573091-05e9-4e03-aeaf-3a006c2bab0d, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 3c573091-05e9-4e03-aeaf-3a006c2bab0d, client name: hz.client_1, client version: 5.0.1
+2024-03-21 13:37:18 [main] INFO  - HHH000412: Hibernate Core {5.2.2.Final}
+2024-03-21 13:37:18 [main] INFO  - HHH000206: hibernate.properties not found
+2024-03-21 13:37:18 [main] INFO  - HHH000021: Bytecode provider name : javassist
+2024-03-21 13:37:18 [main] INFO  - HCANN000001: Hibernate Commons Annotations {5.0.1.Final}
+2024-03-21 13:37:18 [main] INFO  - HHH000400: Using dialect: org.hibernate.dialect.MySQLDialect
+2024-03-21 13:37:20 [hz.keen_hodgkin.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=32.0G, physical.memory.free=15.8G, swap.space.total=0, swap.space.free=0, heap.memory.used=23.0M, heap.memory.free=33.5M, heap.memory.total=56.0M, heap.memory.max=8.0G, heap.memory.used/total=41.16%, heap.memory.used/max=0.28%, minor.gc.count=10, minor.gc.time=47ms, major.gc.count=0, major.gc.time=0ms, load.process=0.00%, load.system=100.00%, load.systemAverage=n/a thread.count=52, thread.peakCount=52, cluster.timeDiff=0, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=4743, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=25, clientEndpoint.count=13, connection.active.count=0, client.connection.count=0, connection.count=0
+2024-03-21 13:37:21 [main] INFO  - Initializing Connection Pool
+2024-03-21 13:37:21 [main] INFO  - jdbc:mysql://localhost:3306/host_brd?autoReconnect=true&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC[com.mysql.cj.jdbc.Driver] User: root Pass: root
+2024-03-21 13:37:21 [main] INFO  - Total Connection Stored: 10
+2024-03-21 13:37:21 [main] INFO  - ********** Start loading Smsc Schedule ******************
+2024-03-21 13:37:21 [main] INFO  - SmscSchedule: {}
+2024-03-21 13:37:21 [main] INFO  - FlagReader Thread Starting
+2024-03-21 13:37:21 [main] INFO  - ********* Start Loading Network Entries ************
+2024-03-21 13:37:21 [main] ERROR - Network[1] Invalid Number Length Range: 0,10
+2024-03-21 13:37:21 [main] ERROR - Network[2] Invalid Number Length Range: 10,9
+2024-03-21 13:37:21 [main] ERROR - Network[3] Invalid Number Length Range: 10,10
+2024-03-21 13:37:22 [main] INFO  - NetworkEntries: 1390
+2024-03-21 13:37:22 [main] INFO  - ********* End Loading Network Entries **************
+2024-03-21 13:37:22 [main] INFO  - ********* Start Loading Smsc Configuration **************
+2024-03-21 13:37:22 [main] INFO  - SmscEntries: 11
+2024-03-21 13:37:22 [main] INFO  - ******** End Loading Smsc Configuration *****************
+2024-03-21 13:37:22 [main] INFO  - ********** Start loading Smsc Group ******************
+2024-03-21 13:37:22 [main] INFO  - SmscGroup: [SmscGroup: id=1,name=DEFAULT,remarks=default]
+2024-03-21 13:37:22 [main] INFO  - ************ End loading Smsc Group *******************
+2024-03-21 13:37:22 [main] INFO  - ********** Start loading Smsc Group Member ******************
+2024-03-21 13:37:22 [main] INFO  - SmscGroupMember: []
+2024-03-21 13:37:22 [main] INFO  - ************ End loading Smsc Group Member *******************
+2024-03-21 13:37:22 [main] INFO  - **** Start Loading User Configuration ********
+2024-03-21 13:37:22 [main] ERROR - null DecodeError: java.lang.NullPointerException: Cannot invoke "String.trim()" because "arg0" is null
+2024-03-21 13:37:22 [main] ERROR - null DecodeError: java.lang.NullPointerException: Cannot invoke "String.trim()" because "arg0" is null
+2024-03-21 13:37:22 [main] INFO  - User Entries: 12
+2024-03-21 13:37:22 [main] INFO  - Balance Entries: 12
+2024-03-21 13:37:22 [main] INFO  - User Mapping: 12
+2024-03-21 13:37:22 [main] INFO  - WebMaster Entries: 12
+2024-03-21 13:37:22 [main] INFO  - Profession Entries: 12
+2024-03-21 13:37:22 [main] INFO  - DlrSetting Entries: 12
+2024-03-21 13:37:22 [main] INFO  - ***** End Loading User Configuration **********
+2024-03-21 13:37:22 [main] INFO  -  ******* Start Loading Routing *********** 
+2024-03-21 13:37:22 [main] INFO  - <--- listing Basic routing --> 
+2024-03-21 13:37:22 [main] INFO  - <--- End listing Basic routing[191] --> 
+2024-03-21 13:37:22 [main] INFO  - <--- listing Optional routing --> 
+2024-03-21 13:37:22 [main] INFO  - <--- End listing Optional routing[191] --> 
+2024-03-21 13:37:22 [main] INFO  - <--- listing Hlr routing --> 
+2024-03-21 13:37:22 [main] INFO  - <--- End listing Hlr routing[191] --> 
+2024-03-21 13:37:22 [main] INFO  - <--- listing Mms routing --> 
+2024-03-21 13:37:22 [main] INFO  - <--- End listing Mms routing[191] --> 
+2024-03-21 13:37:22 [main] INFO  - Basic Routing Entries: 191
+2024-03-21 13:37:22 [main] INFO  - Hlr Routing Entries: 191
+2024-03-21 13:37:22 [main] INFO  - Optional Routing Entries: 191
+2024-03-21 13:37:22 [main] INFO  - Mms Routing Entries: 191
+2024-03-21 13:37:22 [main] INFO  - ********** End Loading Routing *********** 
+2024-03-21 13:37:22 [main] INFO  - BearerBox Starting
+2024-03-21 13:37:22 [main] INFO  - BalanceOperator Starting
+2024-03-21 13:37:22 [main] INFO  - CheckCpuCycle Starting
+2024-03-21 13:37:22 [Thread-1] INFO  - ****** Reloading Smsc Scheduling ****** 
+2024-03-21 13:37:22 [Thread-1] INFO  - Today's SmscScheduling: {}
+2024-03-21 13:38:22 [checkCpuCycle] INFO  - Memory Used:---> 60 MB. Max Available: 8184 MB
+2024-03-21 13:39:22 [checkCpuCycle] INFO  - Memory Used:---> 60 MB. Max Available: 8184 MB
+2024-03-21 13:40:22 [checkCpuCycle] INFO  - Memory Used:---> 53 MB. Max Available: 8184 MB
+2024-03-21 13:41:22 [checkCpuCycle] INFO  - Memory Used:---> 111 MB. Max Available: 8184 MB
+2024-03-21 13:41:24 [hz.keen_hodgkin.IO.thread-in-2] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=6, /127.0.0.1:5701->/127.0.0.1:63627, qualifier=null, endpoint=[127.0.0.1]:63627, remoteUuid=a1c73b08-7df0-46b2-9f03-2aaba9a02a42, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-3] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=6, /127.0.0.1:5701->/127.0.0.1:63627, qualifier=null, endpoint=[127.0.0.1]:63627, remoteUuid=a1c73b08-7df0-46b2-9f03-2aaba9a02a42, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=a1c73b08-7df0-46b2-9f03-2aaba9a02a42, clientName=hz.client_1, authenticated=true, clientVersion=5.2.4, creationTime=1711008437879, latest clientAttributes=lastStatisticsCollectionTime=1711008682462,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711008437878,clientAddress=127.0.0.1,clientName=hz.client_1,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=16676782080,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=106090224,runtime.maxMemory=8581545984,runtime.totalMemory=281018368,runtime.uptime=632185,runtime.usedMemory=174928144, labels=[]}
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-2] INFO  - Client DisConnected: 127.0.0.1:63627 - a1c73b08-7df0-46b2-9f03-2aaba9a02a42
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-2] INFO  - Connected Clients: 12
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63633 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63632 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63629 - deea5b81-0c4f-42ed-aba8-48bc3bce00a9
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63623 - 1842dafa-c2ad-4469-9457-9698dc952943
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63616 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63626 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63625 - 0a55d2d7-1962-4f48-a6ee-57831f0d4beb
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63624 - b07dd5df-78fd-4bae-9594-f41309f1f72b
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63628 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63630 - 4a916756-b5ca-4a89-9fd1-d2ee8966b2fb
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63631 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63634 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:41:24 [hz.keen_hodgkin.IO.thread-in-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=8, /127.0.0.1:5701->/127.0.0.1:63629, qualifier=null, endpoint=[127.0.0.1]:63629, remoteUuid=deea5b81-0c4f-42ed-aba8-48bc3bce00a9, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-5] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=8, /127.0.0.1:5701->/127.0.0.1:63629, qualifier=null, endpoint=[127.0.0.1]:63629, remoteUuid=deea5b81-0c4f-42ed-aba8-48bc3bce00a9, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=deea5b81-0c4f-42ed-aba8-48bc3bce00a9, clientName=hz.client_1, authenticated=true, clientVersion=5.2.4, creationTime=1711008437944, latest clientAttributes=lastStatisticsCollectionTime=1711008682540,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711008437942,clientAddress=127.0.0.1,clientName=hz.client_1,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=16677072896,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=194959904,runtime.maxMemory=8581545984,runtime.totalMemory=327155712,runtime.uptime=614393,runtime.usedMemory=132195808, labels=[]}
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-4] INFO  - Client DisConnected: 127.0.0.1:63629 - deea5b81-0c4f-42ed-aba8-48bc3bce00a9
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-4] INFO  - Connected Clients: 11
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63626 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63633 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63632 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63625 - 0a55d2d7-1962-4f48-a6ee-57831f0d4beb
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63624 - b07dd5df-78fd-4bae-9594-f41309f1f72b
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63628 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63630 - 4a916756-b5ca-4a89-9fd1-d2ee8966b2fb
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63623 - 1842dafa-c2ad-4469-9457-9698dc952943
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63616 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63631 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:41:24 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63634 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:41:25 [hz.keen_hodgkin.IO.thread-in-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=4, /127.0.0.1:5701->/127.0.0.1:63625, qualifier=null, endpoint=[127.0.0.1]:63625, remoteUuid=0a55d2d7-1962-4f48-a6ee-57831f0d4beb, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=4, /127.0.0.1:5701->/127.0.0.1:63625, qualifier=null, endpoint=[127.0.0.1]:63625, remoteUuid=0a55d2d7-1962-4f48-a6ee-57831f0d4beb, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=0a55d2d7-1962-4f48-a6ee-57831f0d4beb, clientName=hz.client_1, authenticated=true, clientVersion=5.2.4, creationTime=1711008437865, latest clientAttributes=lastStatisticsCollectionTime=1711008683596,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711008437865,clientAddress=127.0.0.1,clientName=hz.client_1,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=16648376320,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=209590616,runtime.maxMemory=8581545984,runtime.totalMemory=327155712,runtime.uptime=662836,runtime.usedMemory=117565096, labels=[]}
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client DisConnected: 127.0.0.1:63625 - 0a55d2d7-1962-4f48-a6ee-57831f0d4beb
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Connected Clients: 10
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63626 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63633 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63632 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63624 - b07dd5df-78fd-4bae-9594-f41309f1f72b
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63628 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63630 - 4a916756-b5ca-4a89-9fd1-d2ee8966b2fb
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63623 - 1842dafa-c2ad-4469-9457-9698dc952943
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63616 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63631 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63634 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:41:25 [hz.keen_hodgkin.IO.thread-in-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=9, /127.0.0.1:5701->/127.0.0.1:63630, qualifier=null, endpoint=[127.0.0.1]:63630, remoteUuid=4a916756-b5ca-4a89-9fd1-d2ee8966b2fb, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=9, /127.0.0.1:5701->/127.0.0.1:63630, qualifier=null, endpoint=[127.0.0.1]:63630, remoteUuid=4a916756-b5ca-4a89-9fd1-d2ee8966b2fb, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=4a916756-b5ca-4a89-9fd1-d2ee8966b2fb, clientName=hz.client_1, authenticated=true, clientVersion=5.2.4, creationTime=1711008437957, latest clientAttributes=lastStatisticsCollectionTime=1711008683886,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711008437955,clientAddress=127.0.0.1,clientName=hz.client_1,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=16663351296,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=119355616,runtime.maxMemory=8581545984,runtime.totalMemory=394264576,runtime.uptime=599184,runtime.usedMemory=274908960, labels=[]}
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client DisConnected: 127.0.0.1:63630 - 4a916756-b5ca-4a89-9fd1-d2ee8966b2fb
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Connected Clients: 9
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63626 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63633 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63632 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63624 - b07dd5df-78fd-4bae-9594-f41309f1f72b
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63628 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63623 - 1842dafa-c2ad-4469-9457-9698dc952943
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63616 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63631 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63634 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:41:25 [hz.keen_hodgkin.IO.thread-in-2] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=3, /127.0.0.1:5701->/127.0.0.1:63624, qualifier=null, endpoint=[127.0.0.1]:63624, remoteUuid=b07dd5df-78fd-4bae-9594-f41309f1f72b, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-5] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=3, /127.0.0.1:5701->/127.0.0.1:63624, qualifier=null, endpoint=[127.0.0.1]:63624, remoteUuid=b07dd5df-78fd-4bae-9594-f41309f1f72b, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=b07dd5df-78fd-4bae-9594-f41309f1f72b, clientName=hz.client_1, authenticated=true, clientVersion=5.2.4, creationTime=1711008437850, latest clientAttributes=lastStatisticsCollectionTime=1711008682401,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711008437849,clientAddress=127.0.0.1,clientName=hz.client_1,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=16676761600,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=147051344,runtime.maxMemory=8581545984,runtime.totalMemory=281018368,runtime.uptime=603650,runtime.usedMemory=133967024, labels=[]}
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client DisConnected: 127.0.0.1:63624 - b07dd5df-78fd-4bae-9594-f41309f1f72b
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Connected Clients: 8
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63626 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63633 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63632 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63628 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63623 - 1842dafa-c2ad-4469-9457-9698dc952943
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63616 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63631 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63634 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:41:25 [hz.keen_hodgkin.IO.thread-in-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=2, /127.0.0.1:5701->/127.0.0.1:63623, qualifier=null, endpoint=[127.0.0.1]:63623, remoteUuid=1842dafa-c2ad-4469-9457-9698dc952943, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-4] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=2, /127.0.0.1:5701->/127.0.0.1:63623, qualifier=null, endpoint=[127.0.0.1]:63623, remoteUuid=1842dafa-c2ad-4469-9457-9698dc952943, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=1842dafa-c2ad-4469-9457-9698dc952943, clientName=hz.client_1, authenticated=true, clientVersion=5.2.4, creationTime=1711008437801, latest clientAttributes=lastStatisticsCollectionTime=1711008681249,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711008437800,clientAddress=127.0.0.1,clientName=hz.client_1,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=16677105664,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=181395432,runtime.maxMemory=8581545984,runtime.totalMemory=293601280,runtime.uptime=683208,runtime.usedMemory=112205848, labels=[]}
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-1] INFO  - Client DisConnected: 127.0.0.1:63623 - 1842dafa-c2ad-4469-9457-9698dc952943
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-1] INFO  - Connected Clients: 7
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-1] INFO  - Client: /127.0.0.1:63626 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-1] INFO  - Client: /127.0.0.1:63633 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-1] INFO  - Client: /127.0.0.1:63632 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-1] INFO  - Client: /127.0.0.1:63628 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-1] INFO  - Client: /127.0.0.1:63616 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-1] INFO  - Client: /127.0.0.1:63631 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:41:25 [hz.keen_hodgkin.event-1] INFO  - Client: /127.0.0.1:63634 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:41:27 [hz.keen_hodgkin.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=14, /127.0.0.1:5701->/127.0.0.1:64253, qualifier=null, endpoint=[127.0.0.1]:64253, remoteUuid=d8aebe2a-4821-4bad-894f-d7444cec064e, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: d8aebe2a-4821-4bad-894f-d7444cec064e, client name: hz.client_2, client version: 5.2.4
+2024-03-21 13:41:27 [hz.keen_hodgkin.event-2] INFO  - Client Connected: 127.0.0.1:64253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:41:27 [hz.keen_hodgkin.event-2] INFO  - Connected Clients: 8
+2024-03-21 13:41:27 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63626 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:41:27 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63633 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:41:27 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63632 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:41:27 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:64253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:41:27 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63628 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:41:27 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63616 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:41:27 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63631 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:41:27 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63634 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:41:41 [hz.keen_hodgkin.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=32.0G, physical.memory.free=16.3G, swap.space.total=0, swap.space.free=0, heap.memory.used=61.3M, heap.memory.free=98.7M, heap.memory.total=160.0M, heap.memory.max=8.0G, heap.memory.used/total=38.29%, heap.memory.used/max=0.75%, minor.gc.count=23, minor.gc.time=106ms, major.gc.count=0, major.gc.time=0ms, load.process=0.00%, load.system=100.00%, load.systemAverage=n/a thread.count=80, thread.peakCount=80, cluster.timeDiff=0, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=90395, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=25, clientEndpoint.count=8, connection.active.count=8, client.connection.count=8, connection.count=8
+2024-03-21 13:41:42 [hz.keen_hodgkin.event-1] INFO  - Client Connected: 127.0.0.1:64343 - 605e317c-fb7d-4996-b534-d8bc7db3a505
+2024-03-21 13:41:42 [hz.keen_hodgkin.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=15, /127.0.0.1:5701->/127.0.0.1:64343, qualifier=null, endpoint=[127.0.0.1]:64343, remoteUuid=605e317c-fb7d-4996-b534-d8bc7db3a505, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 605e317c-fb7d-4996-b534-d8bc7db3a505, client name: hz.client_2, client version: 5.2.4
+2024-03-21 13:41:42 [hz.keen_hodgkin.event-1] INFO  - Connected Clients: 9
+2024-03-21 13:41:42 [hz.keen_hodgkin.event-1] INFO  - Client: /127.0.0.1:63626 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:41:42 [hz.keen_hodgkin.event-1] INFO  - Client: /127.0.0.1:63633 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:41:42 [hz.keen_hodgkin.event-1] INFO  - Client: /127.0.0.1:63632 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:41:42 [hz.keen_hodgkin.event-1] INFO  - Client: /127.0.0.1:64253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:41:42 [hz.keen_hodgkin.event-1] INFO  - Client: /127.0.0.1:63628 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:41:42 [hz.keen_hodgkin.event-1] INFO  - Client: /127.0.0.1:64343 - 605e317c-fb7d-4996-b534-d8bc7db3a505
+2024-03-21 13:41:42 [hz.keen_hodgkin.event-1] INFO  - Client: /127.0.0.1:63616 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:41:42 [hz.keen_hodgkin.event-1] INFO  - Client: /127.0.0.1:63631 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:41:42 [hz.keen_hodgkin.event-1] INFO  - Client: /127.0.0.1:63634 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:41:43 [hz.keen_hodgkin.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=16, /127.0.0.1:5701->/127.0.0.1:64344, qualifier=null, endpoint=[127.0.0.1]:64344, remoteUuid=b916a0e8-0bdd-4dee-a355-99ef54f7f931, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: b916a0e8-0bdd-4dee-a355-99ef54f7f931, client name: hz.client_2, client version: 5.2.4
+2024-03-21 13:41:43 [hz.keen_hodgkin.event-2] INFO  - Client Connected: 127.0.0.1:64344 - b916a0e8-0bdd-4dee-a355-99ef54f7f931
+2024-03-21 13:41:43 [hz.keen_hodgkin.event-2] INFO  - Connected Clients: 10
+2024-03-21 13:41:43 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63626 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:41:43 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63633 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:41:43 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63632 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:41:43 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:64253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:41:43 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63628 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:41:43 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:64343 - 605e317c-fb7d-4996-b534-d8bc7db3a505
+2024-03-21 13:41:43 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:64344 - b916a0e8-0bdd-4dee-a355-99ef54f7f931
+2024-03-21 13:41:43 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63616 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:41:43 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63631 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:41:43 [hz.keen_hodgkin.event-2] INFO  - Client: /127.0.0.1:63634 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:41:46 [hz.keen_hodgkin.event-3] INFO  - Client Connected: 127.0.0.1:64349 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:41:46 [hz.keen_hodgkin.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=17, /127.0.0.1:5701->/127.0.0.1:64349, qualifier=null, endpoint=[127.0.0.1]:64349, remoteUuid=a079eccb-3e81-4cff-ac5e-9f736da4f649, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: a079eccb-3e81-4cff-ac5e-9f736da4f649, client name: hz.client_2, client version: 5.2.4
+2024-03-21 13:41:46 [hz.keen_hodgkin.event-3] INFO  - Connected Clients: 11
+2024-03-21 13:41:46 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63626 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:41:46 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63633 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:41:46 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63632 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:41:46 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:41:46 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64349 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:41:46 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63628 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:41:46 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64343 - 605e317c-fb7d-4996-b534-d8bc7db3a505
+2024-03-21 13:41:46 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64344 - b916a0e8-0bdd-4dee-a355-99ef54f7f931
+2024-03-21 13:41:46 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63616 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:41:46 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63631 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:41:46 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63634 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:41:47 [hz.keen_hodgkin.event-4] INFO  - Client Connected: 127.0.0.1:64367 - 69a4a568-9d4a-4450-861d-03c0ca391bfb
+2024-03-21 13:41:47 [hz.keen_hodgkin.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=18, /127.0.0.1:5701->/127.0.0.1:64367, qualifier=null, endpoint=[127.0.0.1]:64367, remoteUuid=69a4a568-9d4a-4450-861d-03c0ca391bfb, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 69a4a568-9d4a-4450-861d-03c0ca391bfb, client name: hz.client_2, client version: 5.2.4
+2024-03-21 13:41:47 [hz.keen_hodgkin.event-4] INFO  - Connected Clients: 12
+2024-03-21 13:41:47 [hz.keen_hodgkin.event-3] INFO  - Client Connected: 127.0.0.1:64369 - 777f4ee5-ea06-4df4-8a00-edfa3105c9a9
+2024-03-21 13:41:47 [hz.keen_hodgkin.generic-operation.thread-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=19, /127.0.0.1:5701->/127.0.0.1:64369, qualifier=null, endpoint=[127.0.0.1]:64369, remoteUuid=777f4ee5-ea06-4df4-8a00-edfa3105c9a9, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 777f4ee5-ea06-4df4-8a00-edfa3105c9a9, client name: hz.client_2, client version: 5.2.4
+2024-03-21 13:41:48 [hz.keen_hodgkin.generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=20, /127.0.0.1:5701->/127.0.0.1:64370, qualifier=null, endpoint=[127.0.0.1]:64370, remoteUuid=e33e40ac-8b75-4875-a7eb-d490f0c575f4, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: e33e40ac-8b75-4875-a7eb-d490f0c575f4, client name: hz.client_2, client version: 5.2.4
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63633 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Connected Clients: 14
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63632 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63633 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:64343 - 605e317c-fb7d-4996-b534-d8bc7db3a505
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63632 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63616 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64343 - 605e317c-fb7d-4996-b534-d8bc7db3a505
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:64367 - 69a4a568-9d4a-4450-861d-03c0ca391bfb
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63616 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63626 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64369 - 777f4ee5-ea06-4df4-8a00-edfa3105c9a9
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:64253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64370 - e33e40ac-8b75-4875-a7eb-d490f0c575f4
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:64349 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64367 - 69a4a568-9d4a-4450-861d-03c0ca391bfb
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63628 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63626 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:64344 - b916a0e8-0bdd-4dee-a355-99ef54f7f931
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63631 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64349 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-4] INFO  - Client: /127.0.0.1:63634 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63628 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64344 - b916a0e8-0bdd-4dee-a355-99ef54f7f931
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63631 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63634 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client Connected: 127.0.0.1:64370 - e33e40ac-8b75-4875-a7eb-d490f0c575f4
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Connected Clients: 14
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63633 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63632 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64343 - 605e317c-fb7d-4996-b534-d8bc7db3a505
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63616 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64369 - 777f4ee5-ea06-4df4-8a00-edfa3105c9a9
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64370 - e33e40ac-8b75-4875-a7eb-d490f0c575f4
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64367 - 69a4a568-9d4a-4450-861d-03c0ca391bfb
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63626 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64349 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63628 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64344 - b916a0e8-0bdd-4dee-a355-99ef54f7f931
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63631 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63634 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Client Connected: 127.0.0.1:64372 - 08fdb4e4-2168-4bb5-9102-9c133c9db1b5
+2024-03-21 13:41:48 [hz.keen_hodgkin.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=21, /127.0.0.1:5701->/127.0.0.1:64372, qualifier=null, endpoint=[127.0.0.1]:64372, remoteUuid=08fdb4e4-2168-4bb5-9102-9c133c9db1b5, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 08fdb4e4-2168-4bb5-9102-9c133c9db1b5, client name: hz.client_2, client version: 5.2.4
+2024-03-21 13:41:48 [hz.keen_hodgkin.event-3] INFO  - Connected Clients: 15
+2024-03-21 13:41:50 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63633 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:41:50 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63632 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:41:50 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64372 - 08fdb4e4-2168-4bb5-9102-9c133c9db1b5
+2024-03-21 13:41:50 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64343 - 605e317c-fb7d-4996-b534-d8bc7db3a505
+2024-03-21 13:41:50 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63616 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:41:50 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64369 - 777f4ee5-ea06-4df4-8a00-edfa3105c9a9
+2024-03-21 13:41:50 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64370 - e33e40ac-8b75-4875-a7eb-d490f0c575f4
+2024-03-21 13:41:50 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64367 - 69a4a568-9d4a-4450-861d-03c0ca391bfb
+2024-03-21 13:41:50 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63626 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:41:50 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:41:50 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64349 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:41:50 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63628 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:41:50 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:64344 - b916a0e8-0bdd-4dee-a355-99ef54f7f931
+2024-03-21 13:41:50 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63631 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:41:50 [hz.keen_hodgkin.event-3] INFO  - Client: /127.0.0.1:63634 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:42:22 [checkCpuCycle] INFO  - Memory Used:---> 105 MB. Max Available: 8184 MB
+2024-03-21 13:43:44 [main] INFO  - [LOCAL] [dev] [5.3.6] Interfaces is enabled, trying to pick one address matching to one of: [127.0.0.1, *.*.*.*]
+2024-03-21 13:43:44 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+	+       +  o    o     o     o---o o----o o      o---o     o     o----o o--o--o
+	+ +   + +  |    |    / \       /  |      |     /         / \    |         |   
+	+ + + + +  o----o   o   o     o   o----o |    o         o   o   o----o    |   
+	+ +   + +  |    |  /     \   /    |      |     \       /     \       |    |   
+	+       +  o    o o       o o---o o----o o----o o---o o       o o----o    o   
+2024-03-21 13:43:44 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+2024-03-21 13:43:44 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Hazelcast Platform 5.3.6 (20231109 - 9903dc9) starting at [127.0.0.1]:5701
+2024-03-21 13:43:44 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Cluster name: dev
+2024-03-21 13:43:44 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Integrity Checker is disabled. Fail-fast on corrupted executables will not be performed. For more information, see the documentation for Integrity Checker.
+2024-03-21 13:43:44 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] The Jet engine is disabled.
+To enable the Jet engine on the members, do one of the following:
+  - Change member config using Java API: config.getJetConfig().setEnabled(true)
+  - Change XML/YAML configuration property: Set hazelcast.jet.enabled to true
+  - Add system property: -Dhz.jet.enabled=true (for Hazelcast embedded, works only when loading config via Config.load)
+  - Add environment variable: HZ_JET_ENABLED=true (recommended when running container image. For Hazelcast embedded, works only when loading config via Config.load)
+2024-03-21 13:43:45 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] TPC: disabled
+2024-03-21 13:43:45 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Enable DEBUG/FINE log level for log category com.hazelcast.system.security  or use -Dhazelcast.security.recommendations system property to see security recommendations and the status of current config.
+2024-03-21 13:43:45 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Using TCP/IP discovery
+2024-03-21 13:43:45 [main] WARN  - [127.0.0.1]:5701 [dev] [5.3.6] CP Subsystem is not enabled. CP data structures will operate in UNSAFE mode! Please note that UNSAFE mode will not provide strong consistency guarantees.
+2024-03-21 13:43:45 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-21 13:43:45 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTING
+2024-03-21 13:43:46 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+
+Members {size:1, ver:1} [
+	Member [127.0.0.1]:5701 - d07aad59-dbd3-4196-a587-5d3ed21605fd this
+]
+
+2024-03-21 13:43:46 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTED
+2024-03-21 13:43:46 [hz.thirsty_hawking.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=2, /127.0.0.1:5701->/127.0.0.1:49252, qualifier=null, endpoint=[127.0.0.1]:49252, remoteUuid=7b99554b-64be-4851-8d6d-81ece7902aa6, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 7b99554b-64be-4851-8d6d-81ece7902aa6, client name: hz.client_1, client version: 5.2.4
+2024-03-21 13:43:46 [hz.thirsty_hawking.generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=1, /127.0.0.1:5701->/127.0.0.1:49251, qualifier=null, endpoint=[127.0.0.1]:49251, remoteUuid=81500cdf-0853-43e5-9306-3b086ccdc43f, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 81500cdf-0853-43e5-9306-3b086ccdc43f, client name: hz.client_1, client version: 5.2.4
+2024-03-21 13:43:46 [hz.thirsty_hawking.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=3, /127.0.0.1:5701->/127.0.0.1:49253, qualifier=null, endpoint=[127.0.0.1]:49253, remoteUuid=d8aebe2a-4821-4bad-894f-d7444cec064e, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: d8aebe2a-4821-4bad-894f-d7444cec064e, client name: hz.client_2, client version: 5.2.4
+2024-03-21 13:43:46 [hz.thirsty_hawking.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=4, /127.0.0.1:5701->/127.0.0.1:49254, qualifier=null, endpoint=[127.0.0.1]:49254, remoteUuid=a079eccb-3e81-4cff-ac5e-9f736da4f649, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: a079eccb-3e81-4cff-ac5e-9f736da4f649, client name: hz.client_2, client version: 5.2.4
+2024-03-21 13:43:46 [hz.thirsty_hawking.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=5, /127.0.0.1:5701->/127.0.0.1:49255, qualifier=null, endpoint=[127.0.0.1]:49255, remoteUuid=69a4a568-9d4a-4450-861d-03c0ca391bfb, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 69a4a568-9d4a-4450-861d-03c0ca391bfb, client name: hz.client_2, client version: 5.2.4
+2024-03-21 13:43:46 [hz.thirsty_hawking.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=6, /127.0.0.1:5701->/127.0.0.1:49256, qualifier=null, endpoint=[127.0.0.1]:49256, remoteUuid=08fdb4e4-2168-4bb5-9102-9c133c9db1b5, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 08fdb4e4-2168-4bb5-9102-9c133c9db1b5, client name: hz.client_2, client version: 5.2.4
+2024-03-21 13:43:46 [hz.thirsty_hawking.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=7, /127.0.0.1:5701->/127.0.0.1:49257, qualifier=null, endpoint=[127.0.0.1]:49257, remoteUuid=605e317c-fb7d-4996-b534-d8bc7db3a505, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 605e317c-fb7d-4996-b534-d8bc7db3a505, client name: hz.client_2, client version: 5.2.4
+2024-03-21 13:43:46 [hz.thirsty_hawking.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=8, /127.0.0.1:5701->/127.0.0.1:49258, qualifier=null, endpoint=[127.0.0.1]:49258, remoteUuid=777f4ee5-ea06-4df4-8a00-edfa3105c9a9, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 777f4ee5-ea06-4df4-8a00-edfa3105c9a9, client name: hz.client_2, client version: 5.2.4
+2024-03-21 13:43:46 [hz.thirsty_hawking.generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=9, /127.0.0.1:5701->/127.0.0.1:49259, qualifier=null, endpoint=[127.0.0.1]:49259, remoteUuid=b916a0e8-0bdd-4dee-a355-99ef54f7f931, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: b916a0e8-0bdd-4dee-a355-99ef54f7f931, client name: hz.client_2, client version: 5.2.4
+2024-03-21 13:43:46 [hz.thirsty_hawking.generic-operation.thread-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=10, /127.0.0.1:5701->/127.0.0.1:49260, qualifier=null, endpoint=[127.0.0.1]:49260, remoteUuid=e33e40ac-8b75-4875-a7eb-d490f0c575f4, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: e33e40ac-8b75-4875-a7eb-d490f0c575f4, client name: hz.client_2, client version: 5.2.4
+2024-03-21 13:43:46 [hz.thirsty_hawking.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=11, /127.0.0.1:5701->/127.0.0.1:49261, qualifier=null, endpoint=[127.0.0.1]:49261, remoteUuid=3b1e44f4-a1f7-4278-a8d4-4b5702123afd, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 3b1e44f4-a1f7-4278-a8d4-4b5702123afd, client name: hz.client_1, client version: 5.0.1
+2024-03-21 13:43:46 [hz.thirsty_hawking.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=12, /127.0.0.1:5701->/127.0.0.1:49262, qualifier=null, endpoint=[127.0.0.1]:49262, remoteUuid=f50015ac-d7d1-453f-a07e-26b57884eabc, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: f50015ac-d7d1-453f-a07e-26b57884eabc, client name: hz.client_1, client version: 5.0.1
+2024-03-21 13:43:46 [hz.thirsty_hawking.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=13, /127.0.0.1:5701->/127.0.0.1:49263, qualifier=null, endpoint=[127.0.0.1]:49263, remoteUuid=1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0, client name: hz.client_1, client version: 5.0.1
+2024-03-21 13:43:46 [hz.thirsty_hawking.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=14, /127.0.0.1:5701->/127.0.0.1:49265, qualifier=null, endpoint=[127.0.0.1]:49265, remoteUuid=8f868763-ab5b-438a-a978-c85c503ba101, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 8f868763-ab5b-438a-a978-c85c503ba101, client name: hz.client_1, client version: 5.0.1
+2024-03-21 13:43:46 [hz.thirsty_hawking.generic-operation.thread-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=15, /127.0.0.1:5701->/127.0.0.1:49264, qualifier=null, endpoint=[127.0.0.1]:49264, remoteUuid=3c573091-05e9-4e03-aeaf-3a006c2bab0d, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 3c573091-05e9-4e03-aeaf-3a006c2bab0d, client name: hz.client_1, client version: 5.0.1
+2024-03-21 13:43:46 [main] INFO  - HHH000412: Hibernate Core {5.2.2.Final}
+2024-03-21 13:43:46 [main] INFO  - HHH000206: hibernate.properties not found
+2024-03-21 13:43:46 [main] INFO  - HHH000021: Bytecode provider name : javassist
+2024-03-21 13:43:47 [main] INFO  - HCANN000001: Hibernate Commons Annotations {5.0.1.Final}
+2024-03-21 13:43:47 [hz.thirsty_hawking.client.thread-3] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Initializing cluster partition table arrangement...
+2024-03-21 13:43:47 [main] INFO  - HHH000400: Using dialect: org.hibernate.dialect.MySQLDialect
+2024-03-21 13:43:48 [hz.thirsty_hawking.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=32.0G, physical.memory.free=16.1G, swap.space.total=0, swap.space.free=0, heap.memory.used=19.4M, heap.memory.free=29.4M, heap.memory.total=56.0M, heap.memory.max=8.0G, heap.memory.used/total=34.63%, heap.memory.used/max=0.24%, minor.gc.count=8, minor.gc.time=46ms, major.gc.count=0, major.gc.time=0ms, load.process=0.00%, load.system=100.00%, load.systemAverage=n/a thread.count=58, thread.peakCount=58, cluster.timeDiff=0, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=299, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=25, clientEndpoint.count=15, connection.active.count=0, client.connection.count=0, connection.count=0
+2024-03-21 13:43:48 [main] INFO  - Initializing Connection Pool
+2024-03-21 13:43:48 [main] INFO  - jdbc:mysql://localhost:3306/host_brd?autoReconnect=true&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC[com.mysql.cj.jdbc.Driver] User: root Pass: root
+2024-03-21 13:43:48 [main] INFO  - Total Connection Stored: 10
+2024-03-21 13:43:48 [main] INFO  - ********** Start loading Smsc Schedule ******************
+2024-03-21 13:43:49 [main] INFO  - SmscSchedule: {}
+2024-03-21 13:43:49 [main] INFO  - FlagReader Thread Starting
+2024-03-21 13:43:49 [main] INFO  - ********* Start Loading Network Entries ************
+2024-03-21 13:43:49 [main] ERROR - Network[1] Invalid Number Length Range: 0,10
+2024-03-21 13:43:49 [main] ERROR - Network[2] Invalid Number Length Range: 10,9
+2024-03-21 13:43:49 [main] ERROR - Network[3] Invalid Number Length Range: 10,10
+2024-03-21 13:43:49 [main] INFO  - NetworkEntries: 1390
+2024-03-21 13:43:49 [main] INFO  - ********* End Loading Network Entries **************
+2024-03-21 13:43:49 [main] INFO  - ********* Start Loading Smsc Configuration **************
+2024-03-21 13:43:49 [main] INFO  - SmscEntries: 11
+2024-03-21 13:43:49 [main] INFO  - ******** End Loading Smsc Configuration *****************
+2024-03-21 13:43:49 [main] INFO  - ********** Start loading Smsc Group ******************
+2024-03-21 13:43:49 [main] INFO  - SmscGroup: [SmscGroup: id=1,name=DEFAULT,remarks=default]
+2024-03-21 13:43:49 [main] INFO  - ************ End loading Smsc Group *******************
+2024-03-21 13:43:49 [main] INFO  - ********** Start loading Smsc Group Member ******************
+2024-03-21 13:43:49 [main] INFO  - SmscGroupMember: []
+2024-03-21 13:43:49 [main] INFO  - ************ End loading Smsc Group Member *******************
+2024-03-21 13:43:49 [main] INFO  - **** Start Loading User Configuration ********
+2024-03-21 13:43:49 [main] ERROR - null DecodeError: java.lang.NullPointerException: Cannot invoke "String.trim()" because "arg0" is null
+2024-03-21 13:43:49 [main] ERROR - null DecodeError: java.lang.NullPointerException: Cannot invoke "String.trim()" because "arg0" is null
+2024-03-21 13:43:50 [main] INFO  - User Entries: 12
+2024-03-21 13:43:50 [main] INFO  - Balance Entries: 12
+2024-03-21 13:43:50 [main] INFO  - User Mapping: 12
+2024-03-21 13:43:50 [main] INFO  - WebMaster Entries: 12
+2024-03-21 13:43:50 [main] INFO  - Profession Entries: 12
+2024-03-21 13:43:50 [main] INFO  - DlrSetting Entries: 12
+2024-03-21 13:43:50 [main] INFO  - ***** End Loading User Configuration **********
+2024-03-21 13:43:50 [main] INFO  -  ******* Start Loading Routing *********** 
+2024-03-21 13:43:50 [main] INFO  - <--- listing Basic routing --> 
+2024-03-21 13:43:50 [main] INFO  - <--- End listing Basic routing[191] --> 
+2024-03-21 13:43:50 [main] INFO  - <--- listing Optional routing --> 
+2024-03-21 13:43:50 [main] INFO  - <--- End listing Optional routing[191] --> 
+2024-03-21 13:43:50 [main] INFO  - <--- listing Hlr routing --> 
+2024-03-21 13:43:50 [main] INFO  - <--- End listing Hlr routing[191] --> 
+2024-03-21 13:43:50 [main] INFO  - <--- listing Mms routing --> 
+2024-03-21 13:43:50 [main] INFO  - <--- End listing Mms routing[191] --> 
+2024-03-21 13:43:50 [main] INFO  - Basic Routing Entries: 191
+2024-03-21 13:43:50 [main] INFO  - Hlr Routing Entries: 191
+2024-03-21 13:43:50 [main] INFO  - Optional Routing Entries: 191
+2024-03-21 13:43:50 [main] INFO  - Mms Routing Entries: 191
+2024-03-21 13:43:50 [main] INFO  - ********** End Loading Routing *********** 
+2024-03-21 13:43:50 [main] INFO  - BearerBox Starting
+2024-03-21 13:43:50 [main] INFO  - BalanceOperator Starting
+2024-03-21 13:43:50 [main] INFO  - CheckCpuCycle Starting
+2024-03-21 13:43:50 [Thread-1] INFO  - ****** Reloading Smsc Scheduling ****** 
+2024-03-21 13:43:50 [Thread-1] INFO  - Today's SmscScheduling: {}
+2024-03-21 13:44:50 [checkCpuCycle] INFO  - Memory Used:---> 114 MB. Max Available: 8184 MB
+2024-03-21 13:45:50 [checkCpuCycle] INFO  - Memory Used:---> 93 MB. Max Available: 8184 MB
+2024-03-21 13:46:11 [hz.thirsty_hawking.IO.thread-in-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=10, /127.0.0.1:5701->/127.0.0.1:49260, qualifier=null, endpoint=[127.0.0.1]:49260, remoteUuid=e33e40ac-8b75-4875-a7eb-d490f0c575f4, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=10, /127.0.0.1:5701->/127.0.0.1:49260, qualifier=null, endpoint=[127.0.0.1]:49260, remoteUuid=e33e40ac-8b75-4875-a7eb-d490f0c575f4, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=e33e40ac-8b75-4875-a7eb-d490f0c575f4, clientName=hz.client_2, authenticated=true, clientVersion=5.2.4, creationTime=1711008826522, latest clientAttributes=lastStatisticsCollectionTime=1711008968181,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711008826521,clientAddress=127.0.0.1,clientName=hz.client_2,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=17371238400,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=67759168,runtime.maxMemory=8581545984,runtime.totalMemory=184549376,runtime.uptime=889427,runtime.usedMemory=116790208, labels=[]}
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client DisConnected: 127.0.0.1:49260 - e33e40ac-8b75-4875-a7eb-d490f0c575f4
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Connected Clients: 14
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49259 - b916a0e8-0bdd-4dee-a355-99ef54f7f931
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49254 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49256 - 08fdb4e4-2168-4bb5-9102-9c133c9db1b5
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49264 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49251 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49262 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49255 - 69a4a568-9d4a-4450-861d-03c0ca391bfb
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49265 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49258 - 777f4ee5-ea06-4df4-8a00-edfa3105c9a9
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49261 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49252 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49263 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49257 - 605e317c-fb7d-4996-b534-d8bc7db3a505
+2024-03-21 13:46:11 [hz.thirsty_hawking.IO.thread-in-2] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=6, /127.0.0.1:5701->/127.0.0.1:49256, qualifier=null, endpoint=[127.0.0.1]:49256, remoteUuid=08fdb4e4-2168-4bb5-9102-9c133c9db1b5, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-2] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=6, /127.0.0.1:5701->/127.0.0.1:49256, qualifier=null, endpoint=[127.0.0.1]:49256, remoteUuid=08fdb4e4-2168-4bb5-9102-9c133c9db1b5, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=08fdb4e4-2168-4bb5-9102-9c133c9db1b5, clientName=hz.client_2, authenticated=true, clientVersion=5.2.4, creationTime=1711008826491, latest clientAttributes=lastStatisticsCollectionTime=1711008970986,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711008826490,clientAddress=127.0.0.1,clientName=hz.client_2,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=17349226496,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=78628432,runtime.maxMemory=8581545984,runtime.totalMemory=272629760,runtime.uptime=972945,runtime.usedMemory=194001328, labels=[]}
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client DisConnected: 127.0.0.1:49256 - 08fdb4e4-2168-4bb5-9102-9c133c9db1b5
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Connected Clients: 13
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49259 - b916a0e8-0bdd-4dee-a355-99ef54f7f931
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49254 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49264 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49251 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49262 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49255 - 69a4a568-9d4a-4450-861d-03c0ca391bfb
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49265 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49258 - 777f4ee5-ea06-4df4-8a00-edfa3105c9a9
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49261 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49252 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49263 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49257 - 605e317c-fb7d-4996-b534-d8bc7db3a505
+2024-03-21 13:46:11 [hz.thirsty_hawking.IO.thread-in-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=7, /127.0.0.1:5701->/127.0.0.1:49257, qualifier=null, endpoint=[127.0.0.1]:49257, remoteUuid=605e317c-fb7d-4996-b534-d8bc7db3a505, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-3] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=7, /127.0.0.1:5701->/127.0.0.1:49257, qualifier=null, endpoint=[127.0.0.1]:49257, remoteUuid=605e317c-fb7d-4996-b534-d8bc7db3a505, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=605e317c-fb7d-4996-b534-d8bc7db3a505, clientName=hz.client_2, authenticated=true, clientVersion=5.2.4, creationTime=1711008826507, latest clientAttributes=lastStatisticsCollectionTime=1711008967996,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711008826506,clientAddress=127.0.0.1,clientName=hz.client_2,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=17371090944,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=58810808,runtime.maxMemory=8581545984,runtime.totalMemory=209715200,runtime.uptime=883296,runtime.usedMemory=150904392, labels=[]}
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-1] INFO  - Client DisConnected: 127.0.0.1:49257 - 605e317c-fb7d-4996-b534-d8bc7db3a505
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-1] INFO  - Connected Clients: 12
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49259 - b916a0e8-0bdd-4dee-a355-99ef54f7f931
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49254 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49264 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49251 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49262 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49255 - 69a4a568-9d4a-4450-861d-03c0ca391bfb
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49265 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49258 - 777f4ee5-ea06-4df4-8a00-edfa3105c9a9
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49261 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49252 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49263 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:46:11 [hz.thirsty_hawking.IO.thread-in-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=5, /127.0.0.1:5701->/127.0.0.1:49255, qualifier=null, endpoint=[127.0.0.1]:49255, remoteUuid=69a4a568-9d4a-4450-861d-03c0ca391bfb, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=5, /127.0.0.1:5701->/127.0.0.1:49255, qualifier=null, endpoint=[127.0.0.1]:49255, remoteUuid=69a4a568-9d4a-4450-861d-03c0ca391bfb, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=69a4a568-9d4a-4450-861d-03c0ca391bfb, clientName=hz.client_2, authenticated=true, clientVersion=5.2.4, creationTime=1711008826479, latest clientAttributes=lastStatisticsCollectionTime=1711008968165,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711008826478,clientAddress=127.0.0.1,clientName=hz.client_2,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=17371238400,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=67424416,runtime.maxMemory=8581545984,runtime.totalMemory=251658240,runtime.uptime=900015,runtime.usedMemory=184233824, labels=[]}
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-4] INFO  - Client DisConnected: 127.0.0.1:49255 - 69a4a568-9d4a-4450-861d-03c0ca391bfb
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-4] INFO  - Connected Clients: 11
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49251 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49259 - b916a0e8-0bdd-4dee-a355-99ef54f7f931
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49262 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49265 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49258 - 777f4ee5-ea06-4df4-8a00-edfa3105c9a9
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49261 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49254 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49252 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49263 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49264 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:46:11 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:46:12 [hz.thirsty_hawking.IO.thread-in-2] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=9, /127.0.0.1:5701->/127.0.0.1:49259, qualifier=null, endpoint=[127.0.0.1]:49259, remoteUuid=b916a0e8-0bdd-4dee-a355-99ef54f7f931, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-5] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=9, /127.0.0.1:5701->/127.0.0.1:49259, qualifier=null, endpoint=[127.0.0.1]:49259, remoteUuid=b916a0e8-0bdd-4dee-a355-99ef54f7f931, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=b916a0e8-0bdd-4dee-a355-99ef54f7f931, clientName=hz.client_2, authenticated=true, clientVersion=5.2.4, creationTime=1711008826532, latest clientAttributes=lastStatisticsCollectionTime=1711008968596,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711008826519,clientAddress=127.0.0.1,clientName=hz.client_2,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=17373564928,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=69116208,runtime.maxMemory=8581545984,runtime.totalMemory=201326592,runtime.uptime=947836,runtime.usedMemory=132210384, labels=[]}
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-2] INFO  - Client DisConnected: 127.0.0.1:49259 - b916a0e8-0bdd-4dee-a355-99ef54f7f931
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-2] INFO  - Connected Clients: 10
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49251 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49262 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49265 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49258 - 777f4ee5-ea06-4df4-8a00-edfa3105c9a9
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49261 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49254 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49252 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49263 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49264 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:46:12 [hz.thirsty_hawking.IO.thread-in-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=8, /127.0.0.1:5701->/127.0.0.1:49258, qualifier=null, endpoint=[127.0.0.1]:49258, remoteUuid=777f4ee5-ea06-4df4-8a00-edfa3105c9a9, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-4] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=8, /127.0.0.1:5701->/127.0.0.1:49258, qualifier=null, endpoint=[127.0.0.1]:49258, remoteUuid=777f4ee5-ea06-4df4-8a00-edfa3105c9a9, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=777f4ee5-ea06-4df4-8a00-edfa3105c9a9, clientName=hz.client_2, authenticated=true, clientVersion=5.2.4, creationTime=1711008826512, latest clientAttributes=lastStatisticsCollectionTime=1711008968181,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711008826508,clientAddress=127.0.0.1,clientName=hz.client_2,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=17371238400,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=153291968,runtime.maxMemory=8581545984,runtime.totalMemory=289406976,runtime.uptime=917901,runtime.usedMemory=136115008, labels=[]}
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-3] INFO  - Client DisConnected: 127.0.0.1:49258 - 777f4ee5-ea06-4df4-8a00-edfa3105c9a9
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-3] INFO  - Connected Clients: 9
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49251 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49262 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49265 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49261 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49254 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49252 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49263 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49264 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:46:12 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:46:13 [hz.thirsty_hawking.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=16, /127.0.0.1:5701->/127.0.0.1:49657, qualifier=null, endpoint=[127.0.0.1]:49657, remoteUuid=6aaa2c90-24b9-4957-bac5-4af66695a79e, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 6aaa2c90-24b9-4957-bac5-4af66695a79e, client name: hz.client_3, client version: 5.2.4
+2024-03-21 13:46:13 [hz.thirsty_hawking.event-3] INFO  - Client Connected: 127.0.0.1:49657 - 6aaa2c90-24b9-4957-bac5-4af66695a79e
+2024-03-21 13:46:13 [hz.thirsty_hawking.event-3] INFO  - Connected Clients: 10
+2024-03-21 13:46:13 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49251 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:46:13 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49262 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:46:13 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49265 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:46:13 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49261 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:46:13 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49254 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:46:13 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49252 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:46:13 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49263 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:46:13 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49264 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:46:13 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49657 - 6aaa2c90-24b9-4957-bac5-4af66695a79e
+2024-03-21 13:46:13 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:46:20 [hz.thirsty_hawking.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=17, /127.0.0.1:5701->/127.0.0.1:49731, qualifier=null, endpoint=[127.0.0.1]:49731, remoteUuid=83b6fad7-c81c-44fe-8194-91eafbc7ef68, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 83b6fad7-c81c-44fe-8194-91eafbc7ef68, client name: hz.client_3, client version: 5.2.4
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client Connected: 127.0.0.1:49731 - 83b6fad7-c81c-44fe-8194-91eafbc7ef68
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Connected Clients: 11
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49731 - 83b6fad7-c81c-44fe-8194-91eafbc7ef68
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49251 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49262 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49265 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49261 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49254 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49252 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49263 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49264 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49657 - 6aaa2c90-24b9-4957-bac5-4af66695a79e
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:46:20 [hz.thirsty_hawking.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=18, /127.0.0.1:5701->/127.0.0.1:49737, qualifier=null, endpoint=[127.0.0.1]:49737, remoteUuid=38538eb6-083b-4d06-aeb9-59bc722ed86e, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 38538eb6-083b-4d06-aeb9-59bc722ed86e, client name: hz.client_3, client version: 5.2.4
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client Connected: 127.0.0.1:49737 - 38538eb6-083b-4d06-aeb9-59bc722ed86e
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Connected Clients: 12
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49254 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49264 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49657 - 6aaa2c90-24b9-4957-bac5-4af66695a79e
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49731 - 83b6fad7-c81c-44fe-8194-91eafbc7ef68
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49251 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49262 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49265 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49261 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49252 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49263 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-2] INFO  - Client: /127.0.0.1:49737 - 38538eb6-083b-4d06-aeb9-59bc722ed86e
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-1] INFO  - Client Connected: 127.0.0.1:49739 - b8058249-9fa0-49d8-8975-2ffca9429bf6
+2024-03-21 13:46:20 [hz.thirsty_hawking.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=19, /127.0.0.1:5701->/127.0.0.1:49739, qualifier=null, endpoint=[127.0.0.1]:49739, remoteUuid=b8058249-9fa0-49d8-8975-2ffca9429bf6, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: b8058249-9fa0-49d8-8975-2ffca9429bf6, client name: hz.client_3, client version: 5.2.4
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-1] INFO  - Connected Clients: 13
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49254 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49264 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49657 - 6aaa2c90-24b9-4957-bac5-4af66695a79e
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49739 - b8058249-9fa0-49d8-8975-2ffca9429bf6
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49731 - 83b6fad7-c81c-44fe-8194-91eafbc7ef68
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49251 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49262 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49265 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49261 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49252 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49263 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:46:20 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49737 - 38538eb6-083b-4d06-aeb9-59bc722ed86e
+2024-03-21 13:46:24 [hz.thirsty_hawking.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=20, /127.0.0.1:5701->/127.0.0.1:49763, qualifier=null, endpoint=[127.0.0.1]:49763, remoteUuid=2d25d389-aaf8-4c7f-99fe-d46fe153352c, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 2d25d389-aaf8-4c7f-99fe-d46fe153352c, client name: hz.client_3, client version: 5.2.4
+2024-03-21 13:46:24 [hz.thirsty_hawking.event-3] INFO  - Client Connected: 127.0.0.1:49763 - 2d25d389-aaf8-4c7f-99fe-d46fe153352c
+2024-03-21 13:46:24 [hz.thirsty_hawking.event-3] INFO  - Connected Clients: 14
+2024-03-21 13:46:24 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49763 - 2d25d389-aaf8-4c7f-99fe-d46fe153352c
+2024-03-21 13:46:24 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49254 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:46:24 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49264 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:46:24 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49657 - 6aaa2c90-24b9-4957-bac5-4af66695a79e
+2024-03-21 13:46:24 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49739 - b8058249-9fa0-49d8-8975-2ffca9429bf6
+2024-03-21 13:46:24 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:46:24 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49731 - 83b6fad7-c81c-44fe-8194-91eafbc7ef68
+2024-03-21 13:46:24 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49251 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:46:24 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49262 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:46:24 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49265 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:46:24 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49261 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:46:24 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49252 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:46:24 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49263 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:46:24 [hz.thirsty_hawking.event-3] INFO  - Client: /127.0.0.1:49737 - 38538eb6-083b-4d06-aeb9-59bc722ed86e
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-1] INFO  - Client Connected: 127.0.0.1:49768 - 666e8213-32d1-41b9-b35a-8f0a726c3d6f
+2024-03-21 13:46:25 [hz.thirsty_hawking.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=21, /127.0.0.1:5701->/127.0.0.1:49768, qualifier=null, endpoint=[127.0.0.1]:49768, remoteUuid=666e8213-32d1-41b9-b35a-8f0a726c3d6f, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 666e8213-32d1-41b9-b35a-8f0a726c3d6f, client name: hz.client_3, client version: 5.2.4
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-1] INFO  - Connected Clients: 15
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49763 - 2d25d389-aaf8-4c7f-99fe-d46fe153352c
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49254 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49264 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49657 - 6aaa2c90-24b9-4957-bac5-4af66695a79e
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49739 - b8058249-9fa0-49d8-8975-2ffca9429bf6
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49768 - 666e8213-32d1-41b9-b35a-8f0a726c3d6f
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49731 - 83b6fad7-c81c-44fe-8194-91eafbc7ef68
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49251 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49262 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49265 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49261 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49252 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49263 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49737 - 38538eb6-083b-4d06-aeb9-59bc722ed86e
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-4] INFO  - Client Connected: 127.0.0.1:49774 - 3cc83ebb-3795-49ce-a1ef-b5c97c94bd53
+2024-03-21 13:46:25 [hz.thirsty_hawking.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=22, /127.0.0.1:5701->/127.0.0.1:49774, qualifier=null, endpoint=[127.0.0.1]:49774, remoteUuid=3cc83ebb-3795-49ce-a1ef-b5c97c94bd53, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 3cc83ebb-3795-49ce-a1ef-b5c97c94bd53, client name: hz.client_3, client version: 5.2.4
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-4] INFO  - Connected Clients: 16
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49763 - 2d25d389-aaf8-4c7f-99fe-d46fe153352c
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49254 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49264 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49774 - 3cc83ebb-3795-49ce-a1ef-b5c97c94bd53
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49657 - 6aaa2c90-24b9-4957-bac5-4af66695a79e
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49739 - b8058249-9fa0-49d8-8975-2ffca9429bf6
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49768 - 666e8213-32d1-41b9-b35a-8f0a726c3d6f
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49731 - 83b6fad7-c81c-44fe-8194-91eafbc7ef68
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49251 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49262 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49265 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49261 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49252 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49263 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:46:25 [hz.thirsty_hawking.event-4] INFO  - Client: /127.0.0.1:49737 - 38538eb6-083b-4d06-aeb9-59bc722ed86e
+2024-03-21 13:46:26 [hz.thirsty_hawking.event-1] INFO  - Client Connected: 127.0.0.1:49777 - a779d662-ce0f-411e-ae09-ddb5d33c1bd2
+2024-03-21 13:46:26 [hz.thirsty_hawking.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=23, /127.0.0.1:5701->/127.0.0.1:49777, qualifier=null, endpoint=[127.0.0.1]:49777, remoteUuid=a779d662-ce0f-411e-ae09-ddb5d33c1bd2, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: a779d662-ce0f-411e-ae09-ddb5d33c1bd2, client name: hz.client_3, client version: 5.2.4
+2024-03-21 13:46:26 [hz.thirsty_hawking.event-1] INFO  - Connected Clients: 17
+2024-03-21 13:46:26 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49763 - 2d25d389-aaf8-4c7f-99fe-d46fe153352c
+2024-03-21 13:46:26 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49254 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:46:26 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49264 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:46:26 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49774 - 3cc83ebb-3795-49ce-a1ef-b5c97c94bd53
+2024-03-21 13:46:26 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49657 - 6aaa2c90-24b9-4957-bac5-4af66695a79e
+2024-03-21 13:46:26 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49739 - b8058249-9fa0-49d8-8975-2ffca9429bf6
+2024-03-21 13:46:26 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49253 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:46:26 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49768 - 666e8213-32d1-41b9-b35a-8f0a726c3d6f
+2024-03-21 13:46:26 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49731 - 83b6fad7-c81c-44fe-8194-91eafbc7ef68
+2024-03-21 13:46:26 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49251 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:46:26 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49262 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:46:26 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49265 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:46:26 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49261 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:46:26 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49252 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:46:26 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49263 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:46:26 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49777 - a779d662-ce0f-411e-ae09-ddb5d33c1bd2
+2024-03-21 13:46:26 [hz.thirsty_hawking.event-1] INFO  - Client: /127.0.0.1:49737 - 38538eb6-083b-4d06-aeb9-59bc722ed86e
+2024-03-21 13:46:28 [hz.thirsty_hawking.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=32.0G, physical.memory.free=16.1G, swap.space.total=0, swap.space.free=0, heap.memory.used=82.0M, heap.memory.free=94.0M, heap.memory.total=176.0M, heap.memory.max=8.0G, heap.memory.used/total=46.57%, heap.memory.used/max=1.00%, minor.gc.count=15, minor.gc.time=95ms, major.gc.count=0, major.gc.time=0ms, load.process=0.00%, load.system=100.00%, load.systemAverage=n/a thread.count=139, thread.peakCount=139, cluster.timeDiff=0, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=58551, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=25, clientEndpoint.count=17, connection.active.count=17, client.connection.count=17, connection.count=17
+2024-03-21 13:47:07 [main] INFO  - [LOCAL] [dev] [5.3.6] Interfaces is enabled, trying to pick one address matching to one of: [127.0.0.1, *.*.*.*]
+2024-03-21 13:47:07 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+	+       +  o    o     o     o---o o----o o      o---o     o     o----o o--o--o
+	+ +   + +  |    |    / \       /  |      |     /         / \    |         |   
+	+ + + + +  o----o   o   o     o   o----o |    o         o   o   o----o    |   
+	+ +   + +  |    |  /     \   /    |      |     \       /     \       |    |   
+	+       +  o    o o       o o---o o----o o----o o---o o       o o----o    o   
+2024-03-21 13:47:07 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+2024-03-21 13:47:07 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Hazelcast Platform 5.3.6 (20231109 - 9903dc9) starting at [127.0.0.1]:5701
+2024-03-21 13:47:07 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Cluster name: dev
+2024-03-21 13:47:07 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Integrity Checker is disabled. Fail-fast on corrupted executables will not be performed. For more information, see the documentation for Integrity Checker.
+2024-03-21 13:47:07 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] The Jet engine is disabled.
+To enable the Jet engine on the members, do one of the following:
+  - Change member config using Java API: config.getJetConfig().setEnabled(true)
+  - Change XML/YAML configuration property: Set hazelcast.jet.enabled to true
+  - Add system property: -Dhz.jet.enabled=true (for Hazelcast embedded, works only when loading config via Config.load)
+  - Add environment variable: HZ_JET_ENABLED=true (recommended when running container image. For Hazelcast embedded, works only when loading config via Config.load)
+2024-03-21 13:47:07 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] TPC: disabled
+2024-03-21 13:47:08 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Enable DEBUG/FINE log level for log category com.hazelcast.system.security  or use -Dhazelcast.security.recommendations system property to see security recommendations and the status of current config.
+2024-03-21 13:47:08 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Using TCP/IP discovery
+2024-03-21 13:47:08 [main] WARN  - [127.0.0.1]:5701 [dev] [5.3.6] CP Subsystem is not enabled. CP data structures will operate in UNSAFE mode! Please note that UNSAFE mode will not provide strong consistency guarantees.
+2024-03-21 13:47:08 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-21 13:47:08 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTING
+2024-03-21 13:47:08 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+
+Members {size:1, ver:1} [
+	Member [127.0.0.1]:5701 - 75056d3e-3434-4aa3-a936-5a7d66623907 this
+]
+
+2024-03-21 13:47:08 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTED
+2024-03-21 13:47:09 [hz.vigilant_mclaren.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=1, /127.0.0.1:5701->/127.0.0.1:51015, qualifier=null, endpoint=[127.0.0.1]:51015, remoteUuid=6aaa2c90-24b9-4957-bac5-4af66695a79e, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 6aaa2c90-24b9-4957-bac5-4af66695a79e, client name: hz.client_3, client version: 5.2.4
+2024-03-21 13:47:09 [hz.vigilant_mclaren.generic-operation.thread-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=2, /127.0.0.1:5701->/127.0.0.1:51016, qualifier=null, endpoint=[127.0.0.1]:51016, remoteUuid=81500cdf-0853-43e5-9306-3b086ccdc43f, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 81500cdf-0853-43e5-9306-3b086ccdc43f, client name: hz.client_1, client version: 5.2.4
+2024-03-21 13:47:09 [hz.vigilant_mclaren.generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=3, /127.0.0.1:5701->/127.0.0.1:51017, qualifier=null, endpoint=[127.0.0.1]:51017, remoteUuid=7b99554b-64be-4851-8d6d-81ece7902aa6, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 7b99554b-64be-4851-8d6d-81ece7902aa6, client name: hz.client_1, client version: 5.2.4
+2024-03-21 13:47:09 [hz.vigilant_mclaren.generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=4, /127.0.0.1:5701->/127.0.0.1:51018, qualifier=null, endpoint=[127.0.0.1]:51018, remoteUuid=a079eccb-3e81-4cff-ac5e-9f736da4f649, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: a079eccb-3e81-4cff-ac5e-9f736da4f649, client name: hz.client_2, client version: 5.2.4
+2024-03-21 13:47:09 [hz.vigilant_mclaren.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=5, /127.0.0.1:5701->/127.0.0.1:51019, qualifier=null, endpoint=[127.0.0.1]:51019, remoteUuid=38538eb6-083b-4d06-aeb9-59bc722ed86e, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 38538eb6-083b-4d06-aeb9-59bc722ed86e, client name: hz.client_3, client version: 5.2.4
+2024-03-21 13:47:09 [hz.vigilant_mclaren.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=6, /127.0.0.1:5701->/127.0.0.1:51020, qualifier=null, endpoint=[127.0.0.1]:51020, remoteUuid=d8aebe2a-4821-4bad-894f-d7444cec064e, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: d8aebe2a-4821-4bad-894f-d7444cec064e, client name: hz.client_2, client version: 5.2.4
+2024-03-21 13:47:09 [hz.vigilant_mclaren.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=7, /127.0.0.1:5701->/127.0.0.1:51021, qualifier=null, endpoint=[127.0.0.1]:51021, remoteUuid=3cc83ebb-3795-49ce-a1ef-b5c97c94bd53, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 3cc83ebb-3795-49ce-a1ef-b5c97c94bd53, client name: hz.client_3, client version: 5.2.4
+2024-03-21 13:47:09 [hz.vigilant_mclaren.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=8, /127.0.0.1:5701->/127.0.0.1:51022, qualifier=null, endpoint=[127.0.0.1]:51022, remoteUuid=2d25d389-aaf8-4c7f-99fe-d46fe153352c, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 2d25d389-aaf8-4c7f-99fe-d46fe153352c, client name: hz.client_3, client version: 5.2.4
+2024-03-21 13:47:09 [hz.vigilant_mclaren.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=9, /127.0.0.1:5701->/127.0.0.1:51024, qualifier=null, endpoint=[127.0.0.1]:51024, remoteUuid=666e8213-32d1-41b9-b35a-8f0a726c3d6f, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 666e8213-32d1-41b9-b35a-8f0a726c3d6f, client name: hz.client_3, client version: 5.2.4
+2024-03-21 13:47:09 [hz.vigilant_mclaren.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=10, /127.0.0.1:5701->/127.0.0.1:51026, qualifier=null, endpoint=[127.0.0.1]:51026, remoteUuid=83b6fad7-c81c-44fe-8194-91eafbc7ef68, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 83b6fad7-c81c-44fe-8194-91eafbc7ef68, client name: hz.client_3, client version: 5.2.4
+2024-03-21 13:47:09 [hz.vigilant_mclaren.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=11, /127.0.0.1:5701->/127.0.0.1:51027, qualifier=null, endpoint=[127.0.0.1]:51027, remoteUuid=a779d662-ce0f-411e-ae09-ddb5d33c1bd2, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: a779d662-ce0f-411e-ae09-ddb5d33c1bd2, client name: hz.client_3, client version: 5.2.4
+2024-03-21 13:47:09 [hz.vigilant_mclaren.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=12, /127.0.0.1:5701->/127.0.0.1:51028, qualifier=null, endpoint=[127.0.0.1]:51028, remoteUuid=b8058249-9fa0-49d8-8975-2ffca9429bf6, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: b8058249-9fa0-49d8-8975-2ffca9429bf6, client name: hz.client_3, client version: 5.2.4
+2024-03-21 13:47:09 [hz.vigilant_mclaren.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=13, /127.0.0.1:5701->/127.0.0.1:51029, qualifier=null, endpoint=[127.0.0.1]:51029, remoteUuid=f50015ac-d7d1-453f-a07e-26b57884eabc, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: f50015ac-d7d1-453f-a07e-26b57884eabc, client name: hz.client_1, client version: 5.0.1
+2024-03-21 13:47:09 [main] INFO  - HHH000412: Hibernate Core {5.2.2.Final}
+2024-03-21 13:47:09 [main] INFO  - HHH000206: hibernate.properties not found
+2024-03-21 13:47:09 [main] INFO  - HHH000021: Bytecode provider name : javassist
+2024-03-21 13:47:09 [hz.vigilant_mclaren.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=14, /127.0.0.1:5701->/127.0.0.1:51030, qualifier=null, endpoint=[127.0.0.1]:51030, remoteUuid=1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0, client name: hz.client_1, client version: 5.0.1
+2024-03-21 13:47:09 [main] INFO  - HCANN000001: Hibernate Commons Annotations {5.0.1.Final}
+2024-03-21 13:47:09 [hz.vigilant_mclaren.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=15, /127.0.0.1:5701->/127.0.0.1:51031, qualifier=null, endpoint=[127.0.0.1]:51031, remoteUuid=3c573091-05e9-4e03-aeaf-3a006c2bab0d, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 3c573091-05e9-4e03-aeaf-3a006c2bab0d, client name: hz.client_1, client version: 5.0.1
+2024-03-21 13:47:09 [hz.vigilant_mclaren.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=16, /127.0.0.1:5701->/127.0.0.1:51032, qualifier=null, endpoint=[127.0.0.1]:51032, remoteUuid=3b1e44f4-a1f7-4278-a8d4-4b5702123afd, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 3b1e44f4-a1f7-4278-a8d4-4b5702123afd, client name: hz.client_1, client version: 5.0.1
+2024-03-21 13:47:09 [hz.vigilant_mclaren.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=17, /127.0.0.1:5701->/127.0.0.1:51033, qualifier=null, endpoint=[127.0.0.1]:51033, remoteUuid=8f868763-ab5b-438a-a978-c85c503ba101, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 8f868763-ab5b-438a-a978-c85c503ba101, client name: hz.client_1, client version: 5.0.1
+2024-03-21 13:47:09 [main] INFO  - HHH000400: Using dialect: org.hibernate.dialect.MySQLDialect
+2024-03-21 13:47:10 [hz.vigilant_mclaren.client.thread-2] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Initializing cluster partition table arrangement...
+2024-03-21 13:47:11 [main] INFO  - Initializing Connection Pool
+2024-03-21 13:47:11 [main] INFO  - jdbc:mysql://localhost:3306/host_brd?autoReconnect=true&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC[com.mysql.cj.jdbc.Driver] User: root Pass: root
+2024-03-21 13:47:11 [main] INFO  - Total Connection Stored: 10
+2024-03-21 13:47:11 [main] INFO  - ********** Start loading Smsc Schedule ******************
+2024-03-21 13:47:11 [main] INFO  - SmscSchedule: {}
+2024-03-21 13:47:11 [main] INFO  - FlagReader Thread Starting
+2024-03-21 13:47:11 [main] INFO  - ********* Start Loading Network Entries ************
+2024-03-21 13:47:11 [main] ERROR - Network[1] Invalid Number Length Range: 0,10
+2024-03-21 13:47:11 [main] ERROR - Network[2] Invalid Number Length Range: 10,9
+2024-03-21 13:47:11 [main] ERROR - Network[3] Invalid Number Length Range: 10,10
+2024-03-21 13:47:11 [main] INFO  - NetworkEntries: 1390
+2024-03-21 13:47:11 [main] INFO  - ********* End Loading Network Entries **************
+2024-03-21 13:47:11 [main] INFO  - ********* Start Loading Smsc Configuration **************
+2024-03-21 13:47:12 [main] INFO  - SmscEntries: 11
+2024-03-21 13:47:12 [main] INFO  - ******** End Loading Smsc Configuration *****************
+2024-03-21 13:47:12 [main] INFO  - ********** Start loading Smsc Group ******************
+2024-03-21 13:47:12 [main] INFO  - SmscGroup: [SmscGroup: id=1,name=DEFAULT,remarks=default]
+2024-03-21 13:47:12 [main] INFO  - ************ End loading Smsc Group *******************
+2024-03-21 13:47:12 [main] INFO  - ********** Start loading Smsc Group Member ******************
+2024-03-21 13:47:12 [main] INFO  - SmscGroupMember: []
+2024-03-21 13:47:12 [main] INFO  - ************ End loading Smsc Group Member *******************
+2024-03-21 13:47:12 [main] INFO  - **** Start Loading User Configuration ********
+2024-03-21 13:47:12 [main] ERROR - null DecodeError: java.lang.NullPointerException: Cannot invoke "String.trim()" because "arg0" is null
+2024-03-21 13:47:12 [main] ERROR - null DecodeError: java.lang.NullPointerException: Cannot invoke "String.trim()" because "arg0" is null
+2024-03-21 13:47:12 [main] INFO  - User Entries: 12
+2024-03-21 13:47:12 [main] INFO  - Balance Entries: 12
+2024-03-21 13:47:12 [main] INFO  - User Mapping: 12
+2024-03-21 13:47:12 [main] INFO  - WebMaster Entries: 12
+2024-03-21 13:47:12 [main] INFO  - Profession Entries: 12
+2024-03-21 13:47:12 [main] INFO  - DlrSetting Entries: 12
+2024-03-21 13:47:12 [main] INFO  - ***** End Loading User Configuration **********
+2024-03-21 13:47:12 [main] INFO  -  ******* Start Loading Routing *********** 
+2024-03-21 13:47:12 [main] INFO  - <--- listing Basic routing --> 
+2024-03-21 13:47:12 [main] INFO  - <--- End listing Basic routing[191] --> 
+2024-03-21 13:47:12 [main] INFO  - <--- listing Optional routing --> 
+2024-03-21 13:47:12 [main] INFO  - <--- End listing Optional routing[191] --> 
+2024-03-21 13:47:12 [main] INFO  - <--- listing Hlr routing --> 
+2024-03-21 13:47:12 [main] INFO  - <--- End listing Hlr routing[191] --> 
+2024-03-21 13:47:12 [main] INFO  - <--- listing Mms routing --> 
+2024-03-21 13:47:12 [main] INFO  - <--- End listing Mms routing[191] --> 
+2024-03-21 13:47:12 [main] INFO  - Basic Routing Entries: 191
+2024-03-21 13:47:12 [main] INFO  - Hlr Routing Entries: 191
+2024-03-21 13:47:12 [main] INFO  - Optional Routing Entries: 191
+2024-03-21 13:47:12 [main] INFO  - Mms Routing Entries: 191
+2024-03-21 13:47:12 [main] INFO  - ********** End Loading Routing *********** 
+2024-03-21 13:47:12 [main] INFO  - BearerBox Starting
+2024-03-21 13:47:12 [main] INFO  - BalanceOperator Starting
+2024-03-21 13:47:12 [main] INFO  - CheckCpuCycle Starting
+2024-03-21 13:47:12 [Thread-1] INFO  - ****** Reloading Smsc Scheduling ****** 
+2024-03-21 13:47:12 [Thread-1] INFO  - Today's SmscScheduling: {}
+2024-03-21 13:48:12 [checkCpuCycle] INFO  - Memory Used:---> 118 MB. Max Available: 8184 MB
+2024-03-21 13:49:12 [checkCpuCycle] INFO  - Memory Used:---> 100 MB. Max Available: 8184 MB
+2024-03-21 13:50:12 [checkCpuCycle] INFO  - Memory Used:---> 104 MB. Max Available: 8184 MB
+2024-03-21 13:50:48 [hz.vigilant_mclaren.IO.thread-in-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=7, /127.0.0.1:5701->/127.0.0.1:51021, qualifier=null, endpoint=[127.0.0.1]:51021, remoteUuid=3cc83ebb-3795-49ce-a1ef-b5c97c94bd53, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 13:50:48 [hz.vigilant_mclaren.event-2] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=7, /127.0.0.1:5701->/127.0.0.1:51021, qualifier=null, endpoint=[127.0.0.1]:51021, remoteUuid=3cc83ebb-3795-49ce-a1ef-b5c97c94bd53, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=3cc83ebb-3795-49ce-a1ef-b5c97c94bd53, clientName=hz.client_3, authenticated=true, clientVersion=5.2.4, creationTime=1711009029212, latest clientAttributes=lastStatisticsCollectionTime=1711009245641,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711009029211,clientAddress=127.0.0.1,clientName=hz.client_3,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=17057300480,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=136217064,runtime.maxMemory=8581545984,runtime.totalMemory=268435456,runtime.uptime=1195362,runtime.usedMemory=132218392, labels=[]}
+2024-03-21 13:50:48 [hz.vigilant_mclaren.event-4] INFO  - Client DisConnected: 127.0.0.1:51021 - 3cc83ebb-3795-49ce-a1ef-b5c97c94bd53
+2024-03-21 13:50:48 [hz.vigilant_mclaren.event-4] INFO  - Connected Clients: 16
+2024-03-21 13:50:48 [hz.vigilant_mclaren.event-4] INFO  - Client: /127.0.0.1:51019 - 38538eb6-083b-4d06-aeb9-59bc722ed86e
+2024-03-21 13:50:48 [hz.vigilant_mclaren.event-4] INFO  - Client: /127.0.0.1:51032 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:50:48 [hz.vigilant_mclaren.event-4] INFO  - Client: /127.0.0.1:51026 - 83b6fad7-c81c-44fe-8194-91eafbc7ef68
+2024-03-21 13:50:48 [hz.vigilant_mclaren.event-4] INFO  - Client: /127.0.0.1:51030 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:50:48 [hz.vigilant_mclaren.event-4] INFO  - Client: /127.0.0.1:51031 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:50:48 [hz.vigilant_mclaren.event-4] INFO  - Client: /127.0.0.1:51029 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:50:48 [hz.vigilant_mclaren.event-4] INFO  - Client: /127.0.0.1:51017 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:50:48 [hz.vigilant_mclaren.event-4] INFO  - Client: /127.0.0.1:51027 - a779d662-ce0f-411e-ae09-ddb5d33c1bd2
+2024-03-21 13:50:48 [hz.vigilant_mclaren.event-4] INFO  - Client: /127.0.0.1:51024 - 666e8213-32d1-41b9-b35a-8f0a726c3d6f
+2024-03-21 13:50:48 [hz.vigilant_mclaren.event-4] INFO  - Client: /127.0.0.1:51028 - b8058249-9fa0-49d8-8975-2ffca9429bf6
+2024-03-21 13:50:48 [hz.vigilant_mclaren.event-4] INFO  - Client: /127.0.0.1:51033 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:50:48 [hz.vigilant_mclaren.event-4] INFO  - Client: /127.0.0.1:51015 - 6aaa2c90-24b9-4957-bac5-4af66695a79e
+2024-03-21 13:50:48 [hz.vigilant_mclaren.event-4] INFO  - Client: /127.0.0.1:51016 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:50:48 [hz.vigilant_mclaren.event-4] INFO  - Client: /127.0.0.1:51022 - 2d25d389-aaf8-4c7f-99fe-d46fe153352c
+2024-03-21 13:50:48 [hz.vigilant_mclaren.event-4] INFO  - Client: /127.0.0.1:51018 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:50:48 [hz.vigilant_mclaren.event-4] INFO  - Client: /127.0.0.1:51020 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:50:52 [hz.vigilant_mclaren.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=18, /127.0.0.1:5701->/127.0.0.1:51573, qualifier=null, endpoint=[127.0.0.1]:51573, remoteUuid=a609bada-9aa7-4888-bef8-299de1df1493, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: a609bada-9aa7-4888-bef8-299de1df1493, client name: hz.client_4, client version: 5.2.4
+2024-03-21 13:50:52 [hz.vigilant_mclaren.event-1] INFO  - Client Connected: 127.0.0.1:51573 - a609bada-9aa7-4888-bef8-299de1df1493
+2024-03-21 13:50:52 [hz.vigilant_mclaren.event-1] INFO  - Connected Clients: 17
+2024-03-21 13:50:52 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51019 - 38538eb6-083b-4d06-aeb9-59bc722ed86e
+2024-03-21 13:50:52 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51032 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:50:52 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51026 - 83b6fad7-c81c-44fe-8194-91eafbc7ef68
+2024-03-21 13:50:52 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51030 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:50:52 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51031 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:50:52 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51029 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:50:52 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51573 - a609bada-9aa7-4888-bef8-299de1df1493
+2024-03-21 13:50:52 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51017 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:50:52 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51027 - a779d662-ce0f-411e-ae09-ddb5d33c1bd2
+2024-03-21 13:50:52 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51024 - 666e8213-32d1-41b9-b35a-8f0a726c3d6f
+2024-03-21 13:50:52 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51028 - b8058249-9fa0-49d8-8975-2ffca9429bf6
+2024-03-21 13:50:52 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51033 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:50:52 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51015 - 6aaa2c90-24b9-4957-bac5-4af66695a79e
+2024-03-21 13:50:52 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51016 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:50:52 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51022 - 2d25d389-aaf8-4c7f-99fe-d46fe153352c
+2024-03-21 13:50:52 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51018 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:50:52 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51020 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:51:12 [checkCpuCycle] INFO  - Memory Used:---> 98 MB. Max Available: 8184 MB
+2024-03-21 13:51:51 [hz.vigilant_mclaren.IO.thread-in-2] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=18, /127.0.0.1:5701->/127.0.0.1:51573, qualifier=null, endpoint=[127.0.0.1]:51573, remoteUuid=a609bada-9aa7-4888-bef8-299de1df1493, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 13:51:51 [hz.vigilant_mclaren.event-4] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=18, /127.0.0.1:5701->/127.0.0.1:51573, qualifier=null, endpoint=[127.0.0.1]:51573, remoteUuid=a609bada-9aa7-4888-bef8-299de1df1493, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=a609bada-9aa7-4888-bef8-299de1df1493, clientName=hz.client_4, authenticated=true, clientVersion=5.2.4, creationTime=1711009252848, latest clientAttributes=lastStatisticsCollectionTime=1711009307854,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711009252847,clientAddress=127.0.0.1,clientName=hz.client_4,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=16811192320,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=94127040,runtime.maxMemory=8581545984,runtime.totalMemory=301989888,runtime.uptime=1257574,runtime.usedMemory=207862848, labels=[]}
+2024-03-21 13:51:51 [hz.vigilant_mclaren.event-1] INFO  - Client DisConnected: 127.0.0.1:51573 - a609bada-9aa7-4888-bef8-299de1df1493
+2024-03-21 13:51:51 [hz.vigilant_mclaren.event-1] INFO  - Connected Clients: 16
+2024-03-21 13:51:51 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51019 - 38538eb6-083b-4d06-aeb9-59bc722ed86e
+2024-03-21 13:51:51 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51032 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:51:51 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51026 - 83b6fad7-c81c-44fe-8194-91eafbc7ef68
+2024-03-21 13:51:51 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51030 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:51:51 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51031 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:51:51 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51029 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:51:51 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51017 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:51:51 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51027 - a779d662-ce0f-411e-ae09-ddb5d33c1bd2
+2024-03-21 13:51:51 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51024 - 666e8213-32d1-41b9-b35a-8f0a726c3d6f
+2024-03-21 13:51:51 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51028 - b8058249-9fa0-49d8-8975-2ffca9429bf6
+2024-03-21 13:51:51 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51033 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:51:51 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51015 - 6aaa2c90-24b9-4957-bac5-4af66695a79e
+2024-03-21 13:51:51 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51016 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:51:51 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51022 - 2d25d389-aaf8-4c7f-99fe-d46fe153352c
+2024-03-21 13:51:51 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51018 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:51:51 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51020 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:51:55 [hz.vigilant_mclaren.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=19, /127.0.0.1:5701->/127.0.0.1:51734, qualifier=null, endpoint=[127.0.0.1]:51734, remoteUuid=3cc8e9d2-cad1-4a37-8325-c79b3d36b435, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 3cc8e9d2-cad1-4a37-8325-c79b3d36b435, client name: hz.client_5, client version: 5.2.4
+2024-03-21 13:51:55 [hz.vigilant_mclaren.event-1] INFO  - Client Connected: 127.0.0.1:51734 - 3cc8e9d2-cad1-4a37-8325-c79b3d36b435
+2024-03-21 13:51:55 [hz.vigilant_mclaren.event-1] INFO  - Connected Clients: 17
+2024-03-21 13:51:55 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51019 - 38538eb6-083b-4d06-aeb9-59bc722ed86e
+2024-03-21 13:51:55 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51734 - 3cc8e9d2-cad1-4a37-8325-c79b3d36b435
+2024-03-21 13:51:55 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51032 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:51:55 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51026 - 83b6fad7-c81c-44fe-8194-91eafbc7ef68
+2024-03-21 13:51:55 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51030 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:51:55 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51031 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:51:55 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51029 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:51:55 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51017 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:51:55 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51027 - a779d662-ce0f-411e-ae09-ddb5d33c1bd2
+2024-03-21 13:51:55 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51024 - 666e8213-32d1-41b9-b35a-8f0a726c3d6f
+2024-03-21 13:51:55 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51028 - b8058249-9fa0-49d8-8975-2ffca9429bf6
+2024-03-21 13:51:55 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51033 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:51:55 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51015 - 6aaa2c90-24b9-4957-bac5-4af66695a79e
+2024-03-21 13:51:55 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51016 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:51:55 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51022 - 2d25d389-aaf8-4c7f-99fe-d46fe153352c
+2024-03-21 13:51:55 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51018 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:51:55 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51020 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:52:12 [checkCpuCycle] INFO  - Memory Used:---> 85 MB. Max Available: 8184 MB
+2024-03-21 13:52:42 [hz.vigilant_mclaren.IO.thread-in-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=19, /127.0.0.1:5701->/127.0.0.1:51734, qualifier=null, endpoint=[127.0.0.1]:51734, remoteUuid=3cc8e9d2-cad1-4a37-8325-c79b3d36b435, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 13:52:42 [hz.vigilant_mclaren.event-5] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=19, /127.0.0.1:5701->/127.0.0.1:51734, qualifier=null, endpoint=[127.0.0.1]:51734, remoteUuid=3cc8e9d2-cad1-4a37-8325-c79b3d36b435, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=3cc8e9d2-cad1-4a37-8325-c79b3d36b435, clientName=hz.client_5, authenticated=true, clientVersion=5.2.4, creationTime=1711009315847, latest clientAttributes=lastStatisticsCollectionTime=1711009360859,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711009315847,clientAddress=127.0.0.1,clientName=hz.client_5,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=16903688192,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=65422928,runtime.maxMemory=8581545984,runtime.totalMemory=301989888,runtime.uptime=1310579,runtime.usedMemory=236566960, labels=[]}
+2024-03-21 13:52:42 [hz.vigilant_mclaren.event-1] INFO  - Client DisConnected: 127.0.0.1:51734 - 3cc8e9d2-cad1-4a37-8325-c79b3d36b435
+2024-03-21 13:52:42 [hz.vigilant_mclaren.event-1] INFO  - Connected Clients: 16
+2024-03-21 13:52:42 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51019 - 38538eb6-083b-4d06-aeb9-59bc722ed86e
+2024-03-21 13:52:42 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51032 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:52:42 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51026 - 83b6fad7-c81c-44fe-8194-91eafbc7ef68
+2024-03-21 13:52:42 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51030 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:52:42 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51031 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:52:42 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51029 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:52:42 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51017 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:52:42 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51027 - a779d662-ce0f-411e-ae09-ddb5d33c1bd2
+2024-03-21 13:52:42 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51024 - 666e8213-32d1-41b9-b35a-8f0a726c3d6f
+2024-03-21 13:52:42 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51028 - b8058249-9fa0-49d8-8975-2ffca9429bf6
+2024-03-21 13:52:42 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51033 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:52:42 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51015 - 6aaa2c90-24b9-4957-bac5-4af66695a79e
+2024-03-21 13:52:42 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51016 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:52:42 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51022 - 2d25d389-aaf8-4c7f-99fe-d46fe153352c
+2024-03-21 13:52:42 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51018 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:52:42 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51020 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:52:47 [hz.vigilant_mclaren.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=20, /127.0.0.1:5701->/127.0.0.1:51865, qualifier=null, endpoint=[127.0.0.1]:51865, remoteUuid=29e56c11-8305-4bba-a047-dea16952c455, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 29e56c11-8305-4bba-a047-dea16952c455, client name: hz.client_6, client version: 5.2.4
+2024-03-21 13:52:47 [hz.vigilant_mclaren.event-1] INFO  - Client Connected: 127.0.0.1:51865 - 29e56c11-8305-4bba-a047-dea16952c455
+2024-03-21 13:52:47 [hz.vigilant_mclaren.event-1] INFO  - Connected Clients: 17
+2024-03-21 13:52:47 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51019 - 38538eb6-083b-4d06-aeb9-59bc722ed86e
+2024-03-21 13:52:47 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51032 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:52:47 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51026 - 83b6fad7-c81c-44fe-8194-91eafbc7ef68
+2024-03-21 13:52:47 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51030 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:52:47 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51865 - 29e56c11-8305-4bba-a047-dea16952c455
+2024-03-21 13:52:47 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51031 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:52:47 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51029 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:52:47 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51017 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:52:47 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51027 - a779d662-ce0f-411e-ae09-ddb5d33c1bd2
+2024-03-21 13:52:47 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51024 - 666e8213-32d1-41b9-b35a-8f0a726c3d6f
+2024-03-21 13:52:47 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51028 - b8058249-9fa0-49d8-8975-2ffca9429bf6
+2024-03-21 13:52:47 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51033 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:52:47 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51015 - 6aaa2c90-24b9-4957-bac5-4af66695a79e
+2024-03-21 13:52:47 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51016 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:52:47 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51022 - 2d25d389-aaf8-4c7f-99fe-d46fe153352c
+2024-03-21 13:52:47 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51018 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:52:47 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51020 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:53:12 [checkCpuCycle] INFO  - Memory Used:---> 67 MB. Max Available: 8184 MB
+2024-03-21 13:54:12 [checkCpuCycle] INFO  - Memory Used:---> 126 MB. Max Available: 8184 MB
+2024-03-21 13:54:39 [hz.vigilant_mclaren.IO.thread-in-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=20, /127.0.0.1:5701->/127.0.0.1:51865, qualifier=null, endpoint=[127.0.0.1]:51865, remoteUuid=29e56c11-8305-4bba-a047-dea16952c455, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 13:54:39 [hz.vigilant_mclaren.event-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=20, /127.0.0.1:5701->/127.0.0.1:51865, qualifier=null, endpoint=[127.0.0.1]:51865, remoteUuid=29e56c11-8305-4bba-a047-dea16952c455, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=29e56c11-8305-4bba-a047-dea16952c455, clientName=hz.client_6, authenticated=true, clientVersion=5.2.4, creationTime=1711009367388, latest clientAttributes=lastStatisticsCollectionTime=1711009477405,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711009367387,clientAddress=127.0.0.1,clientName=hz.client_6,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=16841605120,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=146288328,runtime.maxMemory=8581545984,runtime.totalMemory=322961408,runtime.uptime=1427127,runtime.usedMemory=176673080, labels=[]}
+2024-03-21 13:54:39 [hz.vigilant_mclaren.event-1] INFO  - Client DisConnected: 127.0.0.1:51865 - 29e56c11-8305-4bba-a047-dea16952c455
+2024-03-21 13:54:39 [hz.vigilant_mclaren.event-1] INFO  - Connected Clients: 16
+2024-03-21 13:54:39 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51019 - 38538eb6-083b-4d06-aeb9-59bc722ed86e
+2024-03-21 13:54:39 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51032 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:54:39 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51026 - 83b6fad7-c81c-44fe-8194-91eafbc7ef68
+2024-03-21 13:54:39 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51030 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:54:39 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51031 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:54:39 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51029 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:54:39 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51017 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:54:39 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51027 - a779d662-ce0f-411e-ae09-ddb5d33c1bd2
+2024-03-21 13:54:39 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51024 - 666e8213-32d1-41b9-b35a-8f0a726c3d6f
+2024-03-21 13:54:39 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51028 - b8058249-9fa0-49d8-8975-2ffca9429bf6
+2024-03-21 13:54:39 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51033 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:54:39 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51015 - 6aaa2c90-24b9-4957-bac5-4af66695a79e
+2024-03-21 13:54:39 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51016 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:54:39 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51022 - 2d25d389-aaf8-4c7f-99fe-d46fe153352c
+2024-03-21 13:54:39 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51018 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:54:39 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51020 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:54:44 [hz.vigilant_mclaren.event-3] INFO  - Client Connected: 127.0.0.1:52152 - 562c4dcc-d054-43f7-9e12-7cee25e02e42
+2024-03-21 13:54:44 [hz.vigilant_mclaren.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=21, /127.0.0.1:5701->/127.0.0.1:52152, qualifier=null, endpoint=[127.0.0.1]:52152, remoteUuid=562c4dcc-d054-43f7-9e12-7cee25e02e42, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 562c4dcc-d054-43f7-9e12-7cee25e02e42, client name: hz.client_7, client version: 5.2.4
+2024-03-21 13:54:44 [hz.vigilant_mclaren.event-3] INFO  - Connected Clients: 17
+2024-03-21 13:54:44 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51019 - 38538eb6-083b-4d06-aeb9-59bc722ed86e
+2024-03-21 13:54:44 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51032 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 13:54:44 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51026 - 83b6fad7-c81c-44fe-8194-91eafbc7ef68
+2024-03-21 13:54:44 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51030 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 13:54:44 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51031 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 13:54:44 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51029 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 13:54:44 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51017 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 13:54:44 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51027 - a779d662-ce0f-411e-ae09-ddb5d33c1bd2
+2024-03-21 13:54:44 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51024 - 666e8213-32d1-41b9-b35a-8f0a726c3d6f
+2024-03-21 13:54:44 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51028 - b8058249-9fa0-49d8-8975-2ffca9429bf6
+2024-03-21 13:54:44 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51033 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 13:54:44 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51015 - 6aaa2c90-24b9-4957-bac5-4af66695a79e
+2024-03-21 13:54:44 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51016 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 13:54:44 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51022 - 2d25d389-aaf8-4c7f-99fe-d46fe153352c
+2024-03-21 13:54:44 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51018 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 13:54:44 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:52152 - 562c4dcc-d054-43f7-9e12-7cee25e02e42
+2024-03-21 13:54:44 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51020 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 13:55:12 [checkCpuCycle] INFO  - Memory Used:---> 103 MB. Max Available: 8184 MB
+2024-03-21 13:56:12 [checkCpuCycle] INFO  - Memory Used:---> 73 MB. Max Available: 8184 MB
+2024-03-21 13:57:12 [checkCpuCycle] INFO  - Memory Used:---> 131 MB. Max Available: 8184 MB
+2024-03-21 13:58:12 [checkCpuCycle] INFO  - Memory Used:---> 100 MB. Max Available: 8184 MB
+2024-03-21 13:59:12 [checkCpuCycle] INFO  - Memory Used:---> 69 MB. Max Available: 8184 MB
+2024-03-21 14:00:12 [checkCpuCycle] INFO  - Memory Used:---> 127 MB. Max Available: 8184 MB
+2024-03-21 14:01:12 [checkCpuCycle] INFO  - Memory Used:---> 92 MB. Max Available: 8184 MB
+2024-03-21 14:02:12 [checkCpuCycle] INFO  - Memory Used:---> 51 MB. Max Available: 8184 MB
+2024-03-21 14:03:12 [checkCpuCycle] INFO  - Memory Used:---> 110 MB. Max Available: 8184 MB
+2024-03-21 14:04:12 [checkCpuCycle] INFO  - Memory Used:---> 74 MB. Max Available: 8184 MB
+2024-03-21 14:05:12 [checkCpuCycle] INFO  - Memory Used:---> 133 MB. Max Available: 8184 MB
+2024-03-21 14:06:12 [checkCpuCycle] INFO  - Memory Used:---> 93 MB. Max Available: 8184 MB
+2024-03-21 14:07:12 [checkCpuCycle] INFO  - Memory Used:---> 53 MB. Max Available: 8184 MB
+2024-03-21 14:08:12 [checkCpuCycle] INFO  - Memory Used:---> 113 MB. Max Available: 8184 MB
+2024-03-21 14:09:02 [hz.vigilant_mclaren.IO.thread-in-2] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=21, /127.0.0.1:5701->/127.0.0.1:52152, qualifier=null, endpoint=[127.0.0.1]:52152, remoteUuid=562c4dcc-d054-43f7-9e12-7cee25e02e42, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 14:09:02 [hz.vigilant_mclaren.event-3] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=21, /127.0.0.1:5701->/127.0.0.1:52152, qualifier=null, endpoint=[127.0.0.1]:52152, remoteUuid=562c4dcc-d054-43f7-9e12-7cee25e02e42, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=562c4dcc-d054-43f7-9e12-7cee25e02e42, clientName=hz.client_7, authenticated=true, clientVersion=5.2.4, creationTime=1711009484638, latest clientAttributes=lastStatisticsCollectionTime=1711010339648,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711009484638,clientAddress=127.0.0.1,clientName=hz.client_7,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=17026457600,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=211404088,runtime.maxMemory=8581545984,runtime.totalMemory=352321536,runtime.uptime=2289370,runtime.usedMemory=140917448, labels=[]}
+2024-03-21 14:09:02 [hz.vigilant_mclaren.event-3] INFO  - Client DisConnected: 127.0.0.1:52152 - 562c4dcc-d054-43f7-9e12-7cee25e02e42
+2024-03-21 14:09:02 [hz.vigilant_mclaren.event-3] INFO  - Connected Clients: 16
+2024-03-21 14:09:02 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51019 - 38538eb6-083b-4d06-aeb9-59bc722ed86e
+2024-03-21 14:09:02 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51032 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 14:09:02 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51026 - 83b6fad7-c81c-44fe-8194-91eafbc7ef68
+2024-03-21 14:09:02 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51030 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 14:09:02 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51031 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 14:09:02 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51029 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 14:09:02 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51017 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 14:09:02 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51027 - a779d662-ce0f-411e-ae09-ddb5d33c1bd2
+2024-03-21 14:09:02 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51024 - 666e8213-32d1-41b9-b35a-8f0a726c3d6f
+2024-03-21 14:09:02 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51028 - b8058249-9fa0-49d8-8975-2ffca9429bf6
+2024-03-21 14:09:02 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51033 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 14:09:02 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51015 - 6aaa2c90-24b9-4957-bac5-4af66695a79e
+2024-03-21 14:09:02 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51016 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 14:09:02 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51022 - 2d25d389-aaf8-4c7f-99fe-d46fe153352c
+2024-03-21 14:09:02 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51018 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 14:09:02 [hz.vigilant_mclaren.event-3] INFO  - Client: /127.0.0.1:51020 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 14:09:07 [hz.vigilant_mclaren.event-1] INFO  - Client Connected: 127.0.0.1:54175 - 2a317f38-bae7-4f88-ab37-f26007fde36d
+2024-03-21 14:09:07 [hz.vigilant_mclaren.event-1] INFO  - Connected Clients: 17
+2024-03-21 14:09:07 [hz.vigilant_mclaren.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=22, /127.0.0.1:5701->/127.0.0.1:54175, qualifier=null, endpoint=[127.0.0.1]:54175, remoteUuid=2a317f38-bae7-4f88-ab37-f26007fde36d, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 2a317f38-bae7-4f88-ab37-f26007fde36d, client name: hz.client_8, client version: 5.2.4
+2024-03-21 14:09:07 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51019 - 38538eb6-083b-4d06-aeb9-59bc722ed86e
+2024-03-21 14:09:07 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51032 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 14:09:07 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51026 - 83b6fad7-c81c-44fe-8194-91eafbc7ef68
+2024-03-21 14:09:07 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51030 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 14:09:07 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51031 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 14:09:07 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51029 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 14:09:07 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51017 - 7b99554b-64be-4851-8d6d-81ece7902aa6
+2024-03-21 14:09:07 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:54175 - 2a317f38-bae7-4f88-ab37-f26007fde36d
+2024-03-21 14:09:07 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51027 - a779d662-ce0f-411e-ae09-ddb5d33c1bd2
+2024-03-21 14:09:07 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51024 - 666e8213-32d1-41b9-b35a-8f0a726c3d6f
+2024-03-21 14:09:07 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51028 - b8058249-9fa0-49d8-8975-2ffca9429bf6
+2024-03-21 14:09:07 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51033 - 8f868763-ab5b-438a-a978-c85c503ba101
+2024-03-21 14:09:07 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51015 - 6aaa2c90-24b9-4957-bac5-4af66695a79e
+2024-03-21 14:09:07 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51016 - 81500cdf-0853-43e5-9306-3b086ccdc43f
+2024-03-21 14:09:07 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51022 - 2d25d389-aaf8-4c7f-99fe-d46fe153352c
+2024-03-21 14:09:07 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51018 - a079eccb-3e81-4cff-ac5e-9f736da4f649
+2024-03-21 14:09:07 [hz.vigilant_mclaren.event-1] INFO  - Client: /127.0.0.1:51020 - d8aebe2a-4821-4bad-894f-d7444cec064e
+2024-03-21 14:09:12 [checkCpuCycle] INFO  - Memory Used:---> 75 MB. Max Available: 8184 MB
+2024-03-21 14:09:38 [main] INFO  - [LOCAL] [dev] [5.3.6] Interfaces is enabled, trying to pick one address matching to one of: [127.0.0.1, *.*.*.*]
+2024-03-21 14:09:38 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+	+       +  o    o     o     o---o o----o o      o---o     o     o----o o--o--o
+	+ +   + +  |    |    / \       /  |      |     /         / \    |         |   
+	+ + + + +  o----o   o   o     o   o----o |    o         o   o   o----o    |   
+	+ +   + +  |    |  /     \   /    |      |     \       /     \       |    |   
+	+       +  o    o o       o o---o o----o o----o o---o o       o o----o    o   
+2024-03-21 14:09:38 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+2024-03-21 14:09:38 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Hazelcast Platform 5.3.6 (20231109 - 9903dc9) starting at [127.0.0.1]:5701
+2024-03-21 14:09:38 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Cluster name: dev
+2024-03-21 14:09:38 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Integrity Checker is disabled. Fail-fast on corrupted executables will not be performed. For more information, see the documentation for Integrity Checker.
+2024-03-21 14:09:38 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] The Jet engine is disabled.
+To enable the Jet engine on the members, do one of the following:
+  - Change member config using Java API: config.getJetConfig().setEnabled(true)
+  - Change XML/YAML configuration property: Set hazelcast.jet.enabled to true
+  - Add system property: -Dhz.jet.enabled=true (for Hazelcast embedded, works only when loading config via Config.load)
+  - Add environment variable: HZ_JET_ENABLED=true (recommended when running container image. For Hazelcast embedded, works only when loading config via Config.load)
+2024-03-21 14:09:39 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] TPC: disabled
+2024-03-21 14:09:39 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Enable DEBUG/FINE log level for log category com.hazelcast.system.security  or use -Dhazelcast.security.recommendations system property to see security recommendations and the status of current config.
+2024-03-21 14:09:39 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Using TCP/IP discovery
+2024-03-21 14:09:39 [main] WARN  - [127.0.0.1]:5701 [dev] [5.3.6] CP Subsystem is not enabled. CP data structures will operate in UNSAFE mode! Please note that UNSAFE mode will not provide strong consistency guarantees.
+2024-03-21 14:09:39 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-21 14:09:39 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTING
+2024-03-21 14:09:40 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+
+Members {size:1, ver:1} [
+	Member [127.0.0.1]:5701 - 159c4b7a-35bc-4e90-adaa-7820d63ac1fc this
+]
+
+2024-03-21 14:09:40 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTED
+2024-03-21 14:09:40 [hz.sweet_cray.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=2, /127.0.0.1:5701->/127.0.0.1:54927, qualifier=null, endpoint=[127.0.0.1]:54927, remoteUuid=83b6fad7-c81c-44fe-8194-91eafbc7ef68, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 83b6fad7-c81c-44fe-8194-91eafbc7ef68, client name: hz.client_3, client version: 5.2.4
+2024-03-21 14:09:40 [hz.sweet_cray.generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=1, /127.0.0.1:5701->/127.0.0.1:54926, qualifier=null, endpoint=[127.0.0.1]:54926, remoteUuid=7b99554b-64be-4851-8d6d-81ece7902aa6, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 7b99554b-64be-4851-8d6d-81ece7902aa6, client name: hz.client_1, client version: 5.2.4
+2024-03-21 14:09:40 [hz.sweet_cray.generic-operation.thread-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=3, /127.0.0.1:5701->/127.0.0.1:54928, qualifier=null, endpoint=[127.0.0.1]:54928, remoteUuid=81500cdf-0853-43e5-9306-3b086ccdc43f, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 81500cdf-0853-43e5-9306-3b086ccdc43f, client name: hz.client_1, client version: 5.2.4
+2024-03-21 14:09:40 [hz.sweet_cray.generic-operation.thread-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=4, /127.0.0.1:5701->/127.0.0.1:54929, qualifier=null, endpoint=[127.0.0.1]:54929, remoteUuid=a079eccb-3e81-4cff-ac5e-9f736da4f649, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: a079eccb-3e81-4cff-ac5e-9f736da4f649, client name: hz.client_2, client version: 5.2.4
+2024-03-21 14:09:40 [hz.sweet_cray.generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=5, /127.0.0.1:5701->/127.0.0.1:54930, qualifier=null, endpoint=[127.0.0.1]:54930, remoteUuid=38538eb6-083b-4d06-aeb9-59bc722ed86e, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 38538eb6-083b-4d06-aeb9-59bc722ed86e, client name: hz.client_3, client version: 5.2.4
+2024-03-21 14:09:40 [hz.sweet_cray.generic-operation.thread-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=7, /127.0.0.1:5701->/127.0.0.1:54932, qualifier=null, endpoint=[127.0.0.1]:54932, remoteUuid=6aaa2c90-24b9-4957-bac5-4af66695a79e, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 6aaa2c90-24b9-4957-bac5-4af66695a79e, client name: hz.client_3, client version: 5.2.4
+2024-03-21 14:09:40 [hz.sweet_cray.generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=8, /127.0.0.1:5701->/127.0.0.1:54933, qualifier=null, endpoint=[127.0.0.1]:54933, remoteUuid=666e8213-32d1-41b9-b35a-8f0a726c3d6f, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 666e8213-32d1-41b9-b35a-8f0a726c3d6f, client name: hz.client_3, client version: 5.2.4
+2024-03-21 14:09:40 [hz.sweet_cray.generic-operation.thread-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=9, /127.0.0.1:5701->/127.0.0.1:54934, qualifier=null, endpoint=[127.0.0.1]:54934, remoteUuid=2d25d389-aaf8-4c7f-99fe-d46fe153352c, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 2d25d389-aaf8-4c7f-99fe-d46fe153352c, client name: hz.client_3, client version: 5.2.4
+2024-03-21 14:09:40 [hz.sweet_cray.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=6, /127.0.0.1:5701->/127.0.0.1:54931, qualifier=null, endpoint=[127.0.0.1]:54931, remoteUuid=a779d662-ce0f-411e-ae09-ddb5d33c1bd2, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: a779d662-ce0f-411e-ae09-ddb5d33c1bd2, client name: hz.client_3, client version: 5.2.4
+2024-03-21 14:09:40 [hz.sweet_cray.generic-operation.thread-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=11, /127.0.0.1:5701->/127.0.0.1:54936, qualifier=null, endpoint=[127.0.0.1]:54936, remoteUuid=2a317f38-bae7-4f88-ab37-f26007fde36d, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 2a317f38-bae7-4f88-ab37-f26007fde36d, client name: hz.client_8, client version: 5.2.4
+2024-03-21 14:09:40 [hz.sweet_cray.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=12, /127.0.0.1:5701->/127.0.0.1:54937, qualifier=null, endpoint=[127.0.0.1]:54937, remoteUuid=b8058249-9fa0-49d8-8975-2ffca9429bf6, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: b8058249-9fa0-49d8-8975-2ffca9429bf6, client name: hz.client_3, client version: 5.2.4
+2024-03-21 14:09:40 [hz.sweet_cray.generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=10, /127.0.0.1:5701->/127.0.0.1:54935, qualifier=null, endpoint=[127.0.0.1]:54935, remoteUuid=d8aebe2a-4821-4bad-894f-d7444cec064e, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: d8aebe2a-4821-4bad-894f-d7444cec064e, client name: hz.client_2, client version: 5.2.4
+2024-03-21 14:09:40 [hz.sweet_cray.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=14, /127.0.0.1:5701->/127.0.0.1:54941, qualifier=null, endpoint=[127.0.0.1]:54941, remoteUuid=f50015ac-d7d1-453f-a07e-26b57884eabc, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: f50015ac-d7d1-453f-a07e-26b57884eabc, client name: hz.client_1, client version: 5.0.1
+2024-03-21 14:09:40 [hz.sweet_cray.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=13, /127.0.0.1:5701->/127.0.0.1:54940, qualifier=null, endpoint=[127.0.0.1]:54940, remoteUuid=8f868763-ab5b-438a-a978-c85c503ba101, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 8f868763-ab5b-438a-a978-c85c503ba101, client name: hz.client_1, client version: 5.0.1
+2024-03-21 14:09:40 [hz.sweet_cray.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=15, /127.0.0.1:5701->/127.0.0.1:54943, qualifier=null, endpoint=[127.0.0.1]:54943, remoteUuid=1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0, client name: hz.client_1, client version: 5.0.1
+2024-03-21 14:09:40 [hz.sweet_cray.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=16, /127.0.0.1:5701->/127.0.0.1:54942, qualifier=null, endpoint=[127.0.0.1]:54942, remoteUuid=3c573091-05e9-4e03-aeaf-3a006c2bab0d, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 3c573091-05e9-4e03-aeaf-3a006c2bab0d, client name: hz.client_1, client version: 5.0.1
+2024-03-21 14:09:40 [hz.sweet_cray.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=17, /127.0.0.1:5701->/127.0.0.1:54944, qualifier=null, endpoint=[127.0.0.1]:54944, remoteUuid=3b1e44f4-a1f7-4278-a8d4-4b5702123afd, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 3b1e44f4-a1f7-4278-a8d4-4b5702123afd, client name: hz.client_1, client version: 5.0.1
+2024-03-21 14:09:40 [main] INFO  - HHH000412: Hibernate Core {5.2.2.Final}
+2024-03-21 14:09:40 [main] INFO  - HHH000206: hibernate.properties not found
+2024-03-21 14:09:40 [main] INFO  - HHH000021: Bytecode provider name : javassist
+2024-03-21 14:09:41 [main] INFO  - HCANN000001: Hibernate Commons Annotations {5.0.1.Final}
+2024-03-21 14:09:41 [main] INFO  - HHH000400: Using dialect: org.hibernate.dialect.MySQLDialect
+2024-03-21 14:09:42 [hz.sweet_cray.client.thread-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Initializing cluster partition table arrangement...
+2024-03-21 14:09:42 [hz.sweet_cray.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=32.0G, physical.memory.free=16.0G, swap.space.total=0, swap.space.free=0, heap.memory.used=16.6M, heap.memory.free=22.9M, heap.memory.total=56.0M, heap.memory.max=8.0G, heap.memory.used/total=29.60%, heap.memory.used/max=0.20%, minor.gc.count=8, minor.gc.time=43ms, major.gc.count=0, major.gc.time=0ms, load.process=0.00%, load.system=100.00%, load.systemAverage=n/a thread.count=54, thread.peakCount=54, cluster.timeDiff=0, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=298, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=25, clientEndpoint.count=17, connection.active.count=0, client.connection.count=0, connection.count=0
+2024-03-21 14:09:42 [main] INFO  - Initializing Connection Pool
+2024-03-21 14:09:42 [main] INFO  - jdbc:mysql://localhost:3306/host_brd?autoReconnect=true&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC[com.mysql.cj.jdbc.Driver] User: root Pass: root
+2024-03-21 14:09:42 [main] INFO  - Total Connection Stored: 10
+2024-03-21 14:09:42 [main] INFO  - ********** Start loading Smsc Schedule ******************
+2024-03-21 14:09:43 [main] INFO  - SmscSchedule: {}
+2024-03-21 14:09:43 [main] INFO  - FlagReader Thread Starting
+2024-03-21 14:09:43 [main] INFO  - ********* Start Loading Network Entries ************
+2024-03-21 14:09:43 [main] ERROR - Network[1] Invalid Number Length Range: 0,10
+2024-03-21 14:09:43 [main] ERROR - Network[2] Invalid Number Length Range: 10,9
+2024-03-21 14:09:43 [main] ERROR - Network[3] Invalid Number Length Range: 10,10
+2024-03-21 14:09:43 [main] INFO  - NetworkEntries: 1390
+2024-03-21 14:09:43 [main] INFO  - ********* End Loading Network Entries **************
+2024-03-21 14:09:43 [main] INFO  - ********* Start Loading Smsc Configuration **************
+2024-03-21 14:09:43 [main] INFO  - SmscEntries: 11
+2024-03-21 14:09:43 [main] INFO  - ******** End Loading Smsc Configuration *****************
+2024-03-21 14:09:43 [main] INFO  - ********** Start loading Smsc Group ******************
+2024-03-21 14:09:43 [main] INFO  - SmscGroup: [SmscGroup: id=1,name=DEFAULT,remarks=default]
+2024-03-21 14:09:43 [main] INFO  - ************ End loading Smsc Group *******************
+2024-03-21 14:09:43 [main] INFO  - ********** Start loading Smsc Group Member ******************
+2024-03-21 14:09:43 [main] INFO  - SmscGroupMember: []
+2024-03-21 14:09:43 [main] INFO  - ************ End loading Smsc Group Member *******************
+2024-03-21 14:09:43 [main] INFO  - **** Start Loading User Configuration ********
+2024-03-21 14:09:43 [main] ERROR - null DecodeError: java.lang.NullPointerException: Cannot invoke "String.trim()" because "arg0" is null
+2024-03-21 14:09:43 [main] ERROR - null DecodeError: java.lang.NullPointerException: Cannot invoke "String.trim()" because "arg0" is null
+2024-03-21 14:09:43 [main] INFO  - User Entries: 12
+2024-03-21 14:09:43 [main] INFO  - Balance Entries: 12
+2024-03-21 14:09:43 [main] INFO  - User Mapping: 12
+2024-03-21 14:09:43 [main] INFO  - WebMaster Entries: 12
+2024-03-21 14:09:43 [main] INFO  - Profession Entries: 12
+2024-03-21 14:09:43 [main] INFO  - DlrSetting Entries: 12
+2024-03-21 14:09:43 [main] INFO  - ***** End Loading User Configuration **********
+2024-03-21 14:09:43 [main] INFO  -  ******* Start Loading Routing *********** 
+2024-03-21 14:09:43 [main] INFO  - <--- listing Basic routing --> 
+2024-03-21 14:09:43 [main] INFO  - <--- End listing Basic routing[191] --> 
+2024-03-21 14:09:43 [main] INFO  - <--- listing Optional routing --> 
+2024-03-21 14:09:43 [main] INFO  - <--- End listing Optional routing[191] --> 
+2024-03-21 14:09:43 [main] INFO  - <--- listing Hlr routing --> 
+2024-03-21 14:09:44 [main] INFO  - <--- End listing Hlr routing[191] --> 
+2024-03-21 14:09:44 [main] INFO  - <--- listing Mms routing --> 
+2024-03-21 14:09:44 [main] INFO  - <--- End listing Mms routing[191] --> 
+2024-03-21 14:09:44 [main] INFO  - Basic Routing Entries: 191
+2024-03-21 14:09:44 [main] INFO  - Hlr Routing Entries: 191
+2024-03-21 14:09:44 [main] INFO  - Optional Routing Entries: 191
+2024-03-21 14:09:44 [main] INFO  - Mms Routing Entries: 191
+2024-03-21 14:09:44 [main] INFO  - ********** End Loading Routing *********** 
+2024-03-21 14:09:44 [main] INFO  - BearerBox Starting
+2024-03-21 14:09:44 [main] INFO  - BalanceOperator Starting
+2024-03-21 14:09:44 [main] INFO  - CheckCpuCycle Starting
+2024-03-21 14:09:44 [Thread-1] INFO  - ****** Reloading Smsc Scheduling ****** 
+2024-03-21 14:09:44 [Thread-1] INFO  - Today's SmscScheduling: {}
+2024-03-21 14:10:44 [checkCpuCycle] INFO  - Memory Used:---> 118 MB. Max Available: 8184 MB
+2024-03-21 14:11:44 [checkCpuCycle] INFO  - Memory Used:---> 98 MB. Max Available: 8184 MB
+2024-03-21 14:12:44 [checkCpuCycle] INFO  - Memory Used:---> 104 MB. Max Available: 8184 MB
+2024-03-21 14:13:44 [checkCpuCycle] INFO  - Memory Used:---> 98 MB. Max Available: 8184 MB
+2024-03-21 14:14:44 [checkCpuCycle] INFO  - Memory Used:---> 84 MB. Max Available: 8184 MB
+2024-03-21 14:15:44 [checkCpuCycle] INFO  - Memory Used:---> 64 MB. Max Available: 8184 MB
+2024-03-21 14:16:44 [checkCpuCycle] INFO  - Memory Used:---> 124 MB. Max Available: 8184 MB
+2024-03-21 14:17:44 [checkCpuCycle] INFO  - Memory Used:---> 100 MB. Max Available: 8184 MB
+2024-03-21 14:18:44 [checkCpuCycle] INFO  - Memory Used:---> 72 MB. Max Available: 8184 MB
+2024-03-21 14:19:44 [checkCpuCycle] INFO  - Memory Used:---> 131 MB. Max Available: 8184 MB
+2024-03-21 14:20:44 [checkCpuCycle] INFO  - Memory Used:---> 99 MB. Max Available: 8184 MB
+2024-03-21 14:21:44 [checkCpuCycle] INFO  - Memory Used:---> 68 MB. Max Available: 8184 MB
+2024-03-21 14:22:44 [checkCpuCycle] INFO  - Memory Used:---> 127 MB. Max Available: 8184 MB
+2024-03-21 14:23:44 [checkCpuCycle] INFO  - Memory Used:---> 92 MB. Max Available: 8184 MB
+2024-03-21 14:24:44 [checkCpuCycle] INFO  - Memory Used:---> 57 MB. Max Available: 8184 MB
+2024-03-21 14:25:44 [checkCpuCycle] INFO  - Memory Used:---> 117 MB. Max Available: 8184 MB
+2024-03-21 14:26:44 [checkCpuCycle] INFO  - Memory Used:---> 81 MB. Max Available: 8184 MB
+2024-03-21 14:27:44 [checkCpuCycle] INFO  - Memory Used:---> 140 MB. Max Available: 8184 MB
+2024-03-21 14:28:44 [checkCpuCycle] INFO  - Memory Used:---> 101 MB. Max Available: 8184 MB
+2024-03-21 14:29:44 [checkCpuCycle] INFO  - Memory Used:---> 62 MB. Max Available: 8184 MB
+2024-03-21 14:30:44 [checkCpuCycle] INFO  - Memory Used:---> 121 MB. Max Available: 8184 MB
+2024-03-21 14:31:44 [checkCpuCycle] INFO  - Memory Used:---> 82 MB. Max Available: 8184 MB
+2024-03-21 14:32:44 [checkCpuCycle] INFO  - Memory Used:---> 141 MB. Max Available: 8184 MB
+2024-03-21 14:33:44 [checkCpuCycle] INFO  - Memory Used:---> 102 MB. Max Available: 8184 MB
+2024-03-21 14:34:44 [checkCpuCycle] INFO  - Memory Used:---> 63 MB. Max Available: 8184 MB
+2024-03-21 14:35:44 [checkCpuCycle] INFO  - Memory Used:---> 121 MB. Max Available: 8184 MB
+2024-03-21 14:36:44 [checkCpuCycle] INFO  - Memory Used:---> 82 MB. Max Available: 8184 MB
+2024-03-21 14:37:44 [checkCpuCycle] INFO  - Memory Used:---> 141 MB. Max Available: 8184 MB
+2024-03-21 14:38:44 [checkCpuCycle] INFO  - Memory Used:---> 106 MB. Max Available: 8184 MB
+2024-03-21 14:39:44 [checkCpuCycle] INFO  - Memory Used:---> 70 MB. Max Available: 8184 MB
+2024-03-21 14:40:44 [checkCpuCycle] INFO  - Memory Used:---> 129 MB. Max Available: 8184 MB
+2024-03-21 14:41:44 [checkCpuCycle] INFO  - Memory Used:---> 94 MB. Max Available: 8184 MB
+2024-03-21 14:42:44 [checkCpuCycle] INFO  - Memory Used:---> 59 MB. Max Available: 8184 MB
+2024-03-21 14:43:44 [checkCpuCycle] INFO  - Memory Used:---> 117 MB. Max Available: 8184 MB
+2024-03-21 14:44:44 [checkCpuCycle] INFO  - Memory Used:---> 81 MB. Max Available: 8184 MB
+2024-03-21 14:45:44 [checkCpuCycle] INFO  - Memory Used:---> 140 MB. Max Available: 8184 MB
+2024-03-21 14:46:44 [checkCpuCycle] INFO  - Memory Used:---> 104 MB. Max Available: 8184 MB
+2024-03-21 14:47:44 [checkCpuCycle] INFO  - Memory Used:---> 68 MB. Max Available: 8184 MB
+2024-03-21 14:48:44 [checkCpuCycle] INFO  - Memory Used:---> 126 MB. Max Available: 8184 MB
+2024-03-21 14:49:44 [checkCpuCycle] INFO  - Memory Used:---> 89 MB. Max Available: 8184 MB
+2024-03-21 14:50:44 [checkCpuCycle] INFO  - Memory Used:---> 53 MB. Max Available: 8184 MB
+2024-03-21 14:51:44 [checkCpuCycle] INFO  - Memory Used:---> 113 MB. Max Available: 8184 MB
+2024-03-21 14:52:44 [checkCpuCycle] INFO  - Memory Used:---> 76 MB. Max Available: 8184 MB
+2024-03-21 14:53:44 [checkCpuCycle] INFO  - Memory Used:---> 136 MB. Max Available: 8184 MB
+2024-03-21 14:54:44 [checkCpuCycle] INFO  - Memory Used:---> 99 MB. Max Available: 8184 MB
+2024-03-21 14:55:44 [checkCpuCycle] INFO  - Memory Used:---> 63 MB. Max Available: 8184 MB
+2024-03-21 14:56:44 [checkCpuCycle] INFO  - Memory Used:---> 123 MB. Max Available: 8184 MB
+2024-03-21 14:57:44 [checkCpuCycle] INFO  - Memory Used:---> 86 MB. Max Available: 8184 MB
+2024-03-21 14:58:44 [checkCpuCycle] INFO  - Memory Used:---> 145 MB. Max Available: 8184 MB
+2024-03-21 14:59:44 [checkCpuCycle] INFO  - Memory Used:---> 109 MB. Max Available: 8184 MB
+2024-03-21 15:00:44 [checkCpuCycle] INFO  - Memory Used:---> 73 MB. Max Available: 8184 MB
+2024-03-21 15:01:44 [checkCpuCycle] INFO  - Memory Used:---> 132 MB. Max Available: 8184 MB
+2024-03-21 15:02:44 [checkCpuCycle] INFO  - Memory Used:---> 97 MB. Max Available: 8184 MB
+2024-03-21 15:03:44 [checkCpuCycle] INFO  - Memory Used:---> 61 MB. Max Available: 8184 MB
+2024-03-21 15:04:44 [checkCpuCycle] INFO  - Memory Used:---> 119 MB. Max Available: 8184 MB
+2024-03-21 15:05:44 [checkCpuCycle] INFO  - Memory Used:---> 83 MB. Max Available: 8184 MB
+2024-03-21 15:06:44 [checkCpuCycle] INFO  - Memory Used:---> 141 MB. Max Available: 8184 MB
+2024-03-21 15:07:44 [checkCpuCycle] INFO  - Memory Used:---> 105 MB. Max Available: 8184 MB
+2024-03-21 15:08:44 [checkCpuCycle] INFO  - Memory Used:---> 69 MB. Max Available: 8184 MB
+2024-03-21 15:09:44 [checkCpuCycle] INFO  - Memory Used:---> 129 MB. Max Available: 8184 MB
+2024-03-21 15:10:44 [checkCpuCycle] INFO  - Memory Used:---> 93 MB. Max Available: 8184 MB

@@ -3,18 +3,17 @@ package com.hti.smpp.common.smsc.dto;
 import java.io.Serializable;
 
 import javax.persistence.Column;
-import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import com.hti.util.PasswordConverter;
-
 @Entity
 @Table(name = "smscmaster")
 public class SmscEntry implements Serializable {
+	private static final long serialVersionUID = 274377854561442544L;
+
 	@Id
 	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
