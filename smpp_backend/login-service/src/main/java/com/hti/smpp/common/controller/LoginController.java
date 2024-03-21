@@ -106,7 +106,7 @@ public class LoginController {
 	 * @param username
 	 * @return
 	 */
-	@PostMapping("/status")
+	@GetMapping("/status")
 	@Operation(summary = "Get Service Status", description = "Endpoint to check the status of the login service.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Service status retrieved successfully.", content = @Content(mediaType = "text/plain")),
