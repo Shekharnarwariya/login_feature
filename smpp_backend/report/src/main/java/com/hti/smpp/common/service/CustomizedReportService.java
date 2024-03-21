@@ -14,6 +14,6 @@ public interface CustomizedReportService {
 
 	
 
-	public ResponseEntity<?> SmsReport(String username, SmsReportRequest smsReportRequest);
+	public ResponseEntity<?> SmsReport(String username, SmsReportRequest smsReportRequest, String searchParameter) ;
 
 }

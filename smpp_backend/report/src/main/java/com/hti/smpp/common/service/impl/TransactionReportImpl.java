@@ -151,6 +151,7 @@ public class TransactionReportImpl implements TransactionReportService {
 					response.setBalanceEntry(balance);
 					response.setTotalCreditAmount(totalCreditAmount);
 					response.setTotalDebitAmount(totalDebitAmount);
+					 response.setCurrency(userEntry.getCurrency());
 				} else {
 					for (List<RechargeEntry> list : transactions) {
 						txnlist.addAll(list);
