@@ -1,0 +1,6 @@
+#-------------DATABASE------
+CONNECTION_URL=jdbc:mysql://localhost:3306/host_brd?autoReconnect=true&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC
+DATABASE_DRIVER=com.mysql.cj.jdbc.Driver
+USERNAME=root
+PASSWORD=root
+MAX_CONNECTION=10
