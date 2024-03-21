@@ -6,6 +6,7 @@
 package com.hti.database;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
@@ -15,9 +16,8 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hti.user.dto.BalanceEntry;
+import com.hti.smpp.common.user.dto.BalanceEntry;
 import com.hti.util.GlobalVar;
-import java.sql.PreparedStatement;
 import com.hti.util.PasswordConverter;
 
 /**

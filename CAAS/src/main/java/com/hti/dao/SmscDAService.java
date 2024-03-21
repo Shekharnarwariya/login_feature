@@ -3,9 +3,9 @@ package com.hti.dao;
 import java.util.List;
 import java.util.Map;
 
-import com.hti.smsc.dto.GroupEntry;
-import com.hti.smsc.dto.GroupMemberEntry;
-import com.hti.smsc.dto.SmscEntry;
+import com.hti.smpp.common.contacts.dto.GroupEntry;
+import com.hti.smpp.common.contacts.dto.GroupMemberEntry;
+import com.hti.smpp.common.smsc.dto.SmscEntry;
 
 public interface SmscDAService {
 	public Map<Integer, SmscEntry> list();

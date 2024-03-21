@@ -12,11 +12,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.hti.dao.UserDAO;
-import com.hti.user.dto.BalanceEntry;
-import com.hti.user.dto.DlrSettingEntry;
-import com.hti.user.dto.ProfessionEntry;
-import com.hti.user.dto.UserEntry;
-import com.hti.user.dto.WebMasterEntry;
+import com.hti.smpp.common.user.dto.BalanceEntry;
+import com.hti.smpp.common.user.dto.DlrSettingEntry;
+import com.hti.smpp.common.user.dto.ProfessionEntry;
+import com.hti.smpp.common.user.dto.UserEntry;
+import com.hti.smpp.common.user.dto.WebMasterEntry;
 
 public class UserDAOImpl implements UserDAO {
 	private Logger logger = LoggerFactory.getLogger(UserDAOImpl.class);

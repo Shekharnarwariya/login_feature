@@ -11,10 +11,10 @@ import org.slf4j.LoggerFactory;
 
 import com.hti.dao.RouteDAO;
 import com.hti.dao.RouteDAService;
-import com.hti.route.dto.HlrRouteEntry;
-import com.hti.route.dto.MmsRouteEntry;
-import com.hti.route.dto.OptionalRouteEntry;
-import com.hti.route.dto.RouteEntry;
+import com.hti.smpp.common.route.dto.HlrRouteEntry;
+import com.hti.smpp.common.route.dto.MmsRouteEntry;
+import com.hti.smpp.common.route.dto.OptionalRouteEntry;
+import com.hti.smpp.common.route.dto.RouteEntry;
 import com.hti.util.GlobalVar;
 
 public class RouteDAServiceImpl implements RouteDAService {

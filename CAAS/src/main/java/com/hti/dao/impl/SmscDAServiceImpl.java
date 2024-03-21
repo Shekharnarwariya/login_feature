@@ -15,10 +15,10 @@ import org.slf4j.LoggerFactory;
 
 import com.hti.dao.SmscDAO;
 import com.hti.dao.SmscDAService;
-import com.hti.smsc.dto.GroupEntry;
-import com.hti.smsc.dto.GroupMemberEntry;
-import com.hti.smsc.dto.SmscEntry;
-import com.hti.smsc.dto.TrafficScheduleEntry;
+import com.hti.smpp.common.contacts.dto.GroupEntry;
+import com.hti.smpp.common.contacts.dto.GroupMemberEntry;
+import com.hti.smpp.common.smsc.dto.SmscEntry;
+import com.hti.smpp.common.smsc.dto.TrafficScheduleEntry;
 import com.hti.util.FlagStatus;
 import com.hti.util.GlobalVar;
 

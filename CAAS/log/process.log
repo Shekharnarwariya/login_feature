@@ -128,3 +128,592 @@ Members {size:1, ver:1} [
 2024-03-16 13:12:09 [Thread-1] INFO  - Today's SmscScheduling: {}
 2024-03-16 13:12:09 [main] INFO  - BalanceOperator Starting
 2024-03-16 13:12:09 [main] INFO  - CheckCpuCycle Starting
+2024-03-21 12:03:31 [main] INFO  - [LOCAL] [dev] [5.3.6] Interfaces is enabled, trying to pick one address matching to one of: [127.0.0.1, *.*.*.*]
+2024-03-21 12:03:31 [main] ERROR - [LOCAL] [dev] [5.3.6] Cannot bind to a given address: /127.0.0.1. Hazelcast cannot start. Port [5701] is already in use and auto-increment is disabled.
+com.hazelcast.core.HazelcastException: Cannot bind to a given address: /127.0.0.1. Hazelcast cannot start. Port [5701] is already in use and auto-increment is disabled.
+	at com.hazelcast.instance.impl.ServerSocketHelper.createServerSocketChannel(ServerSocketHelper.java:86)
+	at com.hazelcast.instance.impl.DefaultAddressPicker.getPublicAddressByPortSearch(DefaultAddressPicker.java:150)
+	at com.hazelcast.instance.impl.DefaultAddressPicker.pickAddress(DefaultAddressPicker.java:122)
+	at com.hazelcast.instance.impl.Node.<init>(Node.java:227)
+	at com.hazelcast.instance.impl.HazelcastInstanceImpl.createNode(HazelcastInstanceImpl.java:149)
+	at com.hazelcast.instance.impl.HazelcastInstanceImpl.<init>(HazelcastInstanceImpl.java:118)
+	at com.hazelcast.instance.impl.HazelcastInstanceFactory.constructHazelcastInstance(HazelcastInstanceFactory.java:217)
+	at com.hazelcast.instance.impl.HazelcastInstanceFactory.newHazelcastInstance(HazelcastInstanceFactory.java:196)
+	at com.hazelcast.instance.impl.HazelcastInstanceFactory.newHazelcastInstance(HazelcastInstanceFactory.java:134)
+	at com.hazelcast.core.Hazelcast.newHazelcastInstance(Hazelcast.java:61)
+	at com.hti.init.StartService.startApplication(StartService.java:70)
+	at com.hti.init.StartService.main(StartService.java:61)
+Caused by: java.net.BindException: Address already in use: bind
+	at java.base/sun.nio.ch.Net.bind0(Native Method)
+	at java.base/sun.nio.ch.Net.bind(Net.java:555)
+	at java.base/sun.nio.ch.ServerSocketChannelImpl.netBind(ServerSocketChannelImpl.java:337)
+	at java.base/sun.nio.ch.ServerSocketChannelImpl.bind(ServerSocketChannelImpl.java:294)
+	at java.base/sun.nio.ch.ServerSocketAdaptor.bind(ServerSocketAdaptor.java:89)
+	at com.hazelcast.instance.impl.ServerSocketHelper.openServerSocketChannel(ServerSocketHelper.java:141)
+	at com.hazelcast.instance.impl.ServerSocketHelper.tryOpenServerSocketChannel(ServerSocketHelper.java:104)
+	at com.hazelcast.instance.impl.ServerSocketHelper.createServerSocketChannel(ServerSocketHelper.java:78)
+	... 11 common frames omitted
+2024-03-21 12:03:53 [main] INFO  - [LOCAL] [dev] [5.3.6] Interfaces is enabled, trying to pick one address matching to one of: [127.0.0.1, *.*.*.*]
+2024-03-21 12:03:53 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+	+       +  o    o     o     o---o o----o o      o---o     o     o----o o--o--o
+	+ +   + +  |    |    / \       /  |      |     /         / \    |         |   
+	+ + + + +  o----o   o   o     o   o----o |    o         o   o   o----o    |   
+	+ +   + +  |    |  /     \   /    |      |     \       /     \       |    |   
+	+       +  o    o o       o o---o o----o o----o o---o o       o o----o    o   
+2024-03-21 12:03:53 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+2024-03-21 12:03:53 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Hazelcast Platform 5.3.6 (20231109 - 9903dc9) starting at [127.0.0.1]:5701
+2024-03-21 12:03:53 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Cluster name: dev
+2024-03-21 12:03:53 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Integrity Checker is disabled. Fail-fast on corrupted executables will not be performed. For more information, see the documentation for Integrity Checker.
+2024-03-21 12:03:53 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] The Jet engine is disabled.
+To enable the Jet engine on the members, do one of the following:
+  - Change member config using Java API: config.getJetConfig().setEnabled(true)
+  - Change XML/YAML configuration property: Set hazelcast.jet.enabled to true
+  - Add system property: -Dhz.jet.enabled=true (for Hazelcast embedded, works only when loading config via Config.load)
+  - Add environment variable: HZ_JET_ENABLED=true (recommended when running container image. For Hazelcast embedded, works only when loading config via Config.load)
+2024-03-21 12:03:54 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] TPC: disabled
+2024-03-21 12:03:54 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Enable DEBUG/FINE log level for log category com.hazelcast.system.security  or use -Dhazelcast.security.recommendations system property to see security recommendations and the status of current config.
+2024-03-21 12:03:54 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Using TCP/IP discovery
+2024-03-21 12:03:54 [main] WARN  - [127.0.0.1]:5701 [dev] [5.3.6] CP Subsystem is not enabled. CP data structures will operate in UNSAFE mode! Please note that UNSAFE mode will not provide strong consistency guarantees.
+2024-03-21 12:03:54 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-21 12:03:54 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTING
+2024-03-21 12:03:54 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+
+Members {size:1, ver:1} [
+	Member [127.0.0.1]:5701 - 6b1f2a24-8ba3-4027-ad61-50ed67870b8e this
+]
+
+2024-03-21 12:03:54 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTED
+2024-03-21 12:03:54 [hz.sharp_lehmann.generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=3, /127.0.0.1:5701->/127.0.0.1:63775, qualifier=null, endpoint=[127.0.0.1]:63775, remoteUuid=3b1e44f4-a1f7-4278-a8d4-4b5702123afd, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 3b1e44f4-a1f7-4278-a8d4-4b5702123afd, client name: hz.client_1, client version: 5.0.1
+2024-03-21 12:03:54 [hz.sharp_lehmann.generic-operation.thread-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=1, /127.0.0.1:5701->/127.0.0.1:63773, qualifier=null, endpoint=[127.0.0.1]:63773, remoteUuid=1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0, client name: hz.client_1, client version: 5.0.1
+2024-03-21 12:03:54 [hz.sharp_lehmann.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=2, /127.0.0.1:5701->/127.0.0.1:63774, qualifier=null, endpoint=[127.0.0.1]:63774, remoteUuid=98d17db8-f704-4b1d-b1e8-87cf7e30a688, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 98d17db8-f704-4b1d-b1e8-87cf7e30a688, client name: hz.client_1, client version: 5.0.1
+2024-03-21 12:03:54 [hz.sharp_lehmann.generic-operation.thread-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=5, /127.0.0.1:5701->/127.0.0.1:63777, qualifier=null, endpoint=[127.0.0.1]:63777, remoteUuid=f50015ac-d7d1-453f-a07e-26b57884eabc, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: f50015ac-d7d1-453f-a07e-26b57884eabc, client name: hz.client_1, client version: 5.0.1
+2024-03-21 12:03:54 [hz.sharp_lehmann.generic-operation.thread-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=4, /127.0.0.1:5701->/127.0.0.1:63776, qualifier=null, endpoint=[127.0.0.1]:63776, remoteUuid=3c573091-05e9-4e03-aeaf-3a006c2bab0d, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 3c573091-05e9-4e03-aeaf-3a006c2bab0d, client name: hz.client_1, client version: 5.0.1
+2024-03-21 12:03:55 [hz.sharp_lehmann.client-query.thread-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Initializing cluster partition table arrangement...
+2024-03-21 12:03:55 [main] INFO  - HHH000412: Hibernate Core {5.2.2.Final}
+2024-03-21 12:03:55 [main] INFO  - HHH000206: hibernate.properties not found
+2024-03-21 12:03:55 [main] INFO  - HHH000021: Bytecode provider name : javassist
+2024-03-21 12:03:55 [main] INFO  - HCANN000001: Hibernate Commons Annotations {5.0.1.Final}
+2024-03-21 12:03:55 [hz.sharp_lehmann.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=32.0G, physical.memory.free=19.9G, swap.space.total=0, swap.space.free=0, heap.memory.used=23.6M, heap.memory.free=36.6M, heap.memory.total=56.0M, heap.memory.max=8.0G, heap.memory.used/total=42.15%, heap.memory.used/max=0.29%, minor.gc.count=6, minor.gc.time=24ms, major.gc.count=0, major.gc.time=0ms, load.process=0.00%, load.system=100.00%, load.systemAverage=n/a thread.count=53, thread.peakCount=53, cluster.timeDiff=0, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=15, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=24, clientEndpoint.count=5, connection.active.count=0, client.connection.count=0, connection.count=0
+2024-03-21 12:03:55 [main] INFO  - HHH000400: Using dialect: org.hibernate.dialect.MySQLDialect
+2024-03-21 12:03:56 [main] WARN  - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'hostSessionFactory' defined in file [E:\Github\SMPP_BACKEND_DEV\CAAS\config\CaasContext.xml]: Invocation of init method failed; nested exception is org.hibernate.MappingException: Could not get constructor for org.hibernate.persister.entity.SingleTableEntityPersister
+2024-03-21 12:05:09 [main] INFO  - [LOCAL] [dev] [5.3.6] Interfaces is enabled, trying to pick one address matching to one of: [127.0.0.1, *.*.*.*]
+2024-03-21 12:05:09 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+	+       +  o    o     o     o---o o----o o      o---o     o     o----o o--o--o
+	+ +   + +  |    |    / \       /  |      |     /         / \    |         |   
+	+ + + + +  o----o   o   o     o   o----o |    o         o   o   o----o    |   
+	+ +   + +  |    |  /     \   /    |      |     \       /     \       |    |   
+	+       +  o    o o       o o---o o----o o----o o---o o       o o----o    o   
+2024-03-21 12:05:09 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+2024-03-21 12:05:09 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Hazelcast Platform 5.3.6 (20231109 - 9903dc9) starting at [127.0.0.1]:5701
+2024-03-21 12:05:09 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Cluster name: dev
+2024-03-21 12:05:09 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Integrity Checker is disabled. Fail-fast on corrupted executables will not be performed. For more information, see the documentation for Integrity Checker.
+2024-03-21 12:05:10 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] The Jet engine is disabled.
+To enable the Jet engine on the members, do one of the following:
+  - Change member config using Java API: config.getJetConfig().setEnabled(true)
+  - Change XML/YAML configuration property: Set hazelcast.jet.enabled to true
+  - Add system property: -Dhz.jet.enabled=true (for Hazelcast embedded, works only when loading config via Config.load)
+  - Add environment variable: HZ_JET_ENABLED=true (recommended when running container image. For Hazelcast embedded, works only when loading config via Config.load)
+2024-03-21 12:05:10 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] TPC: disabled
+2024-03-21 12:05:10 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Enable DEBUG/FINE log level for log category com.hazelcast.system.security  or use -Dhazelcast.security.recommendations system property to see security recommendations and the status of current config.
+2024-03-21 12:05:10 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Using TCP/IP discovery
+2024-03-21 12:05:10 [main] WARN  - [127.0.0.1]:5701 [dev] [5.3.6] CP Subsystem is not enabled. CP data structures will operate in UNSAFE mode! Please note that UNSAFE mode will not provide strong consistency guarantees.
+2024-03-21 12:05:10 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-21 12:05:10 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTING
+2024-03-21 12:05:11 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+
+Members {size:1, ver:1} [
+	Member [127.0.0.1]:5701 - e854ca49-7def-4e0e-9cbd-4146dfd72b29 this
+]
+
+2024-03-21 12:05:11 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTED
+2024-03-21 12:05:11 [hz.competent_matsumoto.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=4, /127.0.0.1:5701->/127.0.0.1:64412, qualifier=null, endpoint=[127.0.0.1]:64412, remoteUuid=f50015ac-d7d1-453f-a07e-26b57884eabc, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: f50015ac-d7d1-453f-a07e-26b57884eabc, client name: hz.client_1, client version: 5.0.1
+2024-03-21 12:05:11 [hz.competent_matsumoto.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=5, /127.0.0.1:5701->/127.0.0.1:64413, qualifier=null, endpoint=[127.0.0.1]:64413, remoteUuid=1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0, client name: hz.client_1, client version: 5.0.1
+2024-03-21 12:05:11 [hz.competent_matsumoto.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=1, /127.0.0.1:5701->/127.0.0.1:64409, qualifier=null, endpoint=[127.0.0.1]:64409, remoteUuid=3c573091-05e9-4e03-aeaf-3a006c2bab0d, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 3c573091-05e9-4e03-aeaf-3a006c2bab0d, client name: hz.client_1, client version: 5.0.1
+2024-03-21 12:05:11 [hz.competent_matsumoto.generic-operation.thread-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=2, /127.0.0.1:5701->/127.0.0.1:64410, qualifier=null, endpoint=[127.0.0.1]:64410, remoteUuid=3b1e44f4-a1f7-4278-a8d4-4b5702123afd, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 3b1e44f4-a1f7-4278-a8d4-4b5702123afd, client name: hz.client_1, client version: 5.0.1
+2024-03-21 12:05:11 [hz.competent_matsumoto.generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=3, /127.0.0.1:5701->/127.0.0.1:64411, qualifier=null, endpoint=[127.0.0.1]:64411, remoteUuid=98d17db8-f704-4b1d-b1e8-87cf7e30a688, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 98d17db8-f704-4b1d-b1e8-87cf7e30a688, client name: hz.client_1, client version: 5.0.1
+2024-03-21 12:05:11 [main] INFO  - HHH000412: Hibernate Core {5.2.2.Final}
+2024-03-21 12:05:11 [main] INFO  - HHH000206: hibernate.properties not found
+2024-03-21 12:05:11 [main] INFO  - HHH000021: Bytecode provider name : javassist
+2024-03-21 12:05:11 [main] INFO  - HCANN000001: Hibernate Commons Annotations {5.0.1.Final}
+2024-03-21 12:05:11 [hz.competent_matsumoto.client.thread-4] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Initializing cluster partition table arrangement...
+2024-03-21 12:05:11 [main] INFO  - HHH000400: Using dialect: org.hibernate.dialect.MySQLDialect
+2024-03-21 12:05:12 [main] INFO  - Initializing Connection Pool
+2024-03-21 12:05:12 [main] INFO  - jdbc:mysql://localhost:3306/host_brd?autoReconnect=true&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC[com.mysql.cj.jdbc.Driver] User: root Pass: root
+2024-03-21 12:05:12 [main] INFO  - Total Connection Stored: 10
+2024-03-21 12:05:12 [main] INFO  - ********** Start loading Smsc Schedule ******************
+2024-03-21 12:05:12 [main] INFO  - SmscSchedule: {}
+2024-03-21 12:05:12 [main] INFO  - FlagReader Thread Starting
+2024-03-21 12:05:12 [main] INFO  - ********* Start Loading Network Entries ************
+2024-03-21 12:05:12 [main] ERROR - Network[1] Invalid Number Length Range: 0,10
+2024-03-21 12:05:12 [main] ERROR - Network[2] Invalid Number Length Range: 10,9
+2024-03-21 12:05:12 [main] ERROR - Network[3] Invalid Number Length Range: 10,10
+2024-03-21 12:05:13 [main] INFO  - NetworkEntries: 1390
+2024-03-21 12:05:13 [main] INFO  - ********* End Loading Network Entries **************
+2024-03-21 12:05:13 [main] INFO  - ********* Start Loading Smsc Configuration **************
+2024-03-21 12:05:13 [main] INFO  - File Not Found :flag//smsc//GW_VNG.txt
+2024-03-21 12:05:13 [main] INFO  - SmscEntries: 11
+2024-03-21 12:05:13 [main] INFO  - ******** End Loading Smsc Configuration *****************
+2024-03-21 12:05:13 [main] INFO  - ********** Start loading Smsc Group ******************
+2024-03-21 12:05:13 [main] INFO  - SmscGroup: [SmscGroup: id=1,name=DEFAULT,remarks=default]
+2024-03-21 12:05:13 [main] INFO  - ************ End loading Smsc Group *******************
+2024-03-21 12:05:13 [main] INFO  - ********** Start loading Smsc Group Member ******************
+2024-03-21 12:05:13 [main] INFO  - SmscGroupMember: []
+2024-03-21 12:05:13 [main] INFO  - ************ End loading Smsc Group Member *******************
+2024-03-21 12:05:13 [main] INFO  - **** Start Loading User Configuration ********
+2024-03-21 12:05:13 [main] ERROR - null DecodeError: java.lang.NullPointerException: Cannot invoke "String.trim()" because "arg0" is null
+2024-03-21 12:05:13 [main] ERROR - null DecodeError: java.lang.NullPointerException: Cannot invoke "String.trim()" because "arg0" is null
+2024-03-21 12:05:13 [main] INFO  - File Not Found :flag//client//super.txt
+2024-03-21 12:05:13 [main] INFO  - Creating File :flag//client//super.txt
+2024-03-21 12:05:13 [main] INFO  - File Not Found :flag//client//testUser6.txt
+2024-03-21 12:05:13 [main] INFO  - Creating File :flag//client//testUser6.txt
+2024-03-21 12:05:13 [main] INFO  - User Entries: 12
+2024-03-21 12:05:13 [main] INFO  - Balance Entries: 12
+2024-03-21 12:05:13 [main] INFO  - User Mapping: 12
+2024-03-21 12:05:13 [main] INFO  - WebMaster Entries: 12
+2024-03-21 12:05:13 [main] INFO  - Profession Entries: 12
+2024-03-21 12:05:13 [main] INFO  - DlrSetting Entries: 12
+2024-03-21 12:05:13 [main] INFO  - ***** End Loading User Configuration **********
+2024-03-21 12:05:13 [main] INFO  -  ******* Start Loading Routing *********** 
+2024-03-21 12:05:13 [main] INFO  - <--- listing Basic routing --> 
+2024-03-21 12:05:13 [main] INFO  - <--- End listing Basic routing[191] --> 
+2024-03-21 12:05:13 [main] INFO  - <--- listing Optional routing --> 
+2024-03-21 12:05:13 [main] INFO  - <--- End listing Optional routing[191] --> 
+2024-03-21 12:05:13 [main] INFO  - <--- listing Hlr routing --> 
+2024-03-21 12:05:13 [main] INFO  - <--- End listing Hlr routing[191] --> 
+2024-03-21 12:05:13 [main] INFO  - <--- listing Mms routing --> 
+2024-03-21 12:05:13 [main] INFO  - <--- End listing Mms routing[191] --> 
+2024-03-21 12:05:13 [main] INFO  - Basic Routing Entries: 191
+2024-03-21 12:05:13 [main] INFO  - Hlr Routing Entries: 191
+2024-03-21 12:05:13 [main] INFO  - Optional Routing Entries: 191
+2024-03-21 12:05:13 [main] INFO  - Mms Routing Entries: 191
+2024-03-21 12:05:13 [main] INFO  - ********** End Loading Routing *********** 
+2024-03-21 12:05:13 [main] INFO  - BearerBox Starting
+2024-03-21 12:05:13 [main] INFO  - BalanceOperator Starting
+2024-03-21 12:05:13 [main] INFO  - CheckCpuCycle Starting
+2024-03-21 12:05:13 [Thread-1] INFO  - ****** Reloading Smsc Scheduling ****** 
+2024-03-21 12:05:13 [Thread-1] INFO  - Today's SmscScheduling: {}
+2024-03-21 12:26:10 [main] INFO  - [LOCAL] [dev] [5.3.6] Interfaces is enabled, trying to pick one address matching to one of: [127.0.0.1, *.*.*.*]
+2024-03-21 12:26:10 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+	+       +  o    o     o     o---o o----o o      o---o     o     o----o o--o--o
+	+ +   + +  |    |    / \       /  |      |     /         / \    |         |   
+	+ + + + +  o----o   o   o     o   o----o |    o         o   o   o----o    |   
+	+ +   + +  |    |  /     \   /    |      |     \       /     \       |    |   
+	+       +  o    o o       o o---o o----o o----o o---o o       o o----o    o   
+2024-03-21 12:26:10 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+2024-03-21 12:26:10 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Hazelcast Platform 5.3.6 (20231109 - 9903dc9) starting at [127.0.0.1]:5701
+2024-03-21 12:26:10 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Cluster name: dev
+2024-03-21 12:26:10 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Integrity Checker is disabled. Fail-fast on corrupted executables will not be performed. For more information, see the documentation for Integrity Checker.
+2024-03-21 12:26:11 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] The Jet engine is disabled.
+To enable the Jet engine on the members, do one of the following:
+  - Change member config using Java API: config.getJetConfig().setEnabled(true)
+  - Change XML/YAML configuration property: Set hazelcast.jet.enabled to true
+  - Add system property: -Dhz.jet.enabled=true (for Hazelcast embedded, works only when loading config via Config.load)
+  - Add environment variable: HZ_JET_ENABLED=true (recommended when running container image. For Hazelcast embedded, works only when loading config via Config.load)
+2024-03-21 12:26:11 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] TPC: disabled
+2024-03-21 12:26:11 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Enable DEBUG/FINE log level for log category com.hazelcast.system.security  or use -Dhazelcast.security.recommendations system property to see security recommendations and the status of current config.
+2024-03-21 12:26:11 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Using TCP/IP discovery
+2024-03-21 12:26:11 [main] WARN  - [127.0.0.1]:5701 [dev] [5.3.6] CP Subsystem is not enabled. CP data structures will operate in UNSAFE mode! Please note that UNSAFE mode will not provide strong consistency guarantees.
+2024-03-21 12:26:11 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-21 12:26:11 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTING
+2024-03-21 12:26:12 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+
+Members {size:1, ver:1} [
+	Member [127.0.0.1]:5701 - 510e333f-a29d-4756-baa1-aa2027aa5493 this
+]
+
+2024-03-21 12:26:12 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTED
+2024-03-21 12:26:12 [main] INFO  - HHH000412: Hibernate Core {5.2.2.Final}
+2024-03-21 12:26:12 [main] INFO  - HHH000206: hibernate.properties not found
+2024-03-21 12:26:12 [main] INFO  - HHH000021: Bytecode provider name : javassist
+2024-03-21 12:26:12 [main] INFO  - HCANN000001: Hibernate Commons Annotations {5.0.1.Final}
+2024-03-21 12:26:12 [main] INFO  - HHH000400: Using dialect: org.hibernate.dialect.MySQLDialect
+2024-03-21 12:26:13 [main] INFO  - Initializing Connection Pool
+2024-03-21 12:26:13 [main] INFO  - jdbc:mysql://localhost:3306/host_brd?autoReconnect=true&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC[com.mysql.cj.jdbc.Driver] User: root Pass: root
+2024-03-21 12:26:13 [main] INFO  - Total Connection Stored: 10
+2024-03-21 12:26:13 [main] INFO  - ********** Start loading Smsc Schedule ******************
+2024-03-21 12:26:13 [main] INFO  - SmscSchedule: {}
+2024-03-21 12:26:13 [main] INFO  - FlagReader Thread Starting
+2024-03-21 12:26:13 [main] INFO  - ********* Start Loading Network Entries ************
+2024-03-21 12:26:14 [main] ERROR - Network[1] Invalid Number Length Range: 0,10
+2024-03-21 12:26:14 [main] ERROR - Network[2] Invalid Number Length Range: 10,9
+2024-03-21 12:26:14 [main] ERROR - Network[3] Invalid Number Length Range: 10,10
+2024-03-21 12:26:14 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Initializing cluster partition table arrangement...
+2024-03-21 12:26:14 [main] INFO  - NetworkEntries: 1390
+2024-03-21 12:26:14 [main] INFO  - ********* End Loading Network Entries **************
+2024-03-21 12:26:14 [main] INFO  - ********* Start Loading Smsc Configuration **************
+2024-03-21 12:26:14 [main] INFO  - SmscEntries: 11
+2024-03-21 12:26:14 [main] INFO  - ******** End Loading Smsc Configuration *****************
+2024-03-21 12:26:14 [main] INFO  - ********** Start loading Smsc Group ******************
+2024-03-21 12:26:14 [main] INFO  - SmscGroup: [SmscGroup: id=1,name=DEFAULT,remarks=default]
+2024-03-21 12:26:14 [main] INFO  - ************ End loading Smsc Group *******************
+2024-03-21 12:26:14 [main] INFO  - ********** Start loading Smsc Group Member ******************
+2024-03-21 12:26:14 [main] INFO  - SmscGroupMember: []
+2024-03-21 12:26:14 [main] INFO  - ************ End loading Smsc Group Member *******************
+2024-03-21 12:26:14 [main] INFO  - **** Start Loading User Configuration ********
+2024-03-21 12:26:14 [main] ERROR - null DecodeError: java.lang.NullPointerException: Cannot invoke "String.trim()" because "arg0" is null
+2024-03-21 12:26:14 [main] ERROR - null DecodeError: java.lang.NullPointerException: Cannot invoke "String.trim()" because "arg0" is null
+2024-03-21 12:26:14 [main] INFO  - User Entries: 12
+2024-03-21 12:26:14 [main] INFO  - Balance Entries: 12
+2024-03-21 12:26:14 [main] INFO  - User Mapping: 12
+2024-03-21 12:26:14 [main] INFO  - WebMaster Entries: 12
+2024-03-21 12:26:14 [main] INFO  - Profession Entries: 12
+2024-03-21 12:26:14 [main] INFO  - DlrSetting Entries: 12
+2024-03-21 12:26:14 [main] INFO  - ***** End Loading User Configuration **********
+2024-03-21 12:26:14 [main] INFO  -  ******* Start Loading Routing *********** 
+2024-03-21 12:26:14 [main] INFO  - <--- listing Basic routing --> 
+2024-03-21 12:26:14 [main] INFO  - <--- End listing Basic routing[191] --> 
+2024-03-21 12:26:14 [main] INFO  - <--- listing Optional routing --> 
+2024-03-21 12:26:14 [main] INFO  - <--- End listing Optional routing[191] --> 
+2024-03-21 12:26:14 [main] INFO  - <--- listing Hlr routing --> 
+2024-03-21 12:26:14 [main] INFO  - <--- End listing Hlr routing[191] --> 
+2024-03-21 12:26:14 [main] INFO  - <--- listing Mms routing --> 
+2024-03-21 12:26:14 [main] INFO  - <--- End listing Mms routing[191] --> 
+2024-03-21 12:26:14 [main] INFO  - Basic Routing Entries: 191
+2024-03-21 12:26:14 [main] INFO  - Hlr Routing Entries: 191
+2024-03-21 12:26:14 [main] INFO  - Optional Routing Entries: 191
+2024-03-21 12:26:14 [main] INFO  - Mms Routing Entries: 191
+2024-03-21 12:26:14 [main] INFO  - ********** End Loading Routing *********** 
+2024-03-21 12:26:14 [main] INFO  - BearerBox Starting
+2024-03-21 12:26:14 [main] INFO  - BalanceOperator Starting
+2024-03-21 12:26:14 [main] INFO  - CheckCpuCycle Starting
+2024-03-21 12:26:14 [Thread-1] INFO  - ****** Reloading Smsc Scheduling ****** 
+2024-03-21 12:26:14 [Thread-1] INFO  - Today's SmscScheduling: {}
+2024-03-21 12:26:36 [hz.upbeat_shamir.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=1, /127.0.0.1:5701->/127.0.0.1:52326, qualifier=null, endpoint=[127.0.0.1]:52326, remoteUuid=1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0, client name: hz.client_1, client version: 5.0.1
+2024-03-21 12:26:36 [hz.upbeat_shamir.event-4] INFO  - Client Connected: 127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:26:36 [hz.upbeat_shamir.event-4] INFO  - Connected Clients: 1
+2024-03-21 12:26:36 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-3] INFO  - Client Connected: 127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:26:37 [hz.upbeat_shamir.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=4, /127.0.0.1:5701->/127.0.0.1:52335, qualifier=null, endpoint=[127.0.0.1]:52335, remoteUuid=3b1e44f4-a1f7-4278-a8d4-4b5702123afd, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 3b1e44f4-a1f7-4278-a8d4-4b5702123afd, client name: hz.client_1, client version: 5.0.1
+2024-03-21 12:26:37 [hz.upbeat_shamir.generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=3, /127.0.0.1:5701->/127.0.0.1:52334, qualifier=null, endpoint=[127.0.0.1]:52334, remoteUuid=3c573091-05e9-4e03-aeaf-3a006c2bab0d, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 3c573091-05e9-4e03-aeaf-3a006c2bab0d, client name: hz.client_1, client version: 5.0.1
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-3] INFO  - Connected Clients: 3
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-5] INFO  - Client Connected: 127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-3] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-5] INFO  - Connected Clients: 3
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-3] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-3] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-5] INFO  - Client Connected: 127.0.0.1:52333 - 98d17db8-f704-4b1d-b1e8-87cf7e30a688
+2024-03-21 12:26:37 [hz.upbeat_shamir.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=2, /127.0.0.1:5701->/127.0.0.1:52333, qualifier=null, endpoint=[127.0.0.1]:52333, remoteUuid=98d17db8-f704-4b1d-b1e8-87cf7e30a688, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 98d17db8-f704-4b1d-b1e8-87cf7e30a688, client name: hz.client_1, client version: 5.0.1
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-5] INFO  - Connected Clients: 4
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52333 - 98d17db8-f704-4b1d-b1e8-87cf7e30a688
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:26:37 [hz.upbeat_shamir.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=5, /127.0.0.1:5701->/127.0.0.1:52336, qualifier=null, endpoint=[127.0.0.1]:52336, remoteUuid=f50015ac-d7d1-453f-a07e-26b57884eabc, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: f50015ac-d7d1-453f-a07e-26b57884eabc, client name: hz.client_1, client version: 5.0.1
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-4] INFO  - Client Connected: 127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-4] INFO  - Connected Clients: 5
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:52333 - 98d17db8-f704-4b1d-b1e8-87cf7e30a688
+2024-03-21 12:26:37 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:27:14 [checkCpuCycle] INFO  - Memory Used:---> 86 MB. Max Available: 8184 MB
+2024-03-21 12:27:35 [hz.upbeat_shamir.event-5] INFO  - Client Connected: 127.0.0.1:52476 - e49b9b9b-a491-4954-b87d-1d8aeee0b865
+2024-03-21 12:27:35 [hz.upbeat_shamir.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=6, /127.0.0.1:5701->/127.0.0.1:52476, qualifier=null, endpoint=[127.0.0.1]:52476, remoteUuid=e49b9b9b-a491-4954-b87d-1d8aeee0b865, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: e49b9b9b-a491-4954-b87d-1d8aeee0b865, client name: hz.client_1, client version: 5.2.4
+2024-03-21 12:27:35 [hz.upbeat_shamir.event-5] INFO  - Connected Clients: 6
+2024-03-21 12:27:35 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:27:35 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:27:35 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52333 - 98d17db8-f704-4b1d-b1e8-87cf7e30a688
+2024-03-21 12:27:35 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:27:35 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52476 - e49b9b9b-a491-4954-b87d-1d8aeee0b865
+2024-03-21 12:27:35 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:28:14 [checkCpuCycle] INFO  - Memory Used:---> 97 MB. Max Available: 8184 MB
+2024-03-21 12:29:14 [checkCpuCycle] INFO  - Memory Used:---> 88 MB. Max Available: 8184 MB
+2024-03-21 12:30:14 [checkCpuCycle] INFO  - Memory Used:---> 71 MB. Max Available: 8184 MB
+2024-03-21 12:31:14 [checkCpuCycle] INFO  - Memory Used:---> 125 MB. Max Available: 8184 MB
+2024-03-21 12:32:14 [checkCpuCycle] INFO  - Memory Used:---> 104 MB. Max Available: 8184 MB
+2024-03-21 12:32:59 [hz.upbeat_shamir.IO.thread-in-2] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=6, /127.0.0.1:5701->/127.0.0.1:52476, qualifier=null, endpoint=[127.0.0.1]:52476, remoteUuid=e49b9b9b-a491-4954-b87d-1d8aeee0b865, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 12:32:59 [hz.upbeat_shamir.event-2] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=6, /127.0.0.1:5701->/127.0.0.1:52476, qualifier=null, endpoint=[127.0.0.1]:52476, remoteUuid=e49b9b9b-a491-4954-b87d-1d8aeee0b865, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=e49b9b9b-a491-4954-b87d-1d8aeee0b865, clientName=hz.client_1, authenticated=true, clientVersion=5.2.4, creationTime=1711004255920, latest clientAttributes=lastStatisticsCollectionTime=1711004575971,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711004255897,clientAddress=127.0.0.1,clientName=hz.client_1,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=19734978560,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=113208320,runtime.maxMemory=8581545984,runtime.totalMemory=281018368,runtime.uptime=327312,runtime.usedMemory=167810048, labels=[]}
+2024-03-21 12:32:59 [hz.upbeat_shamir.event-5] INFO  - Client DisConnected: 127.0.0.1:52476 - e49b9b9b-a491-4954-b87d-1d8aeee0b865
+2024-03-21 12:32:59 [hz.upbeat_shamir.event-5] INFO  - Connected Clients: 5
+2024-03-21 12:32:59 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:32:59 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:32:59 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:32:59 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52333 - 98d17db8-f704-4b1d-b1e8-87cf7e30a688
+2024-03-21 12:32:59 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:33:04 [hz.upbeat_shamir.event-1] INFO  - Client Connected: 127.0.0.1:53216 - a4604df7-7aa7-4e6b-b559-c48901222856
+2024-03-21 12:33:04 [hz.upbeat_shamir.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=7, /127.0.0.1:5701->/127.0.0.1:53216, qualifier=null, endpoint=[127.0.0.1]:53216, remoteUuid=a4604df7-7aa7-4e6b-b559-c48901222856, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: a4604df7-7aa7-4e6b-b559-c48901222856, client name: hz.client_2, client version: 5.2.4
+2024-03-21 12:33:04 [hz.upbeat_shamir.event-1] INFO  - Connected Clients: 6
+2024-03-21 12:33:04 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:53216 - a4604df7-7aa7-4e6b-b559-c48901222856
+2024-03-21 12:33:04 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:33:04 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:33:04 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52333 - 98d17db8-f704-4b1d-b1e8-87cf7e30a688
+2024-03-21 12:33:04 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:33:04 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:33:14 [checkCpuCycle] INFO  - Memory Used:---> 80 MB. Max Available: 8184 MB
+2024-03-21 12:34:14 [checkCpuCycle] INFO  - Memory Used:---> 52 MB. Max Available: 8184 MB
+2024-03-21 12:35:14 [checkCpuCycle] INFO  - Memory Used:---> 105 MB. Max Available: 8184 MB
+2024-03-21 12:36:14 [checkCpuCycle] INFO  - Memory Used:---> 73 MB. Max Available: 8184 MB
+2024-03-21 12:36:47 [hz.upbeat_shamir.IO.thread-in-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=7, /127.0.0.1:5701->/127.0.0.1:53216, qualifier=null, endpoint=[127.0.0.1]:53216, remoteUuid=a4604df7-7aa7-4e6b-b559-c48901222856, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 12:36:47 [hz.upbeat_shamir.event-2] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=7, /127.0.0.1:5701->/127.0.0.1:53216, qualifier=null, endpoint=[127.0.0.1]:53216, remoteUuid=a4604df7-7aa7-4e6b-b559-c48901222856, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=a4604df7-7aa7-4e6b-b559-c48901222856, clientName=hz.client_2, authenticated=true, clientVersion=5.2.4, creationTime=1711004584092, latest clientAttributes=lastStatisticsCollectionTime=1711004804099,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711004584091,clientAddress=127.0.0.1,clientName=hz.client_2,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=19585409024,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=177342656,runtime.maxMemory=8581545984,runtime.totalMemory=301989888,runtime.uptime=555443,runtime.usedMemory=124647232, labels=[]}
+2024-03-21 12:36:47 [hz.upbeat_shamir.event-1] INFO  - Client DisConnected: 127.0.0.1:53216 - a4604df7-7aa7-4e6b-b559-c48901222856
+2024-03-21 12:36:47 [hz.upbeat_shamir.event-1] INFO  - Connected Clients: 5
+2024-03-21 12:36:47 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:36:47 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:36:47 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:36:47 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52333 - 98d17db8-f704-4b1d-b1e8-87cf7e30a688
+2024-03-21 12:36:47 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:36:51 [hz.upbeat_shamir.event-1] INFO  - Client Connected: 127.0.0.1:53724 - a3b47a0c-685d-416f-a93e-9e33c4c139e1
+2024-03-21 12:36:51 [hz.upbeat_shamir.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=8, /127.0.0.1:5701->/127.0.0.1:53724, qualifier=null, endpoint=[127.0.0.1]:53724, remoteUuid=a3b47a0c-685d-416f-a93e-9e33c4c139e1, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: a3b47a0c-685d-416f-a93e-9e33c4c139e1, client name: hz.client_3, client version: 5.2.4
+2024-03-21 12:36:51 [hz.upbeat_shamir.event-1] INFO  - Connected Clients: 6
+2024-03-21 12:36:51 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:36:51 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:36:51 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52333 - 98d17db8-f704-4b1d-b1e8-87cf7e30a688
+2024-03-21 12:36:51 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:36:51 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:36:51 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:53724 - a3b47a0c-685d-416f-a93e-9e33c4c139e1
+2024-03-21 12:37:14 [checkCpuCycle] INFO  - Memory Used:---> 127 MB. Max Available: 8184 MB
+2024-03-21 12:38:14 [checkCpuCycle] INFO  - Memory Used:---> 93 MB. Max Available: 8184 MB
+2024-03-21 12:38:25 [hz.upbeat_shamir.IO.thread-in-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=8, /127.0.0.1:5701->/127.0.0.1:53724, qualifier=null, endpoint=[127.0.0.1]:53724, remoteUuid=a3b47a0c-685d-416f-a93e-9e33c4c139e1, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 12:38:25 [hz.upbeat_shamir.event-5] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=8, /127.0.0.1:5701->/127.0.0.1:53724, qualifier=null, endpoint=[127.0.0.1]:53724, remoteUuid=a3b47a0c-685d-416f-a93e-9e33c4c139e1, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=a3b47a0c-685d-416f-a93e-9e33c4c139e1, clientName=hz.client_3, authenticated=true, clientVersion=5.2.4, creationTime=1711004811876, latest clientAttributes=lastStatisticsCollectionTime=1711004901884,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711004811876,clientAddress=127.0.0.1,clientName=hz.client_3,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=19605471232,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=55165488,runtime.maxMemory=8581545984,runtime.totalMemory=251658240,runtime.uptime=653228,runtime.usedMemory=196492752, labels=[]}
+2024-03-21 12:38:25 [hz.upbeat_shamir.event-1] INFO  - Client DisConnected: 127.0.0.1:53724 - a3b47a0c-685d-416f-a93e-9e33c4c139e1
+2024-03-21 12:38:25 [hz.upbeat_shamir.event-1] INFO  - Connected Clients: 5
+2024-03-21 12:38:25 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:38:25 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:38:25 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:38:25 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52333 - 98d17db8-f704-4b1d-b1e8-87cf7e30a688
+2024-03-21 12:38:25 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:38:30 [hz.upbeat_shamir.event-1] INFO  - Client Connected: 127.0.0.1:53963 - 70e82c11-b642-4ac3-8a93-c4434cdebe6a
+2024-03-21 12:38:30 [hz.upbeat_shamir.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=9, /127.0.0.1:5701->/127.0.0.1:53963, qualifier=null, endpoint=[127.0.0.1]:53963, remoteUuid=70e82c11-b642-4ac3-8a93-c4434cdebe6a, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 70e82c11-b642-4ac3-8a93-c4434cdebe6a, client name: hz.client_4, client version: 5.2.4
+2024-03-21 12:38:30 [hz.upbeat_shamir.event-1] INFO  - Connected Clients: 6
+2024-03-21 12:38:30 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:38:30 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:38:30 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52333 - 98d17db8-f704-4b1d-b1e8-87cf7e30a688
+2024-03-21 12:38:30 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:38:30 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:38:30 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:53963 - 70e82c11-b642-4ac3-8a93-c4434cdebe6a
+2024-03-21 12:39:14 [checkCpuCycle] INFO  - Memory Used:---> 57 MB. Max Available: 8184 MB
+2024-03-21 12:40:14 [checkCpuCycle] INFO  - Memory Used:---> 112 MB. Max Available: 8184 MB
+2024-03-21 12:40:28 [hz.upbeat_shamir.IO.thread-in-2] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=9, /127.0.0.1:5701->/127.0.0.1:53963, qualifier=null, endpoint=[127.0.0.1]:53963, remoteUuid=70e82c11-b642-4ac3-8a93-c4434cdebe6a, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 12:40:28 [hz.upbeat_shamir.event-4] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=9, /127.0.0.1:5701->/127.0.0.1:53963, qualifier=null, endpoint=[127.0.0.1]:53963, remoteUuid=70e82c11-b642-4ac3-8a93-c4434cdebe6a, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=70e82c11-b642-4ac3-8a93-c4434cdebe6a, clientName=hz.client_4, authenticated=true, clientVersion=5.2.4, creationTime=1711004910335, latest clientAttributes=lastStatisticsCollectionTime=1711005025344,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711004910333,clientAddress=127.0.0.1,clientName=hz.client_4,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=19523903488,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=80262384,runtime.maxMemory=8581545984,runtime.totalMemory=301989888,runtime.uptime=776685,runtime.usedMemory=221727504, labels=[]}
+2024-03-21 12:40:28 [hz.upbeat_shamir.event-1] INFO  - Client DisConnected: 127.0.0.1:53963 - 70e82c11-b642-4ac3-8a93-c4434cdebe6a
+2024-03-21 12:40:28 [hz.upbeat_shamir.event-1] INFO  - Connected Clients: 5
+2024-03-21 12:40:28 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:40:28 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:40:28 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:40:28 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52333 - 98d17db8-f704-4b1d-b1e8-87cf7e30a688
+2024-03-21 12:40:28 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:40:32 [hz.upbeat_shamir.event-5] INFO  - Client Connected: 127.0.0.1:54276 - 7c85b86e-1b8b-48ac-9bd8-a25abd6d8843
+2024-03-21 12:40:32 [hz.upbeat_shamir.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=10, /127.0.0.1:5701->/127.0.0.1:54276, qualifier=null, endpoint=[127.0.0.1]:54276, remoteUuid=7c85b86e-1b8b-48ac-9bd8-a25abd6d8843, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 7c85b86e-1b8b-48ac-9bd8-a25abd6d8843, client name: hz.client_5, client version: 5.2.4
+2024-03-21 12:40:32 [hz.upbeat_shamir.event-5] INFO  - Connected Clients: 6
+2024-03-21 12:40:32 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:40:32 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:40:32 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52333 - 98d17db8-f704-4b1d-b1e8-87cf7e30a688
+2024-03-21 12:40:32 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:40:32 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:40:32 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:54276 - 7c85b86e-1b8b-48ac-9bd8-a25abd6d8843
+2024-03-21 12:40:40 [hz.upbeat_shamir.IO.thread-in-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=10, /127.0.0.1:5701->/127.0.0.1:54276, qualifier=null, endpoint=[127.0.0.1]:54276, remoteUuid=7c85b86e-1b8b-48ac-9bd8-a25abd6d8843, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 12:40:40 [hz.upbeat_shamir.event-2] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=10, /127.0.0.1:5701->/127.0.0.1:54276, qualifier=null, endpoint=[127.0.0.1]:54276, remoteUuid=7c85b86e-1b8b-48ac-9bd8-a25abd6d8843, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=7c85b86e-1b8b-48ac-9bd8-a25abd6d8843, clientName=hz.client_5, authenticated=true, clientVersion=5.2.4, creationTime=1711005032853, latest clientAttributes=lastStatisticsCollectionTime=1711005037867,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711005032851,clientAddress=127.0.0.1,clientName=hz.client_5,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=19143651328,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=154017568,runtime.maxMemory=8581545984,runtime.totalMemory=322961408,runtime.uptime=789208,runtime.usedMemory=168943840, labels=[]}
+2024-03-21 12:40:40 [hz.upbeat_shamir.event-5] INFO  - Client DisConnected: 127.0.0.1:54276 - 7c85b86e-1b8b-48ac-9bd8-a25abd6d8843
+2024-03-21 12:40:40 [hz.upbeat_shamir.event-5] INFO  - Connected Clients: 5
+2024-03-21 12:40:40 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:40:40 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:40:40 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:40:40 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52333 - 98d17db8-f704-4b1d-b1e8-87cf7e30a688
+2024-03-21 12:40:40 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:40:44 [hz.upbeat_shamir.event-2] INFO  - Client Connected: 127.0.0.1:54313 - 8c90ba19-b3a1-4af1-92eb-96275461e323
+2024-03-21 12:40:44 [hz.upbeat_shamir.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=11, /127.0.0.1:5701->/127.0.0.1:54313, qualifier=null, endpoint=[127.0.0.1]:54313, remoteUuid=8c90ba19-b3a1-4af1-92eb-96275461e323, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 8c90ba19-b3a1-4af1-92eb-96275461e323, client name: hz.client_6, client version: 5.2.4
+2024-03-21 12:40:44 [hz.upbeat_shamir.event-2] INFO  - Connected Clients: 6
+2024-03-21 12:40:44 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:40:44 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:40:44 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:52333 - 98d17db8-f704-4b1d-b1e8-87cf7e30a688
+2024-03-21 12:40:44 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:40:44 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:54313 - 8c90ba19-b3a1-4af1-92eb-96275461e323
+2024-03-21 12:40:44 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:41:14 [checkCpuCycle] INFO  - Memory Used:---> 78 MB. Max Available: 8184 MB
+2024-03-21 12:41:17 [hz.upbeat_shamir.IO.thread-in-0] WARN  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=2, /127.0.0.1:5701->/127.0.0.1:52333, qualifier=null, endpoint=[127.0.0.1]:52333, remoteUuid=98d17db8-f704-4b1d-b1e8-87cf7e30a688, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Exception in Connection[id=2, /127.0.0.1:5701->/127.0.0.1:52333, qualifier=null, endpoint=[127.0.0.1]:52333, remoteUuid=98d17db8-f704-4b1d-b1e8-87cf7e30a688, alive=true, connectionType=JVM, planeIndex=-1], thread=hz.upbeat_shamir.IO.thread-in-0
+java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.SocketChannelImpl.throwConnectionReset(SocketChannelImpl.java:394)
+	at java.base/sun.nio.ch.SocketChannelImpl.read(SocketChannelImpl.java:426)
+	at com.hazelcast.internal.networking.nio.NioInboundPipeline.process(NioInboundPipeline.java:115)
+	at com.hazelcast.internal.networking.nio.NioThread.processSelectionKey(NioThread.java:383)
+	at com.hazelcast.internal.networking.nio.NioThread.processSelectionKeys(NioThread.java:368)
+	at com.hazelcast.internal.networking.nio.NioThread.selectLoop(NioThread.java:294)
+	at com.hazelcast.internal.networking.nio.NioThread.executeRun(NioThread.java:249)
+	at com.hazelcast.internal.util.executor.HazelcastManagedThread.run(HazelcastManagedThread.java:111)
+2024-03-21 12:41:17 [hz.upbeat_shamir.event-4] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=2, /127.0.0.1:5701->/127.0.0.1:52333, qualifier=null, endpoint=[127.0.0.1]:52333, remoteUuid=98d17db8-f704-4b1d-b1e8-87cf7e30a688, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=98d17db8-f704-4b1d-b1e8-87cf7e30a688, clientName=hz.client_1, authenticated=true, clientVersion=5.0.1, creationTime=1711004197257, latest clientAttributes=lastStatisticsCollectionTime=1711005073025,enterprise=false,clientType=JVM,clientVersion=5.0.1,clusterConnectionTimestamp=1711004197251,clientAddress=127.0.0.1,clientName=hz.client_1,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=19243257856,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=147390984,runtime.maxMemory=8581545984,runtime.totalMemory=281018368,runtime.uptime=434258061,runtime.usedMemory=133627384, labels=[]}
+2024-03-21 12:41:17 [hz.upbeat_shamir.event-5] INFO  - Client DisConnected: 127.0.0.1:52333 - 98d17db8-f704-4b1d-b1e8-87cf7e30a688
+2024-03-21 12:41:17 [hz.upbeat_shamir.event-5] INFO  - Connected Clients: 5
+2024-03-21 12:41:17 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:41:17 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:54313 - 8c90ba19-b3a1-4af1-92eb-96275461e323
+2024-03-21 12:41:17 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:41:17 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:41:17 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:42:14 [checkCpuCycle] INFO  - Memory Used:---> 131 MB. Max Available: 8184 MB
+2024-03-21 12:42:35 [hz.upbeat_shamir.event-1] INFO  - Client Connected: 127.0.0.1:54590 - 42169526-1f11-4ad7-94f0-722865029a58
+2024-03-21 12:42:35 [hz.upbeat_shamir.event-1] INFO  - Connected Clients: 6
+2024-03-21 12:42:35 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54590 - 42169526-1f11-4ad7-94f0-722865029a58
+2024-03-21 12:42:35 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:42:35 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:42:35 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:42:35 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54313 - 8c90ba19-b3a1-4af1-92eb-96275461e323
+2024-03-21 12:42:35 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:42:35 [hz.upbeat_shamir.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=12, /127.0.0.1:5701->/127.0.0.1:54590, qualifier=null, endpoint=[127.0.0.1]:54590, remoteUuid=42169526-1f11-4ad7-94f0-722865029a58, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 42169526-1f11-4ad7-94f0-722865029a58, client name: hz.client_1, client version: 5.2.4
+2024-03-21 12:42:42 [hz.upbeat_shamir.event-4] INFO  - Client Connected: 127.0.0.1:54615 - 8b4f1200-5975-4f83-be45-e8b5c6898ecb
+2024-03-21 12:42:42 [hz.upbeat_shamir.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=13, /127.0.0.1:5701->/127.0.0.1:54615, qualifier=null, endpoint=[127.0.0.1]:54615, remoteUuid=8b4f1200-5975-4f83-be45-e8b5c6898ecb, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 8b4f1200-5975-4f83-be45-e8b5c6898ecb, client name: hz.client_1, client version: 5.2.4
+2024-03-21 12:42:42 [hz.upbeat_shamir.event-4] INFO  - Connected Clients: 7
+2024-03-21 12:42:42 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:54590 - 42169526-1f11-4ad7-94f0-722865029a58
+2024-03-21 12:42:42 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:42:42 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:42:42 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:42:42 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:54313 - 8c90ba19-b3a1-4af1-92eb-96275461e323
+2024-03-21 12:42:42 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:42:42 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:54615 - 8b4f1200-5975-4f83-be45-e8b5c6898ecb
+2024-03-21 12:43:09 [hz.upbeat_shamir.event-2] INFO  - Client Connected: 127.0.0.1:54714 - 9eb1f7d7-9d44-4409-9be7-cd0a3b4555bf
+2024-03-21 12:43:09 [hz.upbeat_shamir.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=14, /127.0.0.1:5701->/127.0.0.1:54714, qualifier=null, endpoint=[127.0.0.1]:54714, remoteUuid=9eb1f7d7-9d44-4409-9be7-cd0a3b4555bf, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 9eb1f7d7-9d44-4409-9be7-cd0a3b4555bf, client name: hz.client_1, client version: 5.2.4
+2024-03-21 12:43:09 [hz.upbeat_shamir.event-2] INFO  - Connected Clients: 8
+2024-03-21 12:43:09 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:54590 - 42169526-1f11-4ad7-94f0-722865029a58
+2024-03-21 12:43:09 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:54714 - 9eb1f7d7-9d44-4409-9be7-cd0a3b4555bf
+2024-03-21 12:43:09 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:43:09 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:43:09 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:43:09 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:54313 - 8c90ba19-b3a1-4af1-92eb-96275461e323
+2024-03-21 12:43:09 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:43:09 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:54615 - 8b4f1200-5975-4f83-be45-e8b5c6898ecb
+2024-03-21 12:43:13 [hz.upbeat_shamir.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=32.0G, physical.memory.free=17.0G, swap.space.total=0, swap.space.free=0, heap.memory.used=97.8M, heap.memory.free=78.1M, heap.memory.total=176.0M, heap.memory.max=8.0G, heap.memory.used/total=55.57%, heap.memory.used/max=1.20%, minor.gc.count=25, minor.gc.time=123ms, major.gc.count=0, major.gc.time=0ms, load.process=0.00%, load.system=90.52%, load.systemAverage=n/a thread.count=105, thread.peakCount=105, cluster.timeDiff=0, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=319501, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=25, clientEndpoint.count=8, connection.active.count=8, client.connection.count=8, connection.count=8
+2024-03-21 12:43:14 [checkCpuCycle] INFO  - Memory Used:---> 98 MB. Max Available: 8184 MB
+2024-03-21 12:43:15 [hz.upbeat_shamir.event-1] INFO  - Client Connected: 127.0.0.1:54752 - e884c385-fd73-446a-b483-d1ae951e635c
+2024-03-21 12:43:15 [hz.upbeat_shamir.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=15, /127.0.0.1:5701->/127.0.0.1:54752, qualifier=null, endpoint=[127.0.0.1]:54752, remoteUuid=e884c385-fd73-446a-b483-d1ae951e635c, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: e884c385-fd73-446a-b483-d1ae951e635c, client name: hz.client_1, client version: 5.2.4
+2024-03-21 12:43:15 [hz.upbeat_shamir.event-1] INFO  - Connected Clients: 9
+2024-03-21 12:43:15 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54590 - 42169526-1f11-4ad7-94f0-722865029a58
+2024-03-21 12:43:15 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54714 - 9eb1f7d7-9d44-4409-9be7-cd0a3b4555bf
+2024-03-21 12:43:15 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:43:15 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:43:15 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:43:15 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54313 - 8c90ba19-b3a1-4af1-92eb-96275461e323
+2024-03-21 12:43:15 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54752 - e884c385-fd73-446a-b483-d1ae951e635c
+2024-03-21 12:43:15 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:43:15 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54615 - 8b4f1200-5975-4f83-be45-e8b5c6898ecb
+2024-03-21 12:43:21 [hz.upbeat_shamir.event-3] INFO  - Client Connected: 127.0.0.1:54779 - ed1d7145-9d0f-4aac-8b71-3795bc748c15
+2024-03-21 12:43:21 [hz.upbeat_shamir.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=16, /127.0.0.1:5701->/127.0.0.1:54779, qualifier=null, endpoint=[127.0.0.1]:54779, remoteUuid=ed1d7145-9d0f-4aac-8b71-3795bc748c15, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: ed1d7145-9d0f-4aac-8b71-3795bc748c15, client name: hz.client_1, client version: 5.2.4
+2024-03-21 12:43:21 [hz.upbeat_shamir.event-3] INFO  - Connected Clients: 10
+2024-03-21 12:43:21 [hz.upbeat_shamir.event-3] INFO  - Client: /127.0.0.1:54590 - 42169526-1f11-4ad7-94f0-722865029a58
+2024-03-21 12:43:21 [hz.upbeat_shamir.event-3] INFO  - Client: /127.0.0.1:54714 - 9eb1f7d7-9d44-4409-9be7-cd0a3b4555bf
+2024-03-21 12:43:21 [hz.upbeat_shamir.event-3] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:43:21 [hz.upbeat_shamir.event-3] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:43:21 [hz.upbeat_shamir.event-3] INFO  - Client: /127.0.0.1:54779 - ed1d7145-9d0f-4aac-8b71-3795bc748c15
+2024-03-21 12:43:21 [hz.upbeat_shamir.event-3] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:43:21 [hz.upbeat_shamir.event-3] INFO  - Client: /127.0.0.1:54313 - 8c90ba19-b3a1-4af1-92eb-96275461e323
+2024-03-21 12:43:21 [hz.upbeat_shamir.event-3] INFO  - Client: /127.0.0.1:54752 - e884c385-fd73-446a-b483-d1ae951e635c
+2024-03-21 12:43:21 [hz.upbeat_shamir.event-3] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:43:21 [hz.upbeat_shamir.event-3] INFO  - Client: /127.0.0.1:54615 - 8b4f1200-5975-4f83-be45-e8b5c6898ecb
+2024-03-21 12:44:14 [checkCpuCycle] INFO  - Memory Used:---> 70 MB. Max Available: 8184 MB
+2024-03-21 12:44:42 [hz.upbeat_shamir.IO.thread-in-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=11, /127.0.0.1:5701->/127.0.0.1:54313, qualifier=null, endpoint=[127.0.0.1]:54313, remoteUuid=8c90ba19-b3a1-4af1-92eb-96275461e323, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 12:44:42 [hz.upbeat_shamir.event-4] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=11, /127.0.0.1:5701->/127.0.0.1:54313, qualifier=null, endpoint=[127.0.0.1]:54313, remoteUuid=8c90ba19-b3a1-4af1-92eb-96275461e323, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=8c90ba19-b3a1-4af1-92eb-96275461e323, clientName=hz.client_6, authenticated=true, clientVersion=5.2.4, creationTime=1711005044860, latest clientAttributes=lastStatisticsCollectionTime=1711005279868,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711005044859,clientAddress=127.0.0.1,clientName=hz.client_6,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=17494953984,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=53950000,runtime.maxMemory=8581545984,runtime.totalMemory=272629760,runtime.uptime=1031209,runtime.usedMemory=218679760, labels=[]}
+2024-03-21 12:44:42 [hz.upbeat_shamir.event-2] INFO  - Client DisConnected: 127.0.0.1:54313 - 8c90ba19-b3a1-4af1-92eb-96275461e323
+2024-03-21 12:44:42 [hz.upbeat_shamir.event-2] INFO  - Connected Clients: 9
+2024-03-21 12:44:42 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:54590 - 42169526-1f11-4ad7-94f0-722865029a58
+2024-03-21 12:44:42 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:54714 - 9eb1f7d7-9d44-4409-9be7-cd0a3b4555bf
+2024-03-21 12:44:42 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:44:42 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:44:42 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:54779 - ed1d7145-9d0f-4aac-8b71-3795bc748c15
+2024-03-21 12:44:42 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:44:42 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:54752 - e884c385-fd73-446a-b483-d1ae951e635c
+2024-03-21 12:44:42 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:44:42 [hz.upbeat_shamir.event-2] INFO  - Client: /127.0.0.1:54615 - 8b4f1200-5975-4f83-be45-e8b5c6898ecb
+2024-03-21 12:44:47 [hz.upbeat_shamir.event-1] INFO  - Client Connected: 127.0.0.1:54982 - 26abf973-5dff-407f-8d64-fbe735b63eca
+2024-03-21 12:44:47 [hz.upbeat_shamir.event-1] INFO  - Connected Clients: 10
+2024-03-21 12:44:47 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54590 - 42169526-1f11-4ad7-94f0-722865029a58
+2024-03-21 12:44:47 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54714 - 9eb1f7d7-9d44-4409-9be7-cd0a3b4555bf
+2024-03-21 12:44:47 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:44:47 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54982 - 26abf973-5dff-407f-8d64-fbe735b63eca
+2024-03-21 12:44:47 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:44:47 [hz.upbeat_shamir.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=17, /127.0.0.1:5701->/127.0.0.1:54982, qualifier=null, endpoint=[127.0.0.1]:54982, remoteUuid=26abf973-5dff-407f-8d64-fbe735b63eca, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 26abf973-5dff-407f-8d64-fbe735b63eca, client name: hz.client_7, client version: 5.2.4
+2024-03-21 12:44:47 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54779 - ed1d7145-9d0f-4aac-8b71-3795bc748c15
+2024-03-21 12:44:47 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:44:47 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54752 - e884c385-fd73-446a-b483-d1ae951e635c
+2024-03-21 12:44:47 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:44:47 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54615 - 8b4f1200-5975-4f83-be45-e8b5c6898ecb
+2024-03-21 12:45:14 [checkCpuCycle] INFO  - Memory Used:---> 127 MB. Max Available: 8184 MB
+2024-03-21 12:45:42 [hz.upbeat_shamir.IO.thread-in-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=17, /127.0.0.1:5701->/127.0.0.1:54982, qualifier=null, endpoint=[127.0.0.1]:54982, remoteUuid=26abf973-5dff-407f-8d64-fbe735b63eca, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 12:45:42 [hz.upbeat_shamir.event-3] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=17, /127.0.0.1:5701->/127.0.0.1:54982, qualifier=null, endpoint=[127.0.0.1]:54982, remoteUuid=26abf973-5dff-407f-8d64-fbe735b63eca, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=26abf973-5dff-407f-8d64-fbe735b63eca, clientName=hz.client_7, authenticated=true, clientVersion=5.2.4, creationTime=1711005287563, latest clientAttributes=lastStatisticsCollectionTime=1711005342569,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711005287563,clientAddress=127.0.0.1,clientName=hz.client_7,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=17387065344,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=174060024,runtime.maxMemory=8581545984,runtime.totalMemory=327155712,runtime.uptime=1093911,runtime.usedMemory=153095688, labels=[]}
+2024-03-21 12:45:42 [hz.upbeat_shamir.event-1] INFO  - Client DisConnected: 127.0.0.1:54982 - 26abf973-5dff-407f-8d64-fbe735b63eca
+2024-03-21 12:45:42 [hz.upbeat_shamir.event-1] INFO  - Connected Clients: 9
+2024-03-21 12:45:42 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54590 - 42169526-1f11-4ad7-94f0-722865029a58
+2024-03-21 12:45:42 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54714 - 9eb1f7d7-9d44-4409-9be7-cd0a3b4555bf
+2024-03-21 12:45:42 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:45:42 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:45:42 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54779 - ed1d7145-9d0f-4aac-8b71-3795bc748c15
+2024-03-21 12:45:42 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:45:42 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54752 - e884c385-fd73-446a-b483-d1ae951e635c
+2024-03-21 12:45:42 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:45:42 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54615 - 8b4f1200-5975-4f83-be45-e8b5c6898ecb
+2024-03-21 12:45:47 [hz.upbeat_shamir.event-5] INFO  - Client Connected: 127.0.0.1:55135 - 5dbd92c4-8b66-4cf0-ad0d-024235ae8bf7
+2024-03-21 12:45:47 [hz.upbeat_shamir.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=18, /127.0.0.1:5701->/127.0.0.1:55135, qualifier=null, endpoint=[127.0.0.1]:55135, remoteUuid=5dbd92c4-8b66-4cf0-ad0d-024235ae8bf7, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 5dbd92c4-8b66-4cf0-ad0d-024235ae8bf7, client name: hz.client_8, client version: 5.2.4
+2024-03-21 12:45:47 [hz.upbeat_shamir.event-5] INFO  - Connected Clients: 10
+2024-03-21 12:45:47 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:54590 - 42169526-1f11-4ad7-94f0-722865029a58
+2024-03-21 12:45:47 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:54714 - 9eb1f7d7-9d44-4409-9be7-cd0a3b4555bf
+2024-03-21 12:45:47 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:45:47 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:45:47 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:54779 - ed1d7145-9d0f-4aac-8b71-3795bc748c15
+2024-03-21 12:45:47 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:45:47 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:54752 - e884c385-fd73-446a-b483-d1ae951e635c
+2024-03-21 12:45:47 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:55135 - 5dbd92c4-8b66-4cf0-ad0d-024235ae8bf7
+2024-03-21 12:45:47 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:45:47 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:54615 - 8b4f1200-5975-4f83-be45-e8b5c6898ecb
+2024-03-21 12:45:52 [hz.upbeat_shamir.IO.thread-in-2] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=18, /127.0.0.1:5701->/127.0.0.1:55135, qualifier=null, endpoint=[127.0.0.1]:55135, remoteUuid=5dbd92c4-8b66-4cf0-ad0d-024235ae8bf7, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 12:45:52 [hz.upbeat_shamir.event-1] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=18, /127.0.0.1:5701->/127.0.0.1:55135, qualifier=null, endpoint=[127.0.0.1]:55135, remoteUuid=5dbd92c4-8b66-4cf0-ad0d-024235ae8bf7, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=5dbd92c4-8b66-4cf0-ad0d-024235ae8bf7, clientName=hz.client_8, authenticated=true, clientVersion=5.2.4, creationTime=1711005347284, latest clientAttributes=lastStatisticsCollectionTime=1711005352303,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711005347283,clientAddress=127.0.0.1,clientName=hz.client_8,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=17476284416,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=128459200,runtime.maxMemory=8581545984,runtime.totalMemory=272629760,runtime.uptime=1103646,runtime.usedMemory=144170560, labels=[]}
+2024-03-21 12:45:52 [hz.upbeat_shamir.event-5] INFO  - Client DisConnected: 127.0.0.1:55135 - 5dbd92c4-8b66-4cf0-ad0d-024235ae8bf7
+2024-03-21 12:45:52 [hz.upbeat_shamir.event-5] INFO  - Connected Clients: 9
+2024-03-21 12:45:52 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:54590 - 42169526-1f11-4ad7-94f0-722865029a58
+2024-03-21 12:45:52 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:54714 - 9eb1f7d7-9d44-4409-9be7-cd0a3b4555bf
+2024-03-21 12:45:52 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:45:52 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:45:52 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:54779 - ed1d7145-9d0f-4aac-8b71-3795bc748c15
+2024-03-21 12:45:52 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:45:52 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:54752 - e884c385-fd73-446a-b483-d1ae951e635c
+2024-03-21 12:45:52 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:45:52 [hz.upbeat_shamir.event-5] INFO  - Client: /127.0.0.1:54615 - 8b4f1200-5975-4f83-be45-e8b5c6898ecb
+2024-03-21 12:45:56 [hz.upbeat_shamir.event-1] INFO  - Client Connected: 127.0.0.1:55167 - c489cfd3-dc94-430c-9500-fe8f8133e847
+2024-03-21 12:45:56 [hz.upbeat_shamir.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=19, /127.0.0.1:5701->/127.0.0.1:55167, qualifier=null, endpoint=[127.0.0.1]:55167, remoteUuid=c489cfd3-dc94-430c-9500-fe8f8133e847, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: c489cfd3-dc94-430c-9500-fe8f8133e847, client name: hz.client_9, client version: 5.2.4
+2024-03-21 12:45:56 [hz.upbeat_shamir.event-1] INFO  - Connected Clients: 10
+2024-03-21 12:45:56 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:55167 - c489cfd3-dc94-430c-9500-fe8f8133e847
+2024-03-21 12:45:56 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54590 - 42169526-1f11-4ad7-94f0-722865029a58
+2024-03-21 12:45:56 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54714 - 9eb1f7d7-9d44-4409-9be7-cd0a3b4555bf
+2024-03-21 12:45:56 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:45:56 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:45:56 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54779 - ed1d7145-9d0f-4aac-8b71-3795bc748c15
+2024-03-21 12:45:56 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:45:56 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54752 - e884c385-fd73-446a-b483-d1ae951e635c
+2024-03-21 12:45:56 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:45:56 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54615 - 8b4f1200-5975-4f83-be45-e8b5c6898ecb
+2024-03-21 12:46:14 [checkCpuCycle] INFO  - Memory Used:---> 98 MB. Max Available: 8184 MB
+2024-03-21 12:47:13 [hz.upbeat_shamir.IO.thread-in-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Connection[id=19, /127.0.0.1:5701->/127.0.0.1:55167, qualifier=null, endpoint=[127.0.0.1]:55167, remoteUuid=c489cfd3-dc94-430c-9500-fe8f8133e847, alive=false, connectionType=JVM, planeIndex=-1] closed. Reason: Connection closed by the other side
+2024-03-21 12:47:13 [hz.upbeat_shamir.event-3] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Destroying ClientEndpoint{connection=Connection[id=19, /127.0.0.1:5701->/127.0.0.1:55167, qualifier=null, endpoint=[127.0.0.1]:55167, remoteUuid=c489cfd3-dc94-430c-9500-fe8f8133e847, alive=false, connectionType=JVM, planeIndex=-1], clientUuid=c489cfd3-dc94-430c-9500-fe8f8133e847, clientName=hz.client_9, authenticated=true, clientVersion=5.2.4, creationTime=1711005356902, latest clientAttributes=lastStatisticsCollectionTime=1711005431921,enterprise=false,clientType=JVM,clientVersion=5.2.4,clusterConnectionTimestamp=1711005356902,clientAddress=127.0.0.1,clientName=hz.client_9,credentials.principal=null,os.committedVirtualMemorySize=0,os.freePhysicalMemorySize=17376718848,os.freeSwapSpaceSize=0,os.maxFileDescriptorCount=0,os.openFileDescriptorCount=0,os.processCpuTime=0,os.systemLoadAverage=-1.0,os.totalPhysicalMemorySize=34311737344,os.totalSwapSpaceSize=0,runtime.availableProcessors=4,runtime.freeMemory=208592504,runtime.maxMemory=8581545984,runtime.totalMemory=301989888,runtime.uptime=1183263,runtime.usedMemory=93397384, labels=[]}
+2024-03-21 12:47:13 [hz.upbeat_shamir.event-1] INFO  - Client DisConnected: 127.0.0.1:55167 - c489cfd3-dc94-430c-9500-fe8f8133e847
+2024-03-21 12:47:13 [hz.upbeat_shamir.event-1] INFO  - Connected Clients: 9
+2024-03-21 12:47:13 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54590 - 42169526-1f11-4ad7-94f0-722865029a58
+2024-03-21 12:47:13 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54714 - 9eb1f7d7-9d44-4409-9be7-cd0a3b4555bf
+2024-03-21 12:47:13 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:47:13 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:47:13 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54779 - ed1d7145-9d0f-4aac-8b71-3795bc748c15
+2024-03-21 12:47:13 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:47:13 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54752 - e884c385-fd73-446a-b483-d1ae951e635c
+2024-03-21 12:47:13 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:47:13 [hz.upbeat_shamir.event-1] INFO  - Client: /127.0.0.1:54615 - 8b4f1200-5975-4f83-be45-e8b5c6898ecb
+2024-03-21 12:47:15 [checkCpuCycle] INFO  - Memory Used:---> 67 MB. Max Available: 8184 MB
+2024-03-21 12:47:18 [hz.upbeat_shamir.event-4] INFO  - Client Connected: 127.0.0.1:55370 - 425003ea-37a3-4f36-bca1-21268155dbeb
+2024-03-21 12:47:18 [hz.upbeat_shamir.priority-generic-operation.thread-0] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Received auth from Connection[id=20, /127.0.0.1:5701->/127.0.0.1:55370, qualifier=null, endpoint=[127.0.0.1]:55370, remoteUuid=425003ea-37a3-4f36-bca1-21268155dbeb, alive=true, connectionType=JVM, planeIndex=-1], successfully authenticated, clientUuid: 425003ea-37a3-4f36-bca1-21268155dbeb, client name: hz.client_10, client version: 5.2.4
+2024-03-21 12:47:18 [hz.upbeat_shamir.event-4] INFO  - Connected Clients: 10
+2024-03-21 12:47:18 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:54590 - 42169526-1f11-4ad7-94f0-722865029a58
+2024-03-21 12:47:18 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:54714 - 9eb1f7d7-9d44-4409-9be7-cd0a3b4555bf
+2024-03-21 12:47:18 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:52326 - 1b29424c-9ce5-49b6-b4b8-1ab677c1ffa0
+2024-03-21 12:47:18 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:52335 - 3b1e44f4-a1f7-4278-a8d4-4b5702123afd
+2024-03-21 12:47:18 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:54779 - ed1d7145-9d0f-4aac-8b71-3795bc748c15
+2024-03-21 12:47:18 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:55370 - 425003ea-37a3-4f36-bca1-21268155dbeb
+2024-03-21 12:47:18 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:52336 - f50015ac-d7d1-453f-a07e-26b57884eabc
+2024-03-21 12:47:18 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:54752 - e884c385-fd73-446a-b483-d1ae951e635c
+2024-03-21 12:47:18 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:52334 - 3c573091-05e9-4e03-aeaf-3a006c2bab0d
+2024-03-21 12:47:18 [hz.upbeat_shamir.event-4] INFO  - Client: /127.0.0.1:54615 - 8b4f1200-5975-4f83-be45-e8b5c6898ecb
+2024-03-21 12:48:15 [checkCpuCycle] INFO  - Memory Used:---> 123 MB. Max Available: 8184 MB
+2024-03-21 12:49:15 [checkCpuCycle] INFO  - Memory Used:---> 93 MB. Max Available: 8184 MB
+2024-03-21 12:50:15 [checkCpuCycle] INFO  - Memory Used:---> 54 MB. Max Available: 8184 MB
+2024-03-21 12:51:15 [checkCpuCycle] INFO  - Memory Used:---> 110 MB. Max Available: 8184 MB
+2024-03-21 12:52:15 [checkCpuCycle] INFO  - Memory Used:---> 69 MB. Max Available: 8184 MB
+2024-03-21 12:53:15 [checkCpuCycle] INFO  - Memory Used:---> 126 MB. Max Available: 8184 MB
+2024-03-21 12:54:15 [checkCpuCycle] INFO  - Memory Used:---> 86 MB. Max Available: 8184 MB
+2024-03-21 12:55:15 [checkCpuCycle] INFO  - Memory Used:---> 142 MB. Max Available: 8184 MB
+2024-03-21 12:56:15 [checkCpuCycle] INFO  - Memory Used:---> 103 MB. Max Available: 8184 MB
+2024-03-21 12:57:15 [checkCpuCycle] INFO  - Memory Used:---> 64 MB. Max Available: 8184 MB
