@@ -27,7 +27,10 @@ public interface LoginService {
 	
 	public ResponseEntity<?> updatePassword(PasswordUpdateRequest passwordUpdateRequest,String username);
 	
-	public ResponseEntity<?> updateUserProfile(String username,String email,String firstName,String lastName,String contact,MultipartFile profileImageFile);
+	public ResponseEntity<?>  updateUserProfile(String username, String email, String firstName, String lastName,
+			String contact, String companyName, String designation, String city, String country, String state,
+			String keepLogs, String referenceID, String companyAddress, String companyEmail, String notes ,
+			String taxID, String regID, MultipartFile profileImageFile);
 	
 	public ResponseEntity<?> validateUserIpAccess(LoginRequest loginRequest, String language);
 	

@@ -222,8 +222,22 @@ public class LoginController {
 			@RequestParam(value = "firstName", required = false) String firstName,
 			@RequestParam(value = "lastName", required = false) String lastName,
 			@RequestParam(value = "contact", required = false) String contact,
+			@RequestParam(value = "company_name", required = false) String companyName,
+			@RequestParam(value = "designation", required = false) String designation,
+			@RequestParam(value = "city", required = false) String city,
+			@RequestParam(value = "country", required = false) String country,
+			@RequestParam(value = "state", required = false) String state,
+			@RequestParam(value = "keep_logs", required = false) String keepLogs,
+			@RequestParam(value = "reference_id", required = false) String referenceID,
+			@RequestParam(value = "company_address", required = false) String companyAddress,
+			@RequestParam(value = "company_email", required = false) String companyEmail,
+			@RequestParam(value = "notes", required = false) String notes,
+			@RequestParam(value = "tax_id", required = false) String taxID,
+			@RequestParam(value = "reg_id", required = false) String regID,
 			@RequestParam(value = "image", required = false) MultipartFile image) {
-		return loginService.updateUserProfile(username, email, firstName, lastName, contact, image);
+		return loginService.updateUserProfile(username, email, firstName, lastName, contact,
+				companyName, designation, city, country, state, keepLogs, referenceID, companyAddress,
+				companyEmail, notes, taxID, regID, image);
 	}
 
 	@PostMapping("/validate/user-ip")

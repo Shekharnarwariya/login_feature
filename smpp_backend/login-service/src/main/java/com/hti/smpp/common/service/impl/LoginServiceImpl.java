@@ -616,6 +616,26 @@ public class LoginServiceImpl implements LoginService {
 	
 	@Override
 	public ResponseEntity<?> updateUserProfile(String username, String email, String firstName, String lastName,
+			String contact, String companyName, String designation, String city, String country, String state,
+			String keepLogs, String referenceID, String companyAddress, String companyEmail, String notes ,
+			String taxID, String regID, MultipartFile profileImageFile) {
+		Optional<UserEntry> optionalUser = userEntryRepository.findBySystemId(username);
+		if (optionalUser.isPresent()) {
+			UserEntry user = optionalUser.get();
+			ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
+					.orElseThrow(() -> new NotFoundException(
+							messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
+			updateUserData(user, email, firstName, lastName, contact, regID, companyName, designation, city,
+					country, state, keepLogs, referenceID, companyAddress, companyEmail, notes ,
+					 taxID, professionEntry, profileImageFile);
+			user.setEditOn(LocalDateTime.now() + "");
+			user.setEditBy(username);
+			userEntryRepository.save(user);
+			professionEntryRepository.save(professionEntry);
+			return ResponseEntity.ok("Profile updated successfully");
+		} else {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
+		}
 	        String contact, MultipartFile profileImageFile) {
 	    Optional<UserEntry> optionalUser = userEntryRepository.findBySystemId(username);
 	    Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findBySystemId(username);
@@ -688,19 +708,53 @@ public class LoginServiceImpl implements LoginService {
 	 * @param professionEntry
 	 */
 	private void updateUserData(UserEntry user, String email, String firstName, String lastName, String contact,
+			String companyName, String designation, String city, String country, String state,
+			String keepLogs, String referenceID, String companyAddress, String companyEmail, String notes ,
+			String taxID, String regID,
 			ProfessionEntry professionEntry, MultipartFile profileImageFile) {
 		if (email != null) {
-			professionEntry.setDomainEmail(email);
+		    professionEntry.setDomainEmail(email);
 		}
 		if (firstName != null) {
-			professionEntry.setFirstName(firstName);
+		    professionEntry.setFirstName(firstName);
 		}
 		if (lastName != null) {
-			professionEntry.setLastName(lastName);
+		    professionEntry.setLastName(lastName);
 		}
 		if (contact != null) {
-			professionEntry.setMobile(contact);
+		    professionEntry.setMobile(contact);
 		}
+		if (companyName != null) {
+		    professionEntry.setCompany(companyName);
+		}
+		if (designation != null) {
+		    professionEntry.setDesignation(designation);
+		}
+		if (city != null) {
+		    professionEntry.setCity(city);
+		}
+		if (country != null) {
+		    professionEntry.setCountry(country);
+		}
+		if (state != null) {
+		    professionEntry.setState(state);
+		}
+		if (companyAddress != null) {
+		    professionEntry.setCompanyAddress(companyAddress);
+		}
+		if (companyEmail != null) {
+		    professionEntry.setCompanyEmail(companyEmail);
+		}
+		if (notes != null) {
+		    professionEntry.setNotes(notes);
+		}
+		if (taxID != null) {
+		    professionEntry.setTaxID(taxID);
+		}
+		if (regID != null) {
+		    professionEntry.setRegID(regID);
+		}
+
 
 		if (profileImageFile != null && !profileImageFile.isEmpty()) {
 			try {
