@@ -152,10 +152,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		}
 	}
 
-	
-
-	
-
 	public List sortListBySender(List list) {
 		// logger.info(userSessionObject.getSystemId() + " sortListBySender ");
 		boolean isSummary = false;
@@ -250,44 +246,44 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				String userQuery = "select username from mis_table where msg_id ='" + messageId + "'";
 				List userSet = getDistinctMisUser(userQuery);
 				try {
-				if (userSet.isEmpty()) {
-				    throw new MessageIdNotFoundException(messageId);
-				}
-				if (!userSet.isEmpty()) {
-					reportUser = (String) userSet.remove(0);
-					if (to_gmt != null) {
-						query = "select CONVERT_TZ(submitted_time,'" + from_gmt + "','" + to_gmt
-								+ "') as submitted_time,";
-					} else {
-						query = "select submitted_time,";
+					if (userSet.isEmpty()) {
+						throw new MessageIdNotFoundException(messageId);
 					}
-					query += "msg_id,oprCountry,source_no,route_to_smsc,dest_no,cost,status,deliver_time,err_code from mis_"
-							+ reportUser + " where msg_id ='" + messageId + "'";
-					logger.info(user.getSystemId() + " ReportSQL:" + query);
-					if (isContent) {
-						Map map = getDlrReport(reportUser, query, webMasterEntry.isHideNum());
-						if (!map.isEmpty()) {
-							list = getMessageContent(map, reportUser);
+					if (!userSet.isEmpty()) {
+						reportUser = (String) userSet.remove(0);
+						if (to_gmt != null) {
+							query = "select CONVERT_TZ(submitted_time,'" + from_gmt + "','" + to_gmt
+									+ "') as submitted_time,";
+						} else {
+							query = "select submitted_time,";
 						}
-					} else {
-						list = getCustomizedReport(reportUser, query, webMasterEntry.isHideNum());
+						query += "msg_id,oprCountry,source_no,route_to_smsc,dest_no,cost,status,deliver_time,err_code from mis_"
+								+ reportUser + " where msg_id ='" + messageId + "'";
+						logger.info(user.getSystemId() + " ReportSQL:" + query);
+						if (isContent) {
+							Map map = getDlrReport(reportUser, query, webMasterEntry.isHideNum());
+							if (!map.isEmpty()) {
+								list = getMessageContent(map, reportUser);
+							}
+						} else {
+							list = getCustomizedReport(reportUser, query, webMasterEntry.isHideNum());
+						}
 					}
+					final_list.addAll(list);
+					logger.info(
+							user.getSystemId() + " End Based On MessageId. Final Report Size: " + final_list.size());
+				} catch (MessageIdNotFoundException e) {
+					logger.error(user.getSystemId() + " " + e.getMessage());
+					// Handle the exception, such as returning an error message or null
+					return null; // or any other appropriate response/action
+				} catch (Exception e) {
+					// Handle any other exceptions that might occur
+					logger.error(user.getSystemId() + " Unexpected error: " + e.getMessage());
+					return null; // or any other appropriate response/action
 				}
-				 final_list.addAll(list);
-				logger.info(user.getSystemId() + " End Based On MessageId. Final Report Size: " + final_list.size());
-			} 
-			 catch (MessageIdNotFoundException e) {
-			    logger.error(user.getSystemId() + " " + e.getMessage());
-			    // Handle the exception, such as returning an error message or null
-			    return null; // or any other appropriate response/action
-			} catch (Exception e) {
-			    // Handle any other exceptions that might occur
-			    logger.error(user.getSystemId() + " Unexpected error: " + e.getMessage());
-			    return null; // or any other appropriate response/action
-			}
-			}else {
+			} else {
 				logger.info(user.getSystemId() + " Invalid MessageId");
-				 return null;
+				return null;
 			}
 
 		} else if (criteria_type.equalsIgnoreCase("campaign")) {
@@ -1061,7 +1057,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		return users;
 	}
 
-
 	public List getCustomizedReport(String username, String query, boolean hideNum) throws DBException {
 		List customReport = new ArrayList();
 		Connection con = null;
@@ -1413,18 +1408,18 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	public List<String> getDistinctMisUser(String userQuery) {
 		System.out.println(userQuery);
 		List<String> userSet = new ArrayList<>();
-		Connection con = null;																									
+		Connection con = null;
 		Statement pStmt = null;
 		ResultSet rs = null;
 		try {
-			con = getConnection(); 
+			con = getConnection();
 			pStmt = con.createStatement();
 			rs = pStmt.executeQuery(userQuery);
 			while (rs.next()) {
 				userSet.add(rs.getString("username"));
 			}
 		} catch (SQLException sqle) {
-			
+
 		} catch (Exception e) {
 		} finally {
 			try {
@@ -1463,8 +1458,12 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		boolean isContent = true;
 		List list = null;
 		List<DeliveryDTO> final_list = new ArrayList();
-		String startDate = smsReportRequest.getStartDate();
-		String endDate = smsReportRequest.getEndDate();
+		String startDate = null;
+		String endDate = null;
+		if (smsReportRequest != null) {
+			startDate = smsReportRequest.getStartDate();
+			endDate = smsReportRequest.getEndDate();
+		}
 		String campaign = "all";
 		String status = "%";
 		String senderId = "%";
@@ -1495,23 +1494,21 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			query += "deliver_time";
 		}
 		query += " from mis_" + reportUser + " where ";
-		
+
 		if (searchParameter != null && !searchParameter.isEmpty()) {
-		    query += " (source_no LIKE '%" + searchParameter + "%' OR dest_no LIKE '%" + searchParameter
-		            + "%' OR msg_id LIKE '%" + searchParameter + "%' OR status LIKE '%" + searchParameter + "%') AND ";
+			query += " (source_no LIKE '%" + searchParameter + "%' OR dest_no LIKE '%" + searchParameter
+					+ "%' OR msg_id LIKE '%" + searchParameter + "%' OR status LIKE '%" + searchParameter + "%') AND ";
 		}
-
-
 		if (status != null && status.trim().length() > 0) {
 			if (!status.equals("%")) {
-				query += "status = '" + status + "' and ";
+				query += "status = '" + status + "' AND ";
 			}
 		}
 		if (senderId != null && senderId.trim().length() > 0) {
 			if (senderId.contains("%")) {
-				query += "source_no like \"" + senderId + "\" and ";
+				query += "source_no like \"" + senderId + "\" AND ";
 			} else {
-				query += "source_no =\"" + senderId + "\" and ";
+				query += "source_no =\"" + senderId + "\" AND ";
 			}
 		}
 		if (destination != null && destination.trim().length() > 0) {
@@ -1521,51 +1518,54 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				query += "dest_no ='" + destination + "' and ";
 			}
 		}
-		if (to_gmt != null) {
-			SimpleDateFormat client_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			client_formatter.setTimeZone(TimeZone.getTimeZone(webMasterEntry.getGmt()));
-			SimpleDateFormat local_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			try {
-				String start_msg_id = local_formatter.format(client_formatter.parse(startDate));
-				String end_msg_id = local_formatter.format(client_formatter.parse(endDate));
-				start_msg_id = start_msg_id.replaceAll("-", "");
-				start_msg_id = start_msg_id.replaceAll(":", "");
-				start_msg_id = start_msg_id.replaceAll(" ", "");
-				start_msg_id = start_msg_id.substring(2);
-				start_msg_id += "0000000";
-				end_msg_id = end_msg_id.replaceAll("-", "");
-				end_msg_id = end_msg_id.replaceAll(":", "");
-				end_msg_id = end_msg_id.replaceAll(" ", "");
-				end_msg_id = end_msg_id.substring(2);
-				end_msg_id += "0000000";
-				query += "msg_id between " + start_msg_id + " and " + end_msg_id;
-			} catch (Exception e) {
-				query += "submitted_time between CONVERT_TZ('" + startDate + "','" + to_gmt + "','" + from_gmt
-						+ "') and CONVERT_TZ('" + endDate + "','" + to_gmt + "','" + from_gmt + "')";
+		if (startDate != null && endDate != null) {
+			if (to_gmt != null) {
+				SimpleDateFormat client_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				client_formatter.setTimeZone(TimeZone.getTimeZone(webMasterEntry.getGmt()));
+				SimpleDateFormat local_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				try {
+					String start_msg_id = local_formatter.format(client_formatter.parse(startDate));
+					String end_msg_id = local_formatter.format(client_formatter.parse(endDate));
+					start_msg_id = start_msg_id.replaceAll("-", "");
+					start_msg_id = start_msg_id.replaceAll(":", "");
+					start_msg_id = start_msg_id.replaceAll(" ", "");
+					start_msg_id = start_msg_id.substring(2);
+					start_msg_id += "0000000";
+					end_msg_id = end_msg_id.replaceAll("-", "");
+					end_msg_id = end_msg_id.replaceAll(":", "");
+					end_msg_id = end_msg_id.replaceAll(" ", "");
+					end_msg_id = end_msg_id.substring(2);
+					end_msg_id += "0000000";
+					query += "msg_id between " + start_msg_id + " and " + end_msg_id;
+				} catch (Exception e) {
+					query += "submitted_time between CONVERT_TZ('" + startDate + "','" + to_gmt + "','" + from_gmt
+							+ "') and CONVERT_TZ('" + endDate + "','" + to_gmt + "','" + from_gmt + "')";
+				}
+			} else {
+				if (startDate.equalsIgnoreCase(endDate)) {
+					String start_msg_id = startDate.substring(2);
+					start_msg_id = start_msg_id.replaceAll("-", "");
+					start_msg_id = start_msg_id.replaceAll(":", "");
+					start_msg_id = start_msg_id.replaceAll(" ", "");
+					query += "msg_id like '" + start_msg_id + "%'";
+				} else {
+					String start_msg_id = startDate.substring(2);
+					start_msg_id = start_msg_id.replaceAll("-", "");
+					start_msg_id = start_msg_id.replaceAll(":", "");
+					start_msg_id = start_msg_id.replaceAll(" ", "");
+					start_msg_id += "0000000";
+					String end_msg_id = endDate.substring(2);
+					end_msg_id = end_msg_id.replaceAll("-", "");
+					end_msg_id = end_msg_id.replaceAll(":", "");
+					end_msg_id = end_msg_id.replaceAll(" ", "");
+					end_msg_id += "0000000";
+					query += "msg_id between " + start_msg_id + " and " + end_msg_id + "";
+				}
 			}
 		} else {
-			if (startDate.equalsIgnoreCase(endDate)) {
-				String start_msg_id = startDate.substring(2);
-				start_msg_id = start_msg_id.replaceAll("-", "");
-				start_msg_id = start_msg_id.replaceAll(":", "");
-				start_msg_id = start_msg_id.replaceAll(" ", "");
-				query += "msg_id like '" + start_msg_id + "%'";
-			} else {
-				String start_msg_id = startDate.substring(2);
-				start_msg_id = start_msg_id.replaceAll("-", "");
-				start_msg_id = start_msg_id.replaceAll(":", "");
-				start_msg_id = start_msg_id.replaceAll(" ", "");
-				start_msg_id += "0000000";
-				String end_msg_id = endDate.substring(2);
-				end_msg_id = end_msg_id.replaceAll("-", "");
-				end_msg_id = end_msg_id.replaceAll(":", "");
-				end_msg_id = end_msg_id.replaceAll(" ", "");
-				end_msg_id += "0000000";
-				query += "msg_id between " + start_msg_id + " and " + end_msg_id + "";
-			}
+			query = query.replaceFirst(" and ", "");
 		}
-		// query += " order by submitted_time DESC,oprCountry ASC,msg_id DESC";
-		logger.debug(user.getSystemId() + " ReportSQL:" + query);
+		logger.info(user.getSystemId() + " ReportSQL:" + query);
 		if (isContent) {
 			Map map = getSmsDlrReport(reportUser, query, webMasterEntry.isHideNum());
 			if (!map.isEmpty()) {
@@ -1600,9 +1600,9 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			cross_unprocessed_query += "username in('" + String.join("','", username) + "') and ";
 			if (senderId != null && senderId.trim().length() > 0) {
 				if (senderId.contains("%")) {
-					cross_unprocessed_query += "source_no like \"" + senderId + "\" and ";
+					cross_unprocessed_query += "source_no like \"" + senderId + "\" AND ";
 				} else {
-					cross_unprocessed_query += "source_no =\"" + senderId + "\" and ";
+					cross_unprocessed_query += "source_no =\"" + senderId + "\" AND ";
 				}
 			}
 			if (destination != null && destination.trim().length() > 0) {
@@ -1615,52 +1615,56 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				// Additional Searching Query
 				if (searchParameter != null && !searchParameter.isEmpty()) {
 					cross_unprocessed_query += "(source_no LIKE '%" + searchParameter + "%' OR destination_no LIKE '%"
-							+ searchParameter + "%' OR msg_id LIKE '%" + searchParameter + "%') AND ";
+							+ searchParameter + "%' OR msg_id LIKE '%" + searchParameter + "%') ";
 				}
 			}
 			System.out.println("cross_unprocessed_query " + cross_unprocessed_query);
-			if (to_gmt != null) {
-				SimpleDateFormat client_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				client_formatter.setTimeZone(TimeZone.getTimeZone(webMasterEntry.getGmt()));
-				SimpleDateFormat local_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				try {
-					String start_msg_id = local_formatter.format(client_formatter.parse(startDate));
-					String end_msg_id = local_formatter.format(client_formatter.parse(endDate));
-					start_msg_id = start_msg_id.replaceAll("-", "");
-					start_msg_id = start_msg_id.replaceAll(":", "");
-					start_msg_id = start_msg_id.replaceAll(" ", "");
-					start_msg_id = start_msg_id.substring(2);
-					start_msg_id += "0000000";
-					end_msg_id = end_msg_id.replaceAll("-", "");
-					end_msg_id = end_msg_id.replaceAll(":", "");
-					end_msg_id = end_msg_id.replaceAll(" ", "");
-					end_msg_id = end_msg_id.substring(2);
-					end_msg_id += "0000000";
-					cross_unprocessed_query += "msg_id between " + start_msg_id + " and " + end_msg_id;
-				} catch (Exception e) {
-					cross_unprocessed_query += "time between CONVERT_TZ('" + startDate + "','" + to_gmt + "','"
-							+ from_gmt + "') and CONVERT_TZ('" + endDate + "','" + to_gmt + "','" + from_gmt + "')";
-				}
-			} else {
-				if (startDate.equalsIgnoreCase(endDate)) {
-					String start_msg_id = startDate.substring(2);
-					start_msg_id = start_msg_id.replaceAll("-", "");
-					start_msg_id = start_msg_id.replaceAll(":", "");
-					start_msg_id = start_msg_id.replaceAll(" ", "");
-					cross_unprocessed_query += "msg_id like '" + start_msg_id + "%'";
+			if (startDate != null && endDate != null) {
+				if (to_gmt != null) {
+					SimpleDateFormat client_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+					client_formatter.setTimeZone(TimeZone.getTimeZone(webMasterEntry.getGmt()));
+					SimpleDateFormat local_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+					try {
+						String start_msg_id = local_formatter.format(client_formatter.parse(startDate));
+						String end_msg_id = local_formatter.format(client_formatter.parse(endDate));
+						start_msg_id = start_msg_id.replaceAll("-", "");
+						start_msg_id = start_msg_id.replaceAll(":", "");
+						start_msg_id = start_msg_id.replaceAll(" ", "");
+						start_msg_id = start_msg_id.substring(2);
+						start_msg_id += "0000000";
+						end_msg_id = end_msg_id.replaceAll("-", "");
+						end_msg_id = end_msg_id.replaceAll(":", "");
+						end_msg_id = end_msg_id.replaceAll(" ", "");
+						end_msg_id = end_msg_id.substring(2);
+						end_msg_id += "0000000";
+						cross_unprocessed_query += " AND msg_id between " + start_msg_id + " and " + end_msg_id;
+					} catch (Exception e) {
+						cross_unprocessed_query += " and time between CONVERT_TZ('" + startDate + "','" + to_gmt + "','"
+								+ from_gmt + "') and CONVERT_TZ('" + endDate + "','" + to_gmt + "','" + from_gmt + "')";
+					}
 				} else {
-					String start_msg_id = startDate.substring(2);
-					start_msg_id = start_msg_id.replaceAll("-", "");
-					start_msg_id = start_msg_id.replaceAll(":", "");
-					start_msg_id = start_msg_id.replaceAll(" ", "");
-					start_msg_id += "0000000";
-					String end_msg_id = endDate.substring(2);
-					end_msg_id = end_msg_id.replaceAll("-", "");
-					end_msg_id = end_msg_id.replaceAll(":", "");
-					end_msg_id = end_msg_id.replaceAll(" ", "");
-					end_msg_id += "0000000";
-					cross_unprocessed_query += "msg_id between " + start_msg_id + " and " + end_msg_id + "";
+					if (startDate.equalsIgnoreCase(endDate)) {
+						String start_msg_id = startDate.substring(2);
+						start_msg_id = start_msg_id.replaceAll("-", "");
+						start_msg_id = start_msg_id.replaceAll(":", "");
+						start_msg_id = start_msg_id.replaceAll(" ", "");
+						cross_unprocessed_query += "msg_id like '" + start_msg_id + "%'";
+					} else {
+						String start_msg_id = startDate.substring(2);
+						start_msg_id = start_msg_id.replaceAll("-", "");
+						start_msg_id = start_msg_id.replaceAll(":", "");
+						start_msg_id = start_msg_id.replaceAll(" ", "");
+						start_msg_id += "0000000";
+						String end_msg_id = endDate.substring(2);
+						end_msg_id = end_msg_id.replaceAll("-", "");
+						end_msg_id = end_msg_id.replaceAll(":", "");
+						end_msg_id = end_msg_id.replaceAll(" ", "");
+						end_msg_id += "0000000";
+						cross_unprocessed_query += " AND msg_id between " + start_msg_id + " and " + end_msg_id + "";
+					}
 				}
+			}else {
+				query = query.replaceFirst(" and ", "");
 			}
 			List unproc_list = (List) getUnprocessedReport(
 					cross_unprocessed_query.replaceAll("table_name", "unprocessed"), webMasterEntry.isHideNum(),
@@ -1674,6 +1678,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				final_list.addAll(unproc_list);
 			}
 		}
+
 		logger.info(user.getSystemId() + " End Based On Criteria. Final Report Size: " + final_list.size());
 		List<SmsListResponse> listSmsResponse = new ArrayList<>();
 		SmsListResponse sms = null;
