@@ -41,6 +41,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
@@ -393,5 +395,36 @@ public class SmsController {
 			@RequestBody BulkSmsDTO bulkSmsDTO) {
 		return smsService.sendAlert(username, bulkSmsDTO);
 
+	}
+
+	@PostMapping("/progressPercent")
+	public void progressPercent(@RequestHeader(name = "username", required = true) String username,
+			HttpServletRequest request, HttpServletResponse response) {
+		smsService.progressPercent(username, request, response);
+	}
+
+	@GetMapping("/abortedNumberList")
+	public ResponseEntity<?> abortedNumberList(@RequestHeader(name = "username", required = true) String username,
+			@RequestParam String abort_batch_id) {
+		return smsService.abortedNumberList(username, abort_batch_id);
+	}
+
+	@PostMapping("/saveNumbers")
+	public ResponseEntity<?> saveNumbers(@RequestHeader(name = "username", required = true) String system_id,
+			@RequestParam String numbers) {
+		return smsService.saveNumbers(system_id, numbers);
+	}
+
+	@PostMapping(value = "/preSubmitCalcul", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<?> preSubmitCalcul(@RequestHeader(name = "username", required = true) String systemId,
+			@RequestParam(required = false) String numbers, @RequestParam(required = false) String exclude,
+			@RequestParam String smsparts, @RequestParam String allowDuplicates,
+			@RequestPart(required = false) List<MultipartFile> items, HttpServletRequest request) {
+		return smsService.preSubmitCalcul(systemId, numbers, exclude, smsparts, allowDuplicates, items, request);
+	}
+
+	@GetMapping("/quickNumber")
+	public ResponseEntity<?> quickNumber(@RequestHeader(name = "username", required = true) String username) {
+		return smsService.quickNumber(username);
 	}
 }
