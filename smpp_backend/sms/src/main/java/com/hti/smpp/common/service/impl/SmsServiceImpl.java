@@ -8836,7 +8836,7 @@ public class SmsServiceImpl implements SmsService {
 				logger.error("Quick Numbers Dir Creation Failed");
 			}
 		}
-		File numberfile = new File(IConstants.HOME_DIR + "numbers//" + system_id + ".txt");
+		File numberfile = new File(IConstants.HOME_DIR + "numbers//" + system_id + "quick.txt");
 		if (!numberfile.exists()) {
 			try {
 				if (numberfile.createNewFile()) {
@@ -9160,7 +9160,7 @@ public class SmsServiceImpl implements SmsService {
 			String unauthorizedMessage = messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION);
 			return new ResponseEntity<>(unauthorizedMessage, HttpStatus.UNAUTHORIZED);
 		}
-		String destinationNumberFilePath = IConstants.HOME_DIR + "numbers//" + username + ".txt";
+		String destinationNumberFilePath = IConstants.HOME_DIR + "numbers//" + username + "quick.txt";
 		try {
 			String destinationNumber = Files.readString(Paths.get(destinationNumberFilePath)).trim();
 			int totalNumbers = destinationNumber.isEmpty() ? 0 : destinationNumber.split("\n").length;
