@@ -594,25 +594,89 @@ public class LoginServiceImpl implements LoginService {
 	/**
 	 * Updates the user profile information for the specified username.
 	 */
+//	@Override
+//	public ResponseEntity<?> updateUserProfile(String username, String email, String firstName, String lastName,
+//			String contact, MultipartFile profileImageFile) {
+//		Optional<UserEntry> optionalUser = userEntryRepository.findBySystemId(username);
+//		if (optionalUser.isPresent()) {
+//			UserEntry user = optionalUser.get();
+//			ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
+//					.orElseThrow(() -> new NotFoundException(
+//							messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
+//			updateUserData(user, email, firstName, lastName, contact, professionEntry, profileImageFile);
+//			user.setEditOn(LocalDateTime.now() + "");
+//			user.setEditBy(username);
+//			userEntryRepository.save(user);
+//			professionEntryRepository.save(professionEntry);
+//			return ResponseEntity.ok("Profile updated successfully");
+//		} else {
+//			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
+//		}
+//	}
+	
 	@Override
 	public ResponseEntity<?> updateUserProfile(String username, String email, String firstName, String lastName,
-			String contact, MultipartFile profileImageFile) {
-		Optional<UserEntry> optionalUser = userEntryRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			UserEntry user = optionalUser.get();
-			ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
-					.orElseThrow(() -> new NotFoundException(
-							messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
-			updateUserData(user, email, firstName, lastName, contact, professionEntry, profileImageFile);
-			user.setEditOn(LocalDateTime.now() + "");
-			user.setEditBy(username);
-			userEntryRepository.save(user);
-			professionEntryRepository.save(professionEntry);
-			return ResponseEntity.ok("Profile updated successfully");
-		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
-		}
+	        String contact, MultipartFile profileImageFile) {
+	    Optional<UserEntry> optionalUser = userEntryRepository.findBySystemId(username);
+	    Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findBySystemId(username);
+
+	    if (balanceOptional.isPresent() && optionalUser.isPresent()) {
+	        UserEntry user = optionalUser.get();
+	        BalanceEntry balanceEntry = balanceOptional.get();;
+	        ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
+	                .orElseThrow(() -> new NotFoundException(
+	                        messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
+
+	        // Update user and profession entry data
+	        updateUserData(user, email, firstName, lastName, contact, professionEntry, profileImageFile);
+	        user.setEditOn(LocalDateTime.now() + "");
+	        user.setEditBy(username);
+	        userEntryRepository.save(user);
+	        professionEntryRepository.save(professionEntry);
+
+	        // Construct ProfileResponse with updated profile data
+	        ProfileResponse profileResponse = new ProfileResponse();
+	        profileResponse.setUserName(user.getSystemId());
+	        profileResponse.setBalance(String.valueOf(balanceEntry.getWalletAmount()));
+	        profileResponse.setCountry(professionEntry.getCountry());
+	        profileResponse.setEmail(professionEntry.getDomainEmail());
+	        profileResponse.setFirstName(professionEntry.getFirstName());
+	        profileResponse.setLastName(professionEntry.getLastName());
+	        profileResponse.setRoles(user.getRole());
+	        profileResponse.setContactNo(professionEntry.getMobile());
+	        profileResponse.setCurrency(user.getCurrency());
+	        profileResponse.setCompanyName(professionEntry.getCompany());
+	        profileResponse.setDesignation(professionEntry.getDesignation());
+	        profileResponse.setCity(professionEntry.getCity());
+	        profileResponse.setState(professionEntry.getState());
+	        profileResponse.setKeepLogs(user.getLogDays());
+	        profileResponse.setReferenceID(professionEntry.getReferenceId());
+	        profileResponse.setCompanyAddress(professionEntry.getCompanyAddress());
+	        profileResponse.setCompanyEmail(professionEntry.getCompanyEmail());
+	        profileResponse.setTaxID(professionEntry.getTaxID());
+	        profileResponse.setRegID(professionEntry.getRegID());
+	        profileResponse.setNotes(professionEntry.getNotes());
+
+	        // Set profile image if available
+	        String profileImagePath = professionEntry.getImageFilePath();
+	        if (profileImagePath != null && !profileImagePath.isEmpty()) {
+	            try {
+	                String fileExtension = profileImagePath.substring(profileImagePath.lastIndexOf(".") + 1);
+	                profileResponse.setProfileName(fileExtension);
+	                Path imagePath = Paths.get(IConstants.PROFILE_DIR + "profile//" + profileImagePath);
+	                byte[] imageBytes = Files.readAllBytes(imagePath);
+	                profileResponse.setProfilePath(imageBytes);
+	            } catch (IOException e) {
+	                logger.error("Error while reading the image file: " + e.getMessage());
+	            }
+	        }
+
+	        return ResponseEntity.ok(profileResponse);
+	    } else {
+	        throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
+	    }
 	}
+
 
 	/**
 	 * Updates the user-related data (such as email, first name, last name, and
