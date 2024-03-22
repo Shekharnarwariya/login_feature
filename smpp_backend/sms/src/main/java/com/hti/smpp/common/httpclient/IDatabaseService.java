@@ -939,4 +939,40 @@ public class IDatabaseService {
 		return map;
 	}
 
+	public List<String> getAbortedNumberList(int batch_id) throws SQLException {
+		logger.info("<--- checking For Batch[" + batch_id + "] Aborted Numbers --> ");
+		List<String> list = new ArrayList<String>();
+		Connection con = null;
+		PreparedStatement pStmt = null;
+		ResultSet rs = null;
+		String sql = "select destination from batch_number_log_" + batch_id;
+		try {
+			con = getConnection();
+			pStmt = con.prepareStatement(sql);
+			rs = pStmt.executeQuery();
+			while (rs.next()) {
+				list.add(String.valueOf(rs.getLong("destination")));
+			}
+			logger.info("Batch[" + batch_id + "] Aborted Numbers: " + list.size());
+		} catch (SQLException sqle) {
+			logger.error(" ", sqle.fillInStackTrace());
+		} finally {
+			try {
+				if (rs != null) {
+					rs.close();
+					rs = null;
+				}
+				if (pStmt != null) {
+					pStmt.close();
+					pStmt = null;
+				}
+				if (con != null) {
+					con.close();
+				}
+			} catch (SQLException sqle) {
+			}
+		}
+		return list;
+	}
+
 }
