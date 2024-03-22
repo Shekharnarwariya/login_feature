@@ -97,7 +97,11 @@ public class Dashboard implements DashboardService {
 
 				try {
 					if (systemId != null) {
-						return dashboard(systemId, days, request, username);
+						try {
+							return dashboard(systemId, days, request, username);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 					} else {
 						return (days == 0) ? dashboard(request, username) : dashboard(days, request, username);
 					}
@@ -1881,7 +1885,7 @@ public class Dashboard implements DashboardService {
 				}
 			}
 		} catch (SQLException sqle) {
-			logger.error(messageResourceBundle.getLogMessage("unexpected.error "), sqle.getMessage(), sqle);
+			logger.error(sqle.getMessage(), sqle);
 
 		} finally {
 			try {
