@@ -1,6 +1,7 @@
 package com.hti.smpp.common.service.impl;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,7 +14,9 @@ import java.io.OutputStreamWriter;
 import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLDecoder;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -53,6 +56,9 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -71,6 +77,7 @@ import com.hti.smpp.common.exception.InvalidPropertyException;
 import com.hti.smpp.common.exception.NotFoundException;
 import com.hti.smpp.common.exception.ScheduledTimeException;
 import com.hti.smpp.common.exception.UnauthorizedException;
+import com.hti.smpp.common.httpclient.IDatabaseService;
 import com.hti.smpp.common.management.dto.BulkManagementEntity;
 import com.hti.smpp.common.management.dto.BulkMgmtEntry;
 import com.hti.smpp.common.management.repository.BulkMgmtEntryRepository;
@@ -94,6 +101,7 @@ import com.hti.smpp.common.response.BulkResponse;
 import com.hti.smpp.common.response.MessageIdentiryResponse;
 import com.hti.smpp.common.response.ScheduleEditResponse;
 import com.hti.smpp.common.response.SmsResponse;
+import com.hti.smpp.common.response.UserNumbersResponse;
 import com.hti.smpp.common.schedule.dto.ScheduleEntry;
 import com.hti.smpp.common.schedule.dto.ScheduleEntryExt;
 import com.hti.smpp.common.schedule.repository.ScheduleEntryRepository;
@@ -137,6 +145,8 @@ import com.logica.smpp.util.ByteBuffer;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 
@@ -198,7 +208,9 @@ public class SmsServiceImpl implements SmsService {
 	@Autowired
 	private MessageResourceBundle messageResourceBundle;
 
-	
+	@Autowired
+	private IDatabaseService databaseService;
+
 	public SmsResponse sendSms(SmsRequest smsRequest, String username) {
 		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
 		UserEntry userEntry = null;
@@ -310,6 +322,8 @@ public class SmsServiceImpl implements SmsService {
 			if (bulkSmsDTO.isSchedule()) {
 				boolean valid_sch_time = false;
 				client_time = bulkSmsDTO.getTime();
+				System.out.println(bulkSessionId + " machine_time: "
+						+ new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()));
 				System.out.println("this is client time " + bulkSmsDTO.getTime());
 				String client_gmt = bulkSmsDTO.getGmt();
 				SimpleDateFormat client_formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
@@ -8718,4 +8732,446 @@ public class SmsServiceImpl implements SmsService {
 		return ResponseEntity.ok(ret);
 	}
 
+	@Override
+	public ResponseEntity<?> abortedNumberList(String username, String abort_batch_id) {
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry userEntry = null;
+		if (userOptional.isPresent()) {
+			userEntry = userOptional.get();
+			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException(
+						messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
+
+			}
+		} else {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+		}
+		try {
+			int abortBatchId = Integer.parseInt(abort_batch_id);
+			if (abortBatchId <= 0) {
+				logger.warn("Invalid batch ID received: {}", abort_batch_id);
+				throw new NotFoundException("Invalid batch ID. Please provide a positive integer value.");
+			}
+
+			List<String> numberList = databaseService.getAbortedNumberList(abortBatchId);
+			if (numberList.isEmpty()) {
+				logger.info("No numbers found for batch ID: {}", abortBatchId);
+				throw new NotFoundException("No numbers found for the given batch ID.");
+			}
+
+			String newFilename = abortBatchId + "_unprocessed.txt";
+			byte[] data = String.join("\n", numberList).getBytes();
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+			headers.setContentDispositionFormData("attachment", newFilename);
+
+			logger.info("Successfully retrieved aborted number list for batch ID: {}", abortBatchId);
+			return ResponseEntity.ok().headers(headers).body(new ByteArrayInputStream(data));
+
+		} catch (NumberFormatException e) {
+			logger.error("Error parsing batch ID: {}", abort_batch_id, e);
+			throw new InternalServerException("Invalid batch ID format. Please provide a valid integer.");
+		} catch (Exception e) {
+			logger.error("An unexpected error occurred", e);
+			throw new InternalServerException("An error occurred while processing your request.");
+		}
+	}
+
+	@Override
+	public void progressPercent(String username, HttpServletRequest request, HttpServletResponse response) {
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry userEntry = null;
+		if (userOptional.isPresent()) {
+			userEntry = userOptional.get();
+			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException(
+						messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
+
+			}
+		} else {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+		}
+		// System.out.println(masterId + " Progress Percent: " + uploadPercent);
+		String uploadPercent = null;
+		try {
+			HttpSession session = request.getSession(false);
+			uploadPercent = (String) session.getAttribute("upload_percent");
+			if (uploadPercent != null) {
+				try {
+					response.getWriter().print(Integer.parseInt(uploadPercent));
+				} catch (NumberFormatException ne) {
+					System.out.println(username + " Invalid Progress Percent: " + uploadPercent);
+					response.getWriter().print(0);
+				}
+			} else {
+				response.getWriter().print(0);
+			}
+		} catch (Exception e) {
+			System.out.println(username + " Invalid Progress Percent: " + uploadPercent);
+			throw new InternalServerException(
+					username + " Invalid Progress Percent: " + uploadPercent + e.getMessage());
+		}
+	}
+
+	@Override
+	public ResponseEntity<?> saveNumbers(String system_id, String numbers) {
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(system_id);
+		UserEntry userEntry = null;
+		if (userOptional.isPresent()) {
+			userEntry = userOptional.get();
+			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException(
+						messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
+
+			}
+		} else {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+		}
+		String valid_numbers = "";
+		File dir = new File(IConstants.HOME_DIR + "numbers//");
+		if (!dir.exists()) {
+			if (dir.mkdir()) {
+				logger.info("Quick Numbers Dir Created");
+			} else {
+				logger.error("Quick Numbers Dir Creation Failed");
+			}
+		}
+		File numberfile = new File(IConstants.HOME_DIR + "numbers//" + system_id + ".txt");
+		if (!numberfile.exists()) {
+			try {
+				if (numberfile.createNewFile()) {
+					logger.info(system_id + " Quick Numbers file Created:" + numberfile.getPath());
+				} else {
+					logger.info(system_id + " Quick Numbers file Creation failed: " + numberfile.getPath());
+				}
+			} catch (Exception e) {
+				logger.info(system_id + " Quick Numbers file Creation IOError");
+				throw new InternalServerException("Quick Numbers file Creation IOError:" + e.getMessage());
+			}
+		}
+		String[] number_arr;
+		java.util.StringTokenizer tokens = new java.util.StringTokenizer(numbers, "\n");
+		System.out.println("Total: " + tokens.countTokens());
+		if (numbers.contains(",")) {
+			number_arr = numbers.split(",");
+		} else {
+			number_arr = numbers.split("\n");
+		}
+		Set<String> number_set = new HashSet<String>();
+		for (String number : number_arr) {
+			number = number.replaceAll("\\s+", "");
+			if (number.startsWith("+")) {
+				number = number.substring(number.lastIndexOf("+") + 1);
+			}
+			try {
+				number = String.valueOf(Long.parseLong(number));
+				number_set.add(number);
+			} catch (Exception ex) {
+				logger.error(system_id + " Invalid Destination Found => " + number);
+			}
+		}
+		logger.info(system_id + " Valid Count: " + number_set.size());
+		if (!number_set.isEmpty()) {
+			valid_numbers = String.join("\n", number_set);
+		}
+		MultiUtility.writeNumbers(numberfile.getPath(), valid_numbers);
+		return ResponseEntity.ok(valid_numbers);
+	}
+
+	@Override
+	public List<String> numberFromFile(HttpServletRequest request, List<MultipartFile> items) {
+		List<String> numbers = new ArrayList<String>();
+		try {
+			int totalNum = 0;
+			String file_name = null;
+			HttpSession session = request.getSession(true);
+			session.setAttribute("upload_percent", String.valueOf(0));
+			for (MultipartFile item : items) {
+				InputStream content;
+
+				content = item.getInputStream();
+
+				file_name = item.getOriginalFilename();
+				if (file_name == null) {
+					logger.warn("Empty File Object Found. Skipping");
+					continue;
+				}
+				logger.info("Checking For Number Calculation: " + file_name);
+				if (item.getOriginalFilename().contains(".txt") || item.getOriginalFilename().contains(".xls")) {
+					if (item.getOriginalFilename().contains(".txt")) {
+						ByteArrayOutputStream baos = new ByteArrayOutputStream();
+						int bytesRead = 0;
+						byte[] buffer = new byte[8192];
+						// int x = 0;
+						while ((bytesRead = content.read(buffer, 0, 8192)) != -1) {
+							baos.write(buffer, 0, bytesRead);
+						}
+						String data = new String(baos.toByteArray());
+						String[] entries = data.split("\n");
+						int total_lines = entries.length;
+						System.out.println(file_name + " Total lines found: " + total_lines);
+						int upload_percent = 0;
+						try {
+							int i = 0;
+							for (String entry : entries) {
+								if (!(entry != null && entry.equalsIgnoreCase(""))) {
+									if (entry.contains(";")) {
+										entry = entry.substring(0, entry.indexOf(";"));
+										if (i > 0) {
+											totalNum++;
+										}
+									} else {
+										totalNum++;
+									}
+									String number = validateNumber(entry);
+									if (number != null) {
+										numbers.add(number);
+									}
+								}
+								i++;
+								upload_percent = (totalNum * 100) / total_lines;
+								session.setAttribute("upload_percent", String.valueOf(upload_percent));
+							}
+						} catch (Exception ioe) {
+							logger.error(file_name, ioe.fillInStackTrace());
+						} finally {
+							if (baos != null) {
+								try {
+									baos.close();
+								} catch (IOException ie) {
+								}
+							}
+						}
+					} else {
+						Workbook workbook = null;
+						try {
+							if (item.getOriginalFilename().endsWith(".xlsx")) {
+								workbook = new XSSFWorkbook(content);
+							} else {
+								workbook = new HSSFWorkbook(content);
+							}
+							Sheet firstSheet = workbook.getSheetAt(0);
+							int total_lines = firstSheet.getPhysicalNumberOfRows();
+							Iterator<org.apache.poi.ss.usermodel.Row> iterator = firstSheet.iterator();
+							int upload_percent = 0;
+							while (iterator.hasNext()) {
+								org.apache.poi.ss.usermodel.Row nextRow = iterator.next();
+								Iterator<Cell> cellIterator = nextRow.cellIterator();
+								while (cellIterator.hasNext()) {
+									Cell cell = cellIterator.next();
+									String cell_value = new DataFormatter().formatCellValue(cell);
+									if (cell.getColumnIndex() == 0) {
+										String number = validateNumber(cell_value);
+										if (number != null) {
+											numbers.add(number);
+											totalNum++;
+										}
+									}
+								}
+								upload_percent = (totalNum * 100) / total_lines;
+								session.setAttribute("upload_percent", String.valueOf(upload_percent));
+							}
+						} catch (Exception ex) {
+							logger.error(file_name, ex.fillInStackTrace());
+						} finally {
+							if (workbook != null) {
+								workbook.close();
+							}
+						}
+					}
+				} else {
+					logger.error(file_name + " <-- Unsupported File Format -->");
+				}
+				logger.info(file_name + " NumberCount :--> " + totalNum);
+			}
+		} catch (IOException e) {
+			throw new InternalServerException("Unsupported File Format :" + e.getMessage());
+		}
+		return numbers;
+	}
+
+	private String validateNumber(String number) {
+		try {
+			number = number.replaceAll("\\s+", "");
+			if (number.startsWith("+")) {
+				number = number.substring(number.lastIndexOf("+") + 1);
+			}
+			number = String.valueOf(Long.parseLong(number));
+			return number;
+		} catch (Exception ex) {
+			logger.debug(" Invalid Destination Found => " + number);
+			return null;
+		}
+	}
+
+	@Override
+	public ResponseEntity<?> preSubmitCalcul(String systemId, String numbers, String exclude, String smsparts,
+			String allowDuplicates, List<MultipartFile> items, HttpServletRequest request) {
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(systemId);
+		UserEntry userEntry = null;
+		if (userOptional.isPresent()) {
+			userEntry = userOptional.get();
+			if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedAll")) {
+				throw new UnauthorizedException(
+						messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION));
+
+			}
+		} else {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND));
+		}
+		logger.info(
+				systemId + " Numbers: " + numbers + " smsparts:" + smsparts + " allowDuplicate: " + allowDuplicates);
+		// System.out.println("DecodedNumbers: " + numbers);
+		int excludeCount = 0;
+		int totalNumbers = 0;
+		int duplicateNumbers = 0;
+		int validNumbers = 0;
+		// --------- validate numbers --------------------
+		// -------- checking for excluded -------------
+		Set<String> excludeSet = new HashSet<>();
+		if (exclude != null && exclude.length() > 0) {
+			exclude = URLDecoder.decode(exclude);
+			String[] exclude_arr;
+			if (exclude.contains(",")) {
+				exclude_arr = exclude.split(",");
+			} else {
+				exclude_arr = exclude.split("\n");
+			}
+			for (String excludedNumber : exclude_arr) {
+				excludedNumber = excludedNumber.replaceAll("\\s+", ""); // Replace all the spaces in the String with
+																		// empty character.
+				if (excludedNumber.startsWith("+")) {
+					excludedNumber = excludedNumber.substring(excludedNumber.lastIndexOf("+") + 1); // Remove +
+				}
+				try {
+					excludedNumber = String.valueOf(Long.parseLong(excludedNumber));
+					excludeSet.add(excludedNumber);
+				} catch (Exception ex) {
+					logger.error(systemId + " Invalid Exclude Destination Found => " + excludedNumber);
+				}
+			}
+		}
+		System.out.println("ExcludedNumbers: " + excludeSet);
+		// -------- End checking for excluded -------------
+		List<String> numberlist = null;
+		String[] number_arr;
+		if (numbers != null) {
+			numbers = URLDecoder.decode(numbers);
+			numberlist = new ArrayList<String>();
+			if (numbers.contains(",")) {
+				number_arr = numbers.split(",");
+			} else {
+				number_arr = numbers.split("\n");
+			}
+			for (String number : number_arr) {
+				totalNumbers++;
+				number = number.replaceAll("\\s+", ""); // Replace all the spaces in the String with empty character.
+				if (number.startsWith("+")) {
+					number = number.substring(number.lastIndexOf("+") + 1); // Remove +
+				}
+				try {
+					number = String.valueOf(Long.parseLong(number));
+					validNumbers++;
+					if (excludeSet.contains(number)) {
+						excludeCount++;
+						logger.info(number + " Excluded");
+					} else {
+						numberlist.add(number);
+					}
+				} catch (Exception ex) {
+					logger.error(systemId + " Invalid Destination Found => " + number);
+				}
+			}
+		} else {
+			try {
+				numberlist = numberFromFile(request, items);
+				Iterator<String> itr = numberlist.iterator();
+				while (itr.hasNext()) {
+					String number = itr.next();
+					validNumbers++;
+					totalNumbers++;
+					if (excludeSet.contains(number)) {
+						excludeCount++;
+						itr.remove();
+						logger.info(number + " Excluded");
+					}
+				}
+			} catch (Exception e) {
+				logger.error("", e);
+			}
+		}
+		Set<String> numberSet = new HashSet<String>(numberlist);
+		duplicateNumbers = numberlist.size() - numberSet.size();
+		List<String> finalNumbers = null;
+		if (allowDuplicates != null && allowDuplicates.equalsIgnoreCase("true")) {
+			finalNumbers = new ArrayList<String>(numberlist);
+		} else {
+			finalNumbers = new ArrayList<String>(numberSet);
+		}
+		int intSmsParts = 0;
+		try {
+			intSmsParts = Integer.parseInt(smsparts);
+		} catch (Exception ex) {
+			System.out.println("Invalid Sms Parts: " + smsparts);
+		}
+		JSONObject jsonObj = new JSONObject();
+		if (finalNumbers.isEmpty()) {
+			jsonObj.put("error", "InvalidNumber(s)");
+		} else {
+			int totalmsg = finalNumbers.size() * intSmsParts;
+			jsonObj.put("total", totalNumbers + "");
+			jsonObj.put("valid", validNumbers + "");
+			jsonObj.put("duplicate", duplicateNumbers + "");
+			jsonObj.put("excluded", excludeCount + "");
+			jsonObj.put("proceeding", finalNumbers.size() + "");
+			jsonObj.put("parts", intSmsParts + "");
+			jsonObj.put("totalmsg", totalmsg + "");
+			Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findBySystemId(systemId);
+			if (!balanceOptional.isPresent()) {
+				throw new NotFoundException("balance entry not found with username:" + systemId);
+			}
+			BalanceEntry balanceEntry = balanceOptional.get();
+			if (!finalNumbers.isEmpty() && intSmsParts > 0) {
+				if (balanceEntry.getWalletFlag().equalsIgnoreCase("No")) {
+					jsonObj.put("deduction", totalmsg + " credits");
+				} else {
+					double totalcost = routeService.calculateRoutingCost(userEntry.getId(), finalNumbers, intSmsParts);
+					jsonObj.put("deduction",
+							new DecimalFormat("0.00000").format(totalcost) + " " + userEntry.getCurrency());
+				}
+			} else {
+				jsonObj.put("deduction", 0);
+			}
+		}
+		System.out.println("Result: " + jsonObj.toString());
+		return ResponseEntity.ok(jsonObj.toString());
+	}
+
+	@Override
+	public ResponseEntity<?> quickNumber(String username) {
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		if (!userOptional.isPresent()) {
+			String notFoundMessage = messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND);
+			return new ResponseEntity<>(notFoundMessage, HttpStatus.NOT_FOUND);
+		}
+
+		UserEntry userEntry = userOptional.get();
+		if (!Access.isAuthorized(userEntry.getRole(), "isAuthorizedAll")) {
+			String unauthorizedMessage = messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION);
+			return new ResponseEntity<>(unauthorizedMessage, HttpStatus.UNAUTHORIZED);
+		}
+		String destinationNumberFilePath = IConstants.HOME_DIR + "numbers//" + username + ".txt";
+		try {
+			String destinationNumber = Files.readString(Paths.get(destinationNumberFilePath)).trim();
+			int totalNumbers = destinationNumber.isEmpty() ? 0 : destinationNumber.split("\n").length;
+			UserNumbersResponse response = new UserNumbersResponse(destinationNumber, totalNumbers);
+			return ResponseEntity.ok(response);
+		} catch (FileNotFoundException e) {
+			System.out.println(username + " Quick Number File Not Exist");
+			throw new InternalServerException("Quick Number File Not Exis:" + e.getMessage());
+		} catch (Exception e) {
+			System.out.println(username + " Quick Number File Check IOError");
+			throw new InternalServerException("Quick Number File Check IOError:" + e.getMessage());
+		}
+	}
 }
