@@ -222,6 +222,7 @@ public class LoginServiceImpl implements LoginService {
 		System.out.println("get profile method call username" + username);
 		Optional<BalanceEntry> balanceOptional = balanceEntryRepository.findBySystemId(username);
 		Optional<UserEntry> userEntityOptional = userEntryRepository.findBySystemId(username);
+
 		if (balanceOptional.isPresent() && userEntityOptional.isPresent()) {
 			BalanceEntry balanceEntry = balanceOptional.get();
 			UserEntry userEntry = userEntityOptional.get();
@@ -231,7 +232,7 @@ public class LoginServiceImpl implements LoginService {
 							messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
 			ProfileResponse profileResponse = new ProfileResponse();
 			profileResponse.setUserName(userEntry.getSystemId());
-			profileResponse.setBalance(String.valueOf(balanceEntry.getWalletAmount()));
+//			profileResponse.setBalance(String.valueOf(balanceEntry.getWalletAmount()));
 			profileResponse.setCountry(professionEntry.getCountry());
 			profileResponse.setEmail(professionEntry.getDomainEmail());
 			profileResponse.setFirstName(professionEntry.getFirstName());
@@ -251,6 +252,13 @@ public class LoginServiceImpl implements LoginService {
 			profileResponse.setRegID(professionEntry.getRegID());
 			profileResponse.setNotes(professionEntry.getNotes());
 
+<<<<<<< HEAD
+=======
+			profileResponse.setCredits(balanceEntry.getCredits());
+			profileResponse.setWallets(balanceEntry.getWalletAmount());
+			profileResponse.setWalletFlag(balanceEntry.getWalletFlag());
+
+>>>>>>> 7020c5ff8d670229c83c7a84340ea943cdc53a4d
 			String profileImagePath = professionEntry.getImageFilePath();
 			if (profileImagePath != null && !profileImagePath.isEmpty()) {
 				try {
