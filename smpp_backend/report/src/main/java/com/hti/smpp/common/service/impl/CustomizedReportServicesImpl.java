@@ -1519,6 +1519,8 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			}
 		}
 		if (startDate != null && endDate != null) {
+			startDate += " 00:00:00";
+			endDate += " 23:59:59";
 			if (to_gmt != null) {
 				SimpleDateFormat client_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 				client_formatter.setTimeZone(TimeZone.getTimeZone(webMasterEntry.getGmt()));
@@ -1620,6 +1622,8 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			}
 			System.out.println("cross_unprocessed_query " + cross_unprocessed_query);
 			if (startDate != null && endDate != null) {
+				startDate += " 00:00:00";
+				endDate += " 23:59:59";
 				if (to_gmt != null) {
 					SimpleDateFormat client_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 					client_formatter.setTimeZone(TimeZone.getTimeZone(webMasterEntry.getGmt()));
@@ -1663,7 +1667,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 						cross_unprocessed_query += " AND msg_id between " + start_msg_id + " and " + end_msg_id + "";
 					}
 				}
-			}else {
+			} else {
 				query = query.replaceFirst(" and ", "");
 			}
 			List unproc_list = (List) getUnprocessedReport(
