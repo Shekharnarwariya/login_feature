@@ -7,7 +7,7 @@
         <property name="hazelcast.logging.type">slf4j</property>
     </properties>
     <network>
-        <port auto-increment="false">5701</port>
+        <port auto-increment="false">5801</port>
         <outbound-ports>
             <ports>33000-35000</ports>
         </outbound-ports>
