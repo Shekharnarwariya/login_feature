@@ -251,14 +251,9 @@ public class LoginServiceImpl implements LoginService {
 			profileResponse.setTaxID(professionEntry.getTaxID());
 			profileResponse.setRegID(professionEntry.getRegID());
 			profileResponse.setNotes(professionEntry.getNotes());
-
-<<<<<<< HEAD
-=======
 			profileResponse.setCredits(balanceEntry.getCredits());
 			profileResponse.setWallets(balanceEntry.getWalletAmount());
 			profileResponse.setWalletFlag(balanceEntry.getWalletFlag());
-
->>>>>>> 7020c5ff8d670229c83c7a84340ea943cdc53a4d
 			String profileImagePath = professionEntry.getImageFilePath();
 			if (profileImagePath != null && !profileImagePath.isEmpty()) {
 				try {
