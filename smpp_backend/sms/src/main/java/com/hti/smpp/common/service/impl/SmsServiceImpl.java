@@ -8766,8 +8766,7 @@ public class SmsServiceImpl implements SmsService {
 			headers.setContentDispositionFormData("attachment", newFilename);
 
 			logger.info("Successfully retrieved aborted number list for batch ID: {}", abortBatchId);
-			return ResponseEntity.ok().headers(headers).body(new ByteArrayInputStream(data));
-
+			return ResponseEntity.ok().headers(headers).body(data);
 		} catch (NumberFormatException e) {
 			logger.error("Error parsing batch ID: {}", abort_batch_id, e);
 			throw new InternalServerException("Invalid batch ID format. Please provide a valid integer.");
