@@ -9,6 +9,10 @@ import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -26,9 +30,12 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+import javax.sql.DataSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -59,6 +66,7 @@ import com.hti.smpp.common.request.SignupRequest;
 import com.hti.smpp.common.response.JwtResponse;
 import com.hti.smpp.common.response.LoginResponse;
 import com.hti.smpp.common.response.ProfileResponse;
+import com.hti.smpp.common.response.RecentActivityResponse;
 import com.hti.smpp.common.sales.dto.SalesEntry;
 import com.hti.smpp.common.sales.repository.SalesRepository;
 import com.hti.smpp.common.security.BCryptPasswordEncoder;
@@ -159,6 +167,16 @@ public class LoginServiceImpl implements LoginService {
 
 	@Autowired
 	private RestTemplate restTemplate;
+	
+	@Autowired
+	private DataSource dataSource;
+
+	public Connection getConnection() throws SQLException {
+		return dataSource.getConnection();
+	}
+	
+	
+	
 
 	private static final Logger logger = LoggerFactory.getLogger(LoginServiceImpl.class);
 
@@ -1776,6 +1794,113 @@ public class LoginServiceImpl implements LoginService {
 					new Object[] { systemId }));
 		}
 		return ResponseEntity.ok(target);
+	}
+
+	@Override
+	public ResponseEntity<?> userRecentActivity(String username) {
+		
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		if (userOptional.isEmpty()) {
+			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
+		}
+
+		UserEntry user = userOptional.get();
+		System.out.println(user);
+		String system_id = user.getSystemId();
+		RecentActivityResponse recentActivityResponse = new RecentActivityResponse();
+		
+	try {
+		AccessLogEntry successLogEntry = getLastSuccessLogin(system_id);
+		
+		AccessLogEntry failedLogEntry = getLastFailedLogin(system_id);
+		
+		recentActivityResponse.setSuccessLogEntry(successLogEntry);
+		recentActivityResponse.setFailedLogEntry(failedLogEntry);
+		recentActivityResponse.setGmt(IConstants.DEFAULT_GMT);
+	} catch (Exception e) {
+		throw new InternalServerException("Something Went Wrong");
+	}
+		
+		return new ResponseEntity<>(recentActivityResponse,HttpStatus.ACCEPTED);
+	}
+	
+	
+	public AccessLogEntry getLastSuccessLogin(String systemId) {
+		// List<BulkMgmtEntry> list = new ArrayList<BulkMgmtEntry>();
+		String query = "select time from web_access_log where status = 'login' and system_id=? order by time DESC limit 2";
+		Connection con = null;
+		PreparedStatement pStmt = null;
+		ResultSet rs = null;
+		AccessLogEntry logEntry = null;
+		try {
+			con = getConnection();
+			pStmt = con.prepareStatement(query);
+			pStmt.setString(1, systemId);
+			rs = pStmt.executeQuery();
+			while (rs.next()) {
+				System.out.println(systemId + " login time: " + rs.getString("time"));
+				logEntry = new AccessLogEntry();
+				logEntry.setTime(rs.getString("time"));
+			}
+		} catch (SQLException sqle) {
+			logger.error(systemId + "", sqle);
+		} finally {
+			try {
+				if (rs != null) {
+					rs.close();
+					rs = null;
+				}
+				if (pStmt != null) {
+					pStmt.close();
+					pStmt = null;
+				}
+				if (con != null) {
+					con.close();
+				}
+			} catch (SQLException sqle) {
+			}
+		}
+		
+		return logEntry;
+	}
+	
+	
+	public AccessLogEntry getLastFailedLogin(String systemId) {
+		// List<BulkMgmtEntry> list = new ArrayList<BulkMgmtEntry>();
+		String query = "select MAX(time) as time,remarks from web_access_log where status = 'failed' and system_id=? GROUP BY remarks";
+		Connection con = null;
+		PreparedStatement pStmt = null;
+		ResultSet rs = null;
+		AccessLogEntry logEntry = null;
+		try {
+			con = getConnection();
+			pStmt = con.prepareStatement(query);
+			pStmt.setString(1, systemId);
+			rs = pStmt.executeQuery();
+			if (rs.next()) {
+				logEntry = new AccessLogEntry();
+				logEntry.setTime(rs.getString("time"));
+				logEntry.setRemarks(rs.getString("remarks"));
+			}
+		} catch (SQLException sqle) {
+			logger.error(systemId + "", sqle);
+		} finally {
+			try {
+				if (rs != null) {
+					rs.close();
+					rs = null;
+				}
+				if (pStmt != null) {
+					pStmt.close();
+					pStmt = null;
+				}
+				if (con != null) {
+					con.close();
+				}
+			} catch (SQLException sqle) {
+			}
+		}
+		return logEntry;
 	}
 
 }

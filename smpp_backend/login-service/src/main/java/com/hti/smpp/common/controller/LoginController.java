@@ -263,5 +263,19 @@ public class LoginController {
 			@RequestParam(value = "OTP") int otp) {
 		return this.loginService.userIpOtpValidate(loginRequest, otp);
 	}
+	
+	
+	@PostMapping("/recent-activity")
+	@Operation(summary = "Recent Activity", description = "Endpoint to check Recent Activity.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "202", description = "Recent Activites Fetched Successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponse.class))),
+			@ApiResponse(responseCode = "504", description = "Invalid or malformed request. Unable to authenticate user.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "500", description = "Internal server error during authentication process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
+	public ResponseEntity<?> recentActivity(@RequestHeader(value = "username", required = true) String username) {
+		return this.loginService.userRecentActivity(username);
+	}
+	
+	
 
 }
