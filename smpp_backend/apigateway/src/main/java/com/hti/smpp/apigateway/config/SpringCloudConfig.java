@@ -107,7 +107,7 @@ public class SpringCloudConfig {
 								.filters(f -> f.rewritePath("./network/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
 								.uri("lb://network-service:8093"))
-				
+
 				// Route for REPORT_SERVICE
 				.route("report-service",
 						r -> r.path("/reports/**")
@@ -121,6 +121,13 @@ public class SpringCloudConfig {
 								.filters(f -> f.rewritePath("./download/(?<segment>.*)", "/${segment}")
 										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
 								.uri("lb://downloads-service:8095"))
+
+				// Route for REPORT_SERVICE
+				.route("alert-service",
+						r -> r.path("/alerts/**")
+								.filters(f -> f.rewritePath("./alerts/(?<segment>.*)", "/${segment}")
+										.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
+								.uri("lb://alert-service:8096"))
 				.build(); // Build the routes
 	}
 }
