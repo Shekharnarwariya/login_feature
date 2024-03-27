@@ -37,4 +37,8 @@ public interface LoginService {
 	public ResponseEntity<?> sellerValidation(String username, String password);
 	
 	public ResponseEntity<?> userIpOtpValidate(LoginRequest loginRequest, int otp);
+	
+	public ResponseEntity<?> userRecentActivity(String username);
+	
+	
 }
