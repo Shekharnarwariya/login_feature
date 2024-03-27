@@ -18,7 +18,7 @@ import jakarta.annotation.PreDestroy;
 @SpringBootApplication
 @EnableScheduling
 @ServletComponentScan
-public class SmsApplication  {
+public class SmsApplication {
 
 	private final static Logger logger = LoggerFactory.getLogger(SmsApplication.class);
 

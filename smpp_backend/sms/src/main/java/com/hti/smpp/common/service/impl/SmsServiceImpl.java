@@ -1,7 +1,6 @@
 package com.hti.smpp.common.service.impl;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
