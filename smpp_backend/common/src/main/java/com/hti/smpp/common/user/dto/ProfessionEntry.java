@@ -43,6 +43,21 @@ public class ProfessionEntry implements Serializable {
 	
 	@Column(name="imagePath")
 	private String imageFilePath;
+    
+    @Column(name = "company_address")
+    private String companyAddress;
+    
+    @Column(name = "company_email")
+    private String companyEmail;
+    
+    @Column(name = "tax_ID")
+    private String taxID;
+    
+    @Column(name = "reg_ID")
+    private String regID;
+    
+    @Column(name = "notes")
+    private String notes;
 
 	public int getUserId() {
 		return userId;
@@ -149,10 +164,14 @@ public class ProfessionEntry implements Serializable {
 	}
 
 	public String toString() {
-		return "professionEntry: Userid=" + userId + ",Name=" + firstName + " " + lastName + ",Mobile=" + mobile
-				+ ",company=" + company + ",Designation=" + designation + ",DomainEmail=" + domainEmail + ",city="
-				+ city + ",State=" + state + ",Country=" + country;
+	    return "professionEntry: Userid=" + userId + ", Name=" + firstName + " " + lastName + 
+	           ", Mobile=" + mobile + ", Company=" + company + ", Designation=" + designation + 
+	           ", DomainEmail=" + domainEmail + ", City=" + city + ", State=" + state + 
+	           ", Country=" + country +  
+	           ", CompanyAddress=" + companyAddress + ", CompanyEmail=" + companyEmail + 
+	           ", TaxID=" + taxID + ", RegID=" + regID + ", Notes=" + notes;
 	}
+
 
 	public String getImageFilePath() {
 		return imageFilePath;
@@ -160,6 +179,46 @@ public class ProfessionEntry implements Serializable {
 
 	public void setImageFilePath(String imageFilePath) {
 		this.imageFilePath = imageFilePath;
+	}
+
+	public String getCompanyAddress() {
+		return companyAddress;
+	}
+
+	public void setCompanyAddress(String companyAddress) {
+		this.companyAddress = companyAddress;
+	}
+
+	public String getCompanyEmail() {
+		return companyEmail;
+	}
+
+	public void setCompanyEmail(String companyEmail) {
+		this.companyEmail = companyEmail;
+	}
+
+	public String getTaxID() {
+		return taxID;
+	}
+
+	public void setTaxID(String taxID) {
+		this.taxID = taxID;
+	}
+
+	public String getRegID() {
+		return regID;
+	}
+
+	public void setRegID(String regID) {
+		this.regID = regID;
+	}
+
+	public String getNotes() {
+		return notes;
+	}
+
+	public void setNotes(String notes) {
+		this.notes = notes;
 	}
 
 	

@@ -226,15 +226,13 @@ public class LoginServiceImpl implements LoginService {
 		if (balanceOptional.isPresent() && userEntityOptional.isPresent()) {
 			BalanceEntry balanceEntry = balanceOptional.get();
 			UserEntry userEntry = userEntityOptional.get();
-
 			// Use map to simplify getting profession entry
 			ProfessionEntry professionEntry = professionEntryRepository.findById(userEntry.getId())
 					.orElseThrow(() -> new NotFoundException(
 							messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
-
 			ProfileResponse profileResponse = new ProfileResponse();
 			profileResponse.setUserName(userEntry.getSystemId());
-			profileResponse.setBalance(String.valueOf(balanceEntry.getWalletAmount()));
+//			profileResponse.setBalance(String.valueOf(balanceEntry.getWalletAmount()));
 			profileResponse.setCountry(professionEntry.getCountry());
 			profileResponse.setEmail(professionEntry.getDomainEmail());
 			profileResponse.setFirstName(professionEntry.getFirstName());
@@ -242,15 +240,32 @@ public class LoginServiceImpl implements LoginService {
 			profileResponse.setRoles(userEntry.getRole());
 			profileResponse.setContactNo(professionEntry.getMobile());
 			profileResponse.setCurrency(userEntry.getCurrency());
+			profileResponse.setCompanyName(professionEntry.getCompany());
+			profileResponse.setDesignation(professionEntry.getDesignation());
+			profileResponse.setCity(professionEntry.getCity());
+			profileResponse.setState(professionEntry.getState());
+			profileResponse.setKeepLogs(userEntry.getLogDays());
+			profileResponse.setReferenceID(professionEntry.getReferenceId());
+			profileResponse.setCompanyAddress(professionEntry.getCompanyAddress());
+			profileResponse.setCompanyEmail(professionEntry.getCompanyEmail());
+			profileResponse.setTaxID(professionEntry.getTaxID());
+			profileResponse.setRegID(professionEntry.getRegID());
+			profileResponse.setNotes(professionEntry.getNotes());
+
+			profileResponse.setCredits(balanceEntry.getCredits());
+			profileResponse.setWallets(balanceEntry.getWalletAmount());
+			profileResponse.setWalletFlag(balanceEntry.getWalletFlag());
+
 			String profileImagePath = professionEntry.getImageFilePath();
 			if (profileImagePath != null && !profileImagePath.isEmpty()) {
 				try {
+					String fileExtension = profileImagePath.substring(profileImagePath.lastIndexOf(".") + 1);
+					profileResponse.setProfileName(fileExtension);
 					Path imagePath = Paths.get(IConstants.PROFILE_DIR + "profile//" + profileImagePath);
 					byte[] imageBytes = Files.readAllBytes(imagePath);
 					profileResponse.setProfilePath(imageBytes);
-				} catch (IOException e) {
-					e.printStackTrace();
-					throw new InternalServerException("Error while reading the image file");
+				} catch (Exception e) {
+					logger.error("Error while reading the image file" + e.getMessage());
 				}
 			}
 
@@ -584,16 +599,21 @@ public class LoginServiceImpl implements LoginService {
 	 */
 	@Override
 	public ResponseEntity<?> updateUserProfile(String username, String email, String firstName, String lastName,
-			String contact, MultipartFile profileImageFile) {
+			String contact, String companyName, String designation, String city, String country, String state,
+			String keepLogs, String referenceID, String companyAddress, String companyEmail, String notes, String taxID,
+			String regID, MultipartFile profileImageFile) {
 		Optional<UserEntry> optionalUser = userEntryRepository.findBySystemId(username);
 		if (optionalUser.isPresent()) {
 			UserEntry user = optionalUser.get();
 			ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
 					.orElseThrow(() -> new NotFoundException(
 							messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
-			updateUserData(user, email, firstName, lastName, contact, professionEntry, profileImageFile);
+			updateUserData(user, email, firstName, lastName, contact, companyName, designation, city, country, state,
+					keepLogs, referenceID, companyAddress, companyEmail, notes, taxID, regID, professionEntry,
+					profileImageFile);
 			user.setEditOn(LocalDateTime.now() + "");
 			user.setEditBy(username);
+			user.setLogDays(Integer.parseInt(keepLogs));
 			userEntryRepository.save(user);
 			professionEntryRepository.save(professionEntry);
 			return ResponseEntity.ok("Profile updated successfully");
@@ -612,6 +632,8 @@ public class LoginServiceImpl implements LoginService {
 	 * @param professionEntry
 	 */
 	private void updateUserData(UserEntry user, String email, String firstName, String lastName, String contact,
+			String companyName, String designation, String city, String country, String state, String keepLogs,
+			String referenceID, String companyAddress, String companyEmail, String notes, String taxID, String regID,
 			ProfessionEntry professionEntry, MultipartFile profileImageFile) {
 		if (email != null) {
 			professionEntry.setDomainEmail(email);
@@ -624,6 +646,39 @@ public class LoginServiceImpl implements LoginService {
 		}
 		if (contact != null) {
 			professionEntry.setMobile(contact);
+		}
+		if (companyName != null) {
+			professionEntry.setCompany(companyName);
+		}
+		if (designation != null) {
+			professionEntry.setDesignation(designation);
+		}
+		if (city != null) {
+			professionEntry.setCity(city);
+		}
+		if (country != null) {
+			professionEntry.setCountry(country);
+		}
+		if (state != null) {
+			professionEntry.setState(state);
+		}
+		if (companyAddress != null) {
+			professionEntry.setCompanyAddress(companyAddress);
+		}
+		if (companyEmail != null) {
+			professionEntry.setCompanyEmail(companyEmail);
+		}
+		if (notes != null) {
+			professionEntry.setNotes(notes);
+		}
+		if (taxID != null) {
+			professionEntry.setTaxID(taxID);
+		}
+		if (regID != null) {
+			professionEntry.setRegID(regID);
+		}
+		if (referenceID != null) {
+			professionEntry.setReferenceId(referenceID);
 		}
 
 		if (profileImageFile != null && !profileImageFile.isEmpty()) {

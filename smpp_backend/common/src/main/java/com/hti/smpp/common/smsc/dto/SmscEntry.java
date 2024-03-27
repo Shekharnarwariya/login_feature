@@ -7,12 +7,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "smscmaster")
 public class SmscEntry implements Serializable {
+	private static final long serialVersionUID = 274377854561442544L;
 	@Id
 	@Column(name = "id", length = 5)
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

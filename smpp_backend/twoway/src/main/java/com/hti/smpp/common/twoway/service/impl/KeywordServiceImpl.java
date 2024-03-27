@@ -52,7 +52,6 @@ import com.hti.smpp.common.twoway.dto.KeywordEntry;
 import com.hti.smpp.common.twoway.dto.ReportEntry;
 import com.hti.smpp.common.twoway.repository.KeywordEntryRepository;
 import com.hti.smpp.common.twoway.request.KeywordEntryForm;
-import com.hti.smpp.common.twoway.request.SearchCriteria;
 import com.hti.smpp.common.twoway.request.TwowayReportForm;
 import com.hti.smpp.common.twoway.service.KeywordService;
 import com.hti.smpp.common.user.dto.UserEntry;
@@ -66,7 +65,6 @@ import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MessageResourceBundle;
 import com.hti.smpp.common.util.MultiUtility;
-import com.netflix.discovery.converters.Auto;
 
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRExporter;

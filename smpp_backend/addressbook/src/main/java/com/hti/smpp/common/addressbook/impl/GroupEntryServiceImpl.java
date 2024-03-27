@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -312,10 +314,10 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 	 * @param groupData
 	 * @return
 	 */
-	private List<GroupEntryDTO> listGroupByCriteria(String masterid, boolean groupData) {
-		List<GroupEntryDTO> list = null;
+	private Page<GroupEntryDTO> listGroupByCriteria(String masterid, boolean groupData ,Pageable pageable) {
+		Page<GroupEntryDTO> list = null;
 		try {
-			list = this.groupEntryDTORepository.findByMasterIdAndGroupData(masterid, groupData);
+			list = this.groupEntryDTORepository.findByMasterIdAndGroupData(masterid, groupData,pageable);
 		} catch (Exception e) {
 			logger.error("Error: " + e.getLocalizedMessage());
 			throw new InternalServerException(e.getLocalizedMessage());
@@ -344,10 +346,10 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 	 * @param masterid
 	 * @return
 	 */
-	private List<GroupEntryDTO> listGroupByCriteria(String masterid) {
-		List<GroupEntryDTO> list = null;
+	private Page<GroupEntryDTO> listGroupByCriteria(String masterid,Pageable pageable) {
+		Page<GroupEntryDTO> list = null;
 		try {
-			list = this.groupEntryDTORepository.findByMasterId(masterid);
+			list = this.groupEntryDTORepository.findByMasterId(masterid,pageable);
 		} catch (Exception e) {
 			logger.error("Error: " + e.getLocalizedMessage());
 			throw new InternalServerException(e.getLocalizedMessage());
@@ -375,7 +377,7 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 	 * roles.
 	 */
 	@Override
-	public ResponseEntity<?> listGroup(String purpose, String groupData, String username) {
+	public ResponseEntity<?> listGroup(String purpose, String groupData, String username,Pageable pageable) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = null;
 		if (userOptional.isPresent()) {
@@ -388,7 +390,6 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 			throw new NotFoundException(
 					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
-
 		String target = IConstants.FAILURE_KEY;
 
 		WebMenuAccessEntry webEntry = null;
@@ -438,18 +439,22 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 							.getExMessage(ConstantMessages.UNAUTHORIZED_OPERATION, new Object[] { username }));
 				}
 			}
-			List<GroupEntryDTO> list = null;
+			Page<GroupEntryDTO> list = null;
+			List<GroupEntryDTO> content = null;
+			
 			if (proceed) {
 
 				if (groupData != null) {
 					if (groupData.equalsIgnoreCase("yes")) {
-						list = listGroupByCriteria(systemId, true);
+						list = listGroupByCriteria(systemId, true,pageable);
+						content=list.getContent();
 						if (purpose != null && purpose.equalsIgnoreCase("sms")) {
 							response.setCriteria("yes");
 						}
 						target = "GroupData";
 					} else {
-						list = listGroupByCriteria(systemId, false);
+						list = listGroupByCriteria(systemId, false,pageable);
+						content=list.getContent();
 						if (purpose != null && purpose.equalsIgnoreCase("sms")) {
 							target = "ContactSms";
 						} else {
@@ -457,7 +462,8 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 						}
 					}
 				} else {
-					list = listGroupByCriteria(systemId);
+					list = listGroupByCriteria(systemId,pageable);
+					content=list.getContent();
 					if (purpose.equalsIgnoreCase("add")) {
 						target = "AddGroup";
 					} else {
@@ -466,7 +472,13 @@ public class GroupEntryServiceImpl implements GroupEntryService {
 				}
 
 				if (list != null && !list.isEmpty()) {
-					response.setList(list);
+					content=list.getContent();
+					response.setList(content);
+					response.setPageNumber(list.getNumber());
+					response.setPageSize(list.getSize());
+					response.setTotalPages(list.getTotalPages());
+					response.setFirstPage(list.isFirst());
+					response.setLastPage(list.isLast());
 				} else {
 					logger.info(messageResourceBundle.getLogMessage("addbook.no.record.found.error"));
 					throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.ADDBOOK_NORECORD));

@@ -106,7 +106,7 @@ public class LoginController {
 	 * @param username
 	 * @return
 	 */
-	@PostMapping("/status")
+	@GetMapping("/status")
 	@Operation(summary = "Get Service Status", description = "Endpoint to check the status of the login service.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Service status retrieved successfully.", content = @Content(mediaType = "text/plain")),
@@ -214,16 +214,30 @@ public class LoginController {
 	@Operation(summary = "Update User Profile", description = "Endpoint to update the profile information for a user.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "204", description = "User profile updated successfully. No content returned."),
-			@ApiResponse(responseCode = "400", description = "Invalid or malformed request. Unable to update user profile.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
-			@ApiResponse(responseCode = "401", description = "Unauthorized. User profile update failed.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
-			@ApiResponse(responseCode = "500", description = "Internal server error during user profile update process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
+			@ApiResponse(responseCode = "400", description = "Invalid or malformed request. Unable to update user profile.", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "401", description = "Unauthorized. User profile update failed.", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "500", description = "Internal server error during user profile update process.", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, schema = @Schema(implementation = ExceptionResponse.class))) })
 	public ResponseEntity<?> updateUserProfile(@RequestHeader(value = "username", required = true) String username,
 			@RequestParam(value = "email", required = false) String email,
 			@RequestParam(value = "firstName", required = false) String firstName,
 			@RequestParam(value = "lastName", required = false) String lastName,
 			@RequestParam(value = "contact", required = false) String contact,
+			@RequestParam(value = "companyName", required = false) String companyName,
+			@RequestParam(value = "designation", required = false) String designation,
+			@RequestParam(value = "city", required = false) String city,
+			@RequestParam(value = "country", required = false) String country,
+			@RequestParam(value = "state", required = false) String state,
+			@RequestParam(value = "keepLogs", required = false) String keepLogs,
+			@RequestParam(value = "referenceID", required = false) String referenceID,
+			@RequestParam(value = "companyAddress", required = false) String companyAddress,
+			@RequestParam(value = "companyEmail", required = false) String companyEmail,
+			@RequestParam(value = "notes", required = false) String notes,
+			@RequestParam(value = "taxID", required = false) String taxID,
+			@RequestParam(value = "regID", required = false) String regID,
 			@RequestParam(value = "image", required = false) MultipartFile image) {
-		return loginService.updateUserProfile(username, email, firstName, lastName, contact, image);
+		return loginService.updateUserProfile(username, email, firstName, lastName, contact,
+				companyName, designation, city, country, state, keepLogs, referenceID, companyAddress,
+				companyEmail, notes, taxID, regID, image);
 	}
 
 	@PostMapping("/validate/user-ip")

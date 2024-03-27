@@ -26,12 +26,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
-		<dependency>
+		<!--<dependency>
 			<groupId>jakarta.servlet</groupId>
 			<artifactId>jakarta.servlet-api</artifactId>
 			<version>5.0.0</version>
 			<scope>provided</scope>
-		</dependency>
+		</dependency>-->
 		<!-- Spring Boot Tomcat Starter (Embedded Tomcat) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

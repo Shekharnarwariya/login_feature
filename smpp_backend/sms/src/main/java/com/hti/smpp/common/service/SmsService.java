@@ -16,6 +16,9 @@ import com.hti.smpp.common.request.SendBulkScheduleRequest;
 import com.hti.smpp.common.request.SmsRequest;
 import com.hti.smpp.common.response.BulkResponse;
 import com.hti.smpp.common.response.SmsResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 @Service
@@ -70,5 +73,18 @@ public interface SmsService {
 	public ResponseEntity<?> getSenderId(String username);
 
 	public ResponseEntity<?> sendAlert(String username, BulkSmsDTO bulkSmsDTO);
+
+	public List<String> numberFromFile(HttpServletRequest request, List<MultipartFile> items);
+
+	public void progressPercent(String username, HttpServletRequest request, HttpServletResponse response);
+
+	public ResponseEntity<?> abortedNumberList(String username, String abort_batch_id);
+
+	public ResponseEntity<?> saveNumbers(String system_id, String numbers);
+
+	public ResponseEntity<?> preSubmitCalcul(String systemId, String numbers, String exclude, String smsparts,
+			String allowDuplicates, List<MultipartFile> items, HttpServletRequest request);
+
+	public ResponseEntity<?> quickNumber(String username);
 
 }

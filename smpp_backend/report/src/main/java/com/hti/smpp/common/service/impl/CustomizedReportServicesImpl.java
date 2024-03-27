@@ -1,7 +1,5 @@
 package com.hti.smpp.common.service.impl;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,7 +10,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -25,19 +22,14 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import javax.sql.DataSource;
 
-import org.apache.poi.ss.usermodel.Workbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -75,15 +67,7 @@ import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MessageResourceBundle;
 import com.hti.smpp.common.util.dto.SevenBitChar;
 
-import jakarta.servlet.ServletOutputStream;
-import jakarta.servlet.http.HttpServletResponse;
-
 import jakarta.ws.rs.BadRequestException;
-import net.sf.jasperreports.engine.JRException;
-
-import net.sf.jasperreports.engine.JasperExportManager;
-import net.sf.jasperreports.engine.JasperPrint;
-import net.sf.jasperreports.engine.export.ooxml.JRDocxExporter;
 
 @Service
 public class CustomizedReportServicesImpl implements CustomizedReportService {
@@ -167,10 +151,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			throw new InternalServerException(e.getMessage());
 		}
 	}
-
-	
-
-	
 
 	public List sortListBySender(List list) {
 		// logger.info(userSessionObject.getSystemId() + " sortListBySender ");
@@ -266,44 +246,44 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				String userQuery = "select username from mis_table where msg_id ='" + messageId + "'";
 				List userSet = getDistinctMisUser(userQuery);
 				try {
-				if (userSet.isEmpty()) {
-				    throw new MessageIdNotFoundException(messageId);
-				}
-				if (!userSet.isEmpty()) {
-					reportUser = (String) userSet.remove(0);
-					if (to_gmt != null) {
-						query = "select CONVERT_TZ(submitted_time,'" + from_gmt + "','" + to_gmt
-								+ "') as submitted_time,";
-					} else {
-						query = "select submitted_time,";
+					if (userSet.isEmpty()) {
+						throw new MessageIdNotFoundException(messageId);
 					}
-					query += "msg_id,oprCountry,source_no,route_to_smsc,dest_no,cost,status,deliver_time,err_code from mis_"
-							+ reportUser + " where msg_id ='" + messageId + "'";
-					logger.info(user.getSystemId() + " ReportSQL:" + query);
-					if (isContent) {
-						Map map = getDlrReport(reportUser, query, webMasterEntry.isHideNum());
-						if (!map.isEmpty()) {
-							list = getMessageContent(map, reportUser);
+					if (!userSet.isEmpty()) {
+						reportUser = (String) userSet.remove(0);
+						if (to_gmt != null) {
+							query = "select CONVERT_TZ(submitted_time,'" + from_gmt + "','" + to_gmt
+									+ "') as submitted_time,";
+						} else {
+							query = "select submitted_time,";
 						}
-					} else {
-						list = getCustomizedReport(reportUser, query, webMasterEntry.isHideNum());
+						query += "msg_id,oprCountry,source_no,route_to_smsc,dest_no,cost,status,deliver_time,err_code from mis_"
+								+ reportUser + " where msg_id ='" + messageId + "'";
+						logger.info(user.getSystemId() + " ReportSQL:" + query);
+						if (isContent) {
+							Map map = getDlrReport(reportUser, query, webMasterEntry.isHideNum());
+							if (!map.isEmpty()) {
+								list = getMessageContent(map, reportUser);
+							}
+						} else {
+							list = getCustomizedReport(reportUser, query, webMasterEntry.isHideNum());
+						}
 					}
+					final_list.addAll(list);
+					logger.info(
+							user.getSystemId() + " End Based On MessageId. Final Report Size: " + final_list.size());
+				} catch (MessageIdNotFoundException e) {
+					logger.error(user.getSystemId() + " " + e.getMessage());
+					// Handle the exception, such as returning an error message or null
+					return null; // or any other appropriate response/action
+				} catch (Exception e) {
+					// Handle any other exceptions that might occur
+					logger.error(user.getSystemId() + " Unexpected error: " + e.getMessage());
+					return null; // or any other appropriate response/action
 				}
-				 final_list.addAll(list);
-				logger.info(user.getSystemId() + " End Based On MessageId. Final Report Size: " + final_list.size());
-			} 
-			 catch (MessageIdNotFoundException e) {
-			    logger.error(user.getSystemId() + " " + e.getMessage());
-			    // Handle the exception, such as returning an error message or null
-			    return null; // or any other appropriate response/action
-			} catch (Exception e) {
-			    // Handle any other exceptions that might occur
-			    logger.error(user.getSystemId() + " Unexpected error: " + e.getMessage());
-			    return null; // or any other appropriate response/action
-			}
-			}else {
+			} else {
 				logger.info(user.getSystemId() + " Invalid MessageId");
-				 return null;
+				return null;
 			}
 
 		} else if (criteria_type.equalsIgnoreCase("campaign")) {
@@ -910,11 +890,8 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		Connection con = null;
 		PreparedStatement pStmt = null;
 		ResultSet rs = null;
-		// DBMessage dbMsg = null;
-		// boolean replace = false;
 		String dest = "";
 		DeliveryDTO report = null;
-		// int counter = 0;
 		System.out.println("UnprocessedReport:" + query);
 		String msg_id = null;
 		try {
@@ -980,11 +957,11 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 							} else {
 								try {
 									String content = rs.getString("content").trim();
-									// System.out.println("content: " + content);
+									System.out.println("content: " + content);
 									if (content.contains("0000")) {
-										// logger.info(msg_id + " Content: " + content);
+										logger.info(msg_id + " Content: " + content);
 										content = content.replaceAll("0000", "0040");
-										// logger.info(msg_id + " Replaced: " + content);
+										logger.info(msg_id + " Replaced: " + content);
 									}
 									message = hexCodePointsToCharMsg(content);
 								} catch (Exception ex) {
@@ -994,18 +971,14 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 							report.setContent(message);
 						}
 						customReport.add(report);
-						/*
-						 * if (++counter > 1000) { counter = 0; logger.info(username +
-						 * " Report List Counter:--> " + customReport.size()); }
-						 */
 					} catch (Exception sqle) {
 						logger.error(msg_id, sqle.fillInStackTrace());
 					}
 				}
-				// logger.info(" Report List Count:--> " + customReport.size());
+				logger.info(" Report List Count:--> " + customReport.size());
 			}
 		} catch (SQLException ex) {
-			logger.error(" ", ex.fillInStackTrace());
+			logger.error(" ");
 		} finally {
 			try {
 				if (pStmt != null) {
@@ -1083,7 +1056,6 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		}
 		return users;
 	}
-
 
 	public List getCustomizedReport(String username, String query, boolean hideNum) throws DBException {
 		List customReport = new ArrayList();
@@ -1436,18 +1408,18 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	public List<String> getDistinctMisUser(String userQuery) {
 		System.out.println(userQuery);
 		List<String> userSet = new ArrayList<>();
-		Connection con = null;																									
+		Connection con = null;
 		Statement pStmt = null;
 		ResultSet rs = null;
 		try {
-			con = getConnection(); 
+			con = getConnection();
 			pStmt = con.createStatement();
 			rs = pStmt.executeQuery(userQuery);
 			while (rs.next()) {
 				userSet.add(rs.getString("username"));
 			}
 		} catch (SQLException sqle) {
-			
+
 		} catch (Exception e) {
 		} finally {
 			try {
@@ -1469,7 +1441,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 	}
 
 	@Override
-	public ResponseEntity<?> SmsReport(String username, SmsReportRequest smsReportRequest) {
+	public ResponseEntity<?> SmsReport(String username, SmsReportRequest smsReportRequest, String searchParameter) {
 		Optional<UserEntry> userOptional = userRepository.findBySystemId(username);
 		UserEntry user = userOptional
 				.orElseThrow(() -> new NotFoundException("User not found with the provided username."));
@@ -1486,8 +1458,12 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 		boolean isContent = true;
 		List list = null;
 		List<DeliveryDTO> final_list = new ArrayList();
-		String startDate = smsReportRequest.getStartDate();
-		String endDate = smsReportRequest.getEndDate();
+		String startDate = null;
+		String endDate = null;
+		if (smsReportRequest != null) {
+			startDate = smsReportRequest.getStartDate();
+			endDate = smsReportRequest.getEndDate();
+		}
 		String campaign = "all";
 		String status = "%";
 		String senderId = "%";
@@ -1500,76 +1476,51 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			to_gmt = webMasterEntry.getGmt().replace("GMT", "");
 			from_gmt = IConstants.DEFAULT_GMT.replace("GMT", "");
 		}
-		if (smsReportRequest.getMessageId() != null) {
-			String messageId = smsReportRequest.getMessageId();
-			logger.info(user.getSystemId() + " Report Based On MessageId: " + messageId);
-			if (messageId != null && messageId.trim().length() > 0) {
-				isSummary = false;
-				String userQuery = "select username from mis_table where msg_id ='" + messageId + "'";
-				List userSet = getDistinctMisUser(userQuery);
-				if (!userSet.isEmpty()) {
-					reportUser = (String) userSet.remove(0);
-					if (to_gmt != null) {
-						query = "select CONVERT_TZ(submitted_time,'" + from_gmt + "','" + to_gmt
-								+ "') as submitted_time,";
-					} else {
-						query = "select submitted_time,";
-					}
-					query += "msg_id,source_no,dest_no,cost,status,deliver_time from mis_" + reportUser
-							+ " where msg_id ='" + messageId + "'";
-					logger.info(user.getSystemId() + " ReportSQL:" + query);
-					if (isContent) {
-						Map map = getSmsDlrReport(reportUser, query, webMasterEntry.isHideNum());
-						if (!map.isEmpty()) {
-							list = getMessageContent(map, reportUser);
-						}
-					}
-				}
-				final_list.addAll(list);
-				logger.info(user.getSystemId() + " End Based On MessageId. Final Report Size: " + final_list.size());
-			} else {
-				logger.info(user.getSystemId() + " Invalid MessageId");
-				throw new NotFoundException("messages ID not Found.....");
-			}
+		logger.info(user.getSystemId() + " Report Based On Criteria");
+		logger.info(user.getSystemId() + " Checking Report For " + reportUser);
+		if (groupby.equalsIgnoreCase("country")) {
+			query = "select count(msg_id) as count,date(submitted_time) as date,oprCountry,status,cost from mis_"
+					+ reportUser + " where ";
+		}
+		if (to_gmt != null) {
+			query = "select CONVERT_TZ(submitted_time,'" + from_gmt + "','" + to_gmt + "') as submitted_time,";
 		} else {
-			logger.info(user.getSystemId() + " Report Based On Criteria");
-			logger.info(user.getSystemId() + " Checking Report For " + reportUser);
-			if (groupby.equalsIgnoreCase("country")) {
-				query = "select count(msg_id) as count,date(submitted_time) as date,oprCountry,status,cost from mis_"
-						+ reportUser + " where ";
-			}
-			if (to_gmt != null) {
-				query = "select CONVERT_TZ(submitted_time,'" + from_gmt + "','" + to_gmt + "') as submitted_time,";
-			} else {
-				query = "select submitted_time,";
-			}
-			query += "msg_id,oprCountry,source_no,dest_no,cost,status,route_to_smsc,err_code,";
-			if (to_gmt != null) {
-				query += "CONVERT_TZ(deliver_time,'" + from_gmt + "','" + to_gmt + "') as deliver_time";
-			} else {
-				query += "deliver_time";
-			}
-			query += " from mis_" + reportUser + " where ";
+			query = "select submitted_time,";
+		}
+		query += "msg_id,oprCountry,source_no,dest_no,cost,status,route_to_smsc,err_code,";
+		if (to_gmt != null) {
+			query += "CONVERT_TZ(deliver_time,'" + from_gmt + "','" + to_gmt + "') as deliver_time";
+		} else {
+			query += "deliver_time";
+		}
+		query += " from mis_" + reportUser + " where ";
 
-			if (status != null && status.trim().length() > 0) {
-				if (!status.equals("%")) {
-					query += "status = '" + status + "' and ";
-				}
+		if (searchParameter != null && !searchParameter.isEmpty()) {
+			query += " (source_no LIKE '%" + searchParameter + "%' OR dest_no LIKE '%" + searchParameter
+					+ "%' OR msg_id LIKE '%" + searchParameter + "%' OR status LIKE '%" + searchParameter + "%') AND ";
+		}
+		if (status != null && status.trim().length() > 0) {
+			if (!status.equals("%")) {
+				query += "status = '" + status + "' AND ";
 			}
-			if (senderId != null && senderId.trim().length() > 0) {
-				if (senderId.contains("%")) {
-					query += "source_no like \"" + senderId + "\" and ";
-				} else {
-					query += "source_no =\"" + senderId + "\" and ";
-				}
+		}
+		if (senderId != null && senderId.trim().length() > 0) {
+			if (senderId.contains("%")) {
+				query += "source_no like \"" + senderId + "\" AND ";
+			} else {
+				query += "source_no =\"" + senderId + "\" AND ";
 			}
-			if (destination != null && destination.trim().length() > 0) {
-				if (destination.contains("%")) {
-					query += "dest_no like '" + destination + "' and ";
-				} else {
-					query += "dest_no ='" + destination + "' and ";
-				}
+		}
+		if (destination != null && destination.trim().length() > 0) {
+			if (destination.contains("%")) {
+				query += "dest_no like '" + destination + "' and ";
+			} else {
+				query += "dest_no ='" + destination + "' and ";
 			}
+		}
+		if (startDate != null && endDate != null) {
+			startDate += " 00:00:00";
+			endDate += " 23:59:59";
 			if (to_gmt != null) {
 				SimpleDateFormat client_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 				client_formatter.setTimeZone(TimeZone.getTimeZone(webMasterEntry.getGmt()));
@@ -1613,20 +1564,22 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 					query += "msg_id between " + start_msg_id + " and " + end_msg_id + "";
 				}
 			}
-			// query += " order by submitted_time DESC,oprCountry ASC,msg_id DESC";
-			logger.debug(user.getSystemId() + " ReportSQL:" + query);
-			if (isContent) {
-				Map map = getSmsDlrReport(reportUser, query, webMasterEntry.isHideNum());
-				if (!map.isEmpty()) {
-					list = getMessageContent(map, reportUser);
-				}
-			}
-			if (list != null && !list.isEmpty()) {
-				System.out.println(reportUser + " Report List Size --> " + list.size());
-				final_list.addAll(list);
-				list.clear();
+		} else {
+			query = query.replaceFirst(" and ", "");
+		}
+		logger.info(user.getSystemId() + " ReportSQL:" + query);
+		if (isContent) {
+			Map map = getSmsDlrReport(reportUser, query, webMasterEntry.isHideNum());
+			if (!map.isEmpty()) {
+				list = getMessageContent(map, reportUser);
 			}
 		}
+		if (list != null && !list.isEmpty()) {
+			System.out.println(reportUser + " Report List Size --> " + list.size());
+			final_list.addAll(list);
+			list.clear();
+		}
+
 		boolean unproc = true;
 		if (status != null && status.trim().length() > 0) {
 			if (!status.equals("%")) {
@@ -1649,9 +1602,9 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 			cross_unprocessed_query += "username in('" + String.join("','", username) + "') and ";
 			if (senderId != null && senderId.trim().length() > 0) {
 				if (senderId.contains("%")) {
-					cross_unprocessed_query += "source_no like \"" + senderId + "\" and ";
+					cross_unprocessed_query += "source_no like \"" + senderId + "\" AND ";
 				} else {
-					cross_unprocessed_query += "source_no =\"" + senderId + "\" and ";
+					cross_unprocessed_query += "source_no =\"" + senderId + "\" AND ";
 				}
 			}
 			if (destination != null && destination.trim().length() > 0) {
@@ -1660,50 +1613,62 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				} else {
 					cross_unprocessed_query += "destination_no ='" + destination + "' and ";
 				}
+
+				// Additional Searching Query
+				if (searchParameter != null && !searchParameter.isEmpty()) {
+					cross_unprocessed_query += "(source_no LIKE '%" + searchParameter + "%' OR destination_no LIKE '%"
+							+ searchParameter + "%' OR msg_id LIKE '%" + searchParameter + "%') ";
+				}
 			}
 			System.out.println("cross_unprocessed_query " + cross_unprocessed_query);
-			if (to_gmt != null) {
-				SimpleDateFormat client_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				client_formatter.setTimeZone(TimeZone.getTimeZone(webMasterEntry.getGmt()));
-				SimpleDateFormat local_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				try {
-					String start_msg_id = local_formatter.format(client_formatter.parse(startDate));
-					String end_msg_id = local_formatter.format(client_formatter.parse(endDate));
-					start_msg_id = start_msg_id.replaceAll("-", "");
-					start_msg_id = start_msg_id.replaceAll(":", "");
-					start_msg_id = start_msg_id.replaceAll(" ", "");
-					start_msg_id = start_msg_id.substring(2);
-					start_msg_id += "0000000";
-					end_msg_id = end_msg_id.replaceAll("-", "");
-					end_msg_id = end_msg_id.replaceAll(":", "");
-					end_msg_id = end_msg_id.replaceAll(" ", "");
-					end_msg_id = end_msg_id.substring(2);
-					end_msg_id += "0000000";
-					cross_unprocessed_query += "msg_id between " + start_msg_id + " and " + end_msg_id;
-				} catch (Exception e) {
-					cross_unprocessed_query += "time between CONVERT_TZ('" + startDate + "','" + to_gmt + "','"
-							+ from_gmt + "') and CONVERT_TZ('" + endDate + "','" + to_gmt + "','" + from_gmt + "')";
+			if (startDate != null && endDate != null) {
+				startDate += " 00:00:00";
+				endDate += " 23:59:59";
+				if (to_gmt != null) {
+					SimpleDateFormat client_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+					client_formatter.setTimeZone(TimeZone.getTimeZone(webMasterEntry.getGmt()));
+					SimpleDateFormat local_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+					try {
+						String start_msg_id = local_formatter.format(client_formatter.parse(startDate));
+						String end_msg_id = local_formatter.format(client_formatter.parse(endDate));
+						start_msg_id = start_msg_id.replaceAll("-", "");
+						start_msg_id = start_msg_id.replaceAll(":", "");
+						start_msg_id = start_msg_id.replaceAll(" ", "");
+						start_msg_id = start_msg_id.substring(2);
+						start_msg_id += "0000000";
+						end_msg_id = end_msg_id.replaceAll("-", "");
+						end_msg_id = end_msg_id.replaceAll(":", "");
+						end_msg_id = end_msg_id.replaceAll(" ", "");
+						end_msg_id = end_msg_id.substring(2);
+						end_msg_id += "0000000";
+						cross_unprocessed_query += " AND msg_id between " + start_msg_id + " and " + end_msg_id;
+					} catch (Exception e) {
+						cross_unprocessed_query += " and time between CONVERT_TZ('" + startDate + "','" + to_gmt + "','"
+								+ from_gmt + "') and CONVERT_TZ('" + endDate + "','" + to_gmt + "','" + from_gmt + "')";
+					}
+				} else {
+					if (startDate.equalsIgnoreCase(endDate)) {
+						String start_msg_id = startDate.substring(2);
+						start_msg_id = start_msg_id.replaceAll("-", "");
+						start_msg_id = start_msg_id.replaceAll(":", "");
+						start_msg_id = start_msg_id.replaceAll(" ", "");
+						cross_unprocessed_query += "msg_id like '" + start_msg_id + "%'";
+					} else {
+						String start_msg_id = startDate.substring(2);
+						start_msg_id = start_msg_id.replaceAll("-", "");
+						start_msg_id = start_msg_id.replaceAll(":", "");
+						start_msg_id = start_msg_id.replaceAll(" ", "");
+						start_msg_id += "0000000";
+						String end_msg_id = endDate.substring(2);
+						end_msg_id = end_msg_id.replaceAll("-", "");
+						end_msg_id = end_msg_id.replaceAll(":", "");
+						end_msg_id = end_msg_id.replaceAll(" ", "");
+						end_msg_id += "0000000";
+						cross_unprocessed_query += " AND msg_id between " + start_msg_id + " and " + end_msg_id + "";
+					}
 				}
 			} else {
-				if (startDate.equalsIgnoreCase(endDate)) {
-					String start_msg_id = startDate.substring(2);
-					start_msg_id = start_msg_id.replaceAll("-", "");
-					start_msg_id = start_msg_id.replaceAll(":", "");
-					start_msg_id = start_msg_id.replaceAll(" ", "");
-					cross_unprocessed_query += "msg_id like '" + start_msg_id + "%'";
-				} else {
-					String start_msg_id = startDate.substring(2);
-					start_msg_id = start_msg_id.replaceAll("-", "");
-					start_msg_id = start_msg_id.replaceAll(":", "");
-					start_msg_id = start_msg_id.replaceAll(" ", "");
-					start_msg_id += "0000000";
-					String end_msg_id = endDate.substring(2);
-					end_msg_id = end_msg_id.replaceAll("-", "");
-					end_msg_id = end_msg_id.replaceAll(":", "");
-					end_msg_id = end_msg_id.replaceAll(" ", "");
-					end_msg_id += "0000000";
-					cross_unprocessed_query += "msg_id between " + start_msg_id + " and " + end_msg_id + "";
-				}
+				query = query.replaceFirst(" and ", "");
 			}
 			List unproc_list = (List) getUnprocessedReport(
 					cross_unprocessed_query.replaceAll("table_name", "unprocessed"), webMasterEntry.isHideNum(),
@@ -1717,6 +1682,7 @@ public class CustomizedReportServicesImpl implements CustomizedReportService {
 				final_list.addAll(unproc_list);
 			}
 		}
+
 		logger.info(user.getSystemId() + " End Based On Criteria. Final Report Size: " + final_list.size());
 		List<SmsListResponse> listSmsResponse = new ArrayList<>();
 		SmsListResponse sms = null;

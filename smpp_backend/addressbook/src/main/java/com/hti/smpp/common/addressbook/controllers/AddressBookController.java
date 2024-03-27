@@ -3,6 +3,7 @@ package com.hti.smpp.common.addressbook.controllers;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -95,8 +96,11 @@ public class AddressBookController {
 	public ResponseEntity<?> listGroup(
 			@Parameter(description = "Purpose value can be sms/add/any string") @RequestParam(value = "purpose", required = true) String purpose,
 			@Parameter(description = "GroupData value can be yes/no and null to fetch all data") @RequestParam(value = "groupData", required = false) String groupData,
-			@Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username) {
-		return this.entryService.listGroup(purpose, groupData, username);
+			@Parameter(description = "Username in header") @RequestHeader(value = "username", required = true) String username,
+			@RequestParam(name = "page", defaultValue = "0",required = false) int page,
+			@RequestParam(name = "size", defaultValue = "9",required = false) int size
+			) {
+		return this.entryService.listGroup(purpose, groupData, username,PageRequest.of(page, size));
 	}
 
 	/**
