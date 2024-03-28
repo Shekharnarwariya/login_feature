@@ -661,7 +661,11 @@ public class LoginServiceImpl implements LoginService {
 						coverageReport, lowAmount, smsAlert, webUrl, dlrThroughWeb, mis, lowBalanceAlert,
 						webMasterEntry, dlrSettingEntry);
 
-				user.setEditOn(LocalDateTime.now() + "");
+
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+				String formattedDateTime = LocalDateTime.now().format(formatter);
+				user.setEditOn(formattedDateTime);
+
 
 				user.setEditBy(username);
 				if (keepLogs != null) {
@@ -679,7 +683,7 @@ public class LoginServiceImpl implements LoginService {
 				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
 			}
 		} catch (Exception e) {
-			System.out.println(e);
+
 			throw new InternalServerException("Something Went Wrong");
 		}
 	}
