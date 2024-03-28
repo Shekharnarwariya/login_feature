@@ -73,6 +73,7 @@ import com.hti.smpp.common.security.BCryptPasswordEncoder;
 import com.hti.smpp.common.service.LoginService;
 import com.hti.smpp.common.user.dto.AccessLogEntry;
 import com.hti.smpp.common.user.dto.BalanceEntry;
+import com.hti.smpp.common.user.dto.DlrSettingEntry;
 import com.hti.smpp.common.user.dto.DriverInfo;
 import com.hti.smpp.common.user.dto.MultiUserEntry;
 import com.hti.smpp.common.user.dto.OTPEntry;
@@ -167,16 +168,13 @@ public class LoginServiceImpl implements LoginService {
 
 	@Autowired
 	private RestTemplate restTemplate;
-	
+
 	@Autowired
 	private DataSource dataSource;
 
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
 	}
-	
-	
-	
 
 	private static final Logger logger = LoggerFactory.getLogger(LoginServiceImpl.class);
 
@@ -248,6 +246,10 @@ public class LoginServiceImpl implements LoginService {
 			ProfessionEntry professionEntry = professionEntryRepository.findById(userEntry.getId())
 					.orElseThrow(() -> new NotFoundException(
 							messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
+			WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(userEntry.getId());
+			Optional<DlrSettingEntry> dlrOptional = dlrSettingEntryRepository.findById(userEntry.getId());
+			DlrSettingEntry dlrSettingEntry = dlrOptional.get();
+
 			ProfileResponse profileResponse = new ProfileResponse();
 			profileResponse.setUserName(userEntry.getSystemId());
 //			profileResponse.setBalance(String.valueOf(balanceEntry.getWalletAmount()));
@@ -272,6 +274,23 @@ public class LoginServiceImpl implements LoginService {
 			profileResponse.setCredits(balanceEntry.getCredits());
 			profileResponse.setWallets(balanceEntry.getWalletAmount());
 			profileResponse.setWalletFlag(balanceEntry.getWalletFlag());
+
+//			--------------------------------------------Alert Setting ----------
+			profileResponse.setAlertEmail(webMasterEntry.getMinBalEmail());
+			profileResponse.setAlertMobile(webMasterEntry.getMinBalMobile());
+			profileResponse.setInvoiceEmail(webMasterEntry.getInvoiceEmail());
+			profileResponse.setDlrReport(webMasterEntry.isDlrReport());
+			profileResponse.setDlrEmail(webMasterEntry.getDlrEmail());
+			profileResponse.setCoverageReport(webMasterEntry.getCoverageReport());
+			profileResponse.setCoverageEmail(webMasterEntry.getCoverageEmail());
+			profileResponse.setLowAmount(webMasterEntry.getMinBalance());
+			profileResponse.setSmsAlert(webMasterEntry.isSmsAlert());
+			profileResponse.setWebUrl(dlrSettingEntry.getWebUrl());
+			profileResponse.setDlrThroughWeb(dlrSettingEntry.isWebDlr());
+			profileResponse.setLowBalanceAlert(webMasterEntry.isMinFlag());
+			profileResponse.setMis(webMasterEntry.isMisReport());
+//			-------------------------------------------------------------
+
 			String profileImagePath = professionEntry.getImageFilePath();
 			if (profileImagePath != null && !profileImagePath.isEmpty()) {
 				try {
@@ -618,24 +637,50 @@ public class LoginServiceImpl implements LoginService {
 	public ResponseEntity<?> updateUserProfile(String username, String email, String firstName, String lastName,
 			String contact, String companyName, String designation, String city, String country, String state,
 			String keepLogs, String referenceID, String companyAddress, String companyEmail, String notes, String taxID,
-			String regID, MultipartFile profileImageFile) {
+			String regID, MultipartFile profileImageFile, String alertEmail, String alertMobile, String invoiceEmail,
+			Boolean dlrReport, String dlrEmail, String coverageEmail, String coverageReport, Double lowAmount,
+			Boolean smsAlert, String webUrl, Boolean dlrThroughWeb, Boolean mis, Boolean lowBalanceAlert) {
 		Optional<UserEntry> optionalUser = userEntryRepository.findBySystemId(username);
-		if (optionalUser.isPresent()) {
-			UserEntry user = optionalUser.get();
-			ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
-					.orElseThrow(() -> new NotFoundException(
-							messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
-			updateUserData(user, email, firstName, lastName, contact, companyName, designation, city, country, state,
-					keepLogs, referenceID, companyAddress, companyEmail, notes, taxID, regID, professionEntry,
-					profileImageFile);
-			user.setEditOn(LocalDateTime.now() + "");
-			user.setEditBy(username);
-			user.setLogDays(Integer.parseInt(keepLogs));
-			userEntryRepository.save(user);
-			professionEntryRepository.save(professionEntry);
-			return ResponseEntity.ok("Profile updated successfully");
-		} else {
-			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
+		try {
+
+			if (optionalUser.isPresent()) {
+				UserEntry user = optionalUser.get();
+				ProfessionEntry professionEntry = professionEntryRepository.findById(user.getId())
+						.orElseThrow(() -> new NotFoundException(
+								messageResourceBundle.getExMessage(ConstantMessages.PROFESSION_ENTRY_ERROR)));
+
+				WebMasterEntry webMasterEntry = webMasterEntryRepository.findByUserId(user.getId());
+				Optional<DlrSettingEntry> dlrOptional = dlrSettingEntryRepository.findById(user.getId());
+				DlrSettingEntry dlrSettingEntry = dlrOptional.get();
+
+				updateUserData(user, email, firstName, lastName, contact, companyName, designation, city, country,
+						state, keepLogs, referenceID, companyAddress, companyEmail, notes, taxID, regID,
+						professionEntry, profileImageFile);
+
+				updateAlertSetting(alertEmail, alertMobile, invoiceEmail, dlrReport, dlrEmail, coverageEmail,
+						coverageReport, lowAmount, smsAlert, webUrl, dlrThroughWeb, mis, lowBalanceAlert,
+						webMasterEntry, dlrSettingEntry);
+
+				user.setEditOn(LocalDateTime.now() + "");
+
+				user.setEditBy(username);
+				if (keepLogs != null) {
+
+					user.setLogDays(Integer.parseInt(keepLogs));
+				}
+
+				userEntryRepository.save(user);
+				professionEntryRepository.save(professionEntry);
+				webMasterEntryRepository.save(webMasterEntry);
+				dlrSettingEntryRepository.save(dlrSettingEntry);
+
+				return ResponseEntity.ok("Profile updated successfully");
+			} else {
+				throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
+			}
+		} catch (Exception e) {
+			System.out.println(e);
+			throw new InternalServerException("Something Went Wrong");
 		}
 	}
 
@@ -719,6 +764,51 @@ public class LoginServiceImpl implements LoginService {
 				throw new InternalServerException("Error while parsing the image");
 			}
 		}
+	}
+
+	private void updateAlertSetting(String alertEmail, String alertMobile, String invoiceEmail, Boolean dlrReport,
+			String dlrEmail, String coverageEmail, String coverageReport, Double lowAmount, Boolean smsAlert,
+			String webUrl, Boolean dlrThroughWeb, Boolean mis, Boolean lowBalanceAlert, WebMasterEntry webMasterEntry,
+			DlrSettingEntry dlrSettingEntry) {
+
+		if (lowAmount != null) {
+			webMasterEntry.setMinBalance(lowAmount);
+		}
+		if (alertEmail != null) {
+			webMasterEntry.setMinBalEmail(alertEmail);
+		}
+		if (invoiceEmail != null) {
+			webMasterEntry.setInvoiceEmail(invoiceEmail);
+		}
+		if (dlrReport != null) {
+			webMasterEntry.setDlrReport(dlrReport);
+		}
+		if (dlrEmail != null) {
+			webMasterEntry.setDlrEmail(dlrEmail);
+		}
+		if (coverageReport != null) {
+			webMasterEntry.setCoverageReport(coverageReport);
+		}
+		if (coverageEmail != null) {
+			webMasterEntry.setCoverageEmail(coverageEmail);
+		}
+		if (smsAlert != null) {
+			webMasterEntry.setSmsAlert(smsAlert);
+		}
+		if (webUrl != null) {
+			dlrSettingEntry.setWebUrl(webUrl);
+		}
+		if (dlrThroughWeb != null) {
+			dlrSettingEntry.setWebDlr(dlrThroughWeb);
+		}
+		if (mis != null) {
+			webMasterEntry.setMisReport(mis);
+			;
+		}
+		if (lowBalanceAlert != null) {
+			webMasterEntry.setMinFlag(lowBalanceAlert);
+		}
+
 	}
 
 // -----------------------------------------------------------------------------------------------------------------------
@@ -1798,7 +1888,7 @@ public class LoginServiceImpl implements LoginService {
 
 	@Override
 	public ResponseEntity<?> userRecentActivity(String username) {
-		
+
 		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
 		if (userOptional.isEmpty()) {
 			throw new NotFoundException(messageResourceBundle.getExMessage(ConstantMessages.NOT_FOUND));
@@ -1808,23 +1898,22 @@ public class LoginServiceImpl implements LoginService {
 		System.out.println(user);
 		String system_id = user.getSystemId();
 		RecentActivityResponse recentActivityResponse = new RecentActivityResponse();
-		
-	try {
-		AccessLogEntry successLogEntry = getLastSuccessLogin(system_id);
-		
-		AccessLogEntry failedLogEntry = getLastFailedLogin(system_id);
-		
-		recentActivityResponse.setSuccessLogEntry(successLogEntry);
-		recentActivityResponse.setFailedLogEntry(failedLogEntry);
-		recentActivityResponse.setGmt(IConstants.DEFAULT_GMT);
-	} catch (Exception e) {
-		throw new InternalServerException("Something Went Wrong");
+
+		try {
+			AccessLogEntry successLogEntry = getLastSuccessLogin(system_id);
+
+			AccessLogEntry failedLogEntry = getLastFailedLogin(system_id);
+
+			recentActivityResponse.setSuccessLogEntry(successLogEntry);
+			recentActivityResponse.setFailedLogEntry(failedLogEntry);
+			recentActivityResponse.setGmt(IConstants.DEFAULT_GMT);
+		} catch (Exception e) {
+			throw new InternalServerException("Something Went Wrong");
+		}
+
+		return new ResponseEntity<>(recentActivityResponse, HttpStatus.ACCEPTED);
 	}
-		
-		return new ResponseEntity<>(recentActivityResponse,HttpStatus.ACCEPTED);
-	}
-	
-	
+
 	public AccessLogEntry getLastSuccessLogin(String systemId) {
 		// List<BulkMgmtEntry> list = new ArrayList<BulkMgmtEntry>();
 		String query = "select time from web_access_log where status = 'login' and system_id=? order by time DESC limit 2";
@@ -1860,11 +1949,10 @@ public class LoginServiceImpl implements LoginService {
 			} catch (SQLException sqle) {
 			}
 		}
-		
+
 		return logEntry;
 	}
-	
-	
+
 	public AccessLogEntry getLastFailedLogin(String systemId) {
 		// List<BulkMgmtEntry> list = new ArrayList<BulkMgmtEntry>();
 		String query = "select MAX(time) as time,remarks from web_access_log where status = 'failed' and system_id=? GROUP BY remarks";

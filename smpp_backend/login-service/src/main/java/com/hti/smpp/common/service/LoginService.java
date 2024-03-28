@@ -30,7 +30,9 @@ public interface LoginService {
 	public ResponseEntity<?>  updateUserProfile(String username, String email, String firstName, String lastName,
 			String contact, String companyName, String designation, String city, String country, String state,
 			String keepLogs, String referenceID, String companyAddress, String companyEmail, String notes ,
-			String taxID, String regID, MultipartFile profileImageFile);
+			String taxID, String regID, MultipartFile profileImageFile,String alertEmail,String alertMobile,String invoiceEmail,
+			Boolean dlrReport,String dlrEmail,String coverageEmail,String coverageReport,Double lowAmount,Boolean smsAlert,
+			String webUrl,Boolean dlrThroughWeb, Boolean mis,Boolean lowBalanceAlert);
 	
 	public ResponseEntity<?> validateUserIpAccess(LoginRequest loginRequest, String language);
 	
