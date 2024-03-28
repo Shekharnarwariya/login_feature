@@ -1,8 +1,5 @@
 package com.hti.smpp.common.user.dto;
 
-import org.springframework.stereotype.Component;
-
-@Component
 public class UserSessionObject {
 	private int id;
 	private String systemId;
@@ -44,10 +41,6 @@ public class UserSessionObject {
 	private int otp;
 	// ---- multi user --------
 	private String multiUsername;
-
-	public UserSessionObject() {
-		super();
-	}
 
 	public int getId() {
 		return id;
@@ -356,51 +349,4 @@ public class UserSessionObject {
 		return "id=" + id + ",SystemId=" + systemId + ",Role=" + role + ",MasterId=" + masterId + ",AdminDepend="
 				+ adminDepend;
 	}
-
-	public UserSessionObject(int id, String systemId, String masterId, String password, boolean adminDepend,
-			String expiry, boolean hlr, String currency, String systemType, String role, int sleep, String remark,
-			int priority, double forceDelay, int timeout, String createdOn, String accessIp, int senderLength,
-			boolean skipContent, BalanceEntry balance, WebMasterEntry webMasterEntry, DlrSettingEntry dlrSettingEntry,
-			ProfessionEntry professionEntry, WebMenuAccessEntry webMenuAccessEntry, BalanceEntry masterBalance,
-			String flagValue, int masterUserId, boolean smscOwner, String defaultGmt, String defaultGmtValue,
-			int userCount, int adminCount, int exeCount, int routeCount, int otp, String multiUsername) {
-		super();
-		this.id = id;
-		this.systemId = systemId;
-		this.masterId = masterId;
-		this.password = password;
-		this.adminDepend = adminDepend;
-		this.expiry = expiry;
-		this.hlr = hlr;
-		this.currency = currency;
-		this.systemType = systemType;
-		this.role = role;
-		this.sleep = sleep;
-		this.remark = remark;
-		this.priority = priority;
-		this.forceDelay = forceDelay;
-		this.timeout = timeout;
-		this.createdOn = createdOn;
-		this.accessIp = accessIp;
-		this.senderLength = senderLength;
-		this.skipContent = skipContent;
-		this.balance = balance;
-		this.webMasterEntry = webMasterEntry;
-		this.dlrSettingEntry = dlrSettingEntry;
-		this.professionEntry = professionEntry;
-		this.webMenuAccessEntry = webMenuAccessEntry;
-		this.masterBalance = masterBalance;
-		this.flagValue = flagValue;
-		this.masterUserId = masterUserId;
-		this.smscOwner = smscOwner;
-		this.defaultGmt = defaultGmt;
-		this.defaultGmtValue = defaultGmtValue;
-		this.userCount = userCount;
-		this.adminCount = adminCount;
-		this.exeCount = exeCount;
-		this.routeCount = routeCount;
-		this.otp = otp;
-		this.multiUsername = multiUsername;
-	}
-
 }

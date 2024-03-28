@@ -11,16 +11,7 @@ public class JwtResponse {
 	private int id;
 	private String username;
 	private List<String> roles;
-	private boolean isOtpLogin;
 	private String status;
-
-	public boolean isOtpLogin() {
-		return isOtpLogin;
-	}
-
-	public void setOtpLogin(boolean isOtpLogin) {
-		this.isOtpLogin = isOtpLogin;
-	}
 
 	public String getStatus() {
 		return status;

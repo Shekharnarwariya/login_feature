@@ -11,4 +11,4 @@ COPY target/API_GATEWAY_SERVICE.jar /app/API_GATEWAY_SERVICE.jar
 EXPOSE 9090
 
 # Specify the default command to run when the container starts
-ENTRYPOINT ["java", "-jar", "API_GATEWAY_SERVICE.jar"]
+ENTRYPOINT ["java", "-jar", "/app/API_GATEWAY_SERVICE.jar"]
