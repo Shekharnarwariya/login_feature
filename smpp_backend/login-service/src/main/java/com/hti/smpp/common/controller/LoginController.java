@@ -236,11 +236,61 @@ public class LoginController {
 			@RequestParam(value = "notes", required = false) String notes,
 			@RequestParam(value = "taxID", required = false) String taxID,
 			@RequestParam(value = "regID", required = false) String regID,
+<<<<<<< HEAD
 			@RequestParam(value = "image", required = false) MultipartFile image) {
 		return loginService.updateUserProfile(username, email, firstName, lastName, contact, companyName, designation,
 				city, country, state, keepLogs, referenceID, companyAddress, companyEmail, notes, taxID, regID, image);
 	}
 
+=======
+			@RequestParam(value = "image", required = false) MultipartFile image,
+			@RequestParam(value = "alertEmail", required = false) String alertEmail,
+			@RequestParam(value = "alertMobile", required = false) String alertMobile,
+			@RequestParam(value = "invoiceEmail", required = false) String invoiceEmail,
+			@RequestParam(value = "dlrReport", required = false) Boolean dlrReport,
+			@RequestParam(value = "dlrEmail", required = false) String dlrEmail,
+			@RequestParam(value = "coverageEmail", required = false) String coverageEmail,
+			@RequestParam(value = "coverageReport", required = false) String coverageReport,
+			@RequestParam(value = "lowAmount", required = false) Double lowAmount,
+			@RequestParam(value = "smsAlert", required = false) Boolean smsAlert,
+			@RequestParam(value = "webUrl", required = false) String webUrl,
+			@RequestParam(value = "dlrThroughWeb", required = false) Boolean dlrThroughWeb,
+			@RequestParam(value = "mis", required = false) Boolean mis,
+			@RequestParam(value = "lowBalanceAlert", required = false) Boolean lowBalanceAlert) {
+		System.out.println("ok");
+//		return null;
+		return loginService.updateUserProfile(username, email, firstName, lastName, contact,
+				companyName, designation, city, country, state, keepLogs, referenceID, companyAddress,
+				companyEmail, notes, taxID, regID, image, alertEmail, alertMobile, invoiceEmail,
+				 dlrReport, dlrEmail, coverageEmail, coverageReport, lowAmount, smsAlert,
+				 webUrl, dlrThroughWeb, mis, lowBalanceAlert);
+	}
+
+	@PostMapping("/validate/user-ip")
+	@Operation(summary = "Validate User Ip", description = "Endpoint to validate user ip address and send otp in sms and email if user is enabled to get otp else the user will be notified by email alert when the user logged in.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "User ip authenticated successfully. JWT token generated.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponse.class))),
+			@ApiResponse(responseCode = "400", description = "Invalid or malformed request. Unable to authenticate user.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "500", description = "Internal server error during authentication process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
+	public ResponseEntity<?> validateIpAccess(@Valid @RequestBody LoginRequest loginRequest,
+			@RequestParam(value = "language") String language) {
+		return this.loginService.validateUserIpAccess(loginRequest, language);
+	}
+
+	@PostMapping("/validate/otp-user-ip")
+	@Operation(summary = "Validate OTP User Ip", description = "Endpoint to validate user ip address and send otp in sms and email if user is enabled to get otp else the user will be notified by email alert when the user logged in.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "OTP authenticated successfully. JWT token generated.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponse.class))),
+			@ApiResponse(responseCode = "504", description = "Invalid or malformed request. Unable to authenticate user.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "401", description = "Unauthorized User.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+			@ApiResponse(responseCode = "500", description = "Internal server error during authentication process.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))) })
+	public ResponseEntity<?> userIpOtpValidate(@Valid @RequestBody LoginRequest loginRequest,
+			@RequestParam(value = "OTP") int otp) {
+		return this.loginService.userIpOtpValidate(loginRequest, otp);
+	}
+
+>>>>>>> 7bdddc95fb8071a32c0ef56d14965e1635897468
 	@PostMapping("/recent-activity")
 	@Operation(summary = "Recent Activity", description = "Endpoint to check Recent Activity.")
 	@ApiResponses(value = {
