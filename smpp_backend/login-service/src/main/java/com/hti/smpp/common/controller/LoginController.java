@@ -236,13 +236,6 @@ public class LoginController {
 			@RequestParam(value = "notes", required = false) String notes,
 			@RequestParam(value = "taxID", required = false) String taxID,
 			@RequestParam(value = "regID", required = false) String regID,
-<<<<<<< HEAD
-			@RequestParam(value = "image", required = false) MultipartFile image) {
-		return loginService.updateUserProfile(username, email, firstName, lastName, contact, companyName, designation,
-				city, country, state, keepLogs, referenceID, companyAddress, companyEmail, notes, taxID, regID, image);
-	}
-
-=======
 			@RequestParam(value = "image", required = false) MultipartFile image,
 			@RequestParam(value = "alertEmail", required = false) String alertEmail,
 			@RequestParam(value = "alertMobile", required = false) String alertMobile,
@@ -257,13 +250,10 @@ public class LoginController {
 			@RequestParam(value = "dlrThroughWeb", required = false) Boolean dlrThroughWeb,
 			@RequestParam(value = "mis", required = false) Boolean mis,
 			@RequestParam(value = "lowBalanceAlert", required = false) Boolean lowBalanceAlert) {
-		System.out.println("ok");
-//		return null;
-		return loginService.updateUserProfile(username, email, firstName, lastName, contact,
-				companyName, designation, city, country, state, keepLogs, referenceID, companyAddress,
-				companyEmail, notes, taxID, regID, image, alertEmail, alertMobile, invoiceEmail,
-				 dlrReport, dlrEmail, coverageEmail, coverageReport, lowAmount, smsAlert,
-				 webUrl, dlrThroughWeb, mis, lowBalanceAlert);
+		return loginService.updateUserProfile(username, email, firstName, lastName, contact, companyName, designation,
+				city, country, state, keepLogs, referenceID, companyAddress, companyEmail, notes, taxID, regID, image,
+				alertEmail, alertMobile, invoiceEmail, dlrReport, dlrEmail, coverageEmail, coverageReport, lowAmount,
+				smsAlert, webUrl, dlrThroughWeb, mis, lowBalanceAlert);
 	}
 
 	@PostMapping("/validate/user-ip")
@@ -290,7 +280,6 @@ public class LoginController {
 		return this.loginService.userIpOtpValidate(loginRequest, otp);
 	}
 
->>>>>>> 7bdddc95fb8071a32c0ef56d14965e1635897468
 	@PostMapping("/recent-activity")
 	@Operation(summary = "Recent Activity", description = "Endpoint to check Recent Activity.")
 	@ApiResponses(value = {

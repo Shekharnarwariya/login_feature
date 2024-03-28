@@ -45,14 +45,9 @@ public class WebSecurityConfig {
 	 * An array of public URLs that are accessible without authentication.
 	 */
 	private final String[] PUBLIC_URL = { "/swagger-ui/**", "/webjars/**", "/swagger-resources/**", "/v3/api-docs/**",
-<<<<<<< HEAD
-			"/login/jwt", "/login/register", "/login/user/data", "login/status", "/login/sendOTP", "/login/validateOtp",
-			"/login/updatePassword", "/login/forgotPassword","/login/updateProfile",
-			"/login/recent-activity" };
-=======
 			"/login/jwt", "/login/register", "/login/user/data", "login/status", "/login/sendOTP",
-			"/login/forgotPassword", "/login/validateOtp", "/login/updatePassword","/login/updateProfile","/login/validate/otp-user-ip","/login/recent-activity" };
->>>>>>> 7bdddc95fb8071a32c0ef56d14965e1635897468
+			"/login/forgotPassword", "/login/validateOtp", "/login/updatePassword", "/login/updateProfile",
+			"/login/recent-activity" };
 
 	/**
 	 * Configures the security filter chain for handling HTTP security.
