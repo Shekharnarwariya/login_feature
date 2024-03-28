@@ -14,13 +14,13 @@ public class ConnectionService {
 	private static final Logger log = LoggerFactory.getLogger(ConnectionService.class);
 
 //	@Value("${spring.datasource.url}")
-	private String databaseUrl = "jdbc:mysql://localhost:3306/host_brd?allowPublicKeyRetrieval=true&useSSL=false";
+	private String databaseUrl = "jdbc:mysql://mysql-service:3306/host?allowPublicKeyRetrieval=true&useSSL=false";
 
 //	@Value("${spring.datasource.username}")
-	private String username = "root";
+	private String username = "tomuser";
 
 	// @Value("${spring.datasource.password}")
-	private String password = "root";
+	private String password = "tom(145)brd";
 
 	static {
 		try {

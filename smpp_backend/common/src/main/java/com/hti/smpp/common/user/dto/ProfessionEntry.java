@@ -13,6 +13,7 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "profession_info")
 public class ProfessionEntry implements Serializable {
+	private static final long serialVersionUID = -198003913904828483L;
 	@Id
 	@Column(name = "user_id", unique = true, nullable = false)
 	private int userId;

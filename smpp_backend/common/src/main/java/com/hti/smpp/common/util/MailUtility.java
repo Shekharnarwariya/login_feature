@@ -1,4 +1,4 @@
-package com.hti.smpp.common.request;
+package com.hti.smpp.common.util;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -10,7 +10,8 @@ import java.util.StringTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hti.smpp.common.dto.UserEntryExt;
+import com.hti.smpp.common.user.dto.PasswordLinkEntry;
+import com.hti.smpp.common.user.dto.UserEntryExt;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MultiUtility;
 
@@ -66,7 +67,7 @@ public class MailUtility {
 				+ "</tbody>																																						  "
 				+ "</table></ br>																																					  "
 				+ "<br >	" + "<br >	" + "<br >	" + "</body>";
-		String filename = IConstants.WEBAPP_DIR + "mail//" + systemId + "_login_"
+		String filename = IConstants.WEBSMPP_EXT_DIR + "mail//" + systemId + "_login_"
 				+ new SimpleDateFormat("yyyy-MM-dd_hhmmss").format(new Date()) + ".html";
 		MultiUtility.writeMailContent(filename, content);
 		return filename;
@@ -75,7 +76,7 @@ public class MailUtility {
 	public String mailOnLoginFailedContent(String systemId, String ipAddress, int attempts) {
 		String text = "";
 		try {
-			text = MultiUtility.readContent(IConstants.WEBAPP_DIR + "format//email//login_failed_email.txt");
+			text = MultiUtility.readContent(IConstants.WEBSMPP_EXT_DIR + "format//email//login_failed_email.txt");
 			do {
 				text = text.replaceFirst("#", systemId);
 				text = text.replaceFirst("#", String.valueOf(attempts));
@@ -107,7 +108,7 @@ public class MailUtility {
 				+ "</tbody>																																						  "
 				+ "</table></ br>																																					  "
 				+ "<br >	" + "<br >	" + "<br >	" + "</body>";
-		String filename = IConstants.WEBAPP_DIR + "mail//" + systemId + "_failed_login_"
+		String filename = IConstants.WEBSMPP_EXT_DIR + "mail//" + systemId + "_failed_login_"
 				+ new SimpleDateFormat("yyyy-MM-dd_hhmmss").format(new Date()) + ".html";
 		MultiUtility.writeMailContent(filename, content);
 		return filename;
@@ -135,7 +136,7 @@ public class MailUtility {
 				+ "</tbody>																																						  "
 				+ "</table></ br>																																					  "
 				+ "<br >	" + "<br >	" + "<br >	" + "</body>";
-		String filename = IConstants.WEBAPP_DIR + "mail//" + systemId + "_http_api_access_"
+		String filename = IConstants.WEBSMPP_EXT_DIR + "mail//" + systemId + "_http_api_access_"
 				+ new SimpleDateFormat("yyyy-MM-dd_hhmmss").format(new Date()) + ".html";
 		MultiUtility.writeMailContent(filename, content);
 		return filename;
@@ -172,7 +173,7 @@ public class MailUtility {
 				+ "</tbody>																																						  "
 				+ "</table></ br>																																					  "
 				+ "<br >	" + "<br >	" + "<br >	" + "</body>";
-		String filename = IConstants.WEBAPP_DIR + "mail//" + systemId + "_setpassword_"
+		String filename = IConstants.WEBSMPP_EXT_DIR + "mail//" + systemId + "_setpassword_"
 				+ new SimpleDateFormat("yyyy-MM-dd_hhmmss").format(new Date()) + ".html";
 		MultiUtility.writeMailContent(filename, content);
 		return filename;
@@ -281,7 +282,7 @@ public class MailUtility {
 				+ "</tbody>																																						  "
 				+ "</table></ br>																																					  "
 				+ "<br >	" + "<br >	" + "<br >	" + "</body>";
-		String filename = IConstants.WEBAPP_DIR + "mail//" + userDTO.getUserEntry().getSystemId() + "_Creation_"
+		String filename = IConstants.WEBSMPP_EXT_DIR + "mail//" + userDTO.getUserEntry().getSystemId() + "_Creation_"
 				+ new SimpleDateFormat("yyyy-MM-dd_hhmmss").format(new Date()) + ".html";
 		MultiUtility.writeMailContent(filename, content);
 		return filename;
