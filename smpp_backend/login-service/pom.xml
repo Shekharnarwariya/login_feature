@@ -35,8 +35,16 @@
 		<dependency>
 			<groupId>smpp</groupId>
 			<artifactId>smpp</artifactId>
+			<scope>system</scope>
 			<version>1.0</version>
+			<systemPath>${basedir}/lib/smpp.jar</systemPath>
 		</dependency>
+		<!--	<dependency>
+			<groupId>smpp</groupId>
+			<artifactId>smpp</artifactId>
+			<version>1.0</version>
+		</dependency>-->
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
