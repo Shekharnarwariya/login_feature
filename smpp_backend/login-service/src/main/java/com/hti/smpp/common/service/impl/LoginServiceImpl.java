@@ -80,7 +80,6 @@ import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.BalanceEntryRepository;
 import com.hti.smpp.common.user.repository.DlrSettingEntryRepository;
 import com.hti.smpp.common.user.repository.DriverInfoRepository;
-import com.hti.smpp.common.user.repository.MultiUserEntryRepository;
 import com.hti.smpp.common.user.repository.OtpEntryRepository;
 import com.hti.smpp.common.user.repository.ProfessionEntryRepository;
 import com.hti.smpp.common.user.repository.RechargeEntryRepository;
@@ -159,9 +158,6 @@ public class LoginServiceImpl implements LoginService {
 	private MessageResourceBundle messageResourceBundle;
 
 	@Autowired
-	private MultiUserEntryRepository multiUserRepo;
-
-	@Autowired
 	private RestTemplate restTemplate;
 
 	@Autowired
@@ -183,7 +179,8 @@ public class LoginServiceImpl implements LoginService {
 	 * user details.
 	 */
 	@Override
-	public ResponseEntity<?> loginjwt(LoginRequest loginRequest, HttpServletRequest request) {
+	public ResponseEntity<?> loginjwt(LoginRequest loginRequest, HttpServletRequest request, WebMasterEntry webMaster,
+			ProfessionEntry professionEntry, LoginDTO loginDTO, UserEntry userEntry) {
 		String ipaddress = request.getRemoteAddr();
 		String username = loginRequest.getUsername();
 		try {
@@ -215,6 +212,45 @@ public class LoginServiceImpl implements LoginService {
 			login_attempts++;
 			GlobalVars.LoginAttempts.put(username, login_attempts);
 			logger.error("<-- Invalid User Login[" + username + "] --> Attempts:" + login_attempts);
+			if (webMaster.getOtpEmail() != null) {
+				String to = IConstants.TO_EMAIl;
+				String from = IConstants.SUPPORT_EMAIL[0];
+				String domainEmail = professionEntry.getDomainEmail();
+				if (domainEmail != null && domainEmail.length() > 0 && domainEmail.contains("@")
+						&& domainEmail.contains(".")) {
+					from = domainEmail;
+					logger.info(loginDTO.getSystemId() + " Domain-Email Found: " + from);
+				} else {
+					String master = userEntry.getMasterId();
+					ProfessionEntry masterProfessionEntry = null;
+					if (GlobalVars.UserMapping.containsKey(master)) {
+						int masterid = GlobalVars.UserMapping.get(master);
+						masterProfessionEntry = GlobalVars.ProfessionEntries.get(masterid);
+					}
+					String domainEmailMaster = masterProfessionEntry.getDomainEmail();
+					if (domainEmailMaster != null && domainEmailMaster.length() > 0 && domainEmailMaster.contains("@")
+							&& domainEmailMaster.contains(".")) {
+						from = domainEmailMaster;
+						logger.info(loginDTO.getSystemId() + " Domain-Email Found: " + from);
+					} else {
+						logger.info(loginDTO.getSystemId() + " Domain-Email Not Found");
+					}
+				}
+				if (webMaster.getOtpEmail() != null && webMaster.getOtpEmail().contains("@")
+						&& webMaster.getOtpEmail().contains(".")) {
+					to = webMaster.getOtpEmail();
+				}
+				String mailContent = new MailUtility().mailOnLoginFailedContent(loginDTO.getSystemId(), ipaddress,
+						login_attempts);
+				try {
+					MailUtility.send(to, mailContent, "Failed login alert", from, false);
+					logger.error("failed login[" + loginDTO.getSystemId() + "] Email Sent From:" + from + " To:" + to);
+				} catch (Exception ex) {
+					logger.error(loginDTO.getSystemId() + " failed login email error", ex.fillInStackTrace());
+				}
+			} else {
+				logger.info(loginDTO.getSystemId() + " OTP Email Not Found");
+			}
 			throw new AuthenticationExceptionFailed(
 					messageResourceBundle.getExMessage(ConstantMessages.AUTHENTICATION_FAILED_PASSWORD));
 		} catch (Exception e) {
@@ -229,6 +265,45 @@ public class LoginServiceImpl implements LoginService {
 			SessionLogInsert.logQueue.enqueue(new AccessLogEntry(loginRequest.getUsername(),
 					new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), ipaddress, 0, "failed",
 					"system error"));
+			if (webMaster.getOtpEmail() != null) {
+				String to = IConstants.TO_EMAIl;
+				String from = IConstants.SUPPORT_EMAIL[0];
+				String domainEmail = professionEntry.getDomainEmail();
+				if (domainEmail != null && domainEmail.length() > 0 && domainEmail.contains("@")
+						&& domainEmail.contains(".")) {
+					from = domainEmail;
+					logger.info(loginDTO.getSystemId() + " Domain-Email Found: " + from);
+				} else {
+					String master = userEntry.getMasterId();
+					ProfessionEntry masterProfessionEntry = null;
+					if (GlobalVars.UserMapping.containsKey(master)) {
+						int masterid = GlobalVars.UserMapping.get(master);
+						masterProfessionEntry = GlobalVars.ProfessionEntries.get(masterid);
+					}
+					String domainEmailMaster = masterProfessionEntry.getDomainEmail();
+					if (domainEmailMaster != null && domainEmailMaster.length() > 0 && domainEmailMaster.contains("@")
+							&& domainEmailMaster.contains(".")) {
+						from = domainEmailMaster;
+						logger.info(loginDTO.getSystemId() + " Domain-Email Found: " + from);
+					} else {
+						logger.info(loginDTO.getSystemId() + " Domain-Email Not Found");
+					}
+				}
+				if (webMaster.getOtpEmail() != null && webMaster.getOtpEmail().contains("@")
+						&& webMaster.getOtpEmail().contains(".")) {
+					to = webMaster.getOtpEmail();
+				}
+				String mailContent = new MailUtility().mailOnLoginFailedContent(loginDTO.getSystemId(), ipaddress,
+						login_attempts);
+				try {
+					MailUtility.send(to, mailContent, "Failed login alert", from, false);
+					logger.error("failed login[" + loginDTO.getSystemId() + "] Email Sent From:" + from + " To:" + to);
+				} catch (Exception ex) {
+					logger.error(loginDTO.getSystemId() + " failed login email error", ex.fillInStackTrace());
+				}
+			} else {
+				logger.info(loginDTO.getSystemId() + " OTP Email Not Found");
+			}
 			throw new InternalServerException(
 					messageResourceBundle.getExMessage(ConstantMessages.INTERNAL_SERVER_ERROR));
 		}
@@ -658,11 +733,9 @@ public class LoginServiceImpl implements LoginService {
 						coverageReport, lowAmount, smsAlert, webUrl, dlrThroughWeb, mis, lowBalanceAlert,
 						webMasterEntry, dlrSettingEntry);
 
-
 				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 				String formattedDateTime = LocalDateTime.now().format(formatter);
 				user.setEditOn(formattedDateTime);
-
 
 				user.setEditBy(username);
 				if (keepLogs != null) {
@@ -934,7 +1007,6 @@ public class LoginServiceImpl implements LoginService {
 			login_attempts = GlobalVars.LoginAttempts.get(username);
 		}
 		login_attempts++;
-		System.out.println(login_attempts + "attempts" + IConstants.LOGIN_ATTEMPT_LIMIT);
 		if (login_attempts == IConstants.LOGIN_ATTEMPT_LIMIT) {
 			System.out.println("run if..");
 			webMaster.setWebAccess(false);
@@ -947,15 +1019,17 @@ public class LoginServiceImpl implements LoginService {
 			}
 			GlobalVars.LoginAttempts.remove(loginDTO.getSystemId());
 		}
-		JwtResponse jwtResponse = (JwtResponse) loginjwt(loginRequest, request).getBody();
-		boolean webAccess = true;
-		String lang = "";
-		String login_failed_remarks = null;
 		ProfessionEntry professionEntry = null;
 		if (GlobalVars.UserMapping.containsKey(userEntry.getSystemId())) {
 			int userid = GlobalVars.UserMapping.get(userEntry.getSystemId());
 			professionEntry = GlobalVars.ProfessionEntries.get(userid);
 		}
+		JwtResponse jwtResponse = (JwtResponse) loginjwt(loginRequest, request, webMaster, professionEntry, loginDTO,
+				userEntry).getBody();
+		boolean webAccess = true;
+		String lang = "";
+		String login_failed_remarks = null;
+
 		try {
 			String ipaddress = request.getRemoteAddr();
 			logger.info("Web Login Requested by " + loginRequest.getUsername() + " Via IP: " + ipaddress);
@@ -1460,12 +1534,11 @@ public class LoginServiceImpl implements LoginService {
 										// send email for login
 										String to = IConstants.TO_EMAIl;
 										String from = IConstants.SUPPORT_EMAIL[0];
-										if (professionEntry.getDomainEmail() != null
-												&& professionEntry.getDomainEmail().length() > 0
-												&& professionEntry.getDomainEmail().contains("@")
-												&& professionEntry.getDomainEmail().contains(".")) {
-											from = professionEntry.getDomainEmail();
-											logger.info(userEntry.getSystemId() + " Domain-Email Found: " + from);
+										String domainEmail = professionEntry.getDomainEmail();
+										if (domainEmail != null && domainEmail.length() > 0 && domainEmail.contains("@")
+												&& domainEmail.contains(".")) {
+											from = domainEmail;
+											logger.info(loginDTO.getSystemId() + " Domain-Email Found: " + from);
 										} else {
 											String master = userEntry.getMasterId();
 											ProfessionEntry professionEntryMaster = null;
@@ -1473,14 +1546,12 @@ public class LoginServiceImpl implements LoginService {
 												int masterid = GlobalVars.UserMapping.get(master);
 												professionEntryMaster = GlobalVars.ProfessionEntries.get(masterid);
 											}
-											if (professionEntryMaster != null
-													&& professionEntry.getDomainEmail() != null
-													&& professionEntryMaster.getDomainEmail().length() > 0
-													&& professionEntryMaster.getDomainEmail().contains("@")
-													&& professionEntryMaster.getDomainEmail().contains(".")) {
-												from = professionEntryMaster.getDomainEmail();
-												logger.info(userEntry.getSystemId() + " Master Domain-Email Found: "
-														+ from);
+											String domainEmailMaster = professionEntryMaster.getDomainEmail();
+											if (domainEmailMaster != null && domainEmailMaster.length() > 0
+													&& domainEmailMaster.contains("@")
+													&& domainEmailMaster.contains(".")) {
+												from = domainEmailMaster;
+												logger.info(loginDTO.getSystemId() + " Domain-Email Found: " + from);
 											} else {
 												logger.info(userEntry.getSystemId() + " Domain-Email Not Found");
 											}
@@ -1572,10 +1643,10 @@ public class LoginServiceImpl implements LoginService {
 					if (webMaster.getOtpEmail() != null) {
 						String to = IConstants.TO_EMAIl;
 						String from = IConstants.SUPPORT_EMAIL[0];
-						if (professionEntry.getDomainEmail() != null && professionEntry.getDomainEmail().length() > 0
-								&& professionEntry.getDomainEmail().contains("@")
-								&& professionEntry.getDomainEmail().contains(".")) {
-							from = professionEntry.getDomainEmail();
+						String domainEmail = professionEntry.getDomainEmail();
+						if (domainEmail != null && domainEmail.length() > 0 && domainEmail.contains("@")
+								&& domainEmail.contains(".")) {
+							from = domainEmail;
 							logger.info(loginDTO.getSystemId() + " Domain-Email Found: " + from);
 						} else {
 							String master = userEntry.getMasterId();
@@ -1584,12 +1655,11 @@ public class LoginServiceImpl implements LoginService {
 								int masterid = GlobalVars.UserMapping.get(master);
 								masterProfessionEntry = GlobalVars.ProfessionEntries.get(masterid);
 							}
-							if (masterProfessionEntry != null && masterProfessionEntry.getDomainEmail() != null
-									&& masterProfessionEntry.getDomainEmail().length() > 0
-									&& masterProfessionEntry.getDomainEmail().contains("@")
-									&& masterProfessionEntry.getDomainEmail().contains(".")) {
-								from = masterProfessionEntry.getDomainEmail();
-								logger.info(loginDTO.getSystemId() + " Master Domain-Email Found: " + from);
+							String domainEmailMaster = masterProfessionEntry.getDomainEmail();
+							if (domainEmailMaster != null && domainEmailMaster.length() > 0
+									&& domainEmailMaster.contains("@") && domainEmailMaster.contains(".")) {
+								from = domainEmailMaster;
+								logger.info(loginDTO.getSystemId() + " Domain-Email Found: " + from);
 							} else {
 								logger.info(loginDTO.getSystemId() + " Domain-Email Not Found");
 							}
@@ -1789,6 +1859,10 @@ public class LoginServiceImpl implements LoginService {
 		}
 		logger.info(userId + " multiuser list: " + list.size());
 		return list;
+	}
+
+	public void falidEmail() {
+
 	}
 
 }

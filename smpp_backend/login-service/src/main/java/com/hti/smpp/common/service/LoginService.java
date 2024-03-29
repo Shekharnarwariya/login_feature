@@ -4,9 +4,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.hti.smpp.common.request.LoginDTO;
 import com.hti.smpp.common.request.LoginRequest;
 import com.hti.smpp.common.request.PasswordUpdateRequest;
 import com.hti.smpp.common.request.SignupRequest;
+import com.hti.smpp.common.user.dto.ProfessionEntry;
+import com.hti.smpp.common.user.dto.UserEntry;
+import com.hti.smpp.common.user.dto.WebMasterEntry;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -16,7 +20,8 @@ import jakarta.servlet.http.HttpServletRequest;
 @Service
 public interface LoginService {
 
-	public ResponseEntity<?> loginjwt(LoginRequest loginRequest, HttpServletRequest request);
+	public ResponseEntity<?> loginjwt(LoginRequest loginRequest, HttpServletRequest request, WebMasterEntry webMaster,
+			ProfessionEntry professionEntry, LoginDTO loginDTO, UserEntry userEntry);
 
 	public ResponseEntity<?> profile(String username);
 
