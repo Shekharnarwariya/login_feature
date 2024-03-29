@@ -844,7 +844,9 @@ public class LoginServiceImpl implements LoginService {
 			String dlrEmail, String coverageEmail, String coverageReport, Double lowAmount, Boolean smsAlert,
 			String webUrl, Boolean dlrThroughWeb, Boolean mis, Boolean lowBalanceAlert, WebMasterEntry webMasterEntry,
 			DlrSettingEntry dlrSettingEntry) {
-
+		if (alertMobile != null) {
+			webMasterEntry.setMinBalMobile(alertMobile);
+		}
 		if (lowAmount != null) {
 			webMasterEntry.setMinBalance(lowAmount);
 		}

@@ -31,6 +31,13 @@ public class SpringCloudConfig {
 								.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
 						.uri("lb://login-service:8082")) // Target URI for the route
 
+				// Route for LOGIN-SERVICE
+				.route("login-service", r -> r.path("/dashboard-access/**") // Path pattern for the route
+						.filters(f -> f.rewritePath("./dashboard-access/(?<segment>.*)", "/${segment}") // Rewrite the
+																										// path
+								.filter(new AuthenticationFilter().apply(new AuthenticationFilter.Config())))
+						.uri("lb://login-service:8082")) // Target URI for the route
+
 				// Route for SMS-SERVICE
 				.route("sms-service",
 						r -> r.path("/sms/**")
