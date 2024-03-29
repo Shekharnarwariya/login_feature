@@ -1,0 +1,561 @@
+2024-03-27 15:24:34 [main] INFO  - [LOCAL] [dev] [5.3.6] Interfaces is enabled, trying to pick one address matching to one of: [127.0.0.1, *.*.*.*]
+2024-03-27 15:24:34 [main] WARN  - [LOCAL] [dev] [5.3.6] Ignoring TCP_KEEPCOUNT. It seems your JDK does not support jdk.net.ExtendedSocketOptions on this OS. Try upgrading to the latest JDK or check with your JDK vendor.Alternatively, on Linux, configure tcp_keepalive_probes in the kernel (affecting default keep-alive configuration for all sockets): For more info see https://tldp.org/HOWTO/html_single/TCP-Keepalive-HOWTO/. If this isn't dealt with, idle connections could be closed prematurely.
+2024-03-27 15:24:34 [main] WARN  - [LOCAL] [dev] [5.3.6] Ignoring TCP_KEEPIDLE. It seems your JDK does not support jdk.net.ExtendedSocketOptions on this OS. Try upgrading to the latest JDK or check with your JDK vendor.Alternatively, on Linux, configure tcp_keepalive_time in the kernel (affecting default keep-alive configuration for all sockets): For more info see https://tldp.org/HOWTO/html_single/TCP-Keepalive-HOWTO/. If this isn't dealt with, idle connections could be closed prematurely.
+2024-03-27 15:24:34 [main] WARN  - [LOCAL] [dev] [5.3.6] Ignoring TCP_KEEPINTERVAL. It seems your JDK does not support jdk.net.ExtendedSocketOptions on this OS. Try upgrading to the latest JDK or check with your JDK vendor.Alternatively, on Linux, configure tcp_keepalive_intvl in the kernel (affecting default keep-alive configuration for all sockets): For more info see https://tldp.org/HOWTO/html_single/TCP-Keepalive-HOWTO/. If this isn't dealt with, idle connections could be closed prematurely.
+2024-03-27 15:24:34 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+	+       +  o    o     o     o---o o----o o      o---o     o     o----o o--o--o
+	+ +   + +  |    |    / \       /  |      |     /         / \    |         |   
+	+ + + + +  o----o   o   o     o   o----o |    o         o   o   o----o    |   
+	+ +   + +  |    |  /     \   /    |      |     \       /     \       |    |   
+	+       +  o    o o       o o---o o----o o----o o---o o       o o----o    o   
+2024-03-27 15:24:34 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+2024-03-27 15:24:34 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Hazelcast Platform 5.3.6 (20231109 - 9903dc9) starting at [127.0.0.1]:5701
+2024-03-27 15:24:34 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Cluster name: dev
+2024-03-27 15:24:34 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Integrity Checker is disabled. Fail-fast on corrupted executables will not be performed. For more information, see the documentation for Integrity Checker.
+2024-03-27 15:24:34 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] The Jet engine is disabled.
+To enable the Jet engine on the members, do one of the following:
+  - Change member config using Java API: config.getJetConfig().setEnabled(true)
+  - Change XML/YAML configuration property: Set hazelcast.jet.enabled to true
+  - Add system property: -Dhz.jet.enabled=true (for Hazelcast embedded, works only when loading config via Config.load)
+  - Add environment variable: HZ_JET_ENABLED=true (recommended when running container image. For Hazelcast embedded, works only when loading config via Config.load)
+2024-03-27 15:24:35 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] TPC: disabled
+2024-03-27 15:24:35 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Enable DEBUG/FINE log level for log category com.hazelcast.system.security  or use -Dhazelcast.security.recommendations system property to see security recommendations and the status of current config.
+2024-03-27 15:24:35 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Using TCP/IP discovery
+2024-03-27 15:24:35 [main] WARN  - [127.0.0.1]:5701 [dev] [5.3.6] CP Subsystem is not enabled. CP data structures will operate in UNSAFE mode! Please note that UNSAFE mode will not provide strong consistency guarantees.
+2024-03-27 15:24:36 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-27 15:24:36 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTING
+2024-03-27 15:24:36 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+
+Members {size:1, ver:1} [
+	Member [127.0.0.1]:5701 - dafd9925-0ac5-4393-a7d4-fa487aa04e81 this
+]
+
+2024-03-27 15:24:36 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTED
+2024-03-27 15:24:36 [main] INFO  - HHH000412: Hibernate Core {5.2.2.Final}
+2024-03-27 15:24:36 [main] INFO  - HHH000206: hibernate.properties not found
+2024-03-27 15:24:36 [main] INFO  - HHH000021: Bytecode provider name : javassist
+2024-03-27 15:24:37 [main] INFO  - HCANN000001: Hibernate Commons Annotations {5.0.1.Final}
+2024-03-27 15:24:37 [main] INFO  - HHH000400: Using dialect: org.hibernate.dialect.MySQLDialect
+2024-03-27 15:24:37 [main] WARN  - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'hostSessionFactory' defined in file [D:\eclipse-smpp\creation_of_API\smpp-mohit\CAAS\config\CaasContext.xml]: Invocation of init method failed; nested exception is org.hibernate.MappingException: Could not get constructor for org.hibernate.persister.entity.SingleTableEntityPersister
+2024-03-27 15:28:41 [main] INFO  - [LOCAL] [dev] [5.3.6] Interfaces is enabled, trying to pick one address matching to one of: [127.0.0.1, *.*.*.*]
+2024-03-27 15:28:41 [main] WARN  - [LOCAL] [dev] [5.3.6] Ignoring TCP_KEEPCOUNT. It seems your JDK does not support jdk.net.ExtendedSocketOptions on this OS. Try upgrading to the latest JDK or check with your JDK vendor.Alternatively, on Linux, configure tcp_keepalive_probes in the kernel (affecting default keep-alive configuration for all sockets): For more info see https://tldp.org/HOWTO/html_single/TCP-Keepalive-HOWTO/. If this isn't dealt with, idle connections could be closed prematurely.
+2024-03-27 15:28:41 [main] WARN  - [LOCAL] [dev] [5.3.6] Ignoring TCP_KEEPIDLE. It seems your JDK does not support jdk.net.ExtendedSocketOptions on this OS. Try upgrading to the latest JDK or check with your JDK vendor.Alternatively, on Linux, configure tcp_keepalive_time in the kernel (affecting default keep-alive configuration for all sockets): For more info see https://tldp.org/HOWTO/html_single/TCP-Keepalive-HOWTO/. If this isn't dealt with, idle connections could be closed prematurely.
+2024-03-27 15:28:41 [main] WARN  - [LOCAL] [dev] [5.3.6] Ignoring TCP_KEEPINTERVAL. It seems your JDK does not support jdk.net.ExtendedSocketOptions on this OS. Try upgrading to the latest JDK or check with your JDK vendor.Alternatively, on Linux, configure tcp_keepalive_intvl in the kernel (affecting default keep-alive configuration for all sockets): For more info see https://tldp.org/HOWTO/html_single/TCP-Keepalive-HOWTO/. If this isn't dealt with, idle connections could be closed prematurely.
+2024-03-27 15:28:42 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+	+       +  o    o     o     o---o o----o o      o---o     o     o----o o--o--o
+	+ +   + +  |    |    / \       /  |      |     /         / \    |         |   
+	+ + + + +  o----o   o   o     o   o----o |    o         o   o   o----o    |   
+	+ +   + +  |    |  /     \   /    |      |     \       /     \       |    |   
+	+       +  o    o o       o o---o o----o o----o o---o o       o o----o    o   
+2024-03-27 15:28:42 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+2024-03-27 15:28:42 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Hazelcast Platform 5.3.6 (20231109 - 9903dc9) starting at [127.0.0.1]:5701
+2024-03-27 15:28:42 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Cluster name: dev
+2024-03-27 15:28:42 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Integrity Checker is disabled. Fail-fast on corrupted executables will not be performed. For more information, see the documentation for Integrity Checker.
+2024-03-27 15:28:42 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] The Jet engine is disabled.
+To enable the Jet engine on the members, do one of the following:
+  - Change member config using Java API: config.getJetConfig().setEnabled(true)
+  - Change XML/YAML configuration property: Set hazelcast.jet.enabled to true
+  - Add system property: -Dhz.jet.enabled=true (for Hazelcast embedded, works only when loading config via Config.load)
+  - Add environment variable: HZ_JET_ENABLED=true (recommended when running container image. For Hazelcast embedded, works only when loading config via Config.load)
+2024-03-27 15:28:42 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] TPC: disabled
+2024-03-27 15:28:42 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Enable DEBUG/FINE log level for log category com.hazelcast.system.security  or use -Dhazelcast.security.recommendations system property to see security recommendations and the status of current config.
+2024-03-27 15:28:42 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Using TCP/IP discovery
+2024-03-27 15:28:42 [main] WARN  - [127.0.0.1]:5701 [dev] [5.3.6] CP Subsystem is not enabled. CP data structures will operate in UNSAFE mode! Please note that UNSAFE mode will not provide strong consistency guarantees.
+2024-03-27 15:28:43 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-27 15:28:43 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTING
+2024-03-27 15:28:43 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+
+Members {size:1, ver:1} [
+	Member [127.0.0.1]:5701 - 5592ed2d-e0f7-4404-8d91-59a0c21204a4 this
+]
+
+2024-03-27 15:28:43 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTED
+2024-03-27 15:28:44 [main] INFO  - HHH000412: Hibernate Core {5.2.2.Final}
+2024-03-27 15:28:44 [main] INFO  - HHH000206: hibernate.properties not found
+2024-03-27 15:28:44 [main] INFO  - HHH000021: Bytecode provider name : javassist
+2024-03-27 15:28:44 [main] INFO  - HCANN000001: Hibernate Commons Annotations {5.0.1.Final}
+2024-03-27 15:28:44 [main] INFO  - HHH000400: Using dialect: org.hibernate.dialect.MySQLDialect
+2024-03-27 15:28:44 [main] WARN  - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'hostSessionFactory' defined in file [D:\eclipse-smpp\creation_of_API\smpp-mohit\CAAS\config\CaasContext.xml]: Invocation of init method failed; nested exception is org.hibernate.MappingException: Could not get constructor for org.hibernate.persister.entity.SingleTableEntityPersister
+2024-03-27 15:31:49 [main] INFO  - [LOCAL] [dev] [5.3.6] Interfaces is enabled, trying to pick one address matching to one of: [127.0.0.1, *.*.*.*]
+2024-03-27 15:31:49 [main] WARN  - [LOCAL] [dev] [5.3.6] Ignoring TCP_KEEPCOUNT. It seems your JDK does not support jdk.net.ExtendedSocketOptions on this OS. Try upgrading to the latest JDK or check with your JDK vendor.Alternatively, on Linux, configure tcp_keepalive_probes in the kernel (affecting default keep-alive configuration for all sockets): For more info see https://tldp.org/HOWTO/html_single/TCP-Keepalive-HOWTO/. If this isn't dealt with, idle connections could be closed prematurely.
+2024-03-27 15:31:49 [main] WARN  - [LOCAL] [dev] [5.3.6] Ignoring TCP_KEEPIDLE. It seems your JDK does not support jdk.net.ExtendedSocketOptions on this OS. Try upgrading to the latest JDK or check with your JDK vendor.Alternatively, on Linux, configure tcp_keepalive_time in the kernel (affecting default keep-alive configuration for all sockets): For more info see https://tldp.org/HOWTO/html_single/TCP-Keepalive-HOWTO/. If this isn't dealt with, idle connections could be closed prematurely.
+2024-03-27 15:31:49 [main] WARN  - [LOCAL] [dev] [5.3.6] Ignoring TCP_KEEPINTERVAL. It seems your JDK does not support jdk.net.ExtendedSocketOptions on this OS. Try upgrading to the latest JDK or check with your JDK vendor.Alternatively, on Linux, configure tcp_keepalive_intvl in the kernel (affecting default keep-alive configuration for all sockets): For more info see https://tldp.org/HOWTO/html_single/TCP-Keepalive-HOWTO/. If this isn't dealt with, idle connections could be closed prematurely.
+2024-03-27 15:31:50 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+	+       +  o    o     o     o---o o----o o      o---o     o     o----o o--o--o
+	+ +   + +  |    |    / \       /  |      |     /         / \    |         |   
+	+ + + + +  o----o   o   o     o   o----o |    o         o   o   o----o    |   
+	+ +   + +  |    |  /     \   /    |      |     \       /     \       |    |   
+	+       +  o    o o       o o---o o----o o----o o---o o       o o----o    o   
+2024-03-27 15:31:50 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+2024-03-27 15:31:50 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Hazelcast Platform 5.3.6 (20231109 - 9903dc9) starting at [127.0.0.1]:5701
+2024-03-27 15:31:50 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Cluster name: dev
+2024-03-27 15:31:50 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Integrity Checker is disabled. Fail-fast on corrupted executables will not be performed. For more information, see the documentation for Integrity Checker.
+2024-03-27 15:31:50 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] The Jet engine is disabled.
+To enable the Jet engine on the members, do one of the following:
+  - Change member config using Java API: config.getJetConfig().setEnabled(true)
+  - Change XML/YAML configuration property: Set hazelcast.jet.enabled to true
+  - Add system property: -Dhz.jet.enabled=true (for Hazelcast embedded, works only when loading config via Config.load)
+  - Add environment variable: HZ_JET_ENABLED=true (recommended when running container image. For Hazelcast embedded, works only when loading config via Config.load)
+2024-03-27 15:31:50 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] TPC: disabled
+2024-03-27 15:31:50 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Enable DEBUG/FINE log level for log category com.hazelcast.system.security  or use -Dhazelcast.security.recommendations system property to see security recommendations and the status of current config.
+2024-03-27 15:31:50 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Using TCP/IP discovery
+2024-03-27 15:31:50 [main] WARN  - [127.0.0.1]:5701 [dev] [5.3.6] CP Subsystem is not enabled. CP data structures will operate in UNSAFE mode! Please note that UNSAFE mode will not provide strong consistency guarantees.
+2024-03-27 15:31:51 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-27 15:31:51 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTING
+2024-03-27 15:31:51 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+
+Members {size:1, ver:1} [
+	Member [127.0.0.1]:5701 - 963dd563-2e95-4968-bab9-e415519a13f4 this
+]
+
+2024-03-27 15:31:51 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTED
+2024-03-27 15:31:52 [main] INFO  - HHH000412: Hibernate Core {5.2.2.Final}
+2024-03-27 15:31:52 [main] INFO  - HHH000206: hibernate.properties not found
+2024-03-27 15:31:52 [main] INFO  - HHH000021: Bytecode provider name : javassist
+2024-03-27 15:31:52 [main] INFO  - HCANN000001: Hibernate Commons Annotations {5.0.1.Final}
+2024-03-27 15:31:52 [hz.tender_bouman.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=7.7G, physical.memory.free=627.5M, swap.space.total=0, swap.space.free=0, heap.memory.used=29.9M, heap.memory.free=24.7M, heap.memory.total=40.0M, heap.memory.max=1.9G, heap.memory.used/total=74.84%, heap.memory.used/max=1.51%, minor.gc.count=5, minor.gc.time=45ms, major.gc.count=0, major.gc.time=0ms, unknown.gc.count=2, unknown.gc.time=3ms, load.process=0.00%, load.system=100.00%, load.systemAverage=n/a thread.count=46, thread.peakCount=46, cluster.timeDiff=0, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=1, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=0, clientEndpoint.count=0, connection.active.count=0, client.connection.count=0, connection.count=0
+2024-03-27 15:31:52 [main] INFO  - HHH000400: Using dialect: org.hibernate.dialect.MySQLDialect
+2024-03-27 15:31:53 [main] INFO  - Initializing Connection Pool
+2024-03-27 15:31:53 [main] INFO  - jdbc:mysql://localhost:3306/host_brd?autoReconnect=true&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC[com.mysql.cj.jdbc.Driver] User: root Pass: root
+2024-03-27 15:31:53 [main] INFO  - Total Connection Stored: 10
+2024-03-27 15:31:53 [main] INFO  - ********** Start loading Smsc Schedule ******************
+2024-03-27 15:31:53 [main] INFO  - SmscSchedule: {}
+2024-03-27 15:31:53 [main] INFO  - FlagReader Thread Starting
+2024-03-27 15:31:53 [main] INFO  - ********* Start Loading Network Entries ************
+2024-03-27 15:31:54 [main] ERROR - Network[1] Invalid Number Length Range: 0,10
+2024-03-27 15:31:54 [main] ERROR - Network[2] Invalid Number Length Range: 10,9
+2024-03-27 15:31:54 [main] ERROR - Network[3] Invalid Number Length Range: 10,10
+2024-03-27 15:31:54 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Initializing cluster partition table arrangement...
+2024-03-27 15:31:54 [main] INFO  - NetworkEntries: 1392
+2024-03-27 15:31:54 [main] INFO  - ********* End Loading Network Entries **************
+2024-03-27 15:31:54 [main] INFO  - ********* Start Loading Smsc Configuration **************
+2024-03-27 15:31:54 [main] INFO  - SmscEntries: 11
+2024-03-27 15:31:54 [main] INFO  - ******** End Loading Smsc Configuration *****************
+2024-03-27 15:31:54 [main] INFO  - ********** Start loading Smsc Group ******************
+2024-03-27 15:31:54 [main] INFO  - SmscGroup: [SmscGroup: id=1,name=DEFAULT,remarks=default]
+2024-03-27 15:31:54 [main] INFO  - ************ End loading Smsc Group *******************
+2024-03-27 15:31:54 [main] INFO  - ********** Start loading Smsc Group Member ******************
+2024-03-27 15:31:54 [main] INFO  - SmscGroupMember: []
+2024-03-27 15:31:54 [main] INFO  - ************ End loading Smsc Group Member *******************
+2024-03-27 15:31:54 [main] INFO  - **** Start Loading User Configuration ********
+2024-03-27 15:31:54 [main] ERROR - null DecodeError: java.lang.NullPointerException: Cannot invoke "String.trim()" because "arg0" is null
+2024-03-27 15:31:54 [main] ERROR - null DecodeError: java.lang.NullPointerException: Cannot invoke "String.trim()" because "arg0" is null
+2024-03-27 15:31:54 [main] INFO  - User Entries: 12
+2024-03-27 15:31:54 [main] INFO  - Balance Entries: 12
+2024-03-27 15:31:54 [main] INFO  - User Mapping: 12
+2024-03-27 15:31:54 [main] INFO  - WebMaster Entries: 12
+2024-03-27 15:31:55 [main] INFO  - Profession Entries: 12
+2024-03-27 15:31:55 [main] INFO  - DlrSetting Entries: 12
+2024-03-27 15:31:55 [main] INFO  - ***** End Loading User Configuration **********
+2024-03-27 15:31:55 [main] INFO  -  ******* Start Loading Routing *********** 
+2024-03-27 15:31:55 [main] INFO  - <--- listing Basic routing --> 
+2024-03-27 15:31:55 [main] INFO  - <--- End listing Basic routing[208] --> 
+2024-03-27 15:31:55 [main] INFO  - <--- listing Optional routing --> 
+2024-03-27 15:31:55 [main] INFO  - <--- End listing Optional routing[195] --> 
+2024-03-27 15:31:55 [main] INFO  - <--- listing Hlr routing --> 
+2024-03-27 15:31:55 [main] INFO  - <--- End listing Hlr routing[195] --> 
+2024-03-27 15:31:55 [main] INFO  - <--- listing Mms routing --> 
+2024-03-27 15:31:55 [main] INFO  - <--- End listing Mms routing[195] --> 
+2024-03-27 15:31:55 [main] INFO  - Basic Routing Entries: 195
+2024-03-27 15:31:55 [main] INFO  - Hlr Routing Entries: 195
+2024-03-27 15:31:55 [main] INFO  - Optional Routing Entries: 195
+2024-03-27 15:31:55 [main] INFO  - Mms Routing Entries: 195
+2024-03-27 15:31:55 [main] INFO  - ********** End Loading Routing *********** 
+2024-03-27 15:31:55 [main] INFO  - BearerBox Starting
+2024-03-27 15:31:55 [main] INFO  - BalanceOperator Starting
+2024-03-27 15:31:55 [main] INFO  - CheckCpuCycle Starting
+2024-03-27 15:31:55 [Thread-1] INFO  - ****** Reloading Smsc Scheduling ****** 
+2024-03-27 15:31:55 [Thread-1] INFO  - Today's SmscScheduling: {}
+2024-03-27 15:32:55 [checkCpuCycle] INFO  - Memory Used:---> 54 MB. Max Available: 1982 MB
+2024-03-27 15:33:55 [checkCpuCycle] INFO  - Memory Used:---> 74 MB. Max Available: 1982 MB
+2024-03-27 15:34:55 [checkCpuCycle] INFO  - Memory Used:---> 84 MB. Max Available: 1982 MB
+2024-03-27 15:35:55 [checkCpuCycle] INFO  - Memory Used:---> 90 MB. Max Available: 1982 MB
+2024-03-27 15:36:55 [checkCpuCycle] INFO  - Memory Used:---> 91 MB. Max Available: 1982 MB
+2024-03-27 15:37:55 [checkCpuCycle] INFO  - Memory Used:---> 91 MB. Max Available: 1982 MB
+2024-03-27 15:38:55 [checkCpuCycle] INFO  - Memory Used:---> 91 MB. Max Available: 1982 MB
+2024-03-27 15:39:55 [checkCpuCycle] INFO  - Memory Used:---> 89 MB. Max Available: 1982 MB
+2024-03-27 15:40:55 [checkCpuCycle] INFO  - Memory Used:---> 87 MB. Max Available: 1982 MB
+2024-03-27 15:41:55 [checkCpuCycle] INFO  - Memory Used:---> 86 MB. Max Available: 1982 MB
+2024-03-27 15:42:55 [checkCpuCycle] INFO  - Memory Used:---> 85 MB. Max Available: 1982 MB
+2024-03-27 15:43:55 [checkCpuCycle] INFO  - Memory Used:---> 83 MB. Max Available: 1982 MB
+2024-03-27 15:44:55 [checkCpuCycle] INFO  - Memory Used:---> 82 MB. Max Available: 1982 MB
+2024-03-27 15:45:55 [checkCpuCycle] INFO  - Memory Used:---> 80 MB. Max Available: 1982 MB
+2024-03-27 15:46:55 [checkCpuCycle] INFO  - Memory Used:---> 78 MB. Max Available: 1982 MB
+2024-03-27 15:47:55 [checkCpuCycle] INFO  - Memory Used:---> 76 MB. Max Available: 1982 MB
+2024-03-27 15:48:55 [checkCpuCycle] INFO  - Memory Used:---> 72 MB. Max Available: 1982 MB
+2024-03-27 15:49:55 [checkCpuCycle] INFO  - Memory Used:---> 68 MB. Max Available: 1982 MB
+2024-03-27 15:50:55 [checkCpuCycle] INFO  - Memory Used:---> 64 MB. Max Available: 1982 MB
+2024-03-27 15:51:55 [checkCpuCycle] INFO  - Memory Used:---> 60 MB. Max Available: 1982 MB
+2024-03-27 15:52:55 [checkCpuCycle] INFO  - Memory Used:---> 56 MB. Max Available: 1982 MB
+2024-03-27 15:53:55 [checkCpuCycle] INFO  - Memory Used:---> 52 MB. Max Available: 1982 MB
+2024-03-27 15:54:55 [checkCpuCycle] INFO  - Memory Used:---> 48 MB. Max Available: 1982 MB
+2024-03-27 15:55:55 [checkCpuCycle] INFO  - Memory Used:---> 44 MB. Max Available: 1982 MB
+2024-03-27 15:56:55 [checkCpuCycle] INFO  - Memory Used:---> 93 MB. Max Available: 1982 MB
+2024-03-27 15:57:55 [checkCpuCycle] INFO  - Memory Used:---> 89 MB. Max Available: 1982 MB
+2024-03-27 15:58:55 [checkCpuCycle] INFO  - Memory Used:---> 85 MB. Max Available: 1982 MB
+2024-03-27 15:59:55 [checkCpuCycle] INFO  - Memory Used:---> 81 MB. Max Available: 1982 MB
+2024-03-27 16:00:55 [checkCpuCycle] INFO  - Memory Used:---> 77 MB. Max Available: 1982 MB
+2024-03-27 16:01:55 [checkCpuCycle] INFO  - Memory Used:---> 72 MB. Max Available: 1982 MB
+2024-03-27 16:02:55 [checkCpuCycle] INFO  - Memory Used:---> 69 MB. Max Available: 1982 MB
+2024-03-27 16:03:55 [checkCpuCycle] INFO  - Memory Used:---> 64 MB. Max Available: 1982 MB
+2024-03-27 16:04:55 [checkCpuCycle] INFO  - Memory Used:---> 60 MB. Max Available: 1982 MB
+2024-03-27 16:05:55 [checkCpuCycle] INFO  - Memory Used:---> 56 MB. Max Available: 1982 MB
+2024-03-27 16:06:55 [checkCpuCycle] INFO  - Memory Used:---> 51 MB. Max Available: 1982 MB
+2024-03-27 16:07:55 [checkCpuCycle] INFO  - Memory Used:---> 48 MB. Max Available: 1982 MB
+2024-03-27 16:08:55 [checkCpuCycle] INFO  - Memory Used:---> 44 MB. Max Available: 1982 MB
+2024-03-27 16:09:55 [checkCpuCycle] INFO  - Memory Used:---> 93 MB. Max Available: 1982 MB
+2024-03-27 16:10:55 [checkCpuCycle] INFO  - Memory Used:---> 89 MB. Max Available: 1982 MB
+2024-03-27 16:24:10 [hz.tender_bouman.cached.thread-5] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] System clock apparently jumped from 2024-03-27 16:11:26.263 to 2024-03-27 16:24:10.418 since last heartbeat (+759155 ms)
+2024-03-27 16:24:10 [hz.tender_bouman.cached.thread-5] WARN  - [127.0.0.1]:5701 [dev] [5.3.6] Resetting heartbeat timestamps because of huge system clock jump! Clock-Jump: 759155 ms, Heartbeat-Timeout: 60000 ms
+2024-03-27 16:24:10 [hz.tender_bouman.InvocationMonitorThread] WARN  - [127.0.0.1]:5701 [dev] [5.3.6] MonitorInvocationsTask delayed 759473 ms
+2024-03-27 16:24:10 [hz.tender_bouman.InvocationMonitorThread] WARN  - [127.0.0.1]:5701 [dev] [5.3.6] BroadcastOperationControlTask delayed 754473 ms
+2024-03-27 16:24:12 [hz.tender_bouman.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=7.7G, physical.memory.free=773.6M, swap.space.total=0, swap.space.free=0, heap.memory.used=72.2M, heap.memory.free=32.8M, heap.memory.total=105.0M, heap.memory.max=1.9G, heap.memory.used/total=68.72%, heap.memory.used/max=3.64%, minor.gc.count=55, minor.gc.time=347ms, major.gc.count=0, major.gc.time=0ms, unknown.gc.count=32, unknown.gc.time=509ms, load.process=0.00%, load.system=100.00%, load.systemAverage=n/a thread.count=67, thread.peakCount=67, cluster.timeDiff=-759155, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=653743, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=25, clientEndpoint.count=0, connection.active.count=0, client.connection.count=0, connection.count=0
+2024-03-27 16:24:34 [checkCpuCycle] INFO  - Memory Used:---> 89 MB. Max Available: 1982 MB
+2024-03-27 16:25:34 [checkCpuCycle] INFO  - Memory Used:---> 87 MB. Max Available: 1982 MB
+2024-03-27 16:26:34 [checkCpuCycle] INFO  - Memory Used:---> 82 MB. Max Available: 1982 MB
+2024-03-27 16:27:34 [checkCpuCycle] INFO  - Memory Used:---> 77 MB. Max Available: 1982 MB
+2024-03-27 16:28:34 [checkCpuCycle] INFO  - Memory Used:---> 72 MB. Max Available: 1982 MB
+2024-03-27 16:29:34 [checkCpuCycle] INFO  - Memory Used:---> 66 MB. Max Available: 1982 MB
+2024-03-27 16:30:34 [checkCpuCycle] INFO  - Memory Used:---> 61 MB. Max Available: 1982 MB
+2024-03-27 16:31:34 [checkCpuCycle] INFO  - Memory Used:---> 56 MB. Max Available: 1982 MB
+2024-03-27 16:32:34 [checkCpuCycle] INFO  - Memory Used:---> 50 MB. Max Available: 1982 MB
+2024-03-27 16:33:35 [checkCpuCycle] INFO  - Memory Used:---> 45 MB. Max Available: 1982 MB
+2024-03-27 16:34:35 [checkCpuCycle] INFO  - Memory Used:---> 94 MB. Max Available: 1982 MB
+2024-03-27 16:35:35 [checkCpuCycle] INFO  - Memory Used:---> 88 MB. Max Available: 1982 MB
+2024-03-27 16:36:35 [checkCpuCycle] INFO  - Memory Used:---> 83 MB. Max Available: 1982 MB
+2024-03-27 16:37:35 [checkCpuCycle] INFO  - Memory Used:---> 78 MB. Max Available: 1982 MB
+2024-03-27 16:38:35 [checkCpuCycle] INFO  - Memory Used:---> 73 MB. Max Available: 1982 MB
+2024-03-27 16:39:35 [checkCpuCycle] INFO  - Memory Used:---> 67 MB. Max Available: 1982 MB
+2024-03-27 16:40:35 [checkCpuCycle] INFO  - Memory Used:---> 62 MB. Max Available: 1982 MB
+2024-03-27 16:41:35 [checkCpuCycle] INFO  - Memory Used:---> 57 MB. Max Available: 1982 MB
+2024-03-27 16:42:35 [checkCpuCycle] INFO  - Memory Used:---> 52 MB. Max Available: 1982 MB
+2024-03-27 16:43:35 [checkCpuCycle] INFO  - Memory Used:---> 47 MB. Max Available: 1982 MB
+2024-03-27 16:44:35 [checkCpuCycle] INFO  - Memory Used:---> 43 MB. Max Available: 1982 MB
+2024-03-27 16:45:35 [checkCpuCycle] INFO  - Memory Used:---> 92 MB. Max Available: 1982 MB
+2024-03-27 16:46:35 [checkCpuCycle] INFO  - Memory Used:---> 87 MB. Max Available: 1982 MB
+2024-03-27 16:47:35 [checkCpuCycle] INFO  - Memory Used:---> 81 MB. Max Available: 1982 MB
+2024-03-27 16:48:35 [checkCpuCycle] INFO  - Memory Used:---> 76 MB. Max Available: 1982 MB
+2024-03-27 16:49:35 [checkCpuCycle] INFO  - Memory Used:---> 71 MB. Max Available: 1982 MB
+2024-03-27 16:50:35 [checkCpuCycle] INFO  - Memory Used:---> 65 MB. Max Available: 1982 MB
+2024-03-27 16:51:35 [checkCpuCycle] INFO  - Memory Used:---> 59 MB. Max Available: 1982 MB
+2024-03-27 16:52:35 [checkCpuCycle] INFO  - Memory Used:---> 54 MB. Max Available: 1982 MB
+2024-03-27 16:53:35 [checkCpuCycle] INFO  - Memory Used:---> 49 MB. Max Available: 1982 MB
+2024-03-27 16:54:33 [hz.tender_bouman.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=7.7G, physical.memory.free=467.6M, swap.space.total=0, swap.space.free=0, heap.memory.used=96.4M, heap.memory.free=8.0M, heap.memory.total=105.0M, heap.memory.max=1.9G, heap.memory.used/total=91.81%, heap.memory.used/max=4.86%, minor.gc.count=82, minor.gc.time=482ms, major.gc.count=0, major.gc.time=0ms, unknown.gc.count=50, unknown.gc.time=541ms, load.process=0.00%, load.system=100.00%, load.systemAverage=n/a thread.count=54, thread.peakCount=67, cluster.timeDiff=-759155, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=1146669, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=25, clientEndpoint.count=0, connection.active.count=0, client.connection.count=0, connection.count=0
+2024-03-27 16:54:35 [checkCpuCycle] INFO  - Memory Used:---> 43 MB. Max Available: 1982 MB
+2024-03-27 16:55:35 [checkCpuCycle] INFO  - Memory Used:---> 91 MB. Max Available: 1982 MB
+2024-03-27 16:56:35 [checkCpuCycle] INFO  - Memory Used:---> 85 MB. Max Available: 1982 MB
+2024-03-27 16:57:35 [checkCpuCycle] INFO  - Memory Used:---> 79 MB. Max Available: 1982 MB
+2024-03-27 16:58:35 [checkCpuCycle] INFO  - Memory Used:---> 73 MB. Max Available: 1982 MB
+2024-03-27 16:59:35 [checkCpuCycle] INFO  - Memory Used:---> 66 MB. Max Available: 1982 MB
+2024-03-27 17:00:35 [checkCpuCycle] INFO  - Memory Used:---> 60 MB. Max Available: 1982 MB
+2024-03-27 17:01:35 [checkCpuCycle] INFO  - Memory Used:---> 54 MB. Max Available: 1982 MB
+2024-03-27 17:02:35 [checkCpuCycle] INFO  - Memory Used:---> 47 MB. Max Available: 1982 MB
+2024-03-27 17:03:35 [checkCpuCycle] INFO  - Memory Used:---> 96 MB. Max Available: 1982 MB
+2024-03-27 17:04:35 [checkCpuCycle] INFO  - Memory Used:---> 89 MB. Max Available: 1982 MB
+2024-03-27 17:05:35 [checkCpuCycle] INFO  - Memory Used:---> 83 MB. Max Available: 1982 MB
+2024-03-27 17:06:35 [checkCpuCycle] INFO  - Memory Used:---> 77 MB. Max Available: 1982 MB
+2024-03-27 17:07:35 [checkCpuCycle] INFO  - Memory Used:---> 70 MB. Max Available: 1982 MB
+2024-03-27 17:08:35 [checkCpuCycle] INFO  - Memory Used:---> 64 MB. Max Available: 1982 MB
+2024-03-27 17:09:35 [checkCpuCycle] INFO  - Memory Used:---> 57 MB. Max Available: 1982 MB
+2024-03-27 17:10:35 [checkCpuCycle] INFO  - Memory Used:---> 51 MB. Max Available: 1982 MB
+2024-03-27 17:11:35 [checkCpuCycle] INFO  - Memory Used:---> 45 MB. Max Available: 1982 MB
+2024-03-27 17:12:35 [checkCpuCycle] INFO  - Memory Used:---> 93 MB. Max Available: 1982 MB
+2024-03-27 17:13:35 [checkCpuCycle] INFO  - Memory Used:---> 87 MB. Max Available: 1982 MB
+2024-03-27 17:14:35 [checkCpuCycle] INFO  - Memory Used:---> 82 MB. Max Available: 1982 MB
+2024-03-27 17:15:35 [checkCpuCycle] INFO  - Memory Used:---> 76 MB. Max Available: 1982 MB
+2024-03-27 17:16:35 [checkCpuCycle] INFO  - Memory Used:---> 70 MB. Max Available: 1982 MB
+2024-03-27 17:17:35 [checkCpuCycle] INFO  - Memory Used:---> 63 MB. Max Available: 1982 MB
+2024-03-27 17:18:35 [checkCpuCycle] INFO  - Memory Used:---> 57 MB. Max Available: 1982 MB
+2024-03-27 17:18:54 [hz.tender_bouman.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=7.7G, physical.memory.free=767.7M, swap.space.total=0, swap.space.free=0, heap.memory.used=71.8M, heap.memory.free=33.0M, heap.memory.total=105.0M, heap.memory.max=1.9G, heap.memory.used/total=68.41%, heap.memory.used/max=3.62%, minor.gc.count=104, minor.gc.time=927ms, major.gc.count=0, major.gc.time=0ms, unknown.gc.count=66, unknown.gc.time=580ms, load.process=0.00%, load.system=96.81%, load.systemAverage=n/a thread.count=57, thread.peakCount=67, cluster.timeDiff=-759155, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=1542914, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=25, clientEndpoint.count=0, connection.active.count=0, client.connection.count=0, connection.count=0
+2024-03-27 17:19:35 [checkCpuCycle] INFO  - Memory Used:---> 49 MB. Max Available: 1982 MB
+2024-03-27 17:20:35 [checkCpuCycle] INFO  - Memory Used:---> 43 MB. Max Available: 1982 MB
+2024-03-27 17:21:35 [checkCpuCycle] INFO  - Memory Used:---> 91 MB. Max Available: 1982 MB
+2024-03-27 18:22:19 [main] INFO  - [LOCAL] [dev] [5.3.6] Interfaces is enabled, trying to pick one address matching to one of: [127.0.0.1, *.*.*.*]
+2024-03-27 18:22:19 [main] WARN  - [LOCAL] [dev] [5.3.6] Ignoring TCP_KEEPCOUNT. It seems your JDK does not support jdk.net.ExtendedSocketOptions on this OS. Try upgrading to the latest JDK or check with your JDK vendor.Alternatively, on Linux, configure tcp_keepalive_probes in the kernel (affecting default keep-alive configuration for all sockets): For more info see https://tldp.org/HOWTO/html_single/TCP-Keepalive-HOWTO/. If this isn't dealt with, idle connections could be closed prematurely.
+2024-03-27 18:22:19 [main] WARN  - [LOCAL] [dev] [5.3.6] Ignoring TCP_KEEPIDLE. It seems your JDK does not support jdk.net.ExtendedSocketOptions on this OS. Try upgrading to the latest JDK or check with your JDK vendor.Alternatively, on Linux, configure tcp_keepalive_time in the kernel (affecting default keep-alive configuration for all sockets): For more info see https://tldp.org/HOWTO/html_single/TCP-Keepalive-HOWTO/. If this isn't dealt with, idle connections could be closed prematurely.
+2024-03-27 18:22:19 [main] WARN  - [LOCAL] [dev] [5.3.6] Ignoring TCP_KEEPINTERVAL. It seems your JDK does not support jdk.net.ExtendedSocketOptions on this OS. Try upgrading to the latest JDK or check with your JDK vendor.Alternatively, on Linux, configure tcp_keepalive_intvl in the kernel (affecting default keep-alive configuration for all sockets): For more info see https://tldp.org/HOWTO/html_single/TCP-Keepalive-HOWTO/. If this isn't dealt with, idle connections could be closed prematurely.
+2024-03-27 18:22:19 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+	+       +  o    o     o     o---o o----o o      o---o     o     o----o o--o--o
+	+ +   + +  |    |    / \       /  |      |     /         / \    |         |   
+	+ + + + +  o----o   o   o     o   o----o |    o         o   o   o----o    |   
+	+ +   + +  |    |  /     \   /    |      |     \       /     \       |    |   
+	+       +  o    o o       o o---o o----o o----o o---o o       o o----o    o   
+2024-03-27 18:22:19 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+2024-03-27 18:22:19 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Hazelcast Platform 5.3.6 (20231109 - 9903dc9) starting at [127.0.0.1]:5701
+2024-03-27 18:22:19 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Cluster name: dev
+2024-03-27 18:22:19 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Integrity Checker is disabled. Fail-fast on corrupted executables will not be performed. For more information, see the documentation for Integrity Checker.
+2024-03-27 18:22:19 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] The Jet engine is disabled.
+To enable the Jet engine on the members, do one of the following:
+  - Change member config using Java API: config.getJetConfig().setEnabled(true)
+  - Change XML/YAML configuration property: Set hazelcast.jet.enabled to true
+  - Add system property: -Dhz.jet.enabled=true (for Hazelcast embedded, works only when loading config via Config.load)
+  - Add environment variable: HZ_JET_ENABLED=true (recommended when running container image. For Hazelcast embedded, works only when loading config via Config.load)
+2024-03-27 18:22:19 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] TPC: disabled
+2024-03-27 18:22:19 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Enable DEBUG/FINE log level for log category com.hazelcast.system.security  or use -Dhazelcast.security.recommendations system property to see security recommendations and the status of current config.
+2024-03-27 18:22:19 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Using TCP/IP discovery
+2024-03-27 18:22:19 [main] WARN  - [127.0.0.1]:5701 [dev] [5.3.6] CP Subsystem is not enabled. CP data structures will operate in UNSAFE mode! Please note that UNSAFE mode will not provide strong consistency guarantees.
+2024-03-27 18:22:20 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-27 18:22:20 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTING
+2024-03-27 18:22:20 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+
+Members {size:1, ver:1} [
+	Member [127.0.0.1]:5701 - ff8b256b-df6a-44d3-bdb5-605b44a61d49 this
+]
+
+2024-03-27 18:22:20 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTED
+2024-03-27 18:22:20 [hz.distracted_bhaskara.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=7.7G, physical.memory.free=699.1M, swap.space.total=0, swap.space.free=0, heap.memory.used=29.2M, heap.memory.free=24.1M, heap.memory.total=44.0M, heap.memory.max=1.9G, heap.memory.used/total=66.29%, heap.memory.used/max=1.47%, minor.gc.count=3, minor.gc.time=18ms, major.gc.count=0, major.gc.time=0ms, load.process=0.00%, load.system=100.00%, load.systemAverage=n/a thread.count=43, thread.peakCount=43, cluster.timeDiff=0, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=1, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=0, clientEndpoint.count=0, connection.active.count=0, client.connection.count=0, connection.count=0
+2024-03-27 18:22:20 [main] INFO  - HHH000412: Hibernate Core {5.2.2.Final}
+2024-03-27 18:22:20 [main] INFO  - HHH000206: hibernate.properties not found
+2024-03-27 18:22:20 [main] INFO  - HHH000021: Bytecode provider name : javassist
+2024-03-27 18:22:20 [main] INFO  - HCANN000001: Hibernate Commons Annotations {5.0.1.Final}
+2024-03-27 18:22:21 [main] INFO  - HHH000400: Using dialect: org.hibernate.dialect.MySQLDialect
+2024-03-27 18:22:22 [main] INFO  - Initializing Connection Pool
+2024-03-27 18:22:22 [main] INFO  - jdbc:mysql://localhost:3306/host_brd?autoReconnect=true&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC[com.mysql.cj.jdbc.Driver] User: root Pass: root
+2024-03-27 18:22:22 [main] INFO  - Total Connection Stored: 10
+2024-03-27 18:22:22 [main] INFO  - ********** Start loading Smsc Schedule ******************
+2024-03-27 18:22:22 [main] INFO  - SmscSchedule: {}
+2024-03-27 18:22:22 [main] INFO  - FlagReader Thread Starting
+2024-03-27 18:22:22 [main] INFO  - ********* Start Loading Network Entries ************
+2024-03-27 18:22:22 [main] ERROR - Network[1] Invalid Number Length Range: 0,10
+2024-03-27 18:22:22 [main] ERROR - Network[2] Invalid Number Length Range: 10,9
+2024-03-27 18:22:22 [main] ERROR - Network[3] Invalid Number Length Range: 10,10
+2024-03-27 18:22:22 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Initializing cluster partition table arrangement...
+2024-03-27 18:22:22 [main] INFO  - NetworkEntries: 1392
+2024-03-27 18:22:22 [main] INFO  - ********* End Loading Network Entries **************
+2024-03-27 18:22:22 [main] INFO  - ********* Start Loading Smsc Configuration **************
+2024-03-27 18:22:22 [main] INFO  - SmscEntries: 11
+2024-03-27 18:22:22 [main] INFO  - ******** End Loading Smsc Configuration *****************
+2024-03-27 18:22:22 [main] INFO  - ********** Start loading Smsc Group ******************
+2024-03-27 18:22:22 [main] INFO  - SmscGroup: [SmscGroup: id=1,name=DEFAULT,remarks=default]
+2024-03-27 18:22:22 [main] INFO  - ************ End loading Smsc Group *******************
+2024-03-27 18:22:22 [main] INFO  - ********** Start loading Smsc Group Member ******************
+2024-03-27 18:22:22 [main] INFO  - SmscGroupMember: []
+2024-03-27 18:22:22 [main] INFO  - ************ End loading Smsc Group Member *******************
+2024-03-27 18:22:22 [main] INFO  - **** Start Loading User Configuration ********
+2024-03-27 18:22:23 [main] ERROR - null DecodeError: java.lang.NullPointerException: Cannot invoke "String.trim()" because "arg0" is null
+2024-03-27 18:22:23 [main] ERROR - null DecodeError: java.lang.NullPointerException: Cannot invoke "String.trim()" because "arg0" is null
+2024-03-27 18:22:23 [main] INFO  - User Entries: 12
+2024-03-27 18:22:23 [main] INFO  - Balance Entries: 12
+2024-03-27 18:22:23 [main] INFO  - User Mapping: 12
+2024-03-27 18:22:23 [main] INFO  - WebMaster Entries: 12
+2024-03-27 18:22:23 [main] INFO  - Profession Entries: 12
+2024-03-27 18:22:23 [main] INFO  - DlrSetting Entries: 12
+2024-03-27 18:22:23 [main] INFO  - ***** End Loading User Configuration **********
+2024-03-27 18:22:23 [main] INFO  -  ******* Start Loading Routing *********** 
+2024-03-27 18:22:23 [main] INFO  - <--- listing Basic routing --> 
+2024-03-27 18:22:23 [main] INFO  - <--- End listing Basic routing[208] --> 
+2024-03-27 18:22:23 [main] INFO  - <--- listing Optional routing --> 
+2024-03-27 18:22:23 [main] INFO  - <--- End listing Optional routing[195] --> 
+2024-03-27 18:22:23 [main] INFO  - <--- listing Hlr routing --> 
+2024-03-27 18:22:23 [main] INFO  - <--- End listing Hlr routing[195] --> 
+2024-03-27 18:22:23 [main] INFO  - <--- listing Mms routing --> 
+2024-03-27 18:22:23 [main] INFO  - <--- End listing Mms routing[195] --> 
+2024-03-27 18:22:23 [main] INFO  - Basic Routing Entries: 195
+2024-03-27 18:22:23 [main] INFO  - Hlr Routing Entries: 195
+2024-03-27 18:22:23 [main] INFO  - Optional Routing Entries: 195
+2024-03-27 18:22:23 [main] INFO  - Mms Routing Entries: 195
+2024-03-27 18:22:23 [main] INFO  - ********** End Loading Routing *********** 
+2024-03-27 18:22:23 [main] INFO  - BearerBox Starting
+2024-03-27 18:22:23 [main] INFO  - BalanceOperator Starting
+2024-03-27 18:22:23 [Thread-1] INFO  - ****** Reloading Smsc Scheduling ****** 
+2024-03-27 18:22:23 [Thread-1] INFO  - Today's SmscScheduling: {}
+2024-03-27 18:22:23 [main] INFO  - CheckCpuCycle Starting
+2024-03-27 18:23:23 [checkCpuCycle] INFO  - Memory Used:---> 61 MB. Max Available: 1982 MB
+2024-03-27 18:24:23 [checkCpuCycle] INFO  - Memory Used:---> 65 MB. Max Available: 1982 MB
+2024-03-27 18:25:23 [checkCpuCycle] INFO  - Memory Used:---> 61 MB. Max Available: 1982 MB
+2024-03-27 22:18:41 [main] INFO  - [LOCAL] [dev] [5.3.6] Interfaces is enabled, trying to pick one address matching to one of: [127.0.0.1, *.*.*.*]
+2024-03-27 22:18:41 [main] WARN  - [LOCAL] [dev] [5.3.6] Ignoring TCP_KEEPCOUNT. It seems your JDK does not support jdk.net.ExtendedSocketOptions on this OS. Try upgrading to the latest JDK or check with your JDK vendor.Alternatively, on Linux, configure tcp_keepalive_probes in the kernel (affecting default keep-alive configuration for all sockets): For more info see https://tldp.org/HOWTO/html_single/TCP-Keepalive-HOWTO/. If this isn't dealt with, idle connections could be closed prematurely.
+2024-03-27 22:18:41 [main] WARN  - [LOCAL] [dev] [5.3.6] Ignoring TCP_KEEPIDLE. It seems your JDK does not support jdk.net.ExtendedSocketOptions on this OS. Try upgrading to the latest JDK or check with your JDK vendor.Alternatively, on Linux, configure tcp_keepalive_time in the kernel (affecting default keep-alive configuration for all sockets): For more info see https://tldp.org/HOWTO/html_single/TCP-Keepalive-HOWTO/. If this isn't dealt with, idle connections could be closed prematurely.
+2024-03-27 22:18:41 [main] WARN  - [LOCAL] [dev] [5.3.6] Ignoring TCP_KEEPINTERVAL. It seems your JDK does not support jdk.net.ExtendedSocketOptions on this OS. Try upgrading to the latest JDK or check with your JDK vendor.Alternatively, on Linux, configure tcp_keepalive_intvl in the kernel (affecting default keep-alive configuration for all sockets): For more info see https://tldp.org/HOWTO/html_single/TCP-Keepalive-HOWTO/. If this isn't dealt with, idle connections could be closed prematurely.
+2024-03-27 22:18:41 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+	+       +  o    o     o     o---o o----o o      o---o     o     o----o o--o--o
+	+ +   + +  |    |    / \       /  |      |     /         / \    |         |   
+	+ + + + +  o----o   o   o     o   o----o |    o         o   o   o----o    |   
+	+ +   + +  |    |  /     \   /    |      |     \       /     \       |    |   
+	+       +  o    o o       o o---o o----o o----o o---o o       o o----o    o   
+2024-03-27 22:18:41 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+2024-03-27 22:18:41 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Hazelcast Platform 5.3.6 (20231109 - 9903dc9) starting at [127.0.0.1]:5701
+2024-03-27 22:18:41 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Cluster name: dev
+2024-03-27 22:18:41 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Integrity Checker is disabled. Fail-fast on corrupted executables will not be performed. For more information, see the documentation for Integrity Checker.
+2024-03-27 22:18:41 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] The Jet engine is disabled.
+To enable the Jet engine on the members, do one of the following:
+  - Change member config using Java API: config.getJetConfig().setEnabled(true)
+  - Change XML/YAML configuration property: Set hazelcast.jet.enabled to true
+  - Add system property: -Dhz.jet.enabled=true (for Hazelcast embedded, works only when loading config via Config.load)
+  - Add environment variable: HZ_JET_ENABLED=true (recommended when running container image. For Hazelcast embedded, works only when loading config via Config.load)
+2024-03-27 22:18:42 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] TPC: disabled
+2024-03-27 22:18:42 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Enable DEBUG/FINE log level for log category com.hazelcast.system.security  or use -Dhazelcast.security.recommendations system property to see security recommendations and the status of current config.
+2024-03-27 22:18:43 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Using TCP/IP discovery
+2024-03-27 22:18:43 [main] WARN  - [127.0.0.1]:5701 [dev] [5.3.6] CP Subsystem is not enabled. CP data structures will operate in UNSAFE mode! Please note that UNSAFE mode will not provide strong consistency guarantees.
+2024-03-27 22:18:44 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+2024-03-27 22:18:44 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTING
+2024-03-27 22:18:45 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] 
+
+Members {size:1, ver:1} [
+	Member [127.0.0.1]:5701 - ee0afe47-9f85-4de9-97a9-90bb0042b061 this
+]
+
+2024-03-27 22:18:45 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] [127.0.0.1]:5701 is STARTED
+2024-03-27 22:18:46 [main] INFO  - HHH000412: Hibernate Core {5.2.2.Final}
+2024-03-27 22:18:46 [main] INFO  - HHH000206: hibernate.properties not found
+2024-03-27 22:18:46 [main] INFO  - HHH000021: Bytecode provider name : javassist
+2024-03-27 22:18:46 [main] INFO  - HCANN000001: Hibernate Commons Annotations {5.0.1.Final}
+2024-03-27 22:18:47 [main] INFO  - HHH000400: Using dialect: org.hibernate.dialect.MySQLDialect
+2024-03-27 22:18:49 [main] INFO  - Initializing Connection Pool
+2024-03-27 22:18:49 [main] INFO  - jdbc:mysql://localhost:3306/host_brd?autoReconnect=true&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC[com.mysql.cj.jdbc.Driver] User: root Pass: root
+2024-03-27 22:18:49 [main] INFO  - Total Connection Stored: 10
+2024-03-27 22:18:49 [main] INFO  - ********** Start loading Smsc Schedule ******************
+2024-03-27 22:18:50 [main] INFO  - SmscSchedule: {}
+2024-03-27 22:18:50 [main] INFO  - FlagReader Thread Starting
+2024-03-27 22:18:50 [main] INFO  - ********* Start Loading Network Entries ************
+2024-03-27 22:18:51 [main] ERROR - Network[1] Invalid Number Length Range: 0,10
+2024-03-27 22:18:51 [main] ERROR - Network[2] Invalid Number Length Range: 10,9
+2024-03-27 22:18:51 [main] ERROR - Network[3] Invalid Number Length Range: 10,10
+2024-03-27 22:18:51 [main] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] Initializing cluster partition table arrangement...
+2024-03-27 22:18:52 [main] INFO  - NetworkEntries: 1392
+2024-03-27 22:18:52 [main] INFO  - ********* End Loading Network Entries **************
+2024-03-27 22:18:52 [main] INFO  - ********* Start Loading Smsc Configuration **************
+2024-03-27 22:18:52 [main] INFO  - SmscEntries: 11
+2024-03-27 22:18:52 [main] INFO  - ******** End Loading Smsc Configuration *****************
+2024-03-27 22:18:52 [main] INFO  - ********** Start loading Smsc Group ******************
+2024-03-27 22:18:52 [main] INFO  - SmscGroup: [SmscGroup: id=1,name=DEFAULT,remarks=default]
+2024-03-27 22:18:52 [main] INFO  - ************ End loading Smsc Group *******************
+2024-03-27 22:18:52 [main] INFO  - ********** Start loading Smsc Group Member ******************
+2024-03-27 22:18:52 [main] INFO  - SmscGroupMember: []
+2024-03-27 22:18:52 [main] INFO  - ************ End loading Smsc Group Member *******************
+2024-03-27 22:18:52 [main] INFO  - **** Start Loading User Configuration ********
+2024-03-27 22:18:52 [main] ERROR - null DecodeError: java.lang.NullPointerException: Cannot invoke "String.trim()" because "arg0" is null
+2024-03-27 22:18:52 [main] ERROR - null DecodeError: java.lang.NullPointerException: Cannot invoke "String.trim()" because "arg0" is null
+2024-03-27 22:18:53 [main] INFO  - User Entries: 12
+2024-03-27 22:18:53 [main] INFO  - Balance Entries: 12
+2024-03-27 22:18:53 [main] INFO  - User Mapping: 12
+2024-03-27 22:18:53 [main] INFO  - WebMaster Entries: 12
+2024-03-27 22:18:53 [main] INFO  - Profession Entries: 12
+2024-03-27 22:18:53 [main] INFO  - DlrSetting Entries: 12
+2024-03-27 22:18:53 [main] INFO  - ***** End Loading User Configuration **********
+2024-03-27 22:18:53 [main] INFO  -  ******* Start Loading Routing *********** 
+2024-03-27 22:18:53 [main] INFO  - <--- listing Basic routing --> 
+2024-03-27 22:18:53 [main] INFO  - <--- End listing Basic routing[208] --> 
+2024-03-27 22:18:53 [main] INFO  - <--- listing Optional routing --> 
+2024-03-27 22:18:53 [main] INFO  - <--- End listing Optional routing[195] --> 
+2024-03-27 22:18:53 [main] INFO  - <--- listing Hlr routing --> 
+2024-03-27 22:18:53 [main] INFO  - <--- End listing Hlr routing[195] --> 
+2024-03-27 22:18:53 [main] INFO  - <--- listing Mms routing --> 
+2024-03-27 22:18:53 [main] INFO  - <--- End listing Mms routing[195] --> 
+2024-03-27 22:18:53 [main] INFO  - Basic Routing Entries: 195
+2024-03-27 22:18:53 [main] INFO  - Hlr Routing Entries: 195
+2024-03-27 22:18:53 [main] INFO  - Optional Routing Entries: 195
+2024-03-27 22:18:54 [main] INFO  - Mms Routing Entries: 195
+2024-03-27 22:18:54 [main] INFO  - ********** End Loading Routing *********** 
+2024-03-27 22:18:54 [main] INFO  - BearerBox Starting
+2024-03-27 22:18:54 [main] INFO  - BalanceOperator Starting
+2024-03-27 22:18:54 [main] INFO  - CheckCpuCycle Starting
+2024-03-27 22:18:54 [Thread-1] INFO  - ****** Reloading Smsc Scheduling ****** 
+2024-03-27 22:18:54 [Thread-1] INFO  - Today's SmscScheduling: {}
+2024-03-27 22:19:06 [hz.wonderful_bhabha.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=7.7G, physical.memory.free=1.3G, swap.space.total=0, swap.space.free=0, heap.memory.used=52.8M, heap.memory.free=26.1M, heap.memory.total=79.0M, heap.memory.max=1.9G, heap.memory.used/total=66.81%, heap.memory.used/max=2.66%, minor.gc.count=19, minor.gc.time=138ms, major.gc.count=0, major.gc.time=0ms, unknown.gc.count=10, unknown.gc.time=19ms, load.process=0.00%, load.system=71.33%, load.systemAverage=n/a thread.count=58, thread.peakCount=58, cluster.timeDiff=0, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=11580, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=25, clientEndpoint.count=0, connection.active.count=0, client.connection.count=0, connection.count=0
+2024-03-27 22:19:26 [hz.wonderful_bhabha.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=7.7G, physical.memory.free=1.3G, swap.space.total=0, swap.space.free=0, heap.memory.used=55.2M, heap.memory.free=39.8M, heap.memory.total=95.0M, heap.memory.max=1.9G, heap.memory.used/total=58.14%, heap.memory.used/max=2.79%, minor.gc.count=20, minor.gc.time=145ms, major.gc.count=0, major.gc.time=0ms, unknown.gc.count=10, unknown.gc.time=19ms, load.process=0.00%, load.system=100.00%, load.systemAverage=n/a thread.count=58, thread.peakCount=58, cluster.timeDiff=0, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=17026, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=25, clientEndpoint.count=0, connection.active.count=0, client.connection.count=0, connection.count=0
+2024-03-27 22:19:54 [checkCpuCycle] INFO  - Memory Used:---> 52 MB. Max Available: 1982 MB
+2024-03-27 22:20:06 [hz.wonderful_bhabha.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=7.7G, physical.memory.free=1.2G, swap.space.total=0, swap.space.free=0, heap.memory.used=63.4M, heap.memory.free=30.8M, heap.memory.total=95.0M, heap.memory.max=1.9G, heap.memory.used/total=66.76%, heap.memory.used/max=3.20%, minor.gc.count=21, minor.gc.time=149ms, major.gc.count=0, major.gc.time=0ms, unknown.gc.count=10, unknown.gc.time=19ms, load.process=0.00%, load.system=90.11%, load.systemAverage=n/a thread.count=54, thread.peakCount=58, cluster.timeDiff=0, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=27919, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=25, clientEndpoint.count=0, connection.active.count=0, client.connection.count=0, connection.count=0
+2024-03-27 22:20:54 [checkCpuCycle] INFO  - Memory Used:---> 74 MB. Max Available: 1982 MB
+2024-03-27 22:21:54 [checkCpuCycle] INFO  - Memory Used:---> 51 MB. Max Available: 1982 MB
+2024-03-27 22:22:27 [hz.wonderful_bhabha.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=7.7G, physical.memory.free=480.0M, swap.space.total=0, swap.space.free=0, heap.memory.used=77.9M, heap.memory.free=17.0M, heap.memory.total=95.0M, heap.memory.max=1.9G, heap.memory.used/total=82.05%, heap.memory.used/max=3.93%, minor.gc.count=24, minor.gc.time=169ms, major.gc.count=0, major.gc.time=0ms, unknown.gc.count=12, unknown.gc.time=29ms, load.process=0.00%, load.system=100.00%, load.systemAverage=n/a thread.count=58, thread.peakCount=58, cluster.timeDiff=0, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=65774, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=25, clientEndpoint.count=0, connection.active.count=0, client.connection.count=0, connection.count=0
+2024-03-27 22:22:54 [checkCpuCycle] INFO  - Memory Used:---> 59 MB. Max Available: 1982 MB
+2024-03-27 22:23:27 [hz.wonderful_bhabha.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=7.7G, physical.memory.free=392.9M, swap.space.total=0, swap.space.free=0, heap.memory.used=45.0M, heap.memory.free=49.9M, heap.memory.total=95.0M, heap.memory.max=1.9G, heap.memory.used/total=47.39%, heap.memory.used/max=2.27%, minor.gc.count=26, minor.gc.time=185ms, major.gc.count=0, major.gc.time=0ms, unknown.gc.count=14, unknown.gc.time=58ms, load.process=0.00%, load.system=100.00%, load.systemAverage=n/a thread.count=60, thread.peakCount=60, cluster.timeDiff=0, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=82114, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=25, clientEndpoint.count=0, connection.active.count=0, client.connection.count=0, connection.count=0
+2024-03-27 22:23:54 [checkCpuCycle] INFO  - Memory Used:---> 65 MB. Max Available: 1982 MB
+2024-03-27 22:24:07 [hz.wonderful_bhabha.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=7.7G, physical.memory.free=1.1G, swap.space.total=0, swap.space.free=0, heap.memory.used=77.5M, heap.memory.free=17.5M, heap.memory.total=95.0M, heap.memory.max=1.9G, heap.memory.used/total=81.54%, heap.memory.used/max=3.91%, minor.gc.count=26, minor.gc.time=185ms, major.gc.count=0, major.gc.time=0ms, unknown.gc.count=14, unknown.gc.time=58ms, load.process=0.00%, load.system=79.98%, load.systemAverage=n/a thread.count=60, thread.peakCount=60, cluster.timeDiff=0, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=92463, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=25, clientEndpoint.count=0, connection.active.count=0, client.connection.count=0, connection.count=0
+2024-03-27 22:24:54 [checkCpuCycle] INFO  - Memory Used:---> 73 MB. Max Available: 1982 MB
+2024-03-27 22:25:54 [checkCpuCycle] INFO  - Memory Used:---> 79 MB. Max Available: 1982 MB
+2024-03-27 22:26:54 [checkCpuCycle] INFO  - Memory Used:---> 45 MB. Max Available: 1982 MB
+2024-03-27 22:27:47 [hz.wonderful_bhabha.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=7.7G, physical.memory.free=633.7M, swap.space.total=0, swap.space.free=0, heap.memory.used=47.7M, heap.memory.free=47.3M, heap.memory.total=95.0M, heap.memory.max=1.9G, heap.memory.used/total=50.24%, heap.memory.used/max=2.41%, minor.gc.count=31, minor.gc.time=233ms, major.gc.count=0, major.gc.time=0ms, unknown.gc.count=18, unknown.gc.time=136ms, load.process=0.00%, load.system=70.05%, load.systemAverage=n/a thread.count=54, thread.peakCount=60, cluster.timeDiff=0, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=152104, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=25, clientEndpoint.count=0, connection.active.count=0, client.connection.count=0, connection.count=0
+2024-03-27 22:27:54 [checkCpuCycle] INFO  - Memory Used:---> 52 MB. Max Available: 1982 MB
+2024-03-27 22:28:54 [checkCpuCycle] INFO  - Memory Used:---> 60 MB. Max Available: 1982 MB
+2024-03-27 22:29:54 [checkCpuCycle] INFO  - Memory Used:---> 68 MB. Max Available: 1982 MB
+2024-03-27 22:30:54 [checkCpuCycle] INFO  - Memory Used:---> 73 MB. Max Available: 1982 MB
+2024-03-27 22:31:54 [checkCpuCycle] INFO  - Memory Used:---> 78 MB. Max Available: 1982 MB
+2024-03-27 22:32:54 [checkCpuCycle] INFO  - Memory Used:---> 83 MB. Max Available: 1982 MB
+2024-03-27 22:33:54 [checkCpuCycle] INFO  - Memory Used:---> 44 MB. Max Available: 1982 MB
+2024-03-27 22:34:54 [checkCpuCycle] INFO  - Memory Used:---> 49 MB. Max Available: 1982 MB
+2024-03-27 22:35:54 [checkCpuCycle] INFO  - Memory Used:---> 54 MB. Max Available: 1982 MB
+2024-03-27 22:36:54 [checkCpuCycle] INFO  - Memory Used:---> 59 MB. Max Available: 1982 MB
+2024-03-27 22:37:54 [checkCpuCycle] INFO  - Memory Used:---> 64 MB. Max Available: 1982 MB
+2024-03-27 22:38:54 [checkCpuCycle] INFO  - Memory Used:---> 69 MB. Max Available: 1982 MB
+2024-03-27 22:39:54 [checkCpuCycle] INFO  - Memory Used:---> 75 MB. Max Available: 1982 MB
+2024-03-27 22:40:54 [checkCpuCycle] INFO  - Memory Used:---> 79 MB. Max Available: 1982 MB
+2024-03-27 22:41:54 [checkCpuCycle] INFO  - Memory Used:---> 84 MB. Max Available: 1982 MB
+2024-03-27 22:42:54 [checkCpuCycle] INFO  - Memory Used:---> 46 MB. Max Available: 1982 MB
+2024-03-27 22:43:54 [checkCpuCycle] INFO  - Memory Used:---> 50 MB. Max Available: 1982 MB
+2024-03-27 22:44:54 [checkCpuCycle] INFO  - Memory Used:---> 55 MB. Max Available: 1982 MB
+2024-03-27 22:45:54 [checkCpuCycle] INFO  - Memory Used:---> 60 MB. Max Available: 1982 MB
+2024-03-27 22:46:54 [checkCpuCycle] INFO  - Memory Used:---> 64 MB. Max Available: 1982 MB
+2024-03-27 22:47:54 [checkCpuCycle] INFO  - Memory Used:---> 69 MB. Max Available: 1982 MB
+2024-03-27 22:48:54 [checkCpuCycle] INFO  - Memory Used:---> 74 MB. Max Available: 1982 MB
+2024-03-27 22:49:54 [checkCpuCycle] INFO  - Memory Used:---> 79 MB. Max Available: 1982 MB
+2024-03-27 22:50:54 [checkCpuCycle] INFO  - Memory Used:---> 83 MB. Max Available: 1982 MB
+2024-03-27 22:51:54 [checkCpuCycle] INFO  - Memory Used:---> 45 MB. Max Available: 1982 MB
+2024-03-27 22:52:54 [checkCpuCycle] INFO  - Memory Used:---> 50 MB. Max Available: 1982 MB
+2024-03-27 22:53:54 [checkCpuCycle] INFO  - Memory Used:---> 54 MB. Max Available: 1982 MB
+2024-03-27 22:54:54 [checkCpuCycle] INFO  - Memory Used:---> 59 MB. Max Available: 1982 MB
+2024-03-27 22:55:54 [checkCpuCycle] INFO  - Memory Used:---> 64 MB. Max Available: 1982 MB
+2024-03-27 22:56:54 [checkCpuCycle] INFO  - Memory Used:---> 68 MB. Max Available: 1982 MB
+2024-03-27 22:57:54 [checkCpuCycle] INFO  - Memory Used:---> 73 MB. Max Available: 1982 MB
+2024-03-27 22:58:54 [checkCpuCycle] INFO  - Memory Used:---> 78 MB. Max Available: 1982 MB
+2024-03-27 22:59:54 [checkCpuCycle] INFO  - Memory Used:---> 83 MB. Max Available: 1982 MB
+2024-03-27 23:00:54 [checkCpuCycle] INFO  - Memory Used:---> 86 MB. Max Available: 1982 MB
+2024-03-27 23:01:54 [checkCpuCycle] INFO  - Memory Used:---> 44 MB. Max Available: 1982 MB
+2024-03-27 23:02:54 [checkCpuCycle] INFO  - Memory Used:---> 48 MB. Max Available: 1982 MB
+2024-03-27 23:03:54 [checkCpuCycle] INFO  - Memory Used:---> 52 MB. Max Available: 1982 MB
+2024-03-27 23:04:54 [checkCpuCycle] INFO  - Memory Used:---> 55 MB. Max Available: 1982 MB
+2024-03-27 23:05:54 [checkCpuCycle] INFO  - Memory Used:---> 59 MB. Max Available: 1982 MB
+2024-03-27 23:06:54 [checkCpuCycle] INFO  - Memory Used:---> 62 MB. Max Available: 1982 MB
+2024-03-27 23:07:54 [checkCpuCycle] INFO  - Memory Used:---> 66 MB. Max Available: 1982 MB
+2024-03-27 23:08:54 [checkCpuCycle] INFO  - Memory Used:---> 70 MB. Max Available: 1982 MB
+2024-03-27 23:09:08 [hz.wonderful_bhabha.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=7.7G, physical.memory.free=988.4M, swap.space.total=0, swap.space.free=0, heap.memory.used=81.6M, heap.memory.free=13.4M, heap.memory.total=95.0M, heap.memory.max=1.9G, heap.memory.used/total=85.86%, heap.memory.used/max=4.12%, minor.gc.count=76, minor.gc.time=502ms, major.gc.count=0, major.gc.time=0ms, unknown.gc.count=48, unknown.gc.time=388ms, load.process=0.00%, load.system=80.38%, load.systemAverage=n/a thread.count=59, thread.peakCount=60, cluster.timeDiff=0, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=821233, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=25, clientEndpoint.count=0, connection.active.count=0, client.connection.count=0, connection.count=0
+2024-03-27 23:09:54 [checkCpuCycle] INFO  - Memory Used:---> 74 MB. Max Available: 1982 MB
+2024-03-27 23:10:54 [checkCpuCycle] INFO  - Memory Used:---> 78 MB. Max Available: 1982 MB
+2024-03-27 23:11:54 [checkCpuCycle] INFO  - Memory Used:---> 81 MB. Max Available: 1982 MB
+2024-03-27 23:12:54 [checkCpuCycle] INFO  - Memory Used:---> 85 MB. Max Available: 1982 MB
+2024-03-27 23:13:54 [checkCpuCycle] INFO  - Memory Used:---> 43 MB. Max Available: 1982 MB
+2024-03-27 23:14:54 [checkCpuCycle] INFO  - Memory Used:---> 47 MB. Max Available: 1982 MB
+2024-03-27 23:15:54 [checkCpuCycle] INFO  - Memory Used:---> 50 MB. Max Available: 1982 MB
+2024-03-27 23:16:54 [checkCpuCycle] INFO  - Memory Used:---> 53 MB. Max Available: 1982 MB
+2024-03-27 23:17:54 [checkCpuCycle] INFO  - Memory Used:---> 57 MB. Max Available: 1982 MB
+2024-03-27 23:18:54 [checkCpuCycle] INFO  - Memory Used:---> 61 MB. Max Available: 1982 MB
+2024-03-27 23:19:54 [checkCpuCycle] INFO  - Memory Used:---> 64 MB. Max Available: 1982 MB
+2024-03-27 23:20:54 [checkCpuCycle] INFO  - Memory Used:---> 66 MB. Max Available: 1982 MB
+2024-03-27 23:21:54 [checkCpuCycle] INFO  - Memory Used:---> 68 MB. Max Available: 1982 MB
+2024-03-27 23:22:54 [checkCpuCycle] INFO  - Memory Used:---> 72 MB. Max Available: 1982 MB
+2024-03-27 23:23:54 [checkCpuCycle] INFO  - Memory Used:---> 74 MB. Max Available: 1982 MB
+2024-03-27 23:24:54 [checkCpuCycle] INFO  - Memory Used:---> 77 MB. Max Available: 1982 MB
+2024-03-27 23:25:54 [checkCpuCycle] INFO  - Memory Used:---> 80 MB. Max Available: 1982 MB
+2024-03-27 23:26:54 [checkCpuCycle] INFO  - Memory Used:---> 83 MB. Max Available: 1982 MB
+2024-03-27 23:27:54 [checkCpuCycle] INFO  - Memory Used:---> 86 MB. Max Available: 1982 MB
+2024-03-27 23:28:54 [checkCpuCycle] INFO  - Memory Used:---> 43 MB. Max Available: 1982 MB
+2024-03-27 23:29:54 [checkCpuCycle] INFO  - Memory Used:---> 47 MB. Max Available: 1982 MB
+2024-03-27 23:30:54 [checkCpuCycle] INFO  - Memory Used:---> 49 MB. Max Available: 1982 MB
+2024-03-27 23:31:54 [checkCpuCycle] INFO  - Memory Used:---> 51 MB. Max Available: 1982 MB
+2024-03-27 23:32:54 [checkCpuCycle] INFO  - Memory Used:---> 54 MB. Max Available: 1982 MB
+2024-03-27 23:33:54 [checkCpuCycle] INFO  - Memory Used:---> 57 MB. Max Available: 1982 MB
+2024-03-27 23:34:54 [checkCpuCycle] INFO  - Memory Used:---> 61 MB. Max Available: 1982 MB
+2024-03-27 23:35:54 [checkCpuCycle] INFO  - Memory Used:---> 64 MB. Max Available: 1982 MB
+2024-03-27 23:36:54 [checkCpuCycle] INFO  - Memory Used:---> 66 MB. Max Available: 1982 MB
+2024-03-27 23:37:54 [checkCpuCycle] INFO  - Memory Used:---> 69 MB. Max Available: 1982 MB
+2024-03-27 23:38:54 [checkCpuCycle] INFO  - Memory Used:---> 72 MB. Max Available: 1982 MB
+2024-03-27 23:39:54 [checkCpuCycle] INFO  - Memory Used:---> 75 MB. Max Available: 1982 MB
+2024-03-27 23:40:54 [checkCpuCycle] INFO  - Memory Used:---> 78 MB. Max Available: 1982 MB
+2024-03-27 23:41:54 [checkCpuCycle] INFO  - Memory Used:---> 81 MB. Max Available: 1982 MB
+2024-03-27 23:42:54 [checkCpuCycle] INFO  - Memory Used:---> 84 MB. Max Available: 1982 MB
+2024-03-27 23:43:29 [hz.wonderful_bhabha.HealthMonitor] INFO  - [127.0.0.1]:5701 [dev] [5.3.6] processors=4, physical.memory.total=7.7G, physical.memory.free=399.7M, swap.space.total=0, swap.space.free=0, heap.memory.used=66.1M, heap.memory.free=28.9M, heap.memory.total=95.0M, heap.memory.max=1.9G, heap.memory.used/total=69.61%, heap.memory.used/max=3.34%, minor.gc.count=113, minor.gc.time=743ms, major.gc.count=0, major.gc.time=0ms, unknown.gc.count=78, unknown.gc.time=457ms, load.process=0.00%, load.system=92.45%, load.systemAverage=n/a thread.count=53, thread.peakCount=60, cluster.timeDiff=0, event.q.size=0, executor.q.async.size=0, executor.q.client.size=0, executor.q.client.query.size=0, executor.q.client.blocking.size=0, executor.q.query.size=0, executor.q.scheduled.size=0, executor.q.io.size=0, executor.q.system.size=0, executor.q.operations.size=0, executor.q.priorityOperation.size=0, operations.completed.count=1377886, executor.q.mapLoad.size=0, executor.q.mapLoadAllKeys.size=0, executor.q.cluster.size=0, executor.q.response.size=0, operations.running.count=0, operations.pending.invocations.percentage=0.00%, operations.pending.invocations.count=0, proxy.count=25, clientEndpoint.count=0, connection.active.count=0, client.connection.count=0, connection.count=0
+2024-03-27 23:43:54 [checkCpuCycle] INFO  - Memory Used:---> 42 MB. Max Available: 1982 MB
+2024-03-27 23:44:54 [checkCpuCycle] INFO  - Memory Used:---> 45 MB. Max Available: 1982 MB
+2024-03-27 23:45:54 [checkCpuCycle] INFO  - Memory Used:---> 48 MB. Max Available: 1982 MB
+2024-03-27 23:46:54 [checkCpuCycle] INFO  - Memory Used:---> 51 MB. Max Available: 1982 MB
+2024-03-27 23:47:54 [checkCpuCycle] INFO  - Memory Used:---> 54 MB. Max Available: 1982 MB
+2024-03-27 23:48:54 [checkCpuCycle] INFO  - Memory Used:---> 57 MB. Max Available: 1982 MB
+2024-03-27 23:49:54 [checkCpuCycle] INFO  - Memory Used:---> 61 MB. Max Available: 1982 MB
+2024-03-27 23:50:54 [checkCpuCycle] INFO  - Memory Used:---> 63 MB. Max Available: 1982 MB
+2024-03-27 23:51:54 [checkCpuCycle] INFO  - Memory Used:---> 66 MB. Max Available: 1982 MB
+2024-03-27 23:52:54 [checkCpuCycle] INFO  - Memory Used:---> 69 MB. Max Available: 1982 MB
+2024-03-27 23:53:54 [checkCpuCycle] INFO  - Memory Used:---> 72 MB. Max Available: 1982 MB
+2024-03-27 23:54:54 [checkCpuCycle] INFO  - Memory Used:---> 76 MB. Max Available: 1982 MB
+2024-03-27 23:55:54 [checkCpuCycle] INFO  - Memory Used:---> 80 MB. Max Available: 1982 MB
+2024-03-27 23:56:54 [checkCpuCycle] INFO  - Memory Used:---> 84 MB. Max Available: 1982 MB
