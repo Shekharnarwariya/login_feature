@@ -46,4 +46,10 @@ public interface LoginService {
 
 	public ResponseEntity<?> login(LoginRequest loginRequest, HttpServletRequest request);
 
+	public ResponseEntity<?> loginOtp(LoginRequest loginRequest, HttpServletRequest request, String purpose);
+
+	public ResponseEntity<?> loginMultiUser(LoginRequest loginRequest, HttpServletRequest request, String purpose);
+
+	public ResponseEntity<?> loginskip(LoginRequest loginRequest, HttpServletRequest request, String purpose);
+
 }
