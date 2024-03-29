@@ -12,8 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import com.hti.smpp.common.user.dto.PasswordLinkEntry;
 import com.hti.smpp.common.user.dto.UserEntryExt;
-import com.hti.smpp.common.util.IConstants;
-import com.hti.smpp.common.util.MultiUtility;
 
 import jakarta.activation.DataHandler;
 import jakarta.activation.DataSource;
@@ -294,25 +292,11 @@ public class MailUtility {
 		String to = email;
 		final String pass = IConstants.mailPassword;
 		final String mailAuthUser = IConstants.mailId;
-		// String messagetext = "";
-		// boolean sessionDebug = false;
 		Properties props = new Properties();
-		// props.put("mail.smtp.user", mailAuthUser);
 		props.put("mail.smtp.host", host);
 		props.put("mail.transport.protocol", "smtp");
 		props.put("mail.smtp.port", IConstants.smtpPort + "");
-		// props.put("mail.smtp.auth", "true");
-		// props.put("mail.smtp.debug", "true");
-		// props.put("mail.smtp.starttls.enable", "true");
 		props.put("filepath", fileName);
-		/*
-		 * Session mailSession = Session.getInstance(props, new Authenticator() {
-		 * 
-		 * @Override protected PasswordAuthentication getPasswordAuthentication() {
-		 * return new PasswordAuthentication(mailAuthUser, pass); } });
-		 * 
-		 * mailSession.setDebug(sessionDebug);
-		 */
 		Session mailSession = Session.getDefaultInstance(props);
 		Message message = new MimeMessage(mailSession);
 		message.setFrom(new InternetAddress(from, from));
@@ -343,17 +327,9 @@ public class MailUtility {
 		message.setSubject(subject);
 		message.setSentDate(new Date());
 		Multipart multipart = new MimeMultipart();
-		/*
-		 * BodyPart messageBodyPart = new MimeBodyPart();
-		 * messageBodyPart.setText(messagetext); multipart.addBodyPart(messageBodyPart);
-		 */
-		// String htmlfile = (String) props.get("filepath");
 		try {
-			// System.out.println("HTML File: " + fileName);
 			BodyPart bp = new MimeBodyPart();
-			// BodyPart bp2 = new MimeBodyPart();
 			bp.setDataHandler(new DataHandler(new FileDataSource(fileName)));
-			// bp2 = bp;
 			multipart.addBodyPart(bp);
 		} catch (Exception ex) {
 			System.out.println("Error in Adding Multipart Data into Email: " + ex);
@@ -361,38 +337,23 @@ public class MailUtility {
 		message.setContent(multipart);
 		Transport.send(message, mailAuthUser, pass);
 		System.out.println("Mail Sent to ::" + to);
-		// File mailfile = new File(fileName);
-		// System.out.println("Mail File Exists : " + mailfile.exists());
-		// System.out.println("Mail File Deleted : " + mailfile.delete());
 	}
 
 	public static boolean sendDLRReport(String email, String from, String fileName, boolean IsCC, String time)
 			throws MessagingException, UnsupportedEncodingException {
 		String host = IConstants.mailHost;
 		String to = email;
-		// String from = IConstants.supportId;
 		final String pass = IConstants.mailPassword;
 		final String mailAuthUser = IConstants.mailId;
 		String messagetext = "Dear User,\n\n";
 		messagetext += "Please Find Delivery Report for " + time + " as attachment.\n\n";
 		messagetext += "Thanks & Regards \n";
 		messagetext += "Support Team \n";
-		// boolean sessionDebug = false;
 		Properties props = new Properties();
-		// props.put("mail.smtp.user", mailAuthUser);
 		props.put("mail.smtp.host", host);
 		props.put("mail.transport.protocol", "smtp");
 		props.put("mail.smtp.port", IConstants.smtpPort + "");
-		// props.put("mail.smtp.auth", "true");
-		// props.put("mail.smtp.debug", "true");
-		/*
-		 * Session mailSession = Session.getInstance(props, new Authenticator() {
-		 * 
-		 * @Override protected PasswordAuthentication getPasswordAuthentication() {
-		 * return new PasswordAuthentication(mailAuthUser, pass); } });
-		 * 
-		 * mailSession.setDebug(sessionDebug);
-		 */
+
 		Session mailSession = Session.getDefaultInstance(props);
 		Message message = new MimeMessage(mailSession);
 		message.setFrom(new InternetAddress(from, from));
@@ -422,24 +383,17 @@ public class MailUtility {
 		}
 		message.setSubject("Delivery Report " + time);
 		message.setSentDate(new Date());
-		// Create the message part
 		BodyPart messageBodyPart = new MimeBodyPart();
-		// Now set the actual message
 		messageBodyPart.setText(messagetext);
-		// Create a multipar message
 		Multipart multipart = new MimeMultipart();
-		// Set text message part
 		multipart.addBodyPart(messageBodyPart);
-		// Part two is attachment
 		messageBodyPart = new MimeBodyPart();
 		File attach = new File(fileName);
 		DataSource source = new FileDataSource(attach);
 		messageBodyPart.setDataHandler(new DataHandler(source));
 		messageBodyPart.setFileName(attach.getName());
 		multipart.addBodyPart(messageBodyPart);
-		// Send the complete message parts
 		message.setContent(multipart);
-		// Send message
 		Transport.send(message, mailAuthUser, pass);
 		System.out.println("Mail Sent: " + to);
 		return true;
@@ -449,7 +403,6 @@ public class MailUtility {
 			boolean IsCC) throws MessagingException, UnsupportedEncodingException {
 		String host = IConstants.mailHost;
 		String to = email;
-		// String from = IConstants.RouteId;
 		final String pass = IConstants.mailPassword;
 		final String mailAuthUser = IConstants.mailId;
 		String messagetext = "Dear User,\n\n";
@@ -457,22 +410,10 @@ public class MailUtility {
 		messagetext += "Please Find Coverage Report as attachment.\n\n";
 		messagetext += "Thanks & Regards \n";
 		messagetext += "Support Team \n";
-		// boolean sessionDebug = false;
 		Properties props = new Properties();
-		// props.put("mail.smtp.user", mailAuthUser);
 		props.put("mail.smtp.host", host);
 		props.put("mail.transport.protocol", "smtp");
 		props.put("mail.smtp.port", IConstants.smtpPort + "");
-		// props.put("mail.smtp.auth", "true");
-		// props.put("mail.smtp.debug", "true");
-		/*
-		 * Session mailSession = Session.getInstance(props, new Authenticator() {
-		 * 
-		 * @Override protected PasswordAuthentication getPasswordAuthentication() {
-		 * return new PasswordAuthentication(mailAuthUser, pass); } });
-		 * 
-		 * mailSession.setDebug(sessionDebug);
-		 */
 		Session mailSession = Session.getDefaultInstance(props);
 		Message message = new MimeMessage(mailSession);
 		message.setFrom(new InternetAddress(from, from));
@@ -502,26 +443,18 @@ public class MailUtility {
 		}
 		message.setSubject(subject);
 		message.setSentDate(new Date());
-		// Create the message part
 		BodyPart messageBodyPart = new MimeBodyPart();
-		// Now set the actual message
 		messageBodyPart.setText(messagetext);
-		// Create a multipar message
 		Multipart multipart = new MimeMultipart();
-		// Set text message part
 		multipart.addBodyPart(messageBodyPart);
-		// Part two is attachment
 		messageBodyPart = new MimeBodyPart();
 		File attach = new File(fileName);
 		DataSource source = new FileDataSource(attach);
 		messageBodyPart.setDataHandler(new DataHandler(source));
 		messageBodyPart.setFileName(attach.getName());
 		multipart.addBodyPart(messageBodyPart);
-		// Send the complete message parts
 		message.setContent(multipart);
-		// Send message
 		Transport.send(message, mailAuthUser, pass);
-		// System.out.println("Mail Sent: " + to);
 		new File(fileName).delete();
 		return true;
 	}
@@ -558,7 +491,6 @@ public class MailUtility {
 		message.setSubject(subject);
 		message.setSentDate(new Date());
 		message.setText(content);
-		// Send message
 		Transport.send(message, mailAuthUser, pass);
 		System.out.println("Mail Sent From[" + from_email + "] To[" + to_email + "]");
 	}
