@@ -92,6 +92,7 @@ import com.hti.smpp.common.util.Constant;
 import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Constants;
 import com.hti.smpp.common.util.EmailValidator;
+import com.hti.smpp.common.util.FlagUtil;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MailUtility;
@@ -751,6 +752,17 @@ public class LoginServiceImpl implements LoginService {
 				professionEntryRepository.save(professionEntry);
 				webMasterEntryRepository.save(webMasterEntry);
 				dlrSettingEntryRepository.save(dlrSettingEntry);
+				
+				 String flagVal = FlagUtil.readFlag(Constants.USER_FLAG_DIR + username + ".txt");
+				 System.out.println(flagVal);
+	                if (flagVal != null && !flagVal.equalsIgnoreCase("404")) {
+	                	
+	                    // Change flag
+	                    FlagUtil.changeFlag(Constants.USER_FLAG_DIR + username + ".txt", "505");
+	                    FlagUtil.changeFlag(Constants.CLIENT_FLAG_FILE, "707");
+	                 
+	             //     System.out.println(  FlagUtil.changeFlag(Constants.CLIENT_FLAG_FILE, "707") +" "+"yoyoyoyoy" + " "+FlagUtil.changeFlag(Constants.USER_FLAG_DIR + username + ".txt", "505"));
+	                }
 
 				return ResponseEntity.ok("Profile updated successfully");
 			} else {
