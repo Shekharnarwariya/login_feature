@@ -80,6 +80,7 @@ import com.hti.smpp.common.user.dto.WebMasterEntry;
 import com.hti.smpp.common.user.repository.BalanceEntryRepository;
 import com.hti.smpp.common.user.repository.DlrSettingEntryRepository;
 import com.hti.smpp.common.user.repository.DriverInfoRepository;
+import com.hti.smpp.common.user.repository.MultiUserEntryRepository;
 import com.hti.smpp.common.user.repository.OtpEntryRepository;
 import com.hti.smpp.common.user.repository.ProfessionEntryRepository;
 import com.hti.smpp.common.user.repository.RechargeEntryRepository;
@@ -91,6 +92,7 @@ import com.hti.smpp.common.util.Constant;
 import com.hti.smpp.common.util.ConstantMessages;
 import com.hti.smpp.common.util.Constants;
 import com.hti.smpp.common.util.EmailValidator;
+import com.hti.smpp.common.util.FlagUtil;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MailUtility;
@@ -162,6 +164,9 @@ public class LoginServiceImpl implements LoginService {
 
 	@Autowired
 	private DataSource dataSource;
+
+	@Autowired
+	private MultiUserEntryRepository multiUserEntryRepository;
 
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
@@ -747,6 +752,17 @@ public class LoginServiceImpl implements LoginService {
 				professionEntryRepository.save(professionEntry);
 				webMasterEntryRepository.save(webMasterEntry);
 				dlrSettingEntryRepository.save(dlrSettingEntry);
+				
+				 String flagVal = FlagUtil.readFlag(Constants.USER_FLAG_DIR + username + ".txt");
+				 System.out.println(flagVal);
+	                if (flagVal != null && !flagVal.equalsIgnoreCase("404")) {
+	                	
+	                    // Change flag
+	                    FlagUtil.changeFlag(Constants.USER_FLAG_DIR + username + ".txt", "505");
+	                    FlagUtil.changeFlag(Constants.CLIENT_FLAG_FILE, "707");
+	                 
+	             //     System.out.println(  FlagUtil.changeFlag(Constants.CLIENT_FLAG_FILE, "707") +" "+"yoyoyoyoy" + " "+FlagUtil.changeFlag(Constants.USER_FLAG_DIR + username + ".txt", "505"));
+	                }
 
 				return ResponseEntity.ok("Profile updated successfully");
 			} else {
@@ -994,13 +1010,12 @@ public class LoginServiceImpl implements LoginService {
 		loginDTO.setPassword(loginRequest.getPassword());
 		String target = IConstants.FAILURE_KEY;
 		String username = loginRequest.getUsername();
-		logger.info(messageResourceBundle.getLogMessage("log.attemptAuth"), username);
 		if (!userEntryRepository.existsBySystemId(username) && !salesRepository.existsByUsername(username)) {
 			logger.error(messageResourceBundle.getLogMessage("auth.failed.userNotFound"), username);
 			throw new AuthenticationExceptionFailed(
 					messageResourceBundle.getExMessage(ConstantMessages.AUTHENTICATION_FAILED_USERNAME));
 		}
-
+		logger.info(messageResourceBundle.getLogMessage("log.attemptAuth"), username);
 		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(loginRequest.getUsername());
 		UserEntry userEntry = userOptional.get();
 		WebMasterEntry webMaster = webMasterEntryRepository.findByUserId(userEntry.getId());
@@ -1864,6 +1879,476 @@ public class LoginServiceImpl implements LoginService {
 	}
 
 	public void falidEmail() {
+
+	}
+
+	@Override
+	public ResponseEntity<?> loginOtp(LoginRequest loginRequest, HttpServletRequest request, String purpose) {
+		String username = loginRequest.getUsername();
+		if (!userEntryRepository.existsBySystemId(username) && !salesRepository.existsByUsername(username)) {
+			logger.error(messageResourceBundle.getLogMessage("auth.failed.userNotFound"), username);
+			throw new AuthenticationExceptionFailed(
+					messageResourceBundle.getExMessage(ConstantMessages.AUTHENTICATION_FAILED_USERNAME));
+		}
+		String target = IConstants.FAILURE_KEY;
+		Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(username);
+		UserEntry userEntry = userOptional.get();
+		WebMasterEntry webMaster = webMasterEntryRepository.findByUserId(userEntry.getId());
+		LoginDTO loginDTO = new LoginDTO();
+		loginDTO.setSystemId(loginRequest.getUsername());
+		loginDTO.setPassword(loginRequest.getPassword());
+		loginDTO.setOtp(loginRequest.getOtp());
+		String system_id = loginDTO.getSystemId();
+		ProfessionEntry professionEntry = null;
+		int otp = loginDTO.getOtp();
+		boolean matched = false;
+		try {
+			logger.info(username + "[" + loginDTO.getAccessName() + "] Matching OTP Request[" + otp + " -> "
+					+ loginDTO.getOtp() + "]");
+			if (otp == loginDTO.getOtp()) {
+				if (loginDTO.getAccessName() != null) {
+					request.setAttribute("multiAccessUser", loginDTO.getAccessName());
+				}
+				logger.info(system_id + " Saving WebAccessLog Entry");
+				SessionLogInsert.logQueue.enqueue(
+						new AccessLogEntry(system_id, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
+								loginDTO.getIpAddress(), 0, "login", null));
+				matched = true;
+				target = IConstants.SUCCESS_KEY;
+				if (webMaster.isEmailOnLogin()) {
+					if (webMaster.isEmailOnLogin()) {
+						String to = IConstants.TO_EMAIl;
+						String from = IConstants.SUPPORT_EMAIL[0];
+						if (GlobalVars.UserMapping.containsKey(userEntry.getSystemId())) {
+							int userid = GlobalVars.UserMapping.get(userEntry.getSystemId());
+							professionEntry = GlobalVars.ProfessionEntries.get(userid);
+						}
+						if (professionEntry != null && professionEntry.getDomainEmail() != null
+								&& professionEntry.getDomainEmail().length() > 0
+								&& professionEntry.getDomainEmail().contains("@")
+								&& professionEntry.getDomainEmail().contains(".")) {
+							from = professionEntry.getDomainEmail();
+							logger.info(system_id + " Domain-Email Found: " + from);
+						} else {
+							ProfessionEntry masterProfessionEntry = null;
+							if (GlobalVars.UserMapping.containsKey(userEntry.getSystemId())) {
+								int userid = GlobalVars.UserMapping.get(userEntry.getMasterId());
+								masterProfessionEntry = GlobalVars.ProfessionEntries.get(userid);
+							}
+							if (masterProfessionEntry != null && masterProfessionEntry.getDomainEmail() != null
+									&& masterProfessionEntry.getDomainEmail().length() > 0
+									&& masterProfessionEntry.getDomainEmail().contains("@")
+									&& masterProfessionEntry.getDomainEmail().contains(".")) {
+								from = masterProfessionEntry.getDomainEmail();
+								logger.info(userEntry.getMasterId() + " Master Domain-Email Found: " + from);
+							} else {
+								logger.info(system_id + " Domain-Email Not Found");
+							}
+						}
+						if (webMaster.getEmail() != null && webMaster.getEmail().contains("@")
+								&& webMaster.getEmail().contains(".")) {
+							to = webMaster.getEmail();
+						}
+						String mailContent = new MailUtility().mailOnLoginContent(system_id, loginDTO.getIpAddress());
+						try {
+							MailUtility.send(to, mailContent, "Login alert", from, false);
+							logger.error("login[" + system_id + "] Email Sent From:" + from + " To:" + to);
+						} catch (Exception ex) {
+							logger.error(system_id + " login email error", ex.fillInStackTrace());
+						}
+					}
+				}
+			} else {
+				SessionLogInsert.logQueue.enqueue(
+						new AccessLogEntry(system_id, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
+								loginDTO.getIpAddress(), 0, "failed", "OTP mismatched"));
+			}
+
+			if (matched) {
+				logger.info(system_id + " OTP Matched: " + otp);
+			} else {
+				if (purpose != null && purpose.equalsIgnoreCase("verify")) {
+					target = "resetfail";
+				}
+				logger.error(system_id + " Invalid OTP Entered: " + otp);
+				throw new InvalidOtpException("Invalid OTP Entered username: " + username);
+			}
+		} catch (Exception e) {
+			target = IConstants.WEB_APPLICATION_ERROR;
+			logger.error(system_id + " Login Error", e.fillInStackTrace());
+			SessionLogInsert.logQueue.enqueue(
+					new AccessLogEntry(system_id, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
+							request.getRemoteAddr(), 0, "failed", "Error " + e.getMessage()));
+			throw new InternalServerException(system_id + " Login Error" + e.getMessage());
+		}
+		logger.info(system_id + " OTP login target: " + target);
+		JwtResponse jwtResponse = (JwtResponse) loginjwt(loginRequest, request, webMaster, professionEntry, loginDTO,
+				userEntry).getBody();
+		jwtResponse.setStatus(target);
+		return ResponseEntity.ok(jwtResponse);
+	}
+
+	@Override
+	public ResponseEntity<?> loginMultiUser(LoginRequest loginRequest, HttpServletRequest request, String purpose) {
+		String username = loginRequest.getUsername();
+		if (!userEntryRepository.existsBySystemId(username) && !salesRepository.existsByUsername(username)) {
+			logger.error(messageResourceBundle.getLogMessage("auth.failed.userNotFound"), username);
+			throw new AuthenticationExceptionFailed(
+					messageResourceBundle.getExMessage(ConstantMessages.AUTHENTICATION_FAILED_USERNAME));
+		}
+		String target = IConstants.FAILURE_KEY;
+		LoginDTO loginForm = new LoginDTO();
+		loginForm.setSystemId(loginRequest.getUsername());
+		loginForm.setPassword(loginRequest.getPassword());
+		loginForm.setAccessName(loginRequest.getAccessName());
+		String accessUser = loginForm.getAccessName();
+		logger.info(loginForm.getSystemId() + " Access Login Requested By " + accessUser);
+		try {
+			Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(loginForm.getSystemId());
+			UserEntry userEntry = userOptional.get();
+			WebMasterEntry webMaster = webMasterEntryRepository.findByUserId(userEntry.getId());
+			List<MultiUserEntry> accessUserList = multiUserEntryRepository.findByUserNative(userEntry.getId());
+			boolean matched = false;
+			for (MultiUserEntry multiUserEntry : accessUserList) {
+				if (multiUserEntry.getAccessName().equals(accessUser)) {
+					if (multiUserEntry.getMobile() != null && multiUserEntry.getMobile().length() > 0) {
+						target = "otplogin";
+						String valid_otp_numbers = "";
+						for (String number : multiUserEntry.getMobile().split(",")) {
+							logger.info(userEntry.getSystemId() + " OTP Number: " + number);
+							try {
+								Long.parseLong(number);
+								valid_otp_numbers += number + ",";
+							} catch (NumberFormatException ne) {
+								logger.error(userEntry.getSystemId() + " Invalid OTP Number Configured: " + number);
+							}
+						}
+						if (valid_otp_numbers.length() > 0) {
+							valid_otp_numbers = valid_otp_numbers.substring(0, valid_otp_numbers.length() - 1);
+							logger.info(userEntry.getSystemId() + " Valid OTP Numbers: " + valid_otp_numbers);
+							// check otp exist & send to user in case of absent or expired
+							int otp = new Random().nextInt(999999 - 100000) + 100000;
+							java.util.Calendar calendar = java.util.Calendar.getInstance();
+							int duration = 5;
+							if (IConstants.LOGIN_OTP_VALIDITY > 0) {
+								duration = IConstants.LOGIN_OTP_VALIDITY;
+							}
+							calendar.add(Calendar.MINUTE, duration);
+							String validity = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(calendar.getTime());
+							OTPEntry otpEntry = otpEntryRepository.findBySystemId(username).get();
+							if (otpEntry == null) {
+								otpEntryRepository.save(new OTPEntry(userEntry.getSystemId(), otp, validity));
+							} else {
+								otpEntry.setExpiresOn(validity);
+								otpEntry.setOneTimePass(otp);
+								otpEntryRepository.save(otpEntry);
+							}
+							// --------------------- send to user ---------------
+							UserEntry internalUser = this.userEntryRepository.findByRole("internal");
+							DriverInfo driverInfo = driverInfoRepository.findById(internalUser.getId()).get();
+							if (internalUser != null) {
+								String content = null;
+								try {
+									content = MultiUtility.readContent(IConstants.FORMAT_DIR + "otp.txt");
+								} catch (Exception ex) {
+									logger.error("OTP_FORMAT", ex.fillInStackTrace());
+								}
+								if (content == null) {
+									content = "hello [system_id], [otp_pass] is your One-Time Password (OTP) on [url] valid for next [duration] minutes";
+								}
+								content = content.replace("[system_id]", userEntry.getSystemId());
+								content = content.replace("[otp_pass]", String.valueOf(otp));
+								content = content.replace("[url]", IConstants.WebUrl);
+								content = content.replace("[duration]", String.valueOf(duration));
+								ArrayList<String> list = new ArrayList<String>(
+										Arrays.asList(valid_otp_numbers.split(",")));
+								BulkSmsDTO smsDTO = new BulkSmsDTO();
+								smsDTO.setSystemId(internalUser.getSystemId());
+								smsDTO.setPassword(
+										new PasswordConverter().convertToEntityAttribute(driverInfo.getDriver()));
+								// smsDTO.setMessageType("SpecialChar");
+								smsDTO.setMessage(content);
+								smsDTO.setDestinationList(list);
+								// smsDTO.setFrom("Name");
+								if (webMaster.getOtpSender() != null && webMaster.getOtpSender().length() > 1) {
+									smsDTO.setSenderId(webMaster.getOtpSender());
+								} else {
+									smsDTO.setSenderId(IConstants.OTP_SENDER_ID);
+								}
+								String Response = MultiUtility.sendOtpSms(userEntry.getSystemId(), smsDTO, restTemplate)
+										.toString();
+								logger.info("<OTP SMS: " + Response + ">" + userEntry.getSystemId() + "<"
+										+ valid_otp_numbers + ">");
+								if (multiUserEntry.getEmail() != null && multiUserEntry.getEmail().length() > 0) {
+									String from = IConstants.SUPPORT_EMAIL[0];
+									ProfessionEntry professionEntry = null;
+									if (GlobalVars.UserMapping.containsKey(userEntry.getSystemId())) {
+										int userid = GlobalVars.UserMapping.get(userEntry.getSystemId());
+										professionEntry = GlobalVars.ProfessionEntries.get(userid);
+									}
+									if (professionEntry.getDomainEmail() != null
+											&& professionEntry.getDomainEmail().length() > 0
+											&& professionEntry.getDomainEmail().contains("@")
+											&& professionEntry.getDomainEmail().contains(".")) {
+										from = professionEntry.getDomainEmail();
+										logger.info(userEntry.getSystemId() + " Domain-Email Found: " + from);
+									} else {
+										String master = userEntry.getMasterId();
+										ProfessionEntry professionEntryMaster = null;
+										if (GlobalVars.UserMapping.containsKey(master)) {
+											int userid = GlobalVars.UserMapping.get(master);
+											professionEntryMaster = GlobalVars.ProfessionEntries.get(userid);
+										}
+										if (professionEntryMaster != null
+												&& professionEntryMaster.getDomainEmail() != null
+												&& professionEntryMaster.getDomainEmail().length() > 0
+												&& professionEntryMaster.getDomainEmail().contains("@")
+												&& professionEntryMaster.getDomainEmail().contains(".")) {
+											from = professionEntryMaster.getDomainEmail();
+											logger.info(
+													userEntry.getSystemId() + " Master Domain-Email Found: " + from);
+										} else {
+											logger.info(userEntry.getSystemId() + " Domain-Email Not Found");
+										}
+									}
+									logger.info(userEntry.getSystemId() + " Sending OTP Email From[" + from + "] on: "
+											+ multiUserEntry.getEmail());
+									try {
+										MailUtility.send(from, multiUserEntry.getEmail(), "OTP Password", content);
+									} catch (Exception e) {
+										logger.error(userEntry.getSystemId() + " OTP Email Sending Error:" + e);
+									}
+								}
+								loginForm.setOtp(otp);
+								loginForm.setAccessName(accessUser);
+								loginForm.setAccessMobile(valid_otp_numbers);
+								request.getSession().setAttribute("loginEntry", loginForm);
+								ResponseEntity
+										.ok("An OTP has been sent to your registered number. Please Enter to verify");
+							} else {
+								logger.error("Internal User Not Configured For alerts.");
+								target = "webAccessError";
+								SessionLogInsert.logQueue.enqueue(new AccessLogEntry(loginForm.getSystemId(),
+										new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
+										loginForm.getIpAddress(), 0, "failed", "internal user missing"));
+								throw new UnauthorizedException("Internal User Not Configured For alerts");
+							}
+						} else {
+							target = "webAccessError";
+							SessionLogInsert.logQueue.enqueue(new AccessLogEntry(loginForm.getSystemId(),
+									new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
+									loginForm.getIpAddress(), 0, "failed", "missing OTP numbers"));
+							throw new NotFoundException(" No Valid Number Found For OTP");
+						}
+					} else {
+						logger.error(userEntry.getSystemId() + " OTP Number Not Configured.");
+						target = "webAccessError";
+						SessionLogInsert.logQueue.enqueue(new AccessLogEntry(loginForm.getSystemId(),
+								new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
+								loginForm.getIpAddress(), 0, "failed", "missing OTP numbers"));
+						throw new InternalServerException(userEntry.getSystemId() + " OTP Number Not Configured.");
+					}
+					matched = true;
+					break;
+				}
+			}
+			if (!matched) {
+				logger.error(loginForm.getSystemId() + " mismatched access user");
+				target = "invalidRequest";
+			}
+		} catch (Exception e) {
+			target = IConstants.WEB_APPLICATION_ERROR;
+			logger.error("Login Error: " + accessUser, e.fillInStackTrace());
+			SessionLogInsert.logQueue.enqueue(new AccessLogEntry(loginForm.getSystemId(),
+					new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), request.getRemoteAddr(), 0,
+					"failed", "Error " + e.getMessage()));
+		}
+		return ResponseEntity.ok(target);
+
+	}
+
+	@Override
+	public ResponseEntity<?> loginskip(LoginRequest loginRequest, HttpServletRequest request, String purpose) {
+		String username = loginRequest.getUsername();
+		if (!userEntryRepository.existsBySystemId(username) && !salesRepository.existsByUsername(username)) {
+			logger.error(messageResourceBundle.getLogMessage("auth.failed.userNotFound"), username);
+			throw new AuthenticationExceptionFailed(
+					messageResourceBundle.getExMessage(ConstantMessages.AUTHENTICATION_FAILED_USERNAME));
+		}
+		String target = IConstants.FAILURE_KEY;
+		LoginDTO loginDTO = new LoginDTO();
+		loginDTO.setSystemId(loginRequest.getUsername());
+		loginDTO.setPassword(loginRequest.getPassword());
+		UserEntry userEntry = null;
+		WebMasterEntry webMaster = null;
+		ProfessionEntry professionEntry = null;
+		try {
+			Optional<UserEntry> userOptional = userEntryRepository.findBySystemId(loginDTO.getSystemId());
+			userEntry = userOptional.get();
+			webMaster = webMasterEntryRepository.findByUserId(userEntry.getId());
+			if (webMaster.getOtpNumber() != null && webMaster.getOtpNumber().length() > 0) {
+				target = "otplogin";
+				String valid_otp_numbers = "";
+				for (String number : webMaster.getOtpNumber().split(",")) {
+					logger.info(userEntry.getSystemId() + " OTP Number: " + number);
+					try {
+						Long.parseLong(number);
+						valid_otp_numbers += number + ",";
+					} catch (NumberFormatException ne) {
+						logger.error(userEntry.getSystemId() + " Invalid OTP Number Configured: " + number);
+					}
+				}
+				if (valid_otp_numbers.length() > 0) {
+					int otp = 0;
+					valid_otp_numbers = valid_otp_numbers.substring(0, valid_otp_numbers.length() - 1);
+					logger.info(userEntry.getSystemId() + " Valid OTP Numbers: " + valid_otp_numbers);
+					// check otp exist & send to user in case of absent or expired
+					OTPEntry otpEntry = otpEntryRepository.findBySystemId(userEntry.getSystemId()).get();
+					boolean generate_otp = true;
+					if (otpEntry != null) {
+						if (otpEntry.getExpiresOn() != null) {
+							if (new Date().after(
+									new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(otpEntry.getExpiresOn()))) {
+								logger.info(userEntry.getSystemId() + " OTP ExpiredOn: " + otpEntry.getExpiresOn());
+							} else {
+								generate_otp = false;
+								otp = otpEntry.getOneTimePass();
+							}
+						}
+					}
+					if (generate_otp) {
+						otp = new Random().nextInt(999999 - 100000) + 100000;
+						java.util.Calendar calendar = java.util.Calendar.getInstance();
+						int duration = 5;
+						if (IConstants.LOGIN_OTP_VALIDITY > 0) {
+							duration = IConstants.LOGIN_OTP_VALIDITY;
+						}
+						calendar.add(Calendar.MINUTE, duration);
+						String validity = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(calendar.getTime());
+						if (otpEntry != null) {
+							otpEntry.setExpiresOn(validity);
+							otpEntry.setOneTimePass(otp);
+							otpEntryRepository.save(otpEntry);
+						} else {
+							otpEntryRepository.save(new OTPEntry(userEntry.getSystemId(), otp, validity));
+						}
+						// --------------------- send to user ---------------
+						UserEntry internalUser = this.userEntryRepository.findByRole("internal");
+						DriverInfo driverInfo = driverInfoRepository.findById(internalUser.getId()).get();
+						if (internalUser != null) {
+							String content = null;
+							try {
+								content = MultiUtility.readContent(IConstants.FORMAT_DIR + "otp.txt");
+							} catch (Exception ex) {
+								logger.error("OTP_FORMAT", ex.fillInStackTrace());
+							}
+							if (content == null) {
+								content = "hello [system_id], [otp_pass] is your One-Time Password (OTP) on [url] valid for next [duration] minutes";
+							}
+							content = content.replace("[system_id]", userEntry.getSystemId());
+							content = content.replace("[otp_pass]", String.valueOf(otp));
+							content = content.replace("[url]", IConstants.WebUrl);
+							content = content.replace("[duration]", String.valueOf(duration));
+							ArrayList<String> list = new ArrayList<String>(Arrays.asList(valid_otp_numbers.split(",")));
+							BulkSmsDTO smsDTO = new BulkSmsDTO();
+							smsDTO.setSystemId(internalUser.getSystemId());
+							smsDTO.setPassword(
+									new PasswordConverter().convertToEntityAttribute(driverInfo.getDriver()));
+							// smsDTO.setMessageType("SpecialChar");
+							smsDTO.setMessage(content);
+							smsDTO.setDestinationList(list);
+							// smsDTO.setFrom("Name");
+							if (webMaster.getOtpSender() != null && webMaster.getOtpSender().length() > 1) {
+								smsDTO.setSenderId(webMaster.getOtpSender());
+							} else {
+								smsDTO.setSenderId(IConstants.OTP_SENDER_ID);
+							}
+							String Response = MultiUtility.sendOtpSms(userEntry.getSystemId(), smsDTO, restTemplate)
+									.toString();
+							logger.info("<OTP SMS: " + Response + ">" + userEntry.getSystemId() + "<"
+									+ valid_otp_numbers + ">");
+							if (webMaster.getOtpEmail() != null && webMaster.getOtpEmail().length() > 0) {
+								String from = IConstants.SUPPORT_EMAIL[0];
+								if (GlobalVars.UserMapping.containsKey(userEntry.getSystemId())) {
+									int userid = GlobalVars.UserMapping.get(userEntry.getSystemId());
+									professionEntry = GlobalVars.ProfessionEntries.get(userid);
+								}
+								if (professionEntry.getDomainEmail() != null
+										&& professionEntry.getDomainEmail().length() > 0
+										&& professionEntry.getDomainEmail().contains("@")
+										&& professionEntry.getDomainEmail().contains(".")) {
+									from = professionEntry.getDomainEmail();
+									logger.info(userEntry.getSystemId() + " Domain-Email Found: " + from);
+								} else {
+									String master = userEntry.getMasterId();
+									ProfessionEntry professionEntryMaster = null;
+									if (GlobalVars.UserMapping.containsKey(master)) {
+										int userid = GlobalVars.UserMapping.get(master);
+										professionEntryMaster = GlobalVars.ProfessionEntries.get(userid);
+									}
+									if (professionEntryMaster != null && professionEntryMaster.getDomainEmail() != null
+											&& professionEntryMaster.getDomainEmail().length() > 0
+											&& professionEntryMaster.getDomainEmail().contains("@")
+											&& professionEntryMaster.getDomainEmail().contains(".")) {
+										from = professionEntryMaster.getDomainEmail();
+										logger.info(userEntry.getSystemId() + " Master Domain-Email Found: " + from);
+									} else {
+										logger.info(userEntry.getSystemId() + " Domain-Email Not Found");
+									}
+								}
+								logger.info(userEntry.getSystemId() + " Sending OTP Email From[" + from + "] on: "
+										+ webMaster.getOtpEmail());
+								try {
+									MailUtility.send(from, webMaster.getOtpEmail(), "OTP Password", content);
+								} catch (Exception e) {
+									logger.error(userEntry.getSystemId() + " OTP Email Sending Error:" + e);
+								}
+							}
+							loginDTO.setOtp(otp);
+							request.getSession().setAttribute("loginEntry", loginDTO);
+							return ResponseEntity
+									.ok("An OTP has been sent to your registered number. Please Enter to verify");
+						} else {
+							logger.error("Internal User Not Configured For alerts.");
+							target = "webAccessError";
+							SessionLogInsert.logQueue.enqueue(new AccessLogEntry(loginDTO.getSystemId(),
+									new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
+									loginDTO.getIpAddress(), 0, "failed", "internal user missing"));
+							throw new InternalServerException("Sorry !! No User Found To Proceed");
+						}
+					} else {
+						logger.info(userEntry.getSystemId() + " Login Request Via Recent OTP");
+						loginDTO.setOtp(otp);
+						request.getSession().setAttribute("loginEntry", loginDTO);
+						ResponseEntity.ok("Please Enter Recent OTP to proceed ");
+					}
+				} else {
+					target = "webAccessError";
+					SessionLogInsert.logQueue.enqueue(new AccessLogEntry(loginDTO.getSystemId(),
+							new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), loginDTO.getIpAddress(), 0,
+							"failed", "missing OTP numbers"));
+					throw new NotFoundException("No Valid Number Found For OTP");
+				}
+			} else {
+				logger.error(userEntry.getSystemId() + " OTP Number Not Configured.");
+				target = "webAccessError";
+				SessionLogInsert.logQueue.enqueue(new AccessLogEntry(loginDTO.getSystemId(),
+						new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), loginDTO.getIpAddress(), 0,
+						"failed", "missing OTP numbers"));
+				throw new NotFoundException("No Valid Number Found For OTP");
+			}
+		} catch (Exception e) {
+			target = IConstants.WEB_APPLICATION_ERROR;
+			logger.error("Login Error: " + loginDTO.getSystemId(), e.fillInStackTrace());
+			SessionLogInsert.logQueue.enqueue(new AccessLogEntry(loginDTO.getSystemId(),
+					new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), request.getRemoteAddr(), 0,
+					"failed", "Error " + e.getMessage()));
+		}
+
+		JwtResponse jwtResponse = (JwtResponse) loginjwt(loginRequest, request, webMaster, professionEntry, loginDTO,
+				userEntry).getBody();
+		jwtResponse.setStatus(target);
+		return ResponseEntity.ok(jwtResponse);
 
 	}
 
