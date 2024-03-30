@@ -752,17 +752,19 @@ public class LoginServiceImpl implements LoginService {
 				professionEntryRepository.save(professionEntry);
 				webMasterEntryRepository.save(webMasterEntry);
 				dlrSettingEntryRepository.save(dlrSettingEntry);
-				
-				 String flagVal = FlagUtil.readFlag(Constants.USER_FLAG_DIR + username + ".txt");
-				 System.out.println(flagVal);
-	                if (flagVal != null && !flagVal.equalsIgnoreCase("404")) {
-	                	
-	                    // Change flag
-	                    FlagUtil.changeFlag(Constants.USER_FLAG_DIR + username + ".txt", "505");
-	                    FlagUtil.changeFlag(Constants.CLIENT_FLAG_FILE, "707");
-	                 
-	             //     System.out.println(  FlagUtil.changeFlag(Constants.CLIENT_FLAG_FILE, "707") +" "+"yoyoyoyoy" + " "+FlagUtil.changeFlag(Constants.USER_FLAG_DIR + username + ".txt", "505"));
-	                }
+
+				String flagVal = FlagUtil.readFlag(Constants.USER_FLAG_DIR + username + ".txt");
+				System.out.println(flagVal);
+				if (flagVal != null && !flagVal.equalsIgnoreCase("404")) {
+
+					// Change flag
+					FlagUtil.changeFlag(Constants.USER_FLAG_DIR + username + ".txt", "505");
+					FlagUtil.changeFlag(Constants.CLIENT_FLAG_FILE, "707");
+
+					// System.out.println( FlagUtil.changeFlag(Constants.CLIENT_FLAG_FILE, "707") +"
+					// "+"yoyoyoyoy" + " "+FlagUtil.changeFlag(Constants.USER_FLAG_DIR + username +
+					// ".txt", "505"));
+				}
 
 				return ResponseEntity.ok("Profile updated successfully");
 			} else {
@@ -860,7 +862,9 @@ public class LoginServiceImpl implements LoginService {
 			String dlrEmail, String coverageEmail, String coverageReport, Double lowAmount, Boolean smsAlert,
 			String webUrl, Boolean dlrThroughWeb, Boolean mis, Boolean lowBalanceAlert, WebMasterEntry webMasterEntry,
 			DlrSettingEntry dlrSettingEntry) {
-
+		if (alertMobile != null) {
+			webMasterEntry.setMinBalMobile(alertMobile);
+		}
 		if (lowAmount != null) {
 			webMasterEntry.setMinBalance(lowAmount);
 		}
@@ -1310,12 +1314,7 @@ public class LoginServiceImpl implements LoginService {
 											webAccess = false;
 											logger.info(
 													userEntry.getSystemId() + " Access IP Not Allowed: " + ipaddress);
-											/*
-											 * SessionLogInsert.logQueue.enqueue(new
-											 * AccessLogEntry(loginDTO.getSystemId(), new
-											 * SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), ipaddress, 0,
-											 * "failed", "Invalid AccessIp"));
-											 */
+
 										} else {
 											logger.info(
 													userEntry.getSystemId() + " Valid Access Country: " + ipaddress);
@@ -1326,10 +1325,11 @@ public class LoginServiceImpl implements LoginService {
 								}
 							}
 							// -------------------------
+							System.out.println("web access" + webAccess);
 							if (webAccess) {
 								if (webMaster.isOtpLogin()) {
-
 									boolean otplogin = true;
+									System.out.println("web master multi user access " + webMaster.isMultiUserAccess());
 									if (webMaster.isMultiUserAccess()) {
 										logger.info(userEntry.getSystemId() + " Multi User Access Enabled.");
 										List<MultiUserEntry> list = listMultiUser(userEntry.getId());
@@ -1340,6 +1340,7 @@ public class LoginServiceImpl implements LoginService {
 											otplogin = false;
 											target = "multiaccess";
 											request.getSession().setAttribute("loginEntry", loginRequest);
+											return ResponseEntity.ok("Multi User Access Enabled");
 										}
 									}
 									if (otplogin) {
@@ -1518,7 +1519,7 @@ public class LoginServiceImpl implements LoginService {
 													loginDTO.setSystemId(loginRequest.getUsername());
 													loginDTO.setPassword(loginRequest.getPassword());
 													request.getSession().setAttribute("loginEntry", loginDTO);
-													ResponseEntity.ok("Please Enter Recent OTP to proceed ");
+													return ResponseEntity.ok("Please Enter Recent OTP to proceed ");
 												}
 											} else {
 												target = "webAccessError";
@@ -2318,7 +2319,7 @@ public class LoginServiceImpl implements LoginService {
 						logger.info(userEntry.getSystemId() + " Login Request Via Recent OTP");
 						loginDTO.setOtp(otp);
 						request.getSession().setAttribute("loginEntry", loginDTO);
-						ResponseEntity.ok("Please Enter Recent OTP to proceed ");
+						return ResponseEntity.ok("Please Enter Recent OTP to proceed ");
 					}
 				} else {
 					target = "webAccessError";
