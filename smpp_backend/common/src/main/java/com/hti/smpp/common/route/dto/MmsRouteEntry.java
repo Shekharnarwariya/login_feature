@@ -19,6 +19,7 @@ public class MmsRouteEntry  {
 	private String editBy;
 	@Column(name = "edit_on")
 	private String editOn;
+	
 
 	public MmsRouteEntry() {
 	}

@@ -3944,52 +3944,6 @@ public class LoginServiceImpl implements LoginService {
 		return true;
 	}
 
-	@Override
-	public ResponseEntity<?> loginjwt(LoginRequest loginRequest, HttpServletRequest request, WebMasterEntry webMaster,
-			ProfessionEntry professionEntry, LoginDTO loginDTO, UserEntry userEntry) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ResponseEntity<?> updateUserProfile(String username, String email, String firstName, String lastName,
-			String contact, String companyName, String designation, String city, String country, String state,
-			String keepLogs, String referenceID, String companyAddress, String companyEmail, String notes, String taxID,
-			String regID, MultipartFile profileImageFile, String alertEmail, String alertMobile, String invoiceEmail,
-			Boolean dlrReport, String dlrEmail, String coverageEmail, String coverageReport, Double lowAmount,
-			Boolean smsAlert, String webUrl, Boolean dlrThroughWeb, Boolean mis, Boolean lowBalanceAlert) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ResponseEntity<?> userRecentActivity(String username) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ResponseEntity<?> login(LoginRequest loginRequest, HttpServletRequest request) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ResponseEntity<?> loginOtp(LoginRequest loginRequest, HttpServletRequest request, String purpose) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ResponseEntity<?> loginMultiUser(LoginRequest loginRequest, HttpServletRequest request, String purpose) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ResponseEntity<?> loginskip(LoginRequest loginRequest, HttpServletRequest request, String purpose) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	
 
 }

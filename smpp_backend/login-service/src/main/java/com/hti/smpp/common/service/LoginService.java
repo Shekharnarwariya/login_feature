@@ -56,21 +56,21 @@ public interface LoginService {
 
 	public ResponseEntity<?> loginskip(LoginRequest loginRequest, HttpServletRequest request, String purpose);
 
-	ResponseEntity<?> ModifyMultiUserUpdate(MultiUserForm entryForm);
+	public ResponseEntity<?> ModifyMultiUserUpdate(MultiUserForm entryForm);
 
-	ResponseEntity<?> modifyMultiUserDelete(MultiUserForm entryForm);
+	public ResponseEntity<?> modifyMultiUserDelete(MultiUserForm entryForm);
 
-	ResponseEntity<?> updateBalance(UserEntryForm userForm) throws ProcessErrorException;
+	public ResponseEntity<?> updateBalance(UserEntryForm userForm) throws ProcessErrorException;
 
-	ResponseEntity<?> addUserLimit(UserLimitForm userLimitForm);
+	public ResponseEntity<?> addUserLimit(UserLimitForm userLimitForm);
 
-	ResponseEntity<?> sellerValidation(String systemId, String password);
+	public ResponseEntity<?> sellerValidation(String systemId, String password);
 
-	ResponseEntity<?> listMultiUser(int id);
+	public ResponseEntity<?> listMultiUser(int id);
 
-	ResponseEntity<?> addMultiUser(MultiUserForm entryForm);
+	public ResponseEntity<?> addMultiUser(MultiUserForm entryForm);
 
-	ResponseEntity<?> userIpOtpValidate(LoginRequest loginRequest, int otp);
+	public ResponseEntity<?> userIpOtpValidate(LoginRequest loginRequest, int otp);
 
 	/**
 	 * Authenticates a user based on the provided login credentials. If
@@ -78,5 +78,15 @@ public interface LoginService {
 	 * user details.
 	 */
 	ResponseEntity<?> login(LoginRequest loginRequest);
+
+	/**
+	 * Updates the user profile information for the specified username.
+	 */
+	ResponseEntity<?> updateUserProfile(String username, String email, String firstName, String lastName,
+			String contact, String companyName, String designation, String city, String country, String state,
+			String keepLogs, String referenceID, String companyAddress, String companyEmail, String notes, String taxID,
+			String regID, MultipartFile profileImageFile);
+
+	
 
 }

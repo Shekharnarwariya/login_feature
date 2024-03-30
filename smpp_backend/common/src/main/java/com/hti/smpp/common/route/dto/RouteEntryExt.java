@@ -27,6 +27,8 @@ public class RouteEntryExt {
 	private boolean optional;
 	private HlrRouteEntry hlrRouteEntry;
 	private OptionalRouteEntry routeOptEntry;
+	private MmsRouteEntry mmsRouteEntry;
+	
 
 	public RouteEntryExt() {
 	}
@@ -60,6 +62,16 @@ public class RouteEntryExt {
 		this.optional = optional;
 		this.hlrRouteEntry = hlrRouteEntry;
 		this.routeOptEntry = routeOptEntry;
+	}
+
+	
+	
+	public MmsRouteEntry getMmsRouteEntry() {
+		return mmsRouteEntry;
+	}
+
+	public void setMmsRouteEntry(MmsRouteEntry mmsRouteEntry) {
+		this.mmsRouteEntry = mmsRouteEntry;
 	}
 
 	public RouteEntryExt(RouteEntry basic) {
