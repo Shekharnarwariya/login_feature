@@ -4,10 +4,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.hti.smpp.common.exception.ProcessErrorException;
 import com.hti.smpp.common.request.LoginDTO;
 import com.hti.smpp.common.request.LoginRequest;
+import com.hti.smpp.common.request.MultiUserForm;
 import com.hti.smpp.common.request.PasswordUpdateRequest;
 import com.hti.smpp.common.request.SignupRequest;
+import com.hti.smpp.common.request.UserEntryForm;
+import com.hti.smpp.common.request.UserLimitForm;
 import com.hti.smpp.common.user.dto.ProfessionEntry;
 import com.hti.smpp.common.user.dto.UserEntry;
 import com.hti.smpp.common.user.dto.WebMasterEntry;
@@ -51,5 +55,28 @@ public interface LoginService {
 	public ResponseEntity<?> loginMultiUser(LoginRequest loginRequest, HttpServletRequest request, String purpose);
 
 	public ResponseEntity<?> loginskip(LoginRequest loginRequest, HttpServletRequest request, String purpose);
+
+	ResponseEntity<?> ModifyMultiUserUpdate(MultiUserForm entryForm);
+
+	ResponseEntity<?> modifyMultiUserDelete(MultiUserForm entryForm);
+
+	ResponseEntity<?> updateBalance(UserEntryForm userForm) throws ProcessErrorException;
+
+	ResponseEntity<?> addUserLimit(UserLimitForm userLimitForm);
+
+	ResponseEntity<?> sellerValidation(String systemId, String password);
+
+	ResponseEntity<?> listMultiUser(int id);
+
+	ResponseEntity<?> addMultiUser(MultiUserForm entryForm);
+
+	ResponseEntity<?> userIpOtpValidate(LoginRequest loginRequest, int otp);
+
+	/**
+	 * Authenticates a user based on the provided login credentials. If
+	 * authentication is successful, generates a JWT token and returns it along with
+	 * user details.
+	 */
+	ResponseEntity<?> login(LoginRequest loginRequest);
 
 }
