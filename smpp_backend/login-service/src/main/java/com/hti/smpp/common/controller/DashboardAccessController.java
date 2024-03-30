@@ -37,9 +37,13 @@ public class DashboardAccessController {
 	public ResponseEntity<?>updateDashboardAccess (@RequestHeader("username") String username,@RequestBody(required = false) DashboardVisibilityRequest request){
 		DashboardAccessResponse response=null;
 		if(request==null) {
+			 System.out.println("null list called");
 			 response=dashboardAccessService.updateDashboardVisibility(username,null);
+			
 		}else {
+			 System.out.println("else block called");
 		 response=dashboardAccessService.updateDashboardVisibility(username, request.getDashboardVisibility());
+		
 		}
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}

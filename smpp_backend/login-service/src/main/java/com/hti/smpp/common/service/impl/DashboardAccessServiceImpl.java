@@ -55,16 +55,17 @@ public class DashboardAccessServiceImpl implements DashboardAccessService {
 			throw new NotFoundException(
 					messageResourceBundle.getExMessage(ConstantMessages.USER_NOT_FOUND, new Object[] { username }));
 		}
+		
 		try {
 			
 			Optional<DashboardAccess> dashboardOptional = dashboardAccessRepository.findByUserId(userId);
 			DashboardAccess dashboardAccess;
-			if(dashboardOptional.isPresent() && dashboardVisibilityList==null) {
+			if(dashboardOptional.isPresent() && dashboardVisibilityList.isEmpty() || dashboardVisibilityList==null) {
 				DashboardAccessResponse response = new DashboardAccessResponse();
 				response = getDashboardAccess(username);
-				System.out.println("Inside 1st if condition");
 				return response;
 			}
+			
 			else if (dashboardOptional.isPresent() && !dashboardVisibilityList.isEmpty()) {
 				dashboardAccess = dashboardOptional.get();
 				dashboardAccess.setMsgStatus(dashboardVisibilityList.contains("msgStatus"));
@@ -75,6 +76,8 @@ public class DashboardAccessServiceImpl implements DashboardAccessService {
 				dashboardAccess.setSmscWiseDvy(dashboardVisibilityList.contains("smscWiseDvy"));
 				dashboardAccess.setSmscWiseSpam(dashboardVisibilityList.contains("smscWiseSpam"));
 				dashboardAccess.setUserWiseSpam(dashboardVisibilityList.contains("userWiseSpam"));
+				dashboardAccess.setAccountSummary(dashboardVisibilityList.contains("accountSummary"));
+				
 				dashboardAccessRepository.save(dashboardAccess);
 			} else {
 				dashboardAccess = new DashboardAccess();
@@ -87,6 +90,7 @@ public class DashboardAccessServiceImpl implements DashboardAccessService {
 				dashboardAccess.setSmscWiseSub(true);
 				dashboardAccess.setUserWiseSpam(true);
 				dashboardAccess.setUserWiseSt(true);
+				dashboardAccess.setAccountSummary(true);
 				dashboardAccessRepository.save(dashboardAccess);
 				}
 			
@@ -137,6 +141,7 @@ public class DashboardAccessServiceImpl implements DashboardAccessService {
 			visibilityMap.put("smscWiseDvy", dashboardAccessData.getSmscWiseDvy());
 			visibilityMap.put("smscWiseSpam", dashboardAccessData.getSmscWiseSpam());
 			visibilityMap.put("userWiseSpam", dashboardAccessData.getUserWiseSpam());
+			visibilityMap.put("accountSummary", dashboardAccessData.getAccountSummary());
 			response.setVisibilityMap(visibilityMap);
 		}
 		return response;

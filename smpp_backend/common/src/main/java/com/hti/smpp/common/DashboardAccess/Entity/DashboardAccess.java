@@ -38,6 +38,9 @@ public class DashboardAccess {
 
     @Column(name = "user_wise_spam", length = 255)
     private Boolean userWiseSpam;
+    
+    @Column(name="account_summary",length=255)
+    private Boolean accountSummary;
 
     @Column(name = "user_ID", unique = true)
     private Integer userId;
@@ -123,5 +126,13 @@ public class DashboardAccess {
 		this.userId = userId;
 	}
 
+	public Boolean getAccountSummary() {
+		return accountSummary;
+	}
+
+	public void setAccountSummary(Boolean accountSummary) {
+		this.accountSummary = accountSummary;
+	}
+	
     
 }
