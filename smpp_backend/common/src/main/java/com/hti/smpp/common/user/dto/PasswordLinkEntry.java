@@ -1,4 +1,4 @@
-package com.hti.smpp.common.request;
+package com.hti.smpp.common.user.dto;
 
 
 public class PasswordLinkEntry {

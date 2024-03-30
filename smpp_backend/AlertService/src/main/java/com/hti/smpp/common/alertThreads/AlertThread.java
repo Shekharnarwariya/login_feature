@@ -28,8 +28,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.hti.smpp.common.dto.Network;
-import com.hti.smpp.common.dto.UserEntryExt;
 import com.hti.smpp.common.route.dto.RouteEntryExt;
+import com.hti.smpp.common.user.dto.UserEntryExt;
 import com.hti.smpp.common.util.GlobalVars;
 import com.hti.smpp.common.util.IConstants;
 import com.hti.smpp.common.util.MultiUtility;

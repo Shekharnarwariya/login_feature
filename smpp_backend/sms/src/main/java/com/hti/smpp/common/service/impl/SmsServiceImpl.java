@@ -1,7 +1,6 @@
 package com.hti.smpp.common.service.impl;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -8766,8 +8765,7 @@ public class SmsServiceImpl implements SmsService {
 			headers.setContentDispositionFormData("attachment", newFilename);
 
 			logger.info("Successfully retrieved aborted number list for batch ID: {}", abortBatchId);
-			return ResponseEntity.ok().headers(headers).body(new ByteArrayInputStream(data));
-
+			return ResponseEntity.ok().headers(headers).body(data);
 		} catch (NumberFormatException e) {
 			logger.error("Error parsing batch ID: {}", abort_batch_id, e);
 			throw new InternalServerException("Invalid batch ID format. Please provide a valid integer.");
@@ -8836,7 +8834,7 @@ public class SmsServiceImpl implements SmsService {
 				logger.error("Quick Numbers Dir Creation Failed");
 			}
 		}
-		File numberfile = new File(IConstants.HOME_DIR + "numbers//" + system_id + ".txt");
+		File numberfile = new File(IConstants.HOME_DIR + "numbers//" + system_id + "quick.txt");
 		if (!numberfile.exists()) {
 			try {
 				if (numberfile.createNewFile()) {
@@ -9160,7 +9158,7 @@ public class SmsServiceImpl implements SmsService {
 			String unauthorizedMessage = messageResourceBundle.getExMessage(ConstantMessages.UNAUTHORIZED_EXCEPTION);
 			return new ResponseEntity<>(unauthorizedMessage, HttpStatus.UNAUTHORIZED);
 		}
-		String destinationNumberFilePath = IConstants.HOME_DIR + "numbers//" + username + ".txt";
+		String destinationNumberFilePath = IConstants.HOME_DIR + "numbers//" + username + "quick.txt";
 		try {
 			String destinationNumber = Files.readString(Paths.get(destinationNumberFilePath)).trim();
 			int totalNumbers = destinationNumber.isEmpty() ? 0 : destinationNumber.split("\n").length;

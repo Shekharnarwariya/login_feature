@@ -30,6 +30,112 @@ public class ProfileResponse {
     private long credits;
     private double wallets;
     private String walletFlag;
+    
+    private Boolean dlrReport;
+    private String coverageReport;
+    private Boolean dlrThroughWeb;
+    private String alertEmail;
+    private String alertMobile;
+    private Boolean mis;
+    private Boolean smsAlert;
+    private double lowAmount;
+    private String webUrl;
+    private String dlrEmail;
+    private String coverageEmail;
+    private String invoiceEmail;
+    private Boolean lowBalanceAlert;
+    
+    
+    
+    
+
+    
+	
+	
+//  ----------------------------------------------
+	
+	public Boolean getLowBalanceAlert() {
+		return lowBalanceAlert;
+	}
+	public void setLowBalanceAlert(Boolean lowBalanceAlert) {
+		this.lowBalanceAlert = lowBalanceAlert;
+	}
+	public Boolean getDlrReport() {
+		return dlrReport;
+	}
+	public void setDlrReport(Boolean dlrReport) {
+		this.dlrReport = dlrReport;
+	}
+	public String getCoverageReport() {
+		return coverageReport;
+	}
+	public void setCoverageReport(String coverageReport) {
+		this.coverageReport = coverageReport;
+	}
+	public Boolean getDlrThroughWeb() {
+		return dlrThroughWeb;
+	}
+	public void setDlrThroughWeb(Boolean dlrThroughWeb) {
+		this.dlrThroughWeb = dlrThroughWeb;
+	}
+	public String getAlertEmail() {
+		return alertEmail;
+	}
+	public void setAlertEmail(String alertEmail) {
+		this.alertEmail = alertEmail;
+	}
+	public String getAlertMobile() {
+		return alertMobile;
+	}
+	public void setAlertMobile(String alertMobile) {
+		this.alertMobile = alertMobile;
+	}
+	public Boolean getMis() {
+		return mis;
+	}
+	public void setMis(Boolean mis) {
+		this.mis = mis;
+	}
+	public Boolean getSmsAlert() {
+		return smsAlert;
+	}
+	public void setSmsAlert(Boolean smsAlert) {
+		this.smsAlert = smsAlert;
+	}
+	public double getLowAmount() {
+		return lowAmount;
+	}
+	public void setLowAmount(double lowAmount) {
+		this.lowAmount = lowAmount;
+	}
+
+	public String getWebUrl() {
+		return webUrl;
+	}
+	public void setWebUrl(String webUrl) {
+		this.webUrl = webUrl;
+	}
+	public String getDlrEmail() {
+		return dlrEmail;
+	}
+	public void setDlrEmail(String dlrEmail) {
+		this.dlrEmail = dlrEmail;
+	}
+	public String getCoverageEmail() {
+		return coverageEmail;
+	}
+	public void setCoverageEmail(String coverageEmail) {
+		this.coverageEmail = coverageEmail;
+	}
+	public String getInvoiceEmail() {
+		return invoiceEmail;
+	}
+	public void setInvoiceEmail(String invoiceEmail) {
+		this.invoiceEmail = invoiceEmail;
+	}
+	
+	
+	
 	public String getUserName() {
 		return userName;
 	}

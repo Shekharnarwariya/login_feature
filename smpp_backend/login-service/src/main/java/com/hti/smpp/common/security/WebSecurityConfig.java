@@ -46,7 +46,10 @@ public class WebSecurityConfig {
 	 */
 	private final String[] PUBLIC_URL = { "/swagger-ui/**", "/webjars/**", "/swagger-resources/**", "/v3/api-docs/**",
 			"/login/jwt", "/login/register", "/login/user/data", "login/status", "/login/sendOTP",
-			"/login/forgotPassword", "/login/validateOtp", "/login/updatePassword", "/login/forgotPassword","/login/validate/user-ip","/login/validate/otp-user-ip" };
+			"/login/forgotPassword", "/login/validateOtp", "/login/updatePassword", "/login/forgotPassword","/login/validate/user-ip","/login/validate/otp-user-ip","/login/recent-activity",
+
+			"/login/forgotPassword", "/login/validateOtp", "/login/updatePassword", "/login/updateProfile",
+			"/login/recent-activity" };
 
 	/**
 	 * Configures the security filter chain for handling HTTP security.

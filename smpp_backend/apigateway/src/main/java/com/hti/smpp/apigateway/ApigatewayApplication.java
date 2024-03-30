@@ -23,7 +23,7 @@ public class ApigatewayApplication {
 	@PostConstruct
 	public void postConstruct() throws IOException {
 		logger.info(" Apigateway Application is about to start.");
-		System.out.println(Files.readString(Path.of(new ClassPathResource("welcome.fil").getURI())));
+		//System.out.println(Files.readString(Path.of(new ClassPathResource("welcome.fil").getURI())));
 	}
 
 	@PreDestroy

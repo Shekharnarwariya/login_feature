@@ -2,14 +2,16 @@ package com.hti.smpp.common;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.context.ApplicationContext;
 
 import com.hti.smpp.common.alertThreads.AlertThread;
 import com.hti.smpp.common.alertThreads.MISCounterThread;
 
 @SpringBootApplication
+@EnableDiscoveryClient
 public class AlertServiceApplication {
-    
+
 	public static void main(String[] args) {
 		ApplicationContext context = SpringApplication.run(AlertServiceApplication.class, args);
 		AlertThread alert = context.getBean(AlertThread.class);

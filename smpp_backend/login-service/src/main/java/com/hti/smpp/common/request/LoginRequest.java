@@ -15,6 +15,26 @@ public class LoginRequest {
 	@NotBlank(message = "Please enter a password. It cannot be blank.")
 	private String password;
 
+	private int otp;
+
+	public int getOtp() {
+		return otp;
+	}
+
+	private String accessName;
+
+	public String getAccessName() {
+		return accessName;
+	}
+
+	public void setAccessName(String accessName) {
+		this.accessName = accessName;
+	}
+
+	public void setOtp(int otp) {
+		this.otp = otp;
+	}
+
 	public String getUsername() {
 		return username;
 	}

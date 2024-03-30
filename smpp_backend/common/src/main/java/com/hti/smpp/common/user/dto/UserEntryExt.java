@@ -1,4 +1,4 @@
-package com.hti.smpp.common.dto;
+package com.hti.smpp.common.user.dto;
 
 import com.hti.smpp.common.user.dto.BalanceEntry;
 import com.hti.smpp.common.user.dto.BindErrorEntry;
